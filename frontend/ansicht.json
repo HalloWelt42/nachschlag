@@ -181,6 +181,20 @@
       "speicher": {
         "nachschlag.leseansicht": "c"
       }
+    },
+    {
+      "name": "artikel-wissen",
+      "pfad": "/lesen/wikipedia_de_all_maxi_2026-01/Rotfuchs",
+      "speicher": {
+        "nachschlag.leseansicht": "b"
+      }
+    },
+    {
+      "name": "doku-wissen",
+      "pfad": "/lesen/devdocs_en_php_2026-08/function.array-map",
+      "speicher": {
+        "nachschlag.leseansicht": "b"
+      }
     }
   ]
 }

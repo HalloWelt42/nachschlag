@@ -994,3 +994,32 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .inhalt-tafel li.unter a { padding-left: calc(var(--a2) + 1.6em); }
 .inhalt-tafel li.aktiv a { background: var(--flaeche-2); color: var(--text); font-weight: 600; }
 .inhalt-tafel .nr { font-family: var(--schrift-zahl); color: var(--text-3); min-width: 1.2em; }
+
+/* Ansicht B (WIKI-7, Entwurf artikel-b.html): rechts die Wissensleiste mit Reitern. Sie braucht Platz: ab 1500 px mit
+   Inhalt links, ab 1180 px ohne; schmaler wie A (Steckbrief und Notizen wieder im Text). */
+.wissen { display: none; }
+@media (min-width: 1180px) {
+  .lesen.mit-wissen { grid-template-columns: minmax(0, 1fr) 340px; max-width: none; }
+  .lesen.mit-wissen .inhalt { display: none; }
+  .lesen.mit-wissen .artikel > .steckbrief, .lesen.mit-wissen .deine-notizen { display: none; }
+  .wissen { display: flex; flex-direction: column; position: sticky; top: var(--a4); align-self: start; min-height: 0;
+    max-height: calc(100dvh - 240px); border-radius: var(--r3); background: var(--leiste); box-shadow: 0 0 0 1px var(--rand); }
+}
+@media (min-width: 1500px) {
+  .lesen.mit-wissen { grid-template-columns: 240px minmax(0, 1fr) 360px; }
+  .lesen.mit-wissen.ohne-inhalt { grid-template-columns: minmax(0, 1fr) 360px; }
+  .lesen.mit-wissen .inhalt { display: block; }
+}
+.wissen .reiter { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); padding: var(--a1) var(--a2) 0;
+  box-shadow: inset 0 -1px 0 var(--rand); }
+.wissen .reiter button { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 2px 7px; border: 0;
+  border-radius: var(--r2) var(--r2) 0 0; background: transparent; color: var(--text-2); font: inherit; font-size: var(--klein); cursor: pointer; }
+.wissen .reiter button i { font-size: 16px; color: var(--text-3); }
+.wissen .reiter button.aktiv { color: var(--text); font-weight: 600; background: var(--flaeche); }
+.wissen .reiter button.aktiv i { color: var(--akzent); }
+.wissen .reiter .zahl { font-family: var(--schrift-zahl); font-size: var(--marke); color: var(--text-3); font-weight: 400; }
+.wissen-inhalt { overflow-y: auto; min-height: 0; padding: var(--a3); display: flex; flex-direction: column; gap: var(--a2); }
+.wissen .steckbrief { float: none; width: auto; margin: 0; box-shadow: none; }
+.wissen-medien { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--a2); }
+.wissen-medien button { padding: 0; border: 0; border-radius: var(--r2); overflow: hidden; background: var(--flaeche-2); cursor: zoom-in; aspect-ratio: 4 / 3; }
+.wissen-medien img { width: 100%; height: 100%; object-fit: cover; display: block; }

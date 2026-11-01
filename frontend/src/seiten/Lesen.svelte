@@ -73,6 +73,19 @@
   // Ansicht C (WIKI-7): nur das Blatt, über der Schale; Werkzeuge schwebend, Inhalt als Tafel auf Abruf
   const nurBlatt = $derived(leseansicht.wert === "c" && artikel?.darstellung === "lesedesign" && !zeigeOriginal);
   let inhaltTafel = $state(false);
+  // Ansicht B (WIKI-7): rechts die Wissensleiste mit Reitern; Medien erst, wenn ihr Reiter offen ist
+  const mitWissen = $derived(leseansicht.wert === "b" && artikel?.darstellung === "lesedesign" && !zeigeOriginal);
+  let reiter = $state<"steckbrief" | "notizen" | "medien">("steckbrief");
+  const reiterJetzt = $derived(reiter === "steckbrief" && !artikel?.steckbrief ? "notizen" : reiter);
+  let wissenMedien = $state.raw<Medium[] | null>(null);
+  $effect(() => {
+    const a = artikel;
+    if (!mitWissen || reiterJetzt !== "medien" || !a) return;
+    let aktuell = true;
+    wissenMedien = null;
+    medienImArtikel(a.buch, a.pfad).then((m) => aktuell && (wissenMedien = m)).catch(() => aktuell && (wissenMedien = []));
+    return () => { aktuell = false; };
+  });
   const restMinuten = $derived(Math.max(1, Math.round((woerter * (1 - anteil)) / WOERTER_JE_MINUTE)));
 
   // Lesegröße dieses Buchs auf diesem Gerät (WIKI-29) als Zoom des Lesebereichs, auch in der Originalseite
@@ -662,8 +675,10 @@
                               ...fassungen.optionen.map((f) => ({ wert: f, titel: `Meine Fassung: ${fassungen!.produkt} ${f}` }))]} />
         {/if}
         {#if artikel.darstellung === "lesedesign" && !zeigeOriginal}
-          <Auswahl wert={leseansicht.wert} symbol="fa-table-columns" titel="Ansicht, bleibt auf diesem Gerät eingestellt"
-                   optionen={ANSICHTEN} onwahl={ansichtMerken} />
+          <!-- am Telefon hat die Wissensleiste keinen Platz: dort nur A und C -->
+          <Auswahl wert={geraet.mobil && leseansicht.wert === "b" ? "a" : leseansicht.wert} symbol="fa-table-columns"
+                   titel="Ansicht, bleibt auf diesem Gerät eingestellt" onwahl={ansichtMerken}
+                   optionen={geraet.mobil ? ANSICHTEN.filter((a) => a.wert !== "b") : ANSICHTEN} />
         {/if}
         {#if buch}<Lesegroesse buchName={buch.name} buchTitel={buch.titel} />{/if}
       </div>
@@ -765,7 +780,7 @@
             bind:this={rahmen} onload={rahmenGeladen}></iframe>
   {:else}
     <div class="rollfeld" style="padding: 0" bind:this={rollfeld}>
-      <div class="lesen" class:ohne-inhalt={!inhalt.length && !artikel.nachbarn.length} data-art={buch?.art} style:zoom={zoom}>
+      <div class="lesen" class:ohne-inhalt={!inhalt.length && !artikel.nachbarn.length} class:mit-wissen={mitWissen} data-art={buch?.art} style:zoom={zoom}>
         {#if inhalt.length || artikel.nachbarn.length}
           <nav class="inhalt" aria-label="Inhalt">
             <div class="inhalt-titel">Inhalt</div>
@@ -831,6 +846,50 @@
             </dl>
           </details>
         </article>
+        {#if mitWissen}
+          <!-- Ansicht B: Wissensleiste neben dem Text (Entwurf artikel-b.html); unter 1180 px wie A -->
+          <aside class="wissen" aria-label="Wissen zum Artikel">
+            <div class="reiter" role="tablist">
+              {#if artikel.steckbrief}
+                <button role="tab" aria-selected={reiterJetzt === "steckbrief"} class:aktiv={reiterJetzt === "steckbrief"} onclick={() => (reiter = "steckbrief")}>
+                  <i class="fa-solid fa-id-card"></i>Steckbrief</button>
+              {/if}
+              <button role="tab" aria-selected={reiterJetzt === "notizen"} class:aktiv={reiterJetzt === "notizen"} onclick={() => (reiter = "notizen")}>
+                <i class="fa-solid fa-note-sticky"></i>Notizen{#if artikelNotizen.length}<span class="zahl">{artikelNotizen.length}</span>{/if}</button>
+              <button role="tab" aria-selected={reiterJetzt === "medien"} class:aktiv={reiterJetzt === "medien"} onclick={() => (reiter = "medien")}>
+                <i class="fa-solid fa-images"></i>Medien</button>
+            </div>
+            <div class="wissen-inhalt">
+              {#if reiterJetzt === "steckbrief" && artikel.steckbrief}
+                <div class="steckbrief">
+                  <div class="steckbrief-kopf" class:code-titel={artikel.steckbrief.code}>{artikel.steckbrief.titel}</div>
+                  <div role="presentation" onclick={klick} onkeydown={() => {}}>{@html artikel.steckbrief.html}</div>
+                </div>
+              {:else if reiterJetzt === "notizen"}
+                {#each artikelNotizen as n (n.id)}
+                  <button class="notiz-karte" onclick={() => notizZeigen(n)}>
+                    {#if n.zitat}<span class="zitat">"{n.zitat}"</span>{/if}
+                    <span class="text">{n.text || "Markierung ohne Notiz"}</span>
+                    <span class="wann">{wann(n.geaendert)} · {n.zitat ? `Abschnitt ${n.abschnitt || "Einleitung"}` : "am ganzen Artikel"}</span>
+                  </button>
+                {:else}
+                  <p class="leer-hinweis">Noch keine Notizen zu diesem Artikel. Für eine Stelle den Text markieren, für den ganzen Artikel oben "Notiz".</p>
+                {/each}
+              {:else if wissenMedien === null}
+                <div class="laden">Lädt ...</div>
+              {:else if !wissenMedien.length}
+                <p class="leer-hinweis">Keine Bilder in diesem Artikel.</p>
+              {:else}
+                <div class="wissen-medien">
+                  {#each wissenMedien as m, i (m.bild)}
+                    <button title={m.unterschrift} onclick={() => (bilder = { medien: wissenMedien!, start: i })}>
+                      <img src={m.bild} alt={m.unterschrift} loading="lazy" decoding="async" /></button>
+                  {/each}
+                </div>
+              {/if}
+            </div>
+          </aside>
+        {/if}
       </div>
     </div>
     {#if nurBlatt}
