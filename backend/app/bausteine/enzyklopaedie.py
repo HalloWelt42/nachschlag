@@ -9,6 +9,7 @@ Artikel relativ (`Rotfuchs`), Weiterleitungen auf Abschnitte als kleine Seite mi
 from __future__ import annotations
 
 from lxml import html as lhtml
+from lxml.etree import SubElement
 
 from ..bibliothek import Eintrag
 from ..modell.artikel import Steckbrief
@@ -73,18 +74,23 @@ def _belege_entfernen(inhalt) -> list:
 
 
 def _steckbrief(inhalt, titel: str) -> Steckbrief | None:
-    """Infobox oder Taxobox neu gesetzt: Kopf, Bild, Gruppen und Werte."""
+    """Infobox oder Taxobox neu gesetzt: Kopf, Bild, Gruppen und Werte. Als Elementbaum gebaut (Inhalt der Zellen
+    wandert mit, nie als Text zusammengesetzt) und gesäubert wie der Artikel: Attribute und Klassen der Quelle fallen
+    weg, Text kommt maskiert."""
     tabelle = next(iter(inhalt.xpath(".//table[contains(@class,'infobox') or contains(@class,'taxobox')]")), None)
     if tabelle is None:
         return None
     kopf = titel
-    teile: list[str] = []
-    werte: list[str] = []
+    wurzel = lhtml.Element("div")
+    werte = None                         # die offene Liste von Namen und Werten (dl)
 
-    def werte_schliessen() -> None:
-        if werte:
-            teile.append('<dl class="steckbrief-werte">' + "".join(werte) + "</dl>")
-            werte.clear()
+    def neu(tag: str, klasse: str = "", text: str = "", in_=None):
+        el = SubElement(wurzel if in_ is None else in_, tag)
+        if klasse:
+            el.set("class", klasse)
+        if text:
+            el.text = text
+        return el
 
     for tr in tabelle.iter("tr"):
         zellen = [z for z in tr if z.tag in ("th", "td")]
@@ -92,11 +98,15 @@ def _steckbrief(inhalt, titel: str) -> Steckbrief | None:
             continue
         bild = next(iter(tr.iter("img")), None)
         if bild is not None and len(zellen) == 1:
-            werte_schliessen()
+            werte = None
+            figur = neu("figure", "steckbrief-bild")
+            img = neu("img", in_=figur)
+            for name in ("src", "alt", "width", "height"):
+                img.set(name, bild.get(name) or "")
+            img.set("loading", "lazy")
             unter = h.text_von(zellen[0])
-            teile.append(f'<figure class="steckbrief-bild"><img src="{bild.get("src")}" alt="{bild.get("alt") or ""}" '
-                         f'width="{bild.get("width") or ""}" height="{bild.get("height") or ""}" loading="lazy">'
-                         + (f"<figcaption>{unter}</figcaption>" if unter else "") + "</figure>")
+            if unter:
+                neu("figcaption", text=unter, in_=figur)
             continue
         if len(zellen) == 1 and next(iter(zellen[0].iter("table")), None) is not None:
             continue                     # verschachtelte Tabelle: ihre Zeilen kommen einzeln
@@ -104,27 +114,37 @@ def _steckbrief(inhalt, titel: str) -> Steckbrief | None:
             text = h.text_von(zellen[0])
             if not text:
                 continue
-            if not teile and not werte and kopf == titel:
+            if not len(wurzel) and kopf == titel:
                 kopf = text
-            elif not werte and teile and teile[-1].startswith(('<div class="steckbrief-gruppe">', '<p class="steckbrief-name">')):
-                teile.append(f'<p class="steckbrief-name">{text}</p>')     # Zeile unter einer Gruppe: Wert ohne Namen
+            elif werte is None and len(wurzel) and wurzel[-1].get("class") in ("steckbrief-gruppe", "steckbrief-name"):
+                neu("p", "steckbrief-name", text)          # Zeile unter einer Gruppe: Wert ohne Namen
             else:
-                werte_schliessen()
-                teile.append(f'<div class="steckbrief-gruppe">{text}</div>')
+                werte = None
+                neu("div", "steckbrief-gruppe", text)
             continue
         name, wert = zellen[0], zellen[-1]
-        werte.append(f"<dt>{h.text_von(name).rstrip(':')}</dt><dd>{h.als_html(wert)[4:-5] if wert.tag == 'td' else h.text_von(wert)}</dd>")
-    werte_schliessen()
+        if werte is None:
+            werte = neu("dl", "steckbrief-werte")
+        neu("dt", text=h.text_von(name).rstrip(":"), in_=werte)
+        dd = neu("dd", in_=werte)
+        dd.text = wert.text
+        for kind in list(wert):
+            dd.append(kind)              # mitsamt Verweisen und Auszeichnung; der Rest der Zelle fällt mit der Tabelle
     tabelle.drop_tree()
-    if not teile:
+    if not len(wurzel):
         return None
-    return Steckbrief(titel=kopf, html="".join(teile))
+    h.saeubern(wurzel)
+    return Steckbrief(titel=kopf, html="".join(h.als_html(k) for k in wurzel))
 
 
 class Enzyklopaedie:
     kennung = "enzyklopaedie"
     arten = frozenset({"enzyklopaedie"})
     lesedesign = True
+
+    def passt(self, eintrag: Eintrag) -> bool:
+        """Nur Artikel (mit `#mw-content-text`); die Startseite des Buchs ist eine eigene Kachelseite."""
+        return eintrag.mime.startswith("text/html") and b'id="mw-content-text"' in eintrag.inhalt
 
     def aufbereiten(self, buch: Buch, eintrag: Eintrag, wege: Wege) -> Aufbereitet:
         doc = lhtml.fromstring(eintrag.inhalt.decode("utf-8", "replace"))

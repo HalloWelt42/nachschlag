@@ -41,4 +41,9 @@ class Baustein(Protocol):
     arten: frozenset[Art]
     lesedesign: bool
 
+    def passt(self, eintrag: Eintrag) -> bool:
+        """Kann der Baustein diese Seite lesen? Auch ein Buch seiner Art hat Seiten anderer Bauart (etwa die
+        Startseite aus Kacheln); die zeigt dann die Originalansicht."""
+        ...
+
     def aufbereiten(self, buch: Buch, eintrag: Eintrag, wege: Wege) -> Aufbereitet: ...

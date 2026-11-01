@@ -56,6 +56,24 @@ ARRHENIUS = seite("Svante Arrhenius", """
 """)
 
 
+#: Infobox wie in der englischen Ausgabe: Zellen mit Klassen, Bild mit Unterschrift, Verweis und spitze Klammern im Wert
+AEGYPTEN = seite("Ancient Egypt", """
+<table class="infobox vcard"><tbody>
+<tr><th colspan="2" class="infobox-above">Ancient Egypt</th></tr>
+<tr><td colspan="2" class="infobox-image"><img src="./_assets_/a/fuchs.png" width="250" height="160"><div class="infobox-caption">Map of the Nile</div></td></tr>
+<tr><th scope="row" class="infobox-label">Capital</th><td class="infobox-data" style="color:red"><i>See</i> <a href="Raubtiere">List of capitals</a> &lt;x&gt;</td></tr>
+<tr><th scope="row" class="infobox-label">Religion</th><td class="infobox-data">Egyptian religion</td></tr>
+</tbody></table>
+<p>Ancient Egypt was a civilization of ancient Northeast Africa.</p>
+""")
+
+
+#: Startseite wie bei mwoffliner: eigene Kachelseite ohne Artikelaufbau
+STARTSEITE = ('<html><head><title>Probelexikon</title><link href="./_res_/style.css" rel="stylesheet"></head><body>'
+              '<div class="item"><a href="Rotfuchs"><figure><img src="./_assets_/a/fuchs.png"><figcaption>Rotfuchs</figcaption>'
+              '</figure></a></div></body></html>')
+
+
 def artikel(titel: str, text: str) -> str:
     return seite(titel, f"<p>{text}</p>")
 
@@ -76,12 +94,14 @@ def bauen(ordner: Path, name: str = "probe_de_all_2026-01", erzeuger: str = "mwo
     ordner.mkdir(parents=True, exist_ok=True)
     datei = ordner / f"{name}.zim"
     with Creator(str(datei)).config_indexing(True, "deu") as c:
-        c.set_mainpath("Rotfuchs")
+        c.set_mainpath("index")
         for schluessel, wert in (("Name", name.rsplit("_", 1)[0]), ("Title", "Probelexikon"), ("Language", "deu"),
                                  ("Description", "Buch für die Tests"), ("Date", "2026-01-15"), ("Scraper", erzeuger),
                                  ("Creator", "Tests"), ("Publisher", "Tests")):
             c.add_metadata(schluessel, wert)
+        c.add_item(_Seite("index", "Probelexikon", STARTSEITE))
         c.add_item(_Seite("Rotfuchs", "Rotfuchs", ROTFUCHS))
+        c.add_item(_Seite("Ancient_Egypt", "Ancient Egypt", AEGYPTEN))
         c.add_item(_Seite("Svante_Arrhenius", "Svante Arrhenius", ARRHENIUS))
         c.add_item(_Seite("Raubtiere", "Raubtiere", artikel("Raubtiere", "Raubtiere sind eine Ordnung der Säugetiere.")))
         c.add_item(_Seite("Echte_Füchse", "Echte Füchse", artikel("Echte Füchse", "Die echten Füchse bilden eine Gattungsgruppe.")))

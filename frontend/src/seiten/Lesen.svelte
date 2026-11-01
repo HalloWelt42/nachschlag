@@ -145,6 +145,24 @@
     gehe(ziel.ziel);
   }
 
+  const ORIGINAL = "/api/v1/inhalt/original/";
+
+  /** Verweise in der Originalseite führen in die App: eine Seite desselben Buchs öffnet im Lesen (mit eigenem
+   *  Baustein, wenn sie einer liest); Online-Verweise öffnen neu. Der Rahmen hat die Herkunft der App, aber keine
+   *  Skripte; darum hört die App selbst auf seine Klicks. */
+  function rahmenGeladen(e: Event) {
+    const doc = (e.currentTarget as HTMLIFrameElement).contentDocument;
+    doc?.addEventListener("click", (k) => {
+      const a = (k.target as Element | null)?.closest("a");
+      if (!a || k.ctrlKey || k.metaKey || k.shiftKey) return;
+      const url = new URL(a.getAttribute("href") ?? "", doc.baseURI);
+      if (url.origin !== location.origin || !url.pathname.startsWith(ORIGINAL)) return;
+      k.preventDefault();
+      const anker = decodeURIComponent(url.hash.slice(1));
+      gehe(`lesen/${url.pathname.slice(ORIGINAL.length)}${anker ? "?" + new URLSearchParams({ anker }) : ""}`);
+    });
+  }
+
   async function zufall() {
     try {
       const z = await zufallHolen(buchKennung);
@@ -197,7 +215,8 @@
   {/if}
   {#if zeigeOriginal}
     <!-- ohne Skripte, mit Herkunft der App: Stile und Bilder laden mit dem Lesezugang, die Seite kann nichts in der App tun -->
-    <iframe class="original" src={artikel.original} title="Originalseite: {artikel.titel}" sandbox="allow-same-origin allow-popups"></iframe>
+    <iframe class="original" src={artikel.original} title="Originalseite: {artikel.titel}" sandbox="allow-same-origin allow-popups"
+            onload={rahmenGeladen}></iframe>
   {:else}
     <div class="rollfeld" style="padding: 0" bind:this={rollfeld} onscroll={mitlaufen}>
       <div class="lesen" class:ohne-inhalt={!artikel.abschnitte.length}>

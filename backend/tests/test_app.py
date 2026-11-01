@@ -77,7 +77,7 @@ async def test_buecher(nachschlag):
     stand = (await c.get("/api/v1/buecher")).json()
     assert stand["fehler"] == [] and len(stand["buecher"]) == 1
     b = stand["buecher"][0]
-    assert b["kennung"] == "probe_de_all_2026-01" and b["art"] == "enzyklopaedie" and b["startseite"] == "Rotfuchs"
+    assert b["kennung"] == "probe_de_all_2026-01" and b["art"] == "enzyklopaedie" and b["startseite"] == "index"
     assert b["faehigkeiten"] == {"titelindex": True, "volltext": True, "bilder": True, "lesedesign": True}
     assert (await c.get("/api/v1/buecher/gibt_es_nicht")).status_code == 404
 
@@ -116,6 +116,24 @@ async def test_belege_auch_in_abschnitten(nachschlag):
     weg = re.search(r'src="([^"]+Ufer\.png)"', a["html"]).group(1)
     assert weg.endswith("/K%C3%B6ln%252C_Ufer.png")
     assert (await c.get(weg)).content == probebuch.PNG
+
+
+async def test_steckbrief_aus_zellen_mit_klassen(nachschlag):
+    """Infobox der englischen Ausgabe (td mit Klassen und Stil): Werte kommen als gesäubertes HTML, nie als Rohtext."""
+    c, _, _ = nachschlag
+    s = (await c.get("/api/v1/artikel/probe_de_all_2026-01/Ancient_Egypt")).json()["steckbrief"]
+    assert s["titel"] == "Ancient Egypt"
+    assert "infobox" not in s["html"] and "style" not in s["html"] and "scope" not in s["html"]
+    assert '<dt>Capital</dt><dd><i>See</i> <a href="/lesen/probe_de_all_2026-01/Raubtiere" class="wl">List of capitals</a> &lt;x&gt;</dd>' in s["html"]
+    assert "<figcaption>Map of the Nile</figcaption>" in s["html"] and "<dt>Religion</dt><dd>Egyptian religion</dd>" in s["html"]
+
+
+async def test_startseite_des_buchs_im_original(nachschlag):
+    """Die Startseite ist eine Kachelseite, kein Artikel: sie kommt unverändert, das Lesedesign zerlegt sie nicht."""
+    c, _, _ = nachschlag
+    a = (await c.get("/api/v1/artikel/probe_de_all_2026-01/index")).json()
+    assert a["darstellung"] == "original" and a["baustein"] == "original" and a["titel"] == "Probelexikon"
+    assert a["original"] == "/api/v1/inhalt/original/probe_de_all_2026-01/index"
 
 
 async def test_weiterleitung_auf_abschnitt(nachschlag):

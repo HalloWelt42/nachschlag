@@ -30,7 +30,7 @@ class Artikelleser:
     async def lesen(self, buch: str, pfad: str) -> Artikel:
         b = await self._bib.buch(buch)
         eintrag = await self._bib.eintrag(buch, pfad)
-        baustein = baustein_fuer(b)
+        baustein = baustein_fuer(b, eintrag)
         fertig = await asyncio.to_thread(baustein.aufbereiten, b, eintrag, self._wege)
         return Artikel(buch=buch, pfad=eintrag.pfad, angefragt=pfad, anker=eintrag.anker, titel=fertig.titel,
                        darstellung="lesedesign" if baustein.lesedesign else "original", baustein=baustein.kennung,

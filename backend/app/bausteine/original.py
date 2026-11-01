@@ -16,6 +16,9 @@ class Originalansicht:
     arten = frozenset({"dokumentation", "frage_antwort", "webseite", "sonstiges"})
     lesedesign = False
 
+    def passt(self, eintrag: Eintrag) -> bool:
+        return True                      # zeigt jede Seite, so wie sie ist
+
     def aufbereiten(self, buch: Buch, eintrag: Eintrag, wege: Wege) -> Aufbereitet:
         titel, einleitung = eintrag.titel, ""
         if eintrag.mime.startswith("text/html"):
