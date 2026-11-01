@@ -366,11 +366,56 @@ async def test_notizen_an_stelle_und_artikel(nachschlag):
     assert (await c.patch(f"/api/v1/meins/notizen/{artikel['id']}", json={"text": "x"})).status_code == 404
 
 
+async def test_themen_bereiche_eintraege_und_angebote(nachschlag):
+    """Thema anlegen, Bereiche, Artikel hinein (zweimal bleibt einer), verschieben und umordnen, Lesestand und Notizen
+    am Eintrag; Angebote aus der gespeicherten Suche ohne Bekanntes und Abgelehntes; Bereich löschen lässt die Artikel
+    im Thema; Zuordnung; Thema löschen."""
+    c, _, _ = nachschlag
+    buch = "probe_de_all_2026-01"
+    t = (await c.post("/api/v1/meins/themen", json={"titel": " Füchse ", "regel": "Städte", "regel_buch": buch})).json()
+    assert (t["titel"], t["regel_buch"], t["eintraege"]) == ("Füchse", buch, [])
+    w = f"/api/v1/meins/themen/{t['id']}"
+    angebote = lambda: c.get(f"{w}/angebote")  # noqa: E731
+    assert "Rotfuchs" in [a["pfad"] for a in (await angebote()).json()]
+    tiere = (await c.post(f"{w}/bereiche", json={"titel": "Tiere"})).json()
+    orte = (await c.post(f"{w}/bereiche", json={"titel": "Orte"})).json()
+    assert (tiere["platz"], orte["platz"]) == (0, 1)
+    for _ in range(2):
+        rf = (await c.post(f"{w}/eintraege", json={"buch": buch, "pfad": "Rotfuchs", "titel": "Rotfuchs", "bereich": tiere["id"]})).json()
+    ar = (await c.post(f"{w}/eintraege", json={"buch": buch, "pfad": "Arrhenius", "titel": "Arrhenius"})).json()
+    assert ar["bereich"] == "" and rf["bereich"] == tiere["id"]
+    await c.put("/api/v1/meins/verlauf/lesestand", json={"buch": buch, "pfad": "Rotfuchs", "titel": "Rotfuchs", "anteil": 0.5})
+    await c.post("/api/v1/meins/notizen", json={"buch": buch, "pfad": "Rotfuchs", "titel": "Rotfuchs", "text": "x"})
+    assert (await c.patch(f"{w}/eintraege/{ar['id']}", json={"bereich": tiere["id"], "platz": 0})).status_code == 204
+    assert (await c.patch(f"{w}/bereiche/{orte['id']}", json={"platz": 0})).status_code == 204
+    thema = (await c.get(w)).json()
+    assert [b["titel"] for b in thema["bereiche"]] == ["Orte", "Tiere"]
+    eintraege = {e["pfad"]: e for e in thema["eintraege"]}
+    assert (eintraege["Arrhenius"]["platz"], eintraege["Rotfuchs"]["platz"]) == (0, 1)
+    assert (eintraege["Rotfuchs"]["anteil"], eintraege["Rotfuchs"]["gelesen_je"], eintraege["Rotfuchs"]["notizen"]) == (0.5, True, 1)
+    assert eintraege["Arrhenius"]["gelesen_je"] is False and len(thema["eintraege"]) == 2
+    assert "Rotfuchs" not in [a["pfad"] for a in (await angebote()).json()]          # schon im Thema
+    assert (await c.delete(f"{w}/bereiche/{tiere['id']}")).status_code == 204
+    assert {e["bereich"] for e in (await c.get(w)).json()["eintraege"]} == {""}
+    koepfe = (await c.get("/api/v1/meins/themen")).json()
+    assert [(k["titel"], k["eintraege"], k["bereiche"], k["buecher"]) for k in koepfe] == [("Füchse", 2, 1, 1)]
+    zuordnung = (await c.get("/api/v1/meins/themen/zuordnung")).json()
+    assert {z["pfad"] for z in zuordnung} == {"Rotfuchs", "Arrhenius"} and zuordnung[0]["titel"] == "Füchse"
+    assert (await c.delete(f"{w}/eintraege/{rf['id']}")).status_code == 204
+    assert "Rotfuchs" in [a["pfad"] for a in (await angebote()).json()]
+    assert (await c.post(f"{w}/abgelehnt", json={"buch": buch, "pfad": "Rotfuchs"})).status_code == 204
+    assert "Rotfuchs" not in [a["pfad"] for a in (await angebote()).json()]          # abgelehnt kommt nicht wieder
+    assert (await c.delete(w)).status_code == 204
+    assert (await c.get(w)).status_code == 404 and (await c.get("/api/v1/meins/themen")).json() == []
+
+
 async def test_meins_trennt_konten(tmp_path):
     """Was ein Konto merkt, sieht kein anderes."""
     from appkern.datenbank import Datenbank
     from app.meins import Meins
     from app.modell.meins import Merken, NotizAenderung, NotizNeu
+    from app.modell.themen import EintragNeu, ThemaNeu
+    from app.themen import Themen
     db = await Datenbank(tmp_path / "meins.sqlite").oeffnen()
     try:
         async def name(k): return k.rsplit("_", 1)[0]
@@ -383,5 +428,11 @@ async def test_meins_trennt_konten(tmp_path):
         notiz = await meins.notieren("eins", NotizNeu(buch="probe_2026-01", pfad="A", titel="A", text="nur meins"))
         assert await meins.notizen("zwei") == [] and not await meins.notiz_loeschen("zwei", notiz.id)
         assert await meins.notiz_aendern("zwei", notiz.id, NotizAenderung(text="fremd")) is None
+        themen = Themen(db, name, kennung)
+        await themen.starten()
+        t = await themen.anlegen("eins", ThemaNeu(titel="Meins"))
+        assert await themen.liste("zwei") == [] and await themen.thema("zwei", t.id) is None
+        assert await themen.bereich_anlegen("zwei", t.id, "fremd") is None and not await themen.loeschen("zwei", t.id)
+        assert await themen.eintragen("zwei", t.id, EintragNeu(buch="probe_2026-01", pfad="A", titel="A")) is None
     finally:
         await db.schliessen()

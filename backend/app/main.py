@@ -18,6 +18,8 @@ from .bibliothek import Bibliothek
 from .einstellungen import AppEinstellungen
 from .meins import Meins
 from .meins.api import router as meins_router
+from .themen import Themen
+from .themen.api import router as themen_router
 from .fassung import FASSUNG, WURZEL
 from .suche import Suche
 from .suche.bedeutung import FundusBedeutung
@@ -39,6 +41,8 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
 
     meins = Meins(geruest.db, bibliothek.name_von, bibliothek.kennung_von)
     geruest.begleiter_anmelden(meins)
+    themen = Themen(geruest.db, bibliothek.name_von, bibliothek.kennung_von)
+    geruest.begleiter_anmelden(themen)                   # nach Meins: Einträge lesen Lesestand und Notizen von dort
 
     # Was das System kennt, ist kein Textfeld: die Bücher der Bibliothek als Auswahl, der Fundus aus dem Verzeichnis
     async def buecher() -> Angebot:
@@ -55,6 +59,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     app.state.bibliothek = bibliothek
     app.include_router(router(geruest, bibliothek, leser, suche))
     app.include_router(meins_router(geruest, meins))
+    app.include_router(themen_router(geruest, themen, suche, bibliothek.name_von))
     # unter /lesen trägt der Weg Pfade aus Büchern, oft mit Punkt (function.array-map.php): immer eine Seite
     geruest.oberflaeche_ausliefern(app, seiten=["lesen"])
     return app
