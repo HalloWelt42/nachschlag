@@ -75,6 +75,10 @@
     {
       "name": "medien",
       "pfad": "/medien?frage=Fuchs"
+    },
+    {
+      "name": "suche-im-buch",
+      "pfad": "/suche?frage=array&buch=devdocs_en_php_2026-08"
     }
   ]
 }

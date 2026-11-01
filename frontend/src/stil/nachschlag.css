@@ -303,6 +303,29 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .treffer .ohne-bild i { font-size: 20px; }
 .treffer .zeile1 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px var(--a2); }
 .treffer .t { font-weight: 600; font-size: var(--titel); }
+.treffer .t.code { font-family: var(--schrift-editor); font-weight: 500; }
+/* Filter einer Übersicht (WIKI-17) */
+.uebersicht-filter { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2) var(--a3); padding: var(--a4) var(--a5) 0; }
+.uebersicht-filter .suchfeld { flex: 1 1 260px; max-width: 520px; height: var(--knopf-hoehe); }
+.uebersicht-filter .suchfeld input { width: 100%; min-width: 0; }
+.uebersicht-filter .filter-stand { font-size: var(--klein); color: var(--text-3); font-family: var(--schrift-zahl); }
+.uebersicht-leer { padding-inline: var(--a5); }
+/* Treffer nach Buch (WIKI-17): je Buch ein Block mit Kopf, Stand und "Alle aus diesem Buch" */
+.buchtreffer { display: flex; flex-direction: column; gap: var(--a2); }
+.buchtreffer + .buchtreffer { margin-top: var(--a4); }
+.buchtreffer-kopf { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2) var(--a3); padding-bottom: var(--a1); box-shadow: 0 1px 0 var(--rand); }
+.buchtreffer-kopf .buchmarke { font-weight: 600; font-size: var(--titel); }
+.buchstand-text { display: inline-flex; align-items: center; gap: 6px; font-size: var(--klein); color: var(--text-3); }
+.buchstand-text.fehlt { color: var(--gefahr); }
+.buchtreffer-kopf .alle { margin-left: auto; font: inherit; font-size: var(--klein); color: var(--akzent); font-weight: 600; background: none; border: 0; cursor: pointer; }
+.andere-buecher { margin: var(--a5) 0 var(--a2); font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; }
+.buchstaende { display: flex; flex-wrap: wrap; gap: var(--a1) var(--a2); }
+.buchstand { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: var(--r1); background: var(--flaeche-2); color: var(--text-3); font-size: var(--marke); }
+.buchstand.fertig > i { color: var(--gut); }
+.buchstand.fehlt > i { color: var(--gefahr); }
+.suchfeld button.buchwahl { border: 0; font: inherit; color: inherit; cursor: pointer; }
+.suchfeld .buchwahl.mit-buch .zuerst { color: var(--text-3); }
+.suchfeld .buchwahl.mit-buch .buchtitel { max-width: 14em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .treffer .treffer-abschnitt { font-size: var(--klein); color: var(--text-2); }
 .treffer .buchname { font-size: var(--marke); color: var(--text-3); }
 .treffer .marken { margin-left: auto; display: flex; gap: 4px; }
@@ -749,7 +772,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
   .fundband .knopf { margin-left: 0; }
   .kopf .suchanker .buchwahl, .kopf .suchanker kbd { display: none; }
   /* den Seitenrand am Telefon gibt die Schale, nur einmal (WIKI-18: doppelter Rand nahm dem Text die Breite) */
-  .artikel-kopf, .lesen, .uebersicht, .rubriken, .fragenliste { padding-inline: 0; }
+  .artikel-kopf, .lesen, .uebersicht, .rubriken, .fragenliste, .uebersicht-filter, .uebersicht-leer { padding-inline: 0; }
   .meins-seite { padding-inline: 0; }          /* den Seitenrand am Telefon gibt die Schale, nur einmal */
   .meins-suche { max-width: none; flex: 1 1 100%; }
   .liste-ziel { grid-template-columns: 44px minmax(0, 1fr); padding-inline: var(--a3); }

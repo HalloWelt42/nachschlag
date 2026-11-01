@@ -24,8 +24,12 @@ export function lesen(buch: string, pfad: string, herkunft: Herkunft = {}, anker
   gehe(lesenZiel(buch, pfad, herkunft, anker));
 }
 
-export function suchen(frage: string): void {
-  gehe(`suche?${new URLSearchParams({ frage })}`);
+/** Zur Suche; `buch`: dieses Buch zuerst (der Ort, an dem gesucht wurde), `nur`: nur in diesem Buch. */
+export function suchen(frage: string, buch = "", nur = false): void {
+  const p = new URLSearchParams({ frage });
+  if (buch) p.set("buch", buch);
+  if (buch && nur) p.set("nur", "1");
+  gehe(`suche?${p}`);
 }
 
 /** Ein Verweis im Artikeltext (`/lesen/<buch>/<pfad>#anker`) als Ziel der App. */

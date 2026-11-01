@@ -7,7 +7,9 @@
   import { sucheHolen, vorschlaegeHolen } from "../lib/schnittstelle";
   import type { Treffer, Vorschlag } from "../lib/typen";
   import { buchName } from "../lib/bibliothek.svelte";
+  import { kontextBuch } from "../lib/suchkontext";
   import { lesen, suchen } from "../lib/ziele";
+  import Buchmarke from "./Buchmarke.svelte";
 
   let { gross = false, taste = false, wert = "", platzhalter = "Begriff, Name oder eine Frage in eigenen Worten" }:
     { gross?: boolean; taste?: boolean; wert?: string; platzhalter?: string } = $props();
@@ -29,6 +31,14 @@
 
   $effect(() => {
     frage = wert;
+  });
+
+  // Im Buch: seine Treffer zuerst (ein Tipp auf die Marke sucht für diese Frage in allen gleich)
+  let ohneKontext = $state(false);
+  const kontext = $derived(ohneKontext ? "" : kontextBuch());
+  $effect(() => {
+    void kontextBuch();
+    ohneKontext = false;                                  // neuer Ort: wieder mit seinem Buch
   });
 
   const eintraege = $derived([...titel.map((v) => ({ art: "titel" as const, v })), ...stellen.map((t) => ({ art: "stelle" as const, t }))]);
@@ -56,7 +66,9 @@
       titelAbruf?.abort();
       titelAbruf = new AbortController();
       try {
-        titel = await vorschlaegeHolen(jetzt, [], 6, titelAbruf.signal);
+        const vorschlaege = await vorschlaegeHolen(jetzt, [], 6, titelAbruf.signal);
+        // Titel aus dem Buch, in dem man ist, zuerst; sonst bleibt die Folge des Index
+        titel = kontext ? [...vorschlaege.filter((v) => v.buch === kontext), ...vorschlaege.filter((v) => v.buch !== kontext)] : vorschlaege;
       } catch {
         /* abgebrochen oder ohne Antwort: die Liste bleibt, wie sie war */
       }
@@ -103,7 +115,7 @@
     schliessen();
     feld.blur();
     frage = wert;
-    suchen(gesucht);
+    suchen(gesucht, kontext);
   }
 
   function tasten(e: KeyboardEvent) {
@@ -140,7 +152,13 @@
     <i class="fa-solid fa-magnifying-glass"></i>
     <input bind:this={feld} bind:value={frage} type="search" placeholder={platzhalter} autocomplete="off" spellcheck="false"
            aria-label="Suchen" oninput={eingabe} onkeydown={tasten} onfocus={() => (offen = true)} onblur={schliessen} />
-    <span class="buchwahl" title="Gesucht wird in allen Büchern"><i class="fa-solid fa-book"></i>Alle Bücher</span>
+    {#if kontext}
+      <button type="button" class="buchwahl mit-buch" title="Treffer aus diesem Buch zuerst; antippen: alle Bücher gleich"
+              onmousedown={(e) => e.preventDefault()} onclick={() => (ohneKontext = true)}>
+        <Buchmarke kennung={kontext} symbol={false} /><span class="zuerst">zuerst</span><i class="fa-solid fa-xmark"></i></button>
+    {:else}
+      <span class="buchwahl" title="Gesucht wird in allen Büchern"><i class="fa-solid fa-book"></i>Alle Bücher</span>
+    {/if}
     {#if taste}<kbd title="Taste / setzt die Schreibmarke ins Suchfeld">/</kbd>{/if}
   </label>
   {#if offen && frage.trim()}

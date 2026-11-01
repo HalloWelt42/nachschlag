@@ -11,6 +11,7 @@
   import { lesen, lesenZiel, suchen, verweisZiel } from "../lib/ziele";
   import { Auswahl } from "appkern-oberflaeche";
   import { kopieren } from "../lib/kopieren";
+  import { istCode } from "../lib/code";
   import { htmlSprache } from "../lib/sprache";
   import { gemerkt, lesestandMelden, meins, meinsLaden, merken, notieren, vergessen, vorliebeSetzen, wann, type Notiz,
            type NotizNeu } from "../lib/meins.svelte";
@@ -85,6 +86,7 @@
     blatt = null;
     textwahl = null;
     bilder = null;
+    filterText = "";
     void bibliothekLaden();
     try {
       const neu = await artikelHolen(b, p, signal);
@@ -257,15 +259,6 @@
     if (artikelEl && fassungen) gibtEsInFassung = fassungAnwenden(artikelEl, f, fassungen.produkt);
   }
 
-  /** Ein Eintrag ist ein Name aus dem Code (Funktion, Klasse, Methode), wenn er Zeichen aus dem Code trägt, klein
-   *  beginnt (basename) oder Binnengroßbuchstaben hat (ArrayObject); nur dann steht er in der Schrift des Editors.
-   *  Kapitelnamen ("Getting Started", "Types") bleiben Text. */
-  function istCode(titel: string): boolean {
-    const name = titel.replace(/\s*\((class|interface|enum|trait)\)$/, "");
-    if (/\s/.test(name)) return false;
-    return /[_$\\]|::|->|\(\)$/.test(name) || /^[a-z]/.test(name) || /[a-z][A-Z]/.test(name);
-  }
-
   // --- Merken und Lesestand (Meins) ---
   const LESESTAND_TAKT_MS = 20_000;
   const eintrag = $derived(buch && artikel ? gemerkt(buch.name, artikel.pfad) : undefined);
@@ -300,6 +293,19 @@
       removeEventListener("pagehide", melden);
       melden();
     };
+  });
+
+  // --- Filter der Übersicht: Rubriken, Fragen und Kacheln nach ihrem Titel, sofort beim Tippen ---
+  let filterText = $state("");
+  const gefiltert = $derived.by(() => {
+    const a = artikel, wort = filterText.trim().toLowerCase();
+    const passt = (titel: string) => !wort || titel.toLowerCase().includes(wort);
+    const gruppen = (a?.gruppen ?? []).map((g) => ({ ...g, eintraege: passt(g.titel) ? g.eintraege : g.eintraege.filter((e) => passt(e.titel)) }))
+      .filter((g) => g.eintraege.length);
+    const fragen = (a?.fragen ?? []).filter((f) => passt(f.titel));
+    const kacheln = (a?.kacheln ?? []).filter((k) => passt(k.titel));
+    const gesamt = (a?.gruppen ?? []).reduce((n, g) => n + g.eintraege.length, 0) + (a?.fragen.length ?? 0) + (a?.kacheln.length ?? 0);
+    return { gruppen, fragen, kacheln, gesamt, zahl: gruppen.reduce((n, g) => n + g.eintraege.length, 0) + fragen.length + kacheln.length };
   });
 
   // --- Notizen und Markierungen ---
@@ -509,10 +515,22 @@
   {#if artikel.darstellung === "uebersicht" && !original}
     <!-- Übersicht (etwa Startseite eines Buchs): Kacheln als Karten wie im Entwurf start-a.html -->
     <div class="rollfeld" style="padding: 0" style:zoom={zoom}>
-      {#if artikel.gruppen.length}
+      <!-- Filter der Übersicht (WIKI-17, docs/SUCHE.md Punkt 2): sofort in der Liste, darunter die Suche im ganzen Buch -->
+      <div class="uebersicht-filter">
+        <label class="suchfeld"><i class="fa-solid fa-filter"></i>
+          <input type="search" bind:value={filterText} placeholder="In dieser Übersicht filtern" aria-label="In dieser Übersicht filtern" /></label>
+        {#if filterText.trim()}
+          <button class="knopf" onclick={() => suchen(filterText.trim(), artikel!.buch, true)}><i class="fa-solid fa-magnifying-glass"></i>Im ganzen Buch suchen</button>
+          <span class="filter-stand">{gefiltert.zahl} von {gefiltert.gesamt}</span>
+        {/if}
+      </div>
+      {#if filterText.trim() && !gefiltert.zahl}
+        <p class="leer-hinweis uebersicht-leer">Nichts in dieser Übersicht passt zu "{filterText.trim()}". "Im ganzen Buch suchen" findet es auch in den Seiten selbst.</p>
+      {/if}
+      {#if gefiltert.gruppen.length}
         <!-- Handbuch: die Rubriken der Gliederung mit ihren Seiten -->
         <div class="rubriken">
-          {#each artikel.gruppen as g, gi (gi)}
+          {#each gefiltert.gruppen as g, gi (gi)}
             <section class="rubrik">
               <h2 class="rubrik-titel">{g.titel}<span class="zahl">{g.eintraege.length}</span></h2>
               <ol class="code-liste">
@@ -525,10 +543,10 @@
           {/each}
         </div>
       {/if}
-      {#if artikel.fragen.length}
+      {#if gefiltert.fragen.length}
         <!-- Fragenliste (Frage und Antwort): Karten mit Stimmen und Antworten, Blättern über die Seiten der Quelle -->
         <div class="fragenliste">
-          {#each artikel.fragen as f, fi (fi)}
+          {#each gefiltert.fragen as f, fi (fi)}
             <a class="fragekarte" href={"/" + lesenZiel(artikel.buch, f.pfad)} onclick={(e) => { e.preventDefault(); lesen(artikel!.buch, f.pfad); }}>
               <span class="fk-zahlen">
                 <span class="fk-stimmen"><b>{zahl(f.stimmen)}</b>Stimmen</span>
@@ -553,7 +571,7 @@
         </div>
       {/if}
       <div class="uebersicht">
-        {#each artikel.kacheln as k, ki (ki)}
+        {#each gefiltert.kacheln as k, ki (ki)}
           <Kachel bild={k.bild} titel={k.titel} adresse={"/" + lesenZiel(artikel.buch, k.pfad)} ziel={() => lesen(artikel!.buch, k.pfad)} />
         {/each}
       </div>
