@@ -317,6 +317,17 @@
 .beispiel pre.ausgabe { background: var(--ed-konsole); color: var(--ed-konsole-text); }
 .beispiel .ausgabe-titel { padding: 6px 14px; font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); background: var(--mulde); }
 .beispiel .bnotiz { margin: 0; padding: 8px 14px; font-size: var(--klein); color: var(--text-2); }
+/* Fassungsfilter (Entwurf): eigene Fassung hervorgehoben, andere blass, Änderungen bis zur eigenen markiert */
+.versionen span.blass { opacity: .45; }
+.versionen span.deine { background: var(--violett); color: var(--auf-farbe); font-weight: 600; }
+.artikel-text .aenderungen tr.gilt td { background: color-mix(in srgb, var(--violett) 7%, transparent); }
+.artikel-text .aenderungen tr.blass td { opacity: .5; }
+.gilt-marke { display: inline-block; margin-left: 6px; font-family: var(--schrift); font-size: var(--marke); padding: 0 6px; border-radius: var(--r1);
+              background: var(--violett); color: var(--auf-farbe); white-space: nowrap; }
+.fundband.fassung { background: color-mix(in srgb, var(--violett) 10%, transparent); }
+.fundband.fassung > i { color: var(--violett); }
+.fundband.fassung.warn { background: var(--warn-weich); }
+.fundband.fassung.warn > i { color: var(--warn); }
 .c-kw, .c-tag { color: var(--ed-kw); font-weight: 700; }
 .c-fn { color: var(--ed-fn); }
 .c-var { color: var(--ed-feld); }

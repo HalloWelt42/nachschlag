@@ -8,6 +8,9 @@
   import { artikelHolen, zufallHolen } from "../lib/schnittstelle";
   import type { Artikel } from "../lib/typen";
   import { lesen, lesenZiel, suchen, verweisZiel } from "../lib/ziele";
+  import { Auswahl } from "appkern-oberflaeche";
+  import { anwenden as fassungAnwenden, bekannte as bekannteFassungen, fassungenAus, gemerkt as fassungGemerkt, merken as fassungMerken,
+           type Fassungen } from "../lib/fassung";
 
   const WOERTER_JE_MINUTE = 200;
   const MITLAUF_ABSTAND_PX = 90;          // eine Überschrift gilt als erreicht, sobald sie so nah am oberen Rand steht
@@ -23,6 +26,10 @@
   let anteil = $state(0);
   let woerter = $state(0);
   let gross = $state(lesegroesseLesen());
+  let artikelEl = $state<HTMLElement>();
+  let fassungen = $state.raw<Fassungen | null>(null);   // Fassungen, die die Seite nennt (Dokumentation)
+  let meineFassung = $state("");
+  let gibtEsInFassung = $state(true);
 
   const buchKennung = $derived(navigation.teile[0] ?? "");
   const pfad = $derived(navigation.teile.slice(1).join("/"));
@@ -86,6 +93,15 @@
       if (text) {
         kopierknoepfe(text);
         symboleAnbringen(text);
+      }
+      await bibliothekLaden();                // das Buch nennt den Namen, unter dem die Fassung gemerkt ist
+      const aufDerSeite = artikelEl ? fassungenAus(artikelEl) : null;
+      meineFassung = aufDerSeite && buch ? fassungGemerkt(buch.name) : "";
+      fassungen = aufDerSeite && buch
+        ? { ...aufDerSeite, optionen: bekannteFassungen(buch.name, [...aufDerSeite.optionen, meineFassung]) }
+        : aufDerSeite;
+      if (artikelEl && fassungen) {
+        gibtEsInFassung = fassungAnwenden(artikelEl, meineFassung, fassungen.produkt);
       }
       zurStelle();
     } catch (f) {
@@ -184,6 +200,12 @@
     }
   }
 
+  function fassungWaehlen(f: string) {
+    meineFassung = f;
+    if (buch) fassungMerken(buch.name, f);
+    if (artikelEl && fassungen) gibtEsInFassung = fassungAnwenden(artikelEl, f, fassungen.produkt);
+  }
+
   /** In die Zwischenablage; ohne sicheren Zusammenhang (http im Heimnetz) über ein Textfeld im Klick. */
   async function kopieren(text: string) {
     try {
@@ -269,6 +291,11 @@
       <button class="knopf still" title="Ein zufälliger Artikel aus diesem Buch" onclick={zufall}>
         <i class="fa-solid fa-dice"></i><span class="wort">Zufall</span></button>
       <div class="rechts">
+        {#if fassungen && !zeigeOriginal}
+          <Auswahl wert={meineFassung} symbol="fa-code-branch" titel="Meine Fassung, bleibt für dieses Buch eingestellt" onwahl={fassungWaehlen}
+                   optionen={[{ wert: "", titel: "Alle Fassungen" },
+                              ...fassungen.optionen.map((f) => ({ wert: f, titel: `Meine Fassung: ${fassungen!.produkt} ${f}` }))]} />
+        {/if}
         {#if !zeigeOriginal}
           <button class="rund" class:an={gross} title={gross ? "Lesegröße normal" : "Größer lesen"} onclick={() => (gross = !gross)}>
             <i class="fa-solid fa-text-height"></i></button>
@@ -276,6 +303,14 @@
       </div>
     </div>
   </div>
+  {#if fassungen && meineFassung && !zeigeOriginal}
+    <div class="fundband fassung" class:warn={!gibtEsInFassung}>
+      <i class="fa-solid {gibtEsInFassung ? 'fa-code-branch' : 'fa-triangle-exclamation'}"></i>
+      <span>{#if gibtEsInFassung}Gefiltert auf <b>{fassungen.produkt} {meineFassung}</b>: Änderungen für spätere Fassungen sind blass, die Änderungen bis zu deiner sind markiert.
+        {:else}<b>Diese Seite gibt es in {fassungen.produkt} {meineFassung} nicht.</b> Die Fassungen, in denen es sie gibt, nennt der Steckbrief.{/if}</span>
+      <button class="knopf still" onclick={() => fassungWaehlen("")}><i class="fa-solid fa-xmark"></i>Filter aus</button>
+    </div>
+  {/if}
   {#if frage}
     <div class="fundband">
       <i class="fa-solid {weg === 'bedeutung' ? 'fa-wand-magic-sparkles' : 'fa-magnifying-glass'}"></i>
@@ -374,7 +409,7 @@
             {/if}
           </nav>
         {/if}
-        <article class="artikel">
+        <article class="artikel" bind:this={artikelEl}>
           {#if artikel.steckbrief}
             <aside class="steckbrief">
               <div class="steckbrief-kopf" class:code-titel={artikel.steckbrief.code}>{artikel.steckbrief.titel}</div>
