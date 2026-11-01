@@ -37,7 +37,8 @@ class Artikelleser:
                        html=fertig.html, einleitung=fertig.einleitung, abschnitte=fertig.abschnitte,
                        steckbrief=fertig.steckbrief, bild=fertig.bild, verweise=fertig.verweise, online=fertig.online,
                        original=self._wege.original(buch, eintrag.pfad), kacheln=fertig.kacheln,
-                       gruppen=fertig.gruppen, rubrik=fertig.rubrik, nachbarn=fertig.nachbarn, titelart=fertig.titelart)
+                       gruppen=fertig.gruppen, rubrik=fertig.rubrik, nachbarn=fertig.nachbarn, titelart=fertig.titelart,
+                       fragen=fertig.fragen, zurueck=fertig.zurueck, weiter=fertig.weiter)
 
     async def zufall(self, buch: str) -> str:
         """Pfad eines zufälligen Artikels (ohne Weiterleitungen)."""

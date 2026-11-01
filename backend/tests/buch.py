@@ -242,15 +242,26 @@ FRAGE = ('<html><head><title>Clipboard</title></head><body><div id="question-hea
          + '<div id="sidebar"><a href="../../questions/332/registers" class="question-hyperlink">Define registers</a></div></body></html>')
 
 
+FRAGENLISTE = ('<html><body><h1>Most Popular</h1><div class="question-summary" id="question-summary-84"><div class="statscontainer">'
+               '<div class="votes"><span class="vote-count-post"><strong>1,520</strong></span></div>'
+               '<div class="status answered-accepted"><strong>2</strong> answers</div></div><div class="summary"><h3>'
+               '<a href="./questions/84/clipboard" class="question-hyperlink">How can I copy text to the clipboard?</a></h3>'
+               '<div class="excerpt">Is there a way?</div><a href="./questions/tagged/os-clipboard" class="post-tag">os-clipboard</a>'
+               '<time class="s-user-card--time" datetime="asked Feb 03 \'15 at 18:16">x</time></div></div>'
+               '<div class="s-pagination"><a class="s-pagination--item" href="./questions_page=2" rel="next">Next</a></div></body></html>')
+
+
 def bauen_qa(ordner: Path, name: str = "probeqa_en_all_2026-10") -> Path:
     ordner.mkdir(parents=True, exist_ok=True)
     datei = ordner / f"{name}.zim"
     with Creator(str(datei)).config_indexing(True, "eng") as c:
-        c.set_mainpath("questions/84/clipboard")
+        c.set_mainpath("questions")
         for schluessel, wert in (("Name", name.rsplit("_", 1)[0]), ("Title", "Vi Probe"), ("Language", "eng"),
                                  ("Description", "Fragen für die Tests"), ("Date", "2026-10-01"), ("Scraper", "sotoki 2.2.0"),
                                  ("Creator", "Tests"), ("Publisher", "Tests")):
             c.add_metadata(schluessel, wert)
         c.add_item(_Seite("questions/84/clipboard", "How can I copy text to the clipboard?", FRAGE))
         c.add_item(_Seite("questions/332/registers", "Define registers", "<html><body><p>registers</p></body></html>"))
+        c.add_item(_Seite("questions", "Most Popular", FRAGENLISTE))
+        c.add_item(_Seite("questions_page=2", "Most Popular", "<html><body><h1>Most Popular</h1></body></html>"))
     return datei

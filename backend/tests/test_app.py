@@ -307,3 +307,11 @@ async def test_frage_und_antwort_nach_entwurf(nachschlag):
     assert s["titel"] == "Frage 84"
     assert "<dt>Antworten</dt><dd>2, eine akzeptiert</dd>" in s["html"] and "<dt>Gefragt</dt><dd>03.02.2015 von thameera</dd>" in s["html"]
     assert 'href="/lesen/probeqa_en_all_2026-10/questions/332/registers"' in s["html"]
+
+
+async def test_fragenliste_als_karten_mit_blaettern(nachschlag):
+    c, _, _ = nachschlag
+    a = (await c.get("/api/v1/artikel/probeqa_en_all_2026-10/questions")).json()
+    assert (a["darstellung"], a["titel"], a["weiter"], a["zurueck"]) == ("uebersicht", "Beliebteste Fragen", "questions_page=2", "")
+    assert a["fragen"] == [{"pfad": "questions/84/clipboard", "titel": "How can I copy text to the clipboard?", "auszug": "Is there a way?",
+                            "stimmen": 1520, "antworten": 2, "akzeptiert": True, "schlagwoerter": ["os-clipboard"], "gefragt": "03.02.2015"}]

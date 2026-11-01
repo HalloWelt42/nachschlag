@@ -4,7 +4,7 @@
   // Lesedesign zeigen ihre Seite unverändert (Originalansicht). Verweise im Text bleiben in der App.
   import { gehe, navigation, seitenFehler } from "appkern-oberflaeche";
   import { tick, untrack } from "svelte";
-  import { bezeichnung, bibliothek, bibliothekLaden, buch as buchVon, datum, hauptbuch } from "../lib/bibliothek.svelte";
+  import { bezeichnung, bibliothek, bibliothekLaden, buch as buchVon, datum, hauptbuch, zahl } from "../lib/bibliothek.svelte";
   import { artikelHolen, zufallHolen } from "../lib/schnittstelle";
   import type { Artikel } from "../lib/typen";
   import { lesen, lesenZiel, suchen, verweisZiel } from "../lib/ziele";
@@ -302,6 +302,33 @@
               </ol>
             </section>
           {/each}
+        </div>
+      {/if}
+      {#if artikel.fragen.length}
+        <!-- Fragenliste (Frage und Antwort): Karten mit Stimmen und Antworten, Blättern über die Seiten der Quelle -->
+        <div class="fragenliste">
+          {#each artikel.fragen as f, fi (fi)}
+            <a class="fragekarte" href={"/" + lesenZiel(artikel.buch, f.pfad)} onclick={(e) => { e.preventDefault(); lesen(artikel!.buch, f.pfad); }}>
+              <span class="fk-zahlen">
+                <span class="fk-stimmen"><b>{zahl(f.stimmen)}</b>Stimmen</span>
+                <span class="fk-antworten" class:akzeptiert={f.akzeptiert}><b>{f.antworten}</b>{f.antworten === 1 ? "Antwort" : "Antworten"}</span>
+              </span>
+              <span class="fk-text">
+                <span class="t">{f.titel}</span>
+                {#if f.auszug}<span class="u">{f.auszug}</span>{/if}
+                <span class="fk-fuss">
+                  <span class="schlagwoerter">{#each f.schlagwoerter as s}<span>{s}</span>{/each}</span>
+                  {#if f.gefragt}<span class="fk-wann">gefragt {f.gefragt}</span>{/if}
+                </span>
+              </span>
+            </a>
+          {/each}
+          {#if artikel.zurueck || artikel.weiter}
+            <div class="blaettern">
+              {#if artikel.zurueck}<button class="knopf" onclick={() => lesen(artikel!.buch, artikel!.zurueck)}><i class="fa-solid fa-chevron-left"></i>Zurück</button>{/if}
+              {#if artikel.weiter}<button class="knopf weiter" onclick={() => lesen(artikel!.buch, artikel!.weiter)}>Weiter<i class="fa-solid fa-chevron-right"></i></button>{/if}
+            </div>
+          {/if}
         </div>
       {/if}
       <div class="uebersicht">

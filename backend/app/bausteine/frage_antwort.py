@@ -16,7 +16,7 @@ from lxml import html as lhtml
 from lxml.etree import SubElement
 
 from ..bibliothek import Eintrag
-from ..modell.artikel import Abschnitt, Steckbrief
+from ..modell.artikel import Abschnitt, Fragekarte, Steckbrief
 from ..modell.buch import Buch
 from . import html as h
 from .basis import Aufbereitet, Wege
@@ -34,6 +34,25 @@ def _datum(text: str) -> tuple[str, str]:
     art = {"asked": "gefragt", "answered": "beantwortet", "edited": "bearbeitet"}.get(m.group(1) or "", "")
     jahr = f".20{m.group(4)}" if m.group(4) else ""
     return art, f"{int(m.group(3)):02d}.{MONATE[m.group(2)]:02d}{jahr}"
+
+
+def _text(el, xpath: str) -> str:
+    treffer = next(iter(el.xpath(xpath)), None)
+    return h.text_von(treffer) if treffer is not None else ""
+
+
+def _zahl(el, xpath: str) -> int:
+    """Eine Zahl aus einem Teil (Stimmen, Antworten), Trennzeichen der Quelle entfernt."""
+    return int(re.sub(r"\D", "", _text(el, xpath)) or 0)
+
+
+def _listentitel(quelle: str) -> str:
+    """Feste Überschriften der Fragenlisten, wie Nachschlag sie nennt."""
+    if quelle.lower() in ("most popular", "top questions", "highest scored questions", "newest questions", "all questions"):
+        return {"newest questions": "Neueste Fragen", "all questions": "Alle Fragen"}.get(quelle.lower(), "Beliebteste Fragen")
+    if m := re.match(r"questions tagged \[?([^\]]+)\]?", quelle, re.I):
+        return f"Fragen mit dem Schlagwort {m.group(1)}"
+    return quelle
 
 
 def _signaturen(beitrag) -> dict[str, tuple[str, str]]:
@@ -123,11 +142,14 @@ class FrageAntwort:
     darstellung = "lesedesign"
 
     def passt(self, eintrag: Eintrag) -> bool:
-        return eintrag.mime.startswith("text/html") and b'id="question"' in eintrag.inhalt
+        return eintrag.mime.startswith("text/html") and (b'id="question"' in eintrag.inhalt
+                                                          or b'class="question-summary"' in eintrag.inhalt)
 
     def aufbereiten(self, buch: Buch, eintrag: Eintrag, wege: Wege) -> Aufbereitet:
         doc = lhtml.fromstring(eintrag.inhalt.decode("utf-8", "replace"))
         h.stile_uebersetzen(doc)
+        if not doc.xpath("//*[@id='question']"):
+            return self._liste(doc, buch, eintrag, wege)
         kopf = next(iter(doc.xpath("//*[@id='question-header']//h1")), None)
         titel = h.text_von(kopf) if kopf is not None else eintrag.titel
         frage = doc.xpath("//*[@id='question']")[0]
@@ -170,6 +192,40 @@ class FrageAntwort:
         steckbrief = self._steckbrief(doc, buch, eintrag, wege, nummer, stimmen_frage, antworten, signaturen)
         return Aufbereitet(titel=titel, html=html, einleitung=einleitung, abschnitte=abschnitte, steckbrief=steckbrief,
                            bild=bild, verweise=verweise, online=online, rubrik="Fragen")
+
+    @staticmethod
+    def _liste(doc, buch: Buch, eintrag: Eintrag, wege: Wege) -> Aufbereitet:
+        """Fragenliste (Startseite, Schlagwortseiten): Karten mit Stimmen, Antworten, Auszug, Schlagwörtern, dazu
+        Blättern über die Seiten der Quelle."""
+        fragen: list[Fragekarte] = []
+        for karte in doc.xpath("//div[contains(@class,'question-summary')]"):
+            a = next(iter(karte.xpath(".//a[contains(@class,'question-hyperlink')]")), None)
+            if a is None:
+                continue
+            ziel = h.ziel_im_buch(eintrag.pfad, a.get("href") or "")
+            if not ziel or not wege.gibt_es(buch.kennung, ziel):
+                continue
+            status = next(iter(karte.xpath(".//div[contains(@class,'status')]")), None)
+            zeit = next(iter(karte.xpath(".//time")), None)
+            fragen.append(Fragekarte(
+                pfad=ziel, titel=h.text_von(a), auszug=_text(karte, ".//*[contains(@class,'excerpt')]"),
+                stimmen=_zahl(karte, ".//*[contains(@class,'vote-count-post')]"),
+                antworten=_zahl(karte, ".//div[contains(@class,'status')]/strong"),
+                akzeptiert=status is not None and "accepted" in (status.get("class") or ""),
+                schlagwoerter=[h.text_von(t) for t in karte.xpath(".//a[contains(@class,'post-tag')]")],
+                gefragt=_datum(zeit.get("datetime") or "")[1] if zeit is not None else ""))
+        blaettern = {}
+        for a in doc.xpath("//*[contains(@class,'s-pagination')]//a"):
+            ziel = h.ziel_im_buch(eintrag.pfad, a.get("href") or "")
+            richtung = {"next": "weiter", "prev": "zurueck"}.get((a.get("rel") or "").strip())
+            text = h.text_von(a).lower()
+            richtung = richtung or ("weiter" if text.startswith("next") else "zurueck" if text.startswith("prev") else None)
+            if richtung and ziel and wege.gibt_es(buch.kennung, ziel):
+                blaettern[richtung] = ziel
+        kopf = next(iter(doc.xpath("//h1")), None)
+        titel = _listentitel(h.text_von(kopf) if kopf is not None else "") or buch.titel
+        return Aufbereitet(titel=titel, fragen=fragen, darstellung="uebersicht", rubrik="Fragen",
+                           zurueck=blaettern.get("zurueck", ""), weiter=blaettern.get("weiter", ""))
 
     @staticmethod
     def _steckbrief(doc, buch: Buch, eintrag: Eintrag, wege: Wege, nummer: str, stimmen: int, antworten: list,

@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from typing import Protocol
 
 from ..bibliothek import Eintrag
-from ..modell.artikel import Abschnitt, Darstellung, Gruppe, Kachel, Nachbar, Steckbrief, Verweiszahlen
+from ..modell.artikel import Abschnitt, Darstellung, Fragekarte, Gruppe, Kachel, Nachbar, Steckbrief, Verweiszahlen
 from ..modell.buch import Art, Buch
 
 
@@ -40,6 +40,9 @@ class Aufbereitet:
     rubrik: str = ""
     nachbarn: list[Nachbar] = field(default_factory=list)
     titelart: str = "text"
+    fragen: list[Fragekarte] = field(default_factory=list)
+    zurueck: str = ""
+    weiter: str = ""
     darstellung: Darstellung | None = None       # nur wenn die Seite anders gezeigt wird als sonst beim Baustein
 
 

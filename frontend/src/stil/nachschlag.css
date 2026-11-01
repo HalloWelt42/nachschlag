@@ -363,6 +363,25 @@
 .steckbrief .verwandt { margin: var(--a2) var(--a3) var(--a3); padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
 #frage { scroll-margin-top: var(--a4); }
 
+/* Fragenliste (Startseite und Schlagwortseiten eines Frage-Antwort-Buchs) */
+.fragenliste { display: flex; flex-direction: column; gap: var(--a3); padding: var(--a4) var(--a5) var(--a6); max-width: 1100px; }
+.fragekarte { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: var(--a4); padding: var(--a3) var(--a4); background: var(--flaeche);
+              border-radius: var(--r3); box-shadow: var(--schatten); color: var(--text); text-decoration: none; }
+.fragekarte:hover { box-shadow: var(--schatten), 0 0 0 2px var(--akzent-flaeche); }
+.fk-zahlen { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; font-size: var(--marke); color: var(--text-3); }
+.fk-zahlen > span { display: flex; align-items: baseline; gap: 5px; }
+.fk-zahlen b { font-family: var(--schrift-zahl); font-size: var(--gross); color: var(--text); font-weight: 600; }
+.fk-antworten.akzeptiert { padding: 1px 6px; background: var(--gut-weich); color: var(--gut); font-weight: 600; }
+.fk-antworten.akzeptiert b { color: var(--gut); }
+.fk-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.fk-text .t { font-weight: 600; font-size: var(--titel); color: var(--himmel); overflow-wrap: anywhere; }
+.fk-text .u { color: var(--text-2); font-size: var(--klein); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.fk-fuss { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2) var(--a4); }
+.fk-fuss .schlagwoerter { margin-top: 0; }
+.fk-wann { margin-left: auto; font-size: var(--marke); color: var(--text-3); }
+.blaettern { display: flex; gap: var(--a3); }
+.blaettern .weiter { margin-left: auto; }
+
 /* Startseite eines Handbuchs: Rubriken mit ihren Seiten */
 .rubriken { columns: 4 260px; column-gap: var(--a4); padding: var(--a4) var(--a5) var(--a6); max-width: 1680px; }
 .rubrik { break-inside: avoid; margin-bottom: var(--a4); background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten); padding: var(--a3) var(--a4); }
@@ -398,7 +417,9 @@
   .fundband .knopf { margin-left: 0; }
   .kopf .suchanker .buchwahl, .kopf .suchanker kbd { display: none; }
   .artikel-kopf { padding-inline: var(--a3); }
-  .lesen, .uebersicht, .rubriken { padding-inline: var(--a3); }
+  .lesen, .uebersicht, .rubriken, .fragenliste { padding-inline: var(--a3); }
+  .fragekarte { grid-template-columns: minmax(0, 1fr); gap: var(--a2); }
+  .fk-zahlen { flex-direction: row; align-items: center; }
   .rubriken { columns: 1; }
   .artikel-text .parameterliste { grid-template-columns: minmax(0, 1fr); }
   .qa-beitrag { grid-template-columns: 40px minmax(0, 1fr); gap: var(--a2); }

@@ -44,6 +44,18 @@ class Gruppe(BaseModel):
     eintraege: list[Nachbar]
 
 
+class Fragekarte(BaseModel):
+    """Eine Frage in einer Fragenliste (Startseite und Schlagwortseiten eines Frage-Antwort-Buchs)."""
+    pfad: str
+    titel: str
+    auszug: str = ""
+    stimmen: int = 0
+    antworten: int = 0
+    akzeptiert: bool = False
+    schlagwoerter: list[str] = Field(default_factory=list)
+    gefragt: str = ""
+
+
 class Kachel(BaseModel):
     """Ein Eintrag einer Übersicht: Artikel mit Bild."""
     pfad: str
@@ -72,3 +84,6 @@ class Artikel(BaseModel):
     rubrik: str = Field("", description="Rubrik der Seite im Buch (Dokumentation), für den Pfad")
     nachbarn: list[Nachbar] = Field(default_factory=list, description="die Seiten derselben Rubrik")
     titelart: Literal["text", "code"] = Field("text", description="code: der Titel ist ein Name aus dem Code (Funktion, Klasse)")
+    fragen: list[Fragekarte] = Field(default_factory=list, description="Fragen einer Fragenliste (nur Darstellung uebersicht)")
+    zurueck: str = Field("", description="Pfad der vorigen Seite einer Liste, leer auf der ersten")
+    weiter: str = Field("", description="Pfad der nächsten Seite einer Liste, leer auf der letzten")

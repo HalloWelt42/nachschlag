@@ -61,6 +61,17 @@ export interface Gruppe {
   eintraege: Nachbar[];
 }
 
+export interface Fragekarte {
+  pfad: string;
+  titel: string;
+  auszug: string;
+  stimmen: number;
+  antworten: number;
+  akzeptiert: boolean;
+  schlagwoerter: string[];
+  gefragt: string;
+}
+
 export interface Kachel {
   pfad: string;
   titel: string;
@@ -88,6 +99,9 @@ export interface Artikel {
   rubrik: string;
   nachbarn: Nachbar[];
   titelart: "text" | "code";
+  fragen: Fragekarte[];
+  zurueck: string;
+  weiter: string;
 }
 
 export type Weg = "bedeutung" | "index";
