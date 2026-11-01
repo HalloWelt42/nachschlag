@@ -66,13 +66,13 @@ def art_aus(erzeuger: str) -> Art:
 
 
 def seiten_aus(a: Archive) -> int:
-    """Zahl der Seiten (HTML) laut Zähler der Datei (`Counter`: "text/html=3205144;image/webp=..."). Die Zahl der
-    Artikel der Datei zählt Weiterleitungen mit (deutsche Enzyklopädie 5,04 Mio. statt 3,2 Mio.); ohne Zähler bleibt
-    nur sie."""
+    """Zahl der Artikel: die Hauptseiten der Datei zählen Weiterleitungen mit (deutsche Enzyklopädie 5,04 Mio.), die
+    HTML-Seiten laut Zähler (`Counter`: "text/html=3205144;...") auch Nebenseiten wie Nutzer- und Schlagwortseiten
+    einer Frage-Antwort-Seite; der kleinere Wert kommt dem Buch am nächsten (Enzyklopädie 3,2 Mio., vi 25.378)."""
     zaehler = _angabe(a, "Counter")
     seiten = sum(int(n) for art, _, n in (t.rpartition("=") for t in zaehler.split(";"))
                  if art.startswith("text/html") and n.isdigit())
-    return seiten or a.article_count
+    return min(seiten, a.article_count) if seiten else a.article_count
 
 
 def buch_aus(kennung: str, a: Archive, groesse: int) -> Buch:
