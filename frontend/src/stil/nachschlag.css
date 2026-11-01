@@ -776,7 +776,9 @@ button.kachel:disabled { opacity: .6; cursor: default; }
   .artikel-kopf, .lesen, .uebersicht, .rubriken, .fragenliste, .uebersicht-filter, .uebersicht-leer { padding-inline: 0; }
   .meins-seite { padding-inline: 0; }          /* den Seitenrand am Telefon gibt die Schale, nur einmal */
   .meins-suche { max-width: none; flex: 1 1 100%; }
-  .liste-ziel { grid-template-columns: 44px minmax(0, 1fr); padding-inline: var(--a3); }
+  .liste-ziel { grid-template-columns: minmax(0, 1fr); padding-inline: var(--a3); }
+  .liste-ziel:has(> img) { grid-template-columns: 44px minmax(0, 1fr); }   /* Bildspalte nur mit echtem Bild */
+  .liste-ziel img { width: 44px; height: 34px; }
   .liste-ziel .rechts { display: none; }
   .fragekarte { grid-template-columns: minmax(0, 1fr); gap: var(--a2); }
   .fk-zahlen { flex-direction: row; align-items: center; }
@@ -799,6 +801,19 @@ button.kachel:disabled { opacity: .6; cursor: default; }
   .notiz-gruppe .gruppenkopf .marke-buch { margin-left: 0; }
   .stoebern-seite { padding-inline: 0; }
   .ergebnisse, .suchkopf { padding-inline: 0; }          /* den Seitenrand gibt die Schale, nur einmal */
+  /* Telefon: keine Seitenspalten. Platzhalter-Zeichen ohne Bild entfallen; echte Bilder stehen klein links im Text,
+     der Text umfließt sie (Nutzer: "solche seitlichen Elemente klauen Platz", "sollte umfließen") */
+  .suchstand .buchstaende { display: none; }              /* der Stand je Buch steht im Kopf seines Blocks */
+  .treffer, .angebot-artikel { display: block; }
+  .treffer .ohne-bild, .angebot-artikel .ohne-bild, .liste-ziel .ohne-bild, .vorschlag .ohne-bild,
+  .notiz-gruppe .gruppenkopf .ohne-bild, .kachel.quer .kachel-bild.zeichen { display: none; }
+  .treffer img, .angebot-artikel img { float: left; margin: 2px var(--a2) var(--a1) 0; }
+  .angebot-artikel .ja-nein { float: right; margin-left: var(--a2); }
+  .angebot-ziel { display: block; }
+  .kachel.quer { display: block; }
+  .kachel.quer .kachel-bild:not(.zeichen) { float: left; margin-right: var(--a3); }
+  .kachel.quer .kachel-koerper { display: block; }
+  .kachel.quer .kachel-koerper > * { display: block; }
   .medien-seite { padding-inline: 0; }
   .medien-suche { max-width: none; }
   .mediengitter { columns: 2 150px; }
