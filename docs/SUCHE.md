@@ -52,12 +52,13 @@ fehlenden Feldern (Schlagwörter, Stimmen, Autoren, Rubriken).
     (Übertragung in Teilen, fortsetzbar) und wird dort in einem Schritt ausgetauscht; bis dahin gilt der alte oder
     der Index der Datei. Ist der Mac nicht erreichbar, steht der Auftrag auf dem Pi auf 'wartet auf den Mac' und läuft
     von selbst weiter.
-16. **Freigabe:** Samba-Freigabe `buecher` auf dem Pi (/mnt/data/zim), nur lesend, ohne Passwort, nur aus dem
+16. **Freigabe:** Samba-Freigabe `zim-libs` auf dem Pi (/mnt/data/zim), nur lesend, ohne Passwort, nur aus dem
     Heimnetz (eingerichtet 01.11.2026, vorher gesichert als /etc/samba/smb.conf.vor-buecher-freigabe); am Mac nur
-    lesend eingehängt. Gemessen: PHP Docs (7.560 Einträge, 34 MB HTML) in 0,5 s über die Freigabe gelesen.
-17. **Ablage in der Kellerwolke sichtbar:** Bücher (/mnt/data/zim, NVMe) und eigene Indizes liegen auf der schnellen
-    SSD und werden als externe Quellen in die Kellerwolke eingebunden (Bücher nur lesend). Den Ordner der Indizes nennt
-    Nachschlag in seinen Einstellungen (nie fest im Code). Das Eintragen der Quellen macht der Nutzer als Verwalter.
+    lesend eingehängt unter ~/ZIM-Libs. Gemessen: PHP Docs (7.560 Einträge, 34 MB HTML) in 0,5 s über die Freigabe gelesen.
+17. **Ablage in der Kellerwolke sichtbar:** Die ZIM-Libs (/mnt/data/zim, NVMe) und die eigenen Indizes liegen auf der
+    schnellen SSD und sind externe Quellen der Kellerwolke. ZIM-Libs ist eingehängt (01.11.2026, Konto admin, nur
+    lesend) über das Werkzeug der Kellerwolke `tools/externe_quelle.py` (ohne Anmeldung, derselbe Dienst wie die
+    Verwaltung). Den Ordner der Indizes nennt Nachschlag in seinen Einstellungen (nie fest im Code).
 
 ## Reihenfolge des Baus
 
