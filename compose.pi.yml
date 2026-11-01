@@ -27,6 +27,9 @@ services:
       - ./zertifikate:/zertifikate:ro
       # die Bücher (ZIM-Dateien); Nachschlag liest nur. Welcher Ordner, steht in der .env (BUECHER_ORDNER)
       - ${BUECHER_ORDNER:-./buecher}:/buecher:ro
+      # eigene Indizes der Bücher (WIKI-17): der Index-Dienst auf dem Mac lädt sie hoch, Nachschlag tauscht sie aus;
+      # selbst erzeugt und darum in der Sicherung, anders als die Bücher
+      - ./eigenindex:/eigenindex
       # Ortszeit des Pi (sonst UTC)
       - /etc/localtime:/etc/localtime:ro
 

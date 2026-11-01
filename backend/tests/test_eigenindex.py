@@ -1,0 +1,250 @@
+"""Eigener Index (WIKI-17): Aufbau mit Fortsetzen, Abfrage in Stufen, die Aufträge auf dem Pi mit ihrer Schnittstelle,
+der Index-Dienst auf dem Mac (holt ab, baut, lädt hoch, wartet auf Netz und Pi) und die Suche darüber."""
+
+from __future__ import annotations
+
+import asyncio
+import sqlite3
+import sys
+import threading
+from pathlib import Path
+
+import httpx
+import pytest
+
+sys.path.insert(0, str(Path(__file__).parent))
+import buch as probebuch  # noqa: E402
+from test_app import kellerwolke  # noqa: E402
+
+from app.artikel import wege  # noqa: E402
+from app.bibliothek import Bibliothek  # noqa: E402
+from app.eigenindex import abfrage, aufbau, schema  # noqa: E402
+from app.eigenindex.ablage import Eigenindizes  # noqa: E402
+from app.indexdienst.arbeiter import Arbeiter  # noqa: E402
+from app.main import app_bauen  # noqa: E402
+
+DOKU = "probedoku_en_php_2026-08"
+SCHLUESSEL = {"Authorization": "Bearer geheim"}
+
+
+@pytest.fixture(scope="module")
+def buecher(tmp_path_factory) -> Path:
+    ordner = tmp_path_factory.mktemp("buecher")
+    probebuch.bauen_doku(ordner)
+    probebuch.bauen(ordner)
+    return ordner
+
+
+def _bauen(ordner: Path, kennung: str, ziel: Path, **weiter) -> aufbau.Stand:
+    bib = Bibliothek(lambda: str(ordner))
+    archiv, buch = bib.geoeffnet(kennung)
+    return aufbau.bauen(archiv, buch, wege(bib), ziel, **weiter)
+
+
+# ----- Index ------------------------------------------------------------------------------------------------------------
+
+def test_aufbau_und_abfrage_in_stufen(buecher, tmp_path):
+    ziel = tmp_path / schema.dateiname(DOKU)
+    stand = _bauen(buecher, DOKU, ziel)
+    assert stand.fertig and stand.seiten >= 2 and schema.gueltig(ziel)
+    assert ziel.with_suffix(".sha256").read_text().strip() == aufbau.pruefsumme(ziel)
+
+    funde, _ = abfrage.suchen(ziel, "array_map")                         # genauer Name zuerst
+    assert funde[0].pfad == "function.array-map" and funde[0].stufe == "name"
+    funde, _ = abfrage.suchen(ziel, "ARRAY_")                            # Wortanfang, ohne Groß und Klein
+    assert {"function.array-map", "function.array-filter"} <= {f.pfad for f in funde}
+    funde, gesamt = abfrage.suchen(ziel, "filters elements")             # Volltext, Ausschnitt aus dem Index
+    assert funde[0].pfad == "function.array-filter" and funde[0].stufe == "volltext" and gesamt >= 1
+    assert "<em>" in funde[0].ausschnitt and "<p" not in funde[0].ausschnitt
+    assert abfrage.suchen(ziel, '"()*') == ([], 0)                       # nur Zeichen ohne Wort: nichts, kein Fehler
+    assert abfrage.suchen(ziel, 'array_map "(') [0][0].pfad == "function.array-map"   # Zeichen der Abfragesprache stören nicht
+
+
+def test_aufbau_setzt_nach_abbruch_fort(buecher, tmp_path):
+    ziel = tmp_path / schema.dateiname("probe_de_all_2026-01")
+    halb = _bauen(buecher, "probe_de_all_2026-01", ziel, stapel=1, abbrechen=lambda: True)
+    assert not halb.fertig and not schema.gueltig(ziel)
+    ganz = _bauen(buecher, "probe_de_all_2026-01", ziel, stapel=1)
+    assert ganz.fertig and ganz.seiten > halb.seiten
+    v = sqlite3.connect(ziel)
+    assert v.execute("SELECT COUNT(*) FROM seiten").fetchone()[0] == ganz.seiten
+    assert v.execute("SELECT COUNT(*) FROM seiten WHERE pfad = 'Vulpes_vulpes'").fetchone()[0] == 0   # Sprungseite
+    v.execute("UPDATE angaben SET wert = '0' WHERE schluessel = 'fassung'")
+    v.commit()
+    v.close()
+    assert not schema.gueltig(ziel)                                      # alte Fassung des Schemas gilt nicht
+    assert _bauen(buecher, "probe_de_all_2026-01", ziel).fertig and schema.gueltig(ziel)   # und wird neu gebaut
+
+
+def test_ablage_sieht_austausch(buecher, tmp_path):
+    ablage = Eigenindizes(lambda: str(tmp_path))
+    assert ablage.datei(DOKU) is None
+    neu = tmp_path / "neu.sqlite"
+    _bauen(buecher, DOKU, neu)
+    neu.replace(tmp_path / schema.dateiname(DOKU))
+    assert ablage.datei(DOKU) == tmp_path / schema.dateiname(DOKU)
+    assert Eigenindizes(lambda: "").datei(DOKU) is None                   # ohne Ordner kein eigener Index
+
+
+# ----- Pi und Mac -------------------------------------------------------------------------------------------------------
+
+class Bruecke(httpx.BaseTransport):
+    """Synchroner Weg vom Index-Dienst (eigener Faden, wie auf dem Mac) zur App in der Ereignisschleife des Tests."""
+
+    def __init__(self, app, schleife: asyncio.AbstractEventLoop) -> None:
+        self._c = httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://pi.test")
+        self._schleife = schleife
+
+    def handle_request(self, request: httpx.Request) -> httpx.Response:
+        async def senden() -> httpx.Response:
+            a = await self._c.send(self._c.build_request(request.method, request.url, headers=request.headers,
+                                                         content=request.read()))
+            return httpx.Response(a.status_code, headers=a.headers, content=a.content)
+        return asyncio.run_coroutine_threadsafe(senden(), self._schleife).result(timeout=30)
+
+
+@pytest.fixture
+async def pi(tmp_path: Path, buecher: Path):
+    """Nachschlag auf dem Pi mit Ordner und Schlüssel für eigene Indizes."""
+    app = app_bauen(tmp_path / "daten", transport=httpx.MockTransport(kellerwolke))
+    geruest = app.state.geruest
+    await geruest.starten()
+    await geruest.einstellungen.aendern({"buecher_ordner": str(buecher), "eigenindex_ordner": str(tmp_path / "pi"),
+                                         "indexdienst_schluessel": "geheim"})
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+        await c.post("/api/v1/einrichtung", json={"kellerwolke_adresse": "http://kw.test", "kellerwolke_schluessel": "kw_app_x"})
+        token = (await c.post("/api/v1/anmeldung", json={"kennung": "probe", "passwort": "geheim"})).json()["token"]
+        c.headers["X-Kellerwolke-Sitzung"] = token
+        yield c, app
+    await geruest.stoppen()
+
+
+async def _laeuft(c: httpx.AsyncClient) -> dict:
+    for _ in range(200):
+        a = (await c.get("/api/v1/auftraege")).json()["eintraege"]
+        if a and a[0]["zustand"] == "laeuft":
+            return a[0]
+        await asyncio.sleep(0.02)
+    raise AssertionError("kein Auftrag läuft")
+
+
+async def _beendet(c: httpx.AsyncClient) -> dict:
+    for _ in range(500):
+        a = (await c.get("/api/v1/auftraege")).json()["eintraege"]
+        if a and a[0]["zustand"] not in ("wartet", "laeuft"):
+            return a[0]
+        await asyncio.sleep(0.02)
+    raise AssertionError("Auftrag endet nicht")
+
+
+async def _abholen(mac: httpx.AsyncClient) -> dict:
+    """Wie der Index-Dienst: fragen, bis die Arbeit des Auftrags bereitsteht (sie beginnt kurz nach "läuft")."""
+    for _ in range(100):
+        antwort = await mac.post("/api/v1/indexdienst/abholen")
+        if antwort.status_code == 200:
+            return antwort.json()
+        await asyncio.sleep(0.02)
+    raise AssertionError("nichts abzuholen")
+
+
+async def test_mac_holt_ab_baut_und_uebergibt(pi, buecher, tmp_path):
+    c, app = pi
+    assert await app.state.indexauftraege.fehlende_einreihen() == [DOKU]    # nur die eingestellten Arten (Handbücher)
+    assert await app.state.indexauftraege.fehlende_einreihen() == []        # kein zweiter Auftrag für dasselbe Buch
+    laufend = await _laeuft(c)
+    assert "wartet auf den Mac" in laufend["schritt"] or laufend["schritt"] == ""
+
+    halt = threading.Event()
+    mac = httpx.Client(transport=Bruecke(app, asyncio.get_running_loop()), base_url="http://pi.test", headers=SCHLUESSEL)
+    arbeiter = Arbeiter(mac, buecher, tmp_path / "mac", ruhe_s=0.05, stueck=4096)       # kleine Stücke: viele Anfragen
+    faden = threading.Thread(target=arbeiter.laufen, args=(halt,), daemon=True)
+    faden.start()
+    try:
+        fertig = await _beendet(c)
+    finally:
+        halt.set()
+        await asyncio.to_thread(faden.join, 10)
+    assert fertig["zustand"] == "fertig", fertig
+    assert schema.gueltig(tmp_path / "pi" / schema.dateiname(DOKU)) and not list((tmp_path / "pi").glob("*.teil"))
+    verbindung = next(v for v in (await c.get("/api/v1/verbindungen")).json() if v["name"] == "Index-Dienst")
+    assert verbindung["ok"]
+
+    s = (await c.get("/api/v1/suche", params={"frage": "filters elements", "buecher": DOKU})).json()
+    assert s["treffer"][0]["pfad"] == "function.array-filter" and "<em>" in s["treffer"][0]["ausschnitt"]
+    s = (await c.get("/api/v1/suche", params={"frage": "array_map", "buecher": DOKU})).json()
+    assert s["treffer"][0]["pfad"] == "function.array-map"
+
+
+async def test_schnittstelle_schuetzt_und_setzt_fort(pi):
+    c, app = pi
+    mac = httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://pi.test")
+    assert (await mac.post("/api/v1/indexdienst/abholen")).status_code == 401
+    assert (await mac.post("/api/v1/indexdienst/abholen", headers={"Authorization": "Bearer falsch"})).status_code == 401
+    mac.headers.update(SCHLUESSEL)
+    assert (await mac.post("/api/v1/indexdienst/abholen")).status_code == 204          # nichts offen
+    assert (await c.post("/api/v1/indexdienst/abholen")).status_code == 401            # Anmeldung der Oberfläche zählt nicht
+
+    await app.state.indexauftraege.fehlende_einreihen()
+    auftrag = (await _laeuft(c))["id"]
+    abholung = await _abholen(mac)
+    assert abholung == {"auftrag": auftrag, "buch": DOKU, "da": 0}
+    weg = f"/api/v1/indexdienst/{auftrag}"
+    assert (await mac.put(f"{weg}/datei", params={"ab": 0, "gesamt": 10}, content=b"abcd")).json() == {"da": 4}
+    assert (await mac.put(f"{weg}/datei", params={"ab": 2, "gesamt": 10}, content=b"xx")).status_code == 409
+    assert (await mac.get(f"{weg}/datei")).json() == {"da": 4}
+    assert (await mac.post("/api/v1/indexdienst/abholen")).json()["da"] == 4               # Übertragung setzt dort fort
+    await mac.put(f"{weg}/stand", json={"zustand": "laeuft", "erledigt": 3, "gesamt": 6, "seiten": 2})
+    await asyncio.sleep(2.1)
+    assert (await c.get(f"/api/v1/auftraege/{auftrag}")).json()["phase"] == "holen"
+
+    await c.post(f"/api/v1/auftraege/{auftrag}/abbrechen")
+    await _beendet(c)
+    assert (await mac.put(f"{weg}/stand", json={"zustand": "laeuft"})).status_code == 410   # der Mac lässt ihn fallen
+    await mac.aclose()
+
+
+async def test_falsche_pruefsumme_tauscht_nicht(pi, tmp_path):
+    c, app = pi
+    mac = httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://pi.test", headers=SCHLUESSEL)
+    await app.state.indexauftraege.fehlende_einreihen()
+    auftrag = (await _laeuft(c))["id"]
+    await _abholen(mac)
+    await mac.put(f"/api/v1/indexdienst/{auftrag}/datei", params={"ab": 0, "gesamt": 4}, content=b"abcd")
+    await mac.post(f"/api/v1/indexdienst/{auftrag}/fertig", json={"pruefsumme": "0" * 64, "groesse": 4, "seiten": 1})
+    ende = await _beendet(c)
+    assert ende["zustand"] == "fehler" and "Prüfsumme" in ende["fehler"]
+    assert not (tmp_path / "pi" / schema.dateiname(DOKU)).exists() and not list((tmp_path / "pi").glob("*.teil"))
+    await mac.aclose()
+
+
+# ----- Mac ohne Netz -----------------------------------------------------------------------------------------------------
+
+def test_mac_wartet_auf_netz_und_haengt_neu_ein(tmp_path):
+    """Fehlt die Freigabe, meldet der Dienst "wartet auf Netz", hängt neu ein und versucht es erneut."""
+    gemeldet, eingehaengt, halt = [], [], threading.Event()
+
+    def pi(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/abholen"):
+            return httpx.Response(200, json={"auftrag": "a1", "buch": DOKU, "da": 0})
+        gemeldet.append(request.read())
+        if len(eingehaengt) >= 2:
+            halt.set()
+        return httpx.Response(204)
+
+    mac = httpx.Client(transport=httpx.MockTransport(pi), base_url="http://pi.test")
+    Arbeiter(mac, tmp_path / "weg", tmp_path / "mac", lambda: eingehaengt.append(1), abstaende=(0.01,)).laufen(halt)
+    assert len(eingehaengt) >= 2 and all(b"wartet_auf_netz" in g for g in gemeldet)
+
+
+def test_mac_wartet_auf_den_pi(tmp_path):
+    versuche, halt = [], threading.Event()
+
+    def pi(request: httpx.Request) -> httpx.Response:
+        versuche.append(1)
+        if len(versuche) >= 3:
+            halt.set()
+        raise httpx.ConnectError("Netz weg")
+
+    mac = httpx.Client(transport=httpx.MockTransport(pi), base_url="http://pi.test")
+    Arbeiter(mac, tmp_path, tmp_path / "mac", abstaende=(0.01,)).laufen(halt)        # kein Fehler, nur Warten
+    assert len(versuche) >= 3

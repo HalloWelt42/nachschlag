@@ -1,11 +1,17 @@
 name = "Nachschlag"
-beschreibung = "liest jedes Buch der Bibliothek"
-oberflaeche = "http://127.0.0.1:8711"
+zweck = "Bibliothek lesen"
+beschreibung = "liest jedes Buch der Bibliothek; läuft auf dem Pi, am Mac nur der Index-Dienst, der die eigenen Indizes baut"
 
+# Der Index-Dienst holt die Aufträge bei Nachschlag auf dem Pi ab und lädt die fertigen Indizes hoch; am Mac lauscht er
+# nicht. Adresse des Pi, Schlüssel und Ordner stehen nur am Mac (umgebung_datei), nie im Repo; Aufbau siehe
+# backend/app/indexdienst/__main__.py.
 [[teile]]
-kennung = "backend"
-name = "Backend"
+kennung = "indexdienst"
+name = "Index-Dienst"
+zweck = "Eigene Indizes bauen"
 ordner = "~/Entwicklung/Werkzeuge/nachschlag/backend"
-befehl = [".venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8711", "--log-level", "warning"]
-port = 8711
-speicher_gb = 0.3
+befehl = [".venv/bin/python", "-m", "app.indexdienst"]
+umgebung_datei = "~/Nachschlag/indexdienst.env"
+speicher_gb = 1
+startzeit_s = 10
+daten = ["~/Nachschlag/eigenindex"]

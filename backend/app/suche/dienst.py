@@ -1,4 +1,5 @@
-"""Suche über die Bücher der Bibliothek: der Index antwortet immer; die Bedeutungssuche läuft gleichzeitig mit einer
+"""Suche über die Bücher der Bibliothek: der Index antwortet immer (der eigene, wenn das Buch einen hat, sonst der
+Index der ZIM-Datei); die Bedeutungssuche läuft gleichzeitig mit einer
 Wartezeit. Gemischt wird nach Rang (Reciprocal Rank Fusion, k = 60): ein Treffer, den beide Wege finden, steigt.
 Antwortet die Bedeutungssuche nicht rechtzeitig oder ist sie nicht angebunden, steht `nur_index` in der Antwort."""
 
@@ -10,6 +11,8 @@ import time
 from collections.abc import Callable
 
 from ..bibliothek import Bibliothek, BuchFehlt, EintragFehlt
+from ..eigenindex import abfrage
+from ..eigenindex.ablage import Eigenindizes
 from ..modell.buch import Buch
 from ..modell.suche import Suchergebnis, Treffer, Vorschlag, Zeiten
 from . import index
@@ -24,19 +27,31 @@ def _rang(platz: int) -> float:
 
 class Suche:
     def __init__(self, bibliothek: Bibliothek, bedeutung: Bedeutung, wartezeit_s: Callable[[], float],
-                 bedeutungsbuch: Callable[[], str], medien: Callable[[str, str], str]) -> None:
+                 bedeutungsbuch: Callable[[], str], medien: Callable[[str, str], str], eigen: Eigenindizes) -> None:
         """`bedeutungsbuch`: Kennung des Buchs, zu dem die Bedeutungssuche gehört (ihre Treffer zeigen in dieses Buch)."""
         self._bib, self._bedeutung, self._warten, self._bedeutungsbuch = bibliothek, bedeutung, wartezeit_s, bedeutungsbuch
-        self._medien = medien
+        self._medien, self._eigen = medien, eigen
 
     async def _buecher(self, auswahl: list[str]) -> list[Buch]:
         alle = (await self._bib.stand()).buecher
-        return [b for b in alle if b.faehigkeiten.volltext and (not auswahl or b.kennung in auswahl)]
+        return [b for b in alle if (b.faehigkeiten.volltext or self._eigen.datei(b.kennung))
+                and (not auswahl or b.kennung in auswahl)]
+
+    def _eigen_suchen(self, b: Buch, frage: str, anzahl: int) -> tuple[list[Treffer], int] | None:
+        """Treffer aus dem eigenen Index des Buchs (Ausschnitte aus dem Index, ohne das Buch zu lesen); None ohne ihn."""
+        datei = self._eigen.datei(b.kennung)
+        if datei is None:
+            return None
+        funde, gesamt = abfrage.suchen(datei, frage, anzahl)
+        return [Treffer(buch=b.kennung, pfad=f.pfad, titel=f.titel, ausschnitt=f.ausschnitt, wege=["index"], rang=_rang(platz))
+                for platz, f in enumerate(funde, 1)], gesamt
 
     async def _index(self, buecher: list[Buch], frage: str, anzahl: int) -> tuple[list[Treffer], int]:
         """Treffer aller gewählten Bücher, je Buch nach Platz gerankt (die Indizes verschiedener Bücher sind nicht
         vergleichbar; der Platz schon)."""
         def suchen(b: Buch) -> tuple[list[Treffer], int]:
+            if (eigen := self._eigen_suchen(b, frage, anzahl)) is not None:
+                return eigen
             a = self._bib.archiv(b.kennung)
             pfade, gesamt = index.volltext(a, frage, 0, anzahl)
             treffer, gesehen = [], set()

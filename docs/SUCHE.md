@@ -15,6 +15,12 @@ fehlenden Feldern (Schlagwörter, Stimmen, Autoren, Rubriken).
 4. **Wo gerechnet wird:** auf dem Mac (der Pi liefert nur Daten). Der Index-Dienst liest das Buch übers Heimnetz
    (Freigabe des Bücherordners, nur lesend), baut den Index und liefert die Indexdatei an Nachschlag auf dem Pi. Keine
    Kopie der Bücher auf dem Mac. Platz auf dem Pi: 1,3 TB frei (Stand 01.11.2026).
+   **Umgesetzt (Schritt 2):** Der Index-Dienst ruft nur an, am Mac lauscht nichts im Netz (dort sind Dienste sonst nur
+   über den Vorbau mit Anmeldung erreichbar). Er holt den laufenden Auftrag bei Nachschlag ab (`/api/v1/indexdienst`,
+   nur mit seinem eigenen Schlüssel), meldet den Fortschritt, lädt die fertige Datei in Stücken hoch und meldet sie
+   fertig; Nachschlag prüft die Prüfsumme und tauscht aus. Er läuft als Teil von Nachschlag im Stellwerk
+   (`python -m app.indexdienst`, Einstellungen aus der Umgebung). Welche Bücher einen eigenen Index bekommen, steht in
+   den Einstellungen in Stufen nach der Reihenfolge des Baus (keine, Handbücher, dazu Frage und Antwort, alle).
 5. **Übersetzte Suche:** automatisch, wenn englische Bücher dabei sind. Die Leitstelle übersetzt lokal; Fachbegriffe,
    Code und Bezeichner bleiben. Die englischen Treffer kommen nach, sobald die Übersetzung da ist. Die Übersetzung
    steht sichtbar über den Treffern und lässt sich ändern; einmal übersetzte Fragen werden gemerkt.

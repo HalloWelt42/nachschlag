@@ -39,7 +39,11 @@ def ausschnitt(inhalt: bytes, frage: str, laenge: int = 240) -> str:
     stelle = min((i for w in woerter if (i := unten.find(w)) >= 0), default=0)
     anfang = max(0, stelle - laenge // 3)
     stueck = text[anfang:anfang + laenge]
-    sicher = html.escape(stueck)
-    for w in sorted(set(woerter), key=len, reverse=True):
+    return ("... " if anfang else "") + markieren(html.escape(stueck), frage) + (" ..." if anfang + laenge < len(text) else "")
+
+
+def markieren(sicher: str, frage: str) -> str:
+    """Fundwörter der Frage (auch als Wortanfang) in schon maskiertem Text mit <em> auszeichnen."""
+    for w in sorted({w.lower() for w in WORT.findall(frage)}, key=len, reverse=True):
         sicher = re.sub(f"({re.escape(html.escape(w))}\\w*)", r"<em>\1</em>", sicher, flags=re.I)
-    return ("... " if anfang else "") + sicher + (" ..." if anfang + laenge < len(text) else "")
+    return sicher

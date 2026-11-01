@@ -146,6 +146,11 @@ class Bibliothek:
     def archiv(self, kennung: str) -> Archive:
         return self._oeffnen(kennung).archiv
 
+    def geoeffnet(self, kennung: str) -> tuple[Archive, Buch]:
+        """Datei und Angaben eines Buchs ohne Warten (für Arbeit in einem eigenen Faden, etwa den Index-Dienst)."""
+        offen = self._oeffnen(kennung)
+        return offen.archiv, offen.buch
+
     def _oeffnen(self, kennung: str) -> _Offen:
         with self._sperre:
             offen = self._offen.get(kennung)

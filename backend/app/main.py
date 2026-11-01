@@ -15,7 +15,10 @@ from appkern.einstellungen import Angebot, Option
 from .api import router
 from .artikel import Artikelleser
 from .bibliothek import Bibliothek
-from .einstellungen import AppEinstellungen
+from .eigenindex.ablage import Eigenindizes
+from .eigenindex.api import router as indexdienst_router
+from .eigenindex.auftrag import Indexauftraege
+from .einstellungen import ARTEN_JE_STUFE, AppEinstellungen
 from .meins import Meins
 from .meins.api import router as meins_router
 from .medien import Medien
@@ -40,13 +43,18 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     leser = Artikelleser(bibliothek)
     bedeutung = FundusBedeutung(lambda: geruest.verbund, lambda: e().fundus_adresse, lambda: e().fundus_sammlung,
                                 lambda: e().fundus_vorsilbe)
+    eigen = Eigenindizes(lambda: e().eigenindex_ordner)
     suche = Suche(bibliothek, bedeutung, lambda: e().bedeutung_warten_s, lambda: e().bedeutung_buch,
-                  lambda buch, pfad: "")
+                  lambda buch, pfad: "", eigen)
+    indexauftraege = Indexauftraege(eigen, bibliothek, geruest.auftraege, lambda: e().indexdienst_schluessel.get_secret_value(),
+                                    lambda: ARTEN_JE_STUFE[e().eigene_indizes])
 
     meins = Meins(geruest.db, bibliothek.name_von, bibliothek.kennung_von)
     geruest.begleiter_anmelden(meins)
     themen = Themen(geruest.db, bibliothek.name_von, bibliothek.kennung_von)
     geruest.begleiter_anmelden(themen)                   # nach Meins: Einträge lesen Lesestand und Notizen von dort
+    geruest.begleiter_anmelden(indexauftraege)
+    geruest.verbindung_anmelden("Index-Dienst", indexauftraege.verbindung)
 
     # Was das System kennt, ist kein Textfeld: die Bücher der Bibliothek als Auswahl, der Fundus aus dem Verzeichnis
     async def buecher() -> Angebot:
@@ -61,11 +69,13 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     app = geruest.fastapi()
     app.state.geruest = geruest
     app.state.bibliothek = bibliothek
+    app.state.indexauftraege = indexauftraege
     app.include_router(router(geruest, bibliothek, leser, suche))
     app.include_router(meins_router(geruest, meins))
     app.include_router(themen_router(geruest, themen, suche, bibliothek.name_von))
     app.include_router(medien_router(geruest, Medien(leser, suche)))
     app.include_router(stoebern_router(geruest, Stoebern(bibliothek, leser, suche, meins.gelesen)))
+    app.include_router(indexdienst_router(indexauftraege))           # nur mit dem Schlüssel des Index-Dienstes
     # unter /lesen trägt der Weg Pfade aus Büchern, oft mit Punkt (function.array-map.php): immer eine Seite
     geruest.oberflaeche_ausliefern(app, seiten=["lesen"])
     return app
