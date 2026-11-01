@@ -474,6 +474,23 @@ def test_formeln_als_mathml_ohne_ersatzbild():
     assert '<div class="formel"><math display="block"><mi>E</mi></math></div> danach' in text
 
 
+def test_fehlende_bilder_fallen_weg():
+    """Ein Bild, dessen Datei das Buch nicht enthält, kommt nicht in den Artikel (in einer Abbildung samt Unterschrift)
+    und wird nie Leitbild."""
+    from lxml import html as lhtml
+    from app.bausteine import html as h
+    from app.bausteine.basis import Wege
+    wege = Wege(artikel=lambda b, p: f"/lesen/{b}/{p}", medien=lambda b, p: f"/m/{b}/{p}", original=lambda b, p: "",
+                gibt_es=lambda b, p: p == "_assets_/da.jpg", datei=lambda b, p: None)
+    wurzel = lhtml.fragment_fromstring('<div><figure><img src="./_assets_/fehlt.jpg" width="300"><figcaption>weg</figcaption></figure>'
+                                       '<p>Text <img src="./_assets_/fehlt2.png" width="200"> mehr</p>'
+                                       '<figure><img src="./_assets_/da.jpg" width="250"><figcaption>bleibt</figcaption></figure></div>')
+    erstes = h.bilder_umschreiben(wurzel, "buch", "Artikel", wege)
+    text = h.als_html(wurzel)
+    assert erstes == "/m/buch/_assets_/da.jpg"
+    assert "fehlt" not in text and "weg</figcaption>" not in text and "bleibt" in text and "Text  mehr" in text
+
+
 async def test_meins_trennt_konten(tmp_path):
     """Was ein Konto merkt, sieht kein anderes."""
     from appkern.datenbank import Datenbank

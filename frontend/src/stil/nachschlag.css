@@ -224,7 +224,6 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .sprachmarke .fi { width: 1.25em; line-height: .94em; border-radius: 2px; box-shadow: 0 0 0 1px var(--rand); }
 .sprachmarke > i { color: var(--text-3); }
 .sprachmarke .sprachname { font-size: var(--marke); color: var(--text-2); }
-.nur-lesen { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .buchmarke { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
 .buchmarke > i { color: var(--text-3); }
 .buchmarke .buchtitel { min-width: 0; overflow-wrap: anywhere; }
@@ -677,7 +676,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .medium .unter em { font-style: normal; background: var(--akzent-weich); border-radius: 2px; }
 .medium .herkunft-m { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: var(--marke); color: var(--text-3); }
 .medium .groesse { position: absolute; top: 8px; right: 8px; font-family: var(--schrift-zahl); font-size: var(--marke); padding: 2px 7px; border-radius: var(--r1);
-                   background: color-mix(in srgb, var(--text) 70%, transparent); color: var(--hg); }
+                   background: var(--text); color: var(--hg); }
 .artikel-text figure img, .steckbrief img { cursor: zoom-in; }
 /* Ausnahme: die große Bildansicht ist in beiden Modi dunkel, damit Bilder gleich wirken (wie im Entwurf); ihre Farben nur hier */
 .leuchtkasten { --lk-grund: rgb(6, 9, 14); --lk-leiste: #111a25; --lk-text: #e9eef5; --lk-hell: #fff; --lk-blass: #b4c2d3; --lk-schwach: #8296ab;
@@ -779,7 +778,8 @@ button.kachel:disabled { opacity: .6; cursor: default; }
   .themen-seite.mit-thema .themenliste, .themen-seite:not(.mit-thema) .thema-flaeche { display: none; }
   .themenliste { box-shadow: none; background: transparent; }
   .themen-kopfzeile { padding-inline: 0; }
-  .themenliste .rollfeld { padding-inline: 0; }
+  .themenliste .rollfeld { padding-inline: 0; gap: var(--a2); }
+  .thema-eintrag { background: var(--flaeche); box-shadow: var(--schatten); }   /* Zeilen über die volle Breite wie die anderen Listen */
   .thema-kopf, .thema-bereiche, .thema-leer { padding-inline: 0; }
   .vorschlagsband { margin-inline: 0; }
   .thema-kopf .werkzeuge .rechts { margin-left: 0; }

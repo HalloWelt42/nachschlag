@@ -6,13 +6,15 @@
   let { kuerzel, name = false }: { kuerzel: string; name?: boolean } = $props();
 
   const liste = $derived(sprachen(kuerzel));
+  const namen = $derived(liste.map((s) => s.name).join(", "));
 </script>
 
 {#if liste.length}
-  <span class="sprachmarke" title={liste.map((s) => s.name).join(", ")}>
+  <!-- die Flaggen sind ein Bild der Sprache: ihr Name steht als Beschriftung daran (Vorlesen, Hinweis beim Überfahren) -->
+  <span class="sprachmarke" role="img" aria-label={namen} title={namen}>
     {#each liste as s (s.name)}
       {#if s.flagge}<span class="fi fi-{s.flagge}" aria-hidden="true"></span>{:else}<i class="fa-solid fa-globe" aria-hidden="true"></i>{/if}
     {/each}
-    {#if name}<span class="sprachname">{liste.map((s) => s.name).join(", ")}</span>{:else}<span class="nur-lesen">{liste.map((s) => s.name).join(", ")}</span>{/if}
+    {#if name}<span class="sprachname" aria-hidden="true">{namen}</span>{/if}
   </span>
 {/if}

@@ -148,14 +148,21 @@ def verweise_umschreiben(wurzel, buch: str, eintragspfad: str, wege: Wege) -> tu
 
 
 def bilder_umschreiben(wurzel, buch: str, eintragspfad: str, wege: Wege) -> str:
-    """Bilder auf den Medienweg legen (nie größer als die Datei); liefert das erste Bild des Inhalts."""
+    """Bilder auf den Medienweg legen (nie größer als die Datei); liefert das erste Bild des Inhalts. Ein Bild, dessen
+    Datei das Buch nicht enthält (Bücher ohne Bilder, Ausschnitte), fällt weg, in einer Abbildung mit ihr: so fragt
+    keine Seite ein Bild an, das es nicht gibt, und kein Leitbild zeigt ins Leere."""
     erstes = ""
     for img in list(wurzel.iter("img")):
         src = img.get("src") or ""
         if not src or src.startswith(("data:", "http:", "https:", "//")):
             img.drop_tree()
             continue
-        adresse = wege.medien(buch, ziel_im_buch(eintragspfad, src))
+        ziel = ziel_im_buch(eintragspfad, src)
+        if not wege.gibt_es(buch, ziel):
+            abbildung = next(img.iterancestors("figure"), None)
+            (abbildung if abbildung is not None and len(list(abbildung.iter("img"))) == 1 else img).drop_tree()
+            continue
+        adresse = wege.medien(buch, ziel)
         for name in ("srcset", "sizes", "style", "data-src"):
             img.attrib.pop(name, None)
         img.set("src", adresse)
