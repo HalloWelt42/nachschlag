@@ -1068,3 +1068,8 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .wahl-uebersetzung .text { flex: 1; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 40vh; overflow-y: auto; }
 .wahl-uebersetzung .laeuft, .wahl-uebersetzung .grund { display: inline-flex; align-items: center; gap: var(--a2); }
 .wahl-uebersetzung button.kopieren { flex: none; flex-direction: row; gap: 6px; }
+
+/* Kommentare im Code umschalten (WIKI-8): am Kopf eines Beispiels, sonst klein über dem Codeabschnitt rechts */
+.artikel-text .kommentar-schalter { height: 28px; padding: 0 10px; font-size: var(--klein); }
+.artikel-text .kommentar-schalter.an { color: var(--petrol); }
+.artikel-text :not(.bkopf) > .kommentar-schalter { display: flex; margin: 0 0 4px auto; }

@@ -58,3 +58,21 @@ def html_sprache(kuerzel: str) -> str:
 
 def anweisung(art: Art, sprache: str, titel: str, anzahl: int) -> str:
     return GRUND.format(sprache=sprache_in_worten(sprache), titel=titel, art=JE_ART.get(art, SONST), anzahl=anzahl)
+
+
+KOMMENTARE = """Du übersetzt Kommentare aus Programmcode aus dem {sprache} ins Deutsche, aus dem Artikel "{titel}". Jedes Stück
+ist der Text einer Kommentarzeile ohne Kommentarzeichen, in der Reihenfolge des Codes.
+
+Regeln für jedes Stück:
+- Fachlich genau, wie ein deutscher Entwickler kommentieren würde; den Sinn nicht verändern, nichts ergänzen, nichts
+  weglassen.
+- Unverändert bleiben: Bezeichner, Funktions-, Klassen- und Variablennamen ($n, x_squared(), myVar), Werte und Zahlen,
+  Zeichen und Ausdrücke (==, ->, [], Pfade, Adressen), Text in Backticks, Annotationen wie @param oder @return samt Typ.
+- Ist ein Stück schon deutsch oder rein technisch, gib es unverändert zurück.
+- Eine Zeile bleibt eine Zeile. Nur gerade Anführungszeichen (") und einfache Bindestriche (-).
+
+Antworte nur mit dem JSON-Objekt {{"stuecke": [...]}}: genau {anzahl} Stücke in derselben Reihenfolge."""
+
+
+def anweisung_kommentare(sprache: str, titel: str, anzahl: int) -> str:
+    return KOMMENTARE.format(sprache=sprache_in_worten(sprache), titel=titel, anzahl=anzahl)

@@ -26,14 +26,16 @@ from ..bausteine.html import als_html, ueberschriften
 from ..bibliothek import Bibliothek
 from ..modell.artikel import Abschnitt, Artikel, Steckbrief
 from ..modell.buch import Buch
-from .anweisungen import anweisung, html_sprache, sprache_in_worten
+from .anweisungen import anweisung, anweisung_kommentare, html_sprache, sprache_in_worten
+from .kommentare import Kommentarzeile, kommentare, sprache_aus
+from .kommentare import pruefen as kommentar_pruefen
 from .zerlegen import Abgelehnt, Lauf, einsetzen, laeufe, pruefen
 
 logger = logging.getLogger("nachschlag.uebersetzung")
 
 ART = "artikeluebersetzung"
 #: Fassung der Übersetzung: steigt sie (bessere Anweisungen, andere Prüfung), gelten ältere Übersetzungen als fehlend
-FASSUNG = 1
+FASSUNG = 2                  # 2: Kommentare im Code eigens übersetzt (WIKI-8)
 ZIEL = "deu"
 #: so viel Text geht je Anfrage ans Modell (Zeichen der Vorlagen), höchstens so viele Stücke
 TEIL_ZEICHEN = 2500
@@ -59,6 +61,14 @@ class ArtikelEingabe(BaseModel):
     pfad: str = Field(min_length=1, max_length=2000)
 
 
+class Codekommentar(BaseModel):
+    """Eine Kommentarzeile eines Codeabschnitts: wie sie im Code steht und übersetzt (mit denselben Zeichen); die
+    Oberfläche tauscht sie im gezeigten Code, je Abschnitt umschaltbar."""
+    block: int = Field(description="Nummer des Codeabschnitts (pre) im Artikel, ab 0")
+    original: str
+    uebersetzt: str
+
+
 class ArtikelUebersetzung(BaseModel):
     """Was die Oberfläche statt des Originals zeigt; Anker, Bilder und Verweise sind die des Originals."""
     titel: str
@@ -70,6 +80,7 @@ class ArtikelUebersetzung(BaseModel):
     wann: str = Field(description="Zeitpunkt der Übersetzung (ISO)")
     stuecke: int = Field(0, description="so viele Textstücke hat der Artikel")
     im_original: int = Field(0, description="so viele bestanden die Prüfung nicht und stehen im Original")
+    kommentare: list[Codekommentar] = Field(default_factory=list, description="Kommentare im Code, je Abschnitt umschaltbar")
 
 
 class Artikelstand(BaseModel):
@@ -175,32 +186,43 @@ class Artikeluebersetzer(Begleiter):
         await k.fortschritt(0.0, "Artikel lesen", phase="lesen")
         buch = await self._bib.buch(k.eingabe.buch)
         artikel = await self._leser.lesen(k.eingabe.buch, k.eingabe.pfad)
-        teile = _Zerlegt(artikel)
+        teile = _Zerlegt(artikel, [buch.name])
         fertig: dict[str, str] = dict(k.zwischenstand.get("stuecke") or {})
+        kfertig: dict[str, str] = dict(k.zwischenstand.get("kommentare") or {})
         modell = str(k.zwischenstand.get("modell") or "")
-        offen = [(nr, l.vorlage) for nr, l in enumerate(teile.laeufe) if str(nr) not in fertig]
-        portionen = _teile(offen)
-        for i, portion in enumerate(portionen):
-            await k.pruefen()
-            await k.fortschritt(len(fertig) / max(1, len(teile.laeufe)), f"Teil {i + 1} von {len(portionen)}", phase="uebersetzen")
-            uebersetzt, modell = await self._uebersetzen(leitstelle, buch, artikel, teile, portion, modell)
-            fertig.update({str(nr): text for nr, text in uebersetzt.items()})
-            await k.merken(stuecke=fertig, modell=modell)
+        gesamt = max(1, len(teile.laeufe) + len(teile.kommentare))
+        # erst der Text, dann die Kommentare im Code: eigene Anweisung, eigene Prüfung (Bezeichner und Werte bleiben)
+        arbeiten = [
+            ("stuecke", fertig, [(nr, l.vorlage) for nr, l in enumerate(teile.laeufe)],
+             lambda n: anweisung(buch.art, buch.sprache, artikel.titel, n), lambda nr, t: pruefen(teile.laeufe[nr], t), "Teil"),
+            ("kommentare", kfertig, [(nr, z.inhalt) for nr, z in enumerate(teile.kommentare)],
+             lambda n: anweisung_kommentare(buch.sprache, artikel.titel, n),
+             lambda nr, t: kommentar_pruefen(teile.kommentare[nr], t), "Kommentare im Code, Teil"),
+        ]
+        for _, erledigt, stuecke, anweisen, pruefe, wort in arbeiten:
+            portionen = _teile([(nr, v) for nr, v in stuecke if str(nr) not in erledigt])
+            for i, portion in enumerate(portionen):
+                await k.pruefen()
+                await k.fortschritt((len(fertig) + len(kfertig)) / gesamt, f"{wort} {i + 1} von {len(portionen)}", phase="uebersetzen")
+                uebersetzt, modell = await self._uebersetzen(leitstelle, anweisen, portion, pruefe, artikel.pfad, modell)
+                erledigt.update({str(nr): text for nr, text in uebersetzt.items()})
+                await k.merken(stuecke=fertig, kommentare=kfertig, modell=modell)
         await k.fortschritt(1.0, "Prüfen und ablegen", phase="ablegen")
-        ergebnis = teile.zusammensetzen(fertig, buch.sprache, modell)
+        ergebnis = teile.zusammensetzen(fertig, kfertig, buch.sprache, modell)
         await self._db.ausfuehren(
             "INSERT INTO artikeluebersetzungen (buch, pfad, fassung, daten, wann) VALUES (?,?,?,?,?) "
             "ON CONFLICT(buch, pfad) DO UPDATE SET fassung = excluded.fassung, daten = excluded.daten, wann = excluded.wann",
             (buch.kennung, artikel.pfad, FASSUNG, ergebnis.model_dump_json(), ergebnis.wann))
         return {"stuecke": ergebnis.stuecke, "im_original": ergebnis.im_original}
 
-    async def _uebersetzen(self, leitstelle: Leitstelle, buch: Buch, artikel: Artikel, teile: _Zerlegt,
-                           portion: list[tuple[int, str]], modell: str) -> tuple[dict[int, str], str]:
-        """Eine Portion übersetzen. Passt die Antwort nicht (Anzahl, unlesbar), wird halbiert, bis einzelne Stücke
-        übrig sind; ein einzelnes Stück, das nicht durchgeht, bleibt im Original (fehlt im Ergebnis)."""
+    async def _uebersetzen(self, leitstelle: Leitstelle, anweisen: Callable[[int], str], portion: list[tuple[int, str]],
+                           pruefe: Callable[[int, str], None], wo: str, modell: str) -> tuple[dict[int, str], str]:
+        """Eine Portion übersetzen (Text oder Kommentare, je mit eigener Anweisung und Prüfung). Passt die Antwort nicht
+        (Anzahl, unlesbar), wird halbiert, bis einzelne Stücke übrig sind; ein einzelnes Stück, das nicht durchgeht,
+        bleibt im Original (fehlt im Ergebnis)."""
         try:
             antwort = await leitstelle.chat(
-                [Nachricht.system(anweisung(buch.art, buch.sprache, artikel.titel, len(portion))),
+                [Nachricht.system(anweisen(len(portion))),
                  Nachricht.nutzer(json.dumps({"stuecke": [v for _, v in portion]}, ensure_ascii=False))],
                 modell=self._modell() or None, titel="Artikel übersetzen", prioritaet="normal",
                 response_format=_form(len(portion)), temperature=0)
@@ -212,25 +234,25 @@ class Artikeluebersetzer(Begleiter):
             raise AuftragFehler(f"Übersetzung gerade nicht möglich: {f}") from f
         except (ValueError, AttributeError) as f:
             if len(portion) == 1:
-                logger.info("Stück %s von %s bleibt im Original: %s", portion[0][0], artikel.pfad, f)
+                logger.info("Stück %s von %s bleibt im Original: %s", portion[0][0], wo, f)
                 return {}, modell
             mitte = len(portion) // 2
-            vorn, modell = await self._uebersetzen(leitstelle, buch, artikel, teile, portion[:mitte], modell)
-            hinten, modell = await self._uebersetzen(leitstelle, buch, artikel, teile, portion[mitte:], modell)
+            vorn, modell = await self._uebersetzen(leitstelle, anweisen, portion[:mitte], pruefe, wo, modell)
+            hinten, modell = await self._uebersetzen(leitstelle, anweisen, portion[mitte:], pruefe, wo, modell)
             return vorn | hinten, modell
         ergebnis, nochmal = {}, []
         for (nr, vorlage), text in zip(portion, stuecke):
             text = gerade(str(text))
             try:
-                pruefen(teile.laeufe[nr], text)
-            except Abgelehnt as f:
-                logger.info("Stück %s von %s abgelehnt: %s", nr, artikel.pfad, f)
+                pruefe(nr, text)
+            except ValueError as f:                     # Abgelehnt (Text) oder Verfaelscht (Kommentar)
+                logger.info("Stück %s von %s abgelehnt: %s", nr, wo, f)
                 nochmal.append((nr, vorlage))
                 continue
             ergebnis[nr] = text
         if len(portion) > 1:                 # Abgelehntes einzeln noch einmal: allein gelingt es dem Modell eher
             for stueck in nochmal:
-                einzeln, modell = await self._uebersetzen(leitstelle, buch, artikel, teile, [stueck], modell)
+                einzeln, modell = await self._uebersetzen(leitstelle, anweisen, [stueck], pruefe, wo, modell)
                 ergebnis |= einzeln
         return ergebnis, modell
 
@@ -239,7 +261,8 @@ class _Zerlegt:
     """Ein Artikel als Bäume (Titel, Text, Steckbrief) und seine Textläufe in fester Reihenfolge. Dieselbe Fassung
     des Artikels ergibt dieselben Läufe; darauf baut das Fortsetzen (Nummern im Zwischenstand)."""
 
-    def __init__(self, artikel: Artikel) -> None:
+    def __init__(self, artikel: Artikel, hinweise: list[str] = ()) -> None:
+        """`hinweise`: woran sich die Sprache des Codes erkennen lässt (Name des Buchs); dazu die Schlagwörter."""
         self.artikel = artikel
         self.titel = lhtml.fragment_fromstring("<h1></h1>")
         self.titel.text = artikel.titel
@@ -249,6 +272,9 @@ class _Zerlegt:
         if artikel.steckbrief:
             self.steckbrief_titel.text = artikel.steckbrief.titel
             self.steckbrief = lhtml.fragment_fromstring(artikel.steckbrief.html or "<div></div>", create_parent="div")
+        schlagwoerter = [e.text_content() for e in self.text.xpath(
+            ".//*[contains(concat(' ', normalize-space(@class), ' '), ' schlagwoerter ')]//*[self::a or self::span]")]
+        self.kommentare: list[Kommentarzeile] = kommentare(self.text.xpath(".//pre"), sprache_aus([*schlagwoerter, *hinweise]))
         code_titel = artikel.titelart == "code"
         self.laeufe: list[Lauf] = [
             *([] if code_titel else laeufe(self.titel)),
@@ -257,7 +283,7 @@ class _Zerlegt:
             *([] if self.steckbrief is None else laeufe(self.steckbrief)),
         ]
 
-    def zusammensetzen(self, stuecke: dict[str, str], sprache: str, modell: str) -> ArtikelUebersetzung:
+    def zusammensetzen(self, stuecke: dict[str, str], kommentare: dict[str, str], sprache: str, modell: str) -> ArtikelUebersetzung:
         """Geprüfte Übersetzungen einsetzen; was fehlt oder nicht durchgeht, bleibt im Original und trägt dessen
         Sprache (lang), damit Vorlesen und Silbentrennung sie kennen und die Oberfläche es zeigen kann."""
         aus, lang = sprache_in_worten(sprache), html_sprache(sprache)
@@ -283,5 +309,8 @@ class _Zerlegt:
         return ArtikelUebersetzung(titel=self.titel.text_content() or a.titel, html=html,
                                    abschnitte=ueberschriften(self.text), steckbrief=steckbrief, aus=aus, modell=modell,
                                    wann=datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                                   stuecke=len(self.laeufe), im_original=im_original)
+                                   stuecke=len(self.laeufe), im_original=im_original,
+                                   kommentare=[Codekommentar(block=z.block, original=z.original, uebersetzt=z.mit(kommentare[str(nr)]))
+                                               for nr, z in enumerate(self.kommentare)
+                                               if str(nr) in kommentare and z.mit(kommentare[str(nr)]) != z.original])
 

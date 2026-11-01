@@ -69,6 +69,7 @@ export interface ArtikelUebersetzung {
   wann: string;
   stuecke: number;
   im_original: number;             // so viele Stücke bestanden die Prüfung nicht und stehen im Original (mit lang)
+  kommentare: { block: number; original: string; uebersetzt: string }[];   // Kommentare im Code, je Abschnitt umschaltbar
 }
 
 export interface Artikelstand {

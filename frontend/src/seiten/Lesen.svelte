@@ -32,6 +32,7 @@
   import { belegeDerAuswahl, recherche, rechercheUmschalten } from "../lib/recherche.svelte";
   import { VorleseKnopf, vorleser } from "appkern-oberflaeche";
   import { hervorhebungWeg, satzHervorheben, vorlesetext } from "../lib/mitlesen";
+  import { kommentareSetzen } from "../lib/kommentare";
   import Leuchtkasten from "../teile/Leuchtkasten.svelte";
   import { medienImArtikel, type Medium } from "../lib/medien";
   import { themenLaden } from "../lib/themen.svelte";
@@ -151,6 +152,7 @@
       // Sprache des Codes aus den Schlagwörtern (Frage und Antwort); sonst erkennt sie sich am Inhalt
       codeEinfaerben(text, spracheAus([...text.querySelectorAll(".schlagwoerter :is(span, a)")].map((e) => e.textContent ?? "")));
       kopierknoepfe(text);
+      kommentarSchalter(text);
       if (geraet.mobil) codeGrossKnoepfe(text);
       symboleAnbringen(text);
     }
@@ -339,6 +341,37 @@
       const kopf = kasten.querySelector<HTMLElement>(".bkopf");
       if (kopf) kopf.append(knopf);
       else kasten.prepend(knopf);
+    }
+  }
+
+  /** Kommentare im Code (WIKI-8): Gibt es übersetzte Kommentare, bekommt jeder Codeabschnitt mit welchen einen Schalter
+   *  "Kommentare"; er tauscht nur diesen Abschnitt. Auf Deutsch gezeigt beginnen sie deutsch, sonst im Original. */
+  function kommentarSchalter(wurzel: HTMLElement) {
+    const paare = ue?.uebersetzung?.kommentare ?? [];
+    if (!paare.length) return;
+    const pres = [...wurzel.querySelectorAll<HTMLElement>("pre")];
+    for (const [nr, pre] of pres.entries()) {
+      const eigene = paare.filter((p) => p.block === nr);
+      if (!eigene.length || pre.dataset.kommentare) continue;
+      pre.dataset.kommentare = "ja";                 // jeder Abschnitt bekommt seinen Schalter genau einmal
+      let deutsch = aufDeutsch;
+      if (deutsch) kommentareSetzen(pre, eigene, true);
+      const knopf = document.createElement("button");
+      knopf.className = "knopf still kommentar-schalter";
+      const beschriften = () => {
+        knopf.title = deutsch ? "Kommentare im Original zeigen" : "Kommentare auf Deutsch zeigen";
+        knopf.innerHTML = `<i class="fa-solid fa-language"></i><span class="wort">Kommentare ${deutsch ? "Deutsch" : "Original"}</span>`;
+        knopf.classList.toggle("an", deutsch);
+      };
+      beschriften();
+      knopf.addEventListener("click", () => {
+        deutsch = !deutsch;
+        kommentareSetzen(pre, eigene, deutsch);
+        beschriften();
+      });
+      const kopf = pre.closest(".beispiel")?.querySelector<HTMLElement>(".bkopf");
+      if (kopf) kopf.append(knopf);
+      else pre.before(knopf);
     }
   }
 

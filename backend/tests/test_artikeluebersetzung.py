@@ -205,3 +205,32 @@ async def test_fehler_der_leitstelle_und_wiederholen(db):
         assert (await bis_fertig(u)).zustand == "fertig"
     finally:
         await auftraege.stoppen()
+
+
+async def test_kommentare_im_code_eigens_uebersetzt_code_bleibt(db):
+    """WIKI-8: Kommentare im Code als eigene Stücke (ohne Kommentarzeichen); der Code bleibt Zeichen für Zeichen, die
+    Paare stehen je Codeabschnitt; was Bezeichner verändert, bleibt im Original."""
+    import app.uebersetzung.artikel as modul
+
+    code = '<pre><span class="c-kom">// returns the cube of $n</span>\n$b = cube(3); <span class="c-kom">// calls cube()</span></pre>'
+    artikel = ARTIKEL.model_copy(update={"html": ARTIKEL.html + code})
+    tabelle = DEUTSCH | {"returns the cube of $n": "gibt die dritte Potenz von $n zurück", "calls cube()": "ruft die Funktion auf"}
+    leitstelle = Leitstelle(tabelle)
+
+    class EigenerLeser:
+        async def lesen(self, buch, pfad):
+            return artikel
+
+    auftraege = Auftraege(db, [])
+    u = modul.Artikeluebersetzer(db, auftraege, Bib(), EigenerLeser(), lambda: leitstelle, lambda: "")
+    await u.starten()
+    await auftraege.starten()
+    try:
+        await u.anstossen(BUCH.kennung, ARTIKEL.pfad, "Probe")
+        ue = (await bis_fertig(u)).uebersetzung
+        assert [(k.block, k.original, k.uebersetzt) for k in ue.kommentare] == [
+            (0, "// returns the cube of $n", "// gibt die dritte Potenz von $n zurück")]   # cube() fehlte: bleibt Original
+        assert '<span class="c-kom">// returns the cube of $n</span>' in ue.html                # der Code selbst bleibt
+        assert ["returns the cube of $n", "calls cube()"] in leitstelle.aufrufe
+    finally:
+        await auftraege.stoppen()

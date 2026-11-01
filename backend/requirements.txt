@@ -4,4 +4,5 @@ python-multipart>=0.0.9
 pytest>=8
 pytest-asyncio>=0.24
 libzim>=3.5
+pygments>=2.18,<3            # Kommentare im Code erkennen (WIKI-8)
 lxml>=5
