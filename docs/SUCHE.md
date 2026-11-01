@@ -55,6 +55,9 @@ fehlenden Feldern (Schlagwörter, Stimmen, Autoren, Rubriken).
 16. **Freigabe:** Samba-Freigabe `buecher` auf dem Pi (/mnt/data/zim), nur lesend, ohne Passwort, nur aus dem
     Heimnetz (eingerichtet 01.11.2026, vorher gesichert als /etc/samba/smb.conf.vor-buecher-freigabe); am Mac nur
     lesend eingehängt. Gemessen: PHP Docs (7.560 Einträge, 34 MB HTML) in 0,5 s über die Freigabe gelesen.
+17. **Ablage in der Kellerwolke sichtbar:** Bücher (/mnt/data/zim, NVMe) und eigene Indizes liegen auf der schnellen
+    SSD und werden als externe Quellen in die Kellerwolke eingebunden (Bücher nur lesend). Den Ordner der Indizes nennt
+    Nachschlag in seinen Einstellungen (nie fest im Code). Das Eintragen der Quellen macht der Nutzer als Verwalter.
 
 ## Reihenfolge des Baus
 
