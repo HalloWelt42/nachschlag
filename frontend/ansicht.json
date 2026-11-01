@@ -51,6 +51,14 @@
     {
       "name": "fragenliste",
       "pfad": "/lesen/vi.stackexchange.com_en_all_2026-10/questions"
+    },
+    {
+      "name": "merkzettel",
+      "pfad": "/merkzettel"
+    },
+    {
+      "name": "verlauf",
+      "pfad": "/verlauf"
     }
   ]
 }

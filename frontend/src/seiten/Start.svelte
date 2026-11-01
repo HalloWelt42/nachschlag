@@ -8,6 +8,13 @@
   import { artikelHolen, zufallHolen } from "../lib/schnittstelle";
   import type { Art, Buch } from "../lib/typen";
   import { lesen } from "../lib/ziele";
+  import { gehe } from "appkern-oberflaeche";
+  import { meins, meinsLaden, verlaufHolen, wann, type Verlaufseintrag } from "../lib/meins.svelte";
+
+  const WEITERLESEN = 4;                 // Karten im Entwurf
+  const MERKZETTEL = 5;
+  const FERTIG_AB = 0.95;                // so weit gelesen gilt als fertig, nicht mehr zum Weiterlesen
+  let weiterlesen = $state.raw<Verlaufseintrag[]>([]);
 
   interface Fund { buch: Buch; pfad: string; titel: string; einleitung: string }
 
@@ -32,6 +39,9 @@
   }
 
   onMount(async () => {
+    void meinsLaden(true);
+    verlaufHolen(30, 0, "artikel").then((v) => (weiterlesen = v.filter((e) => e.buch && e.anteil < FERTIG_AB).slice(0, WEITERLESEN)))
+      .catch(() => {});
     await bibliothekLaden();
     for (const b of mitLesedesign) void zufallsfund(b);
   });
@@ -48,6 +58,41 @@
           {bibliothek.buecher.length === 1 ? "Buch" : "Büchern"}</div>
       {/if}
     </div>
+
+    {#if weiterlesen.length}
+      <section>
+        <div class="abschnitt-kopf"><h2><i class="fa-solid fa-book-open-reader"></i>Weiterlesen</h2>
+          <button class="alle" onclick={() => gehe("verlauf")}>Verlauf</button></div>
+        <div class="reihe">
+          {#each weiterlesen as e (e.id)}
+            <button class="leskarte" onclick={() => lesen(e.buch, e.pfad)}>
+              <span class="bildflaeche">{#if e.bild}<img src={e.bild} alt="" loading="lazy" />{:else}<i class="fa-solid fa-file-lines"></i>{/if}</span>
+              <span class="koerper"><span class="t">{e.titel}</span>
+                {#if e.abschnitt}<span class="u">bei {e.abschnitt}</span>{/if}
+                <span class="stand"><span class="spur"><span style="width: {Math.round(e.anteil * 100)}%"></span></span>{Math.round(e.anteil * 100)} %</span></span>
+            </button>
+          {/each}
+        </div>
+      </section>
+    {/if}
+
+    {#if meins.merkzettel.length}
+      <section>
+        <div class="abschnitt-kopf"><h2><i class="fa-solid fa-bookmark"></i>Merkzettel</h2><span class="neben">{meins.merkzettel.length}</span>
+          <button class="alle" onclick={() => gehe("merkzettel")}>Alle</button></div>
+        <div class="liste">
+          {#each meins.merkzettel.slice(0, MERKZETTEL) as m (m.id)}
+            <div class="liste-zeile">
+              <button class="liste-ziel" disabled={!m.buch} onclick={() => lesen(m.buch, m.pfad)}>
+                {#if m.bild}<img src={m.bild} alt="" loading="lazy" />{:else}<span class="ohne-bild"><i class="fa-solid fa-bookmark"></i></span>{/if}
+                <span><span class="t">{m.titel}</span><span class="u">gemerkt {wann(m.angelegt)}</span></span>
+                <span class="rechts">{m.anteil > 0 ? `${Math.round(m.anteil * 100)} %` : "ungelesen"}</span>
+              </button>
+            </div>
+          {/each}
+        </div>
+      </section>
+    {/if}
 
     {#if mitLesedesign.length}
       <section>

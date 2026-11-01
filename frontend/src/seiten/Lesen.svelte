@@ -9,6 +9,7 @@
   import type { Artikel } from "../lib/typen";
   import { lesen, lesenZiel, suchen, verweisZiel } from "../lib/ziele";
   import { Auswahl } from "appkern-oberflaeche";
+  import { gemerkt, lesestandMelden, meins, meinsLaden, merken, vergessen, vorliebeSetzen } from "../lib/meins.svelte";
   import { anwenden as fassungAnwenden, bekannte as bekannteFassungen, fassungenAus, gemerkt as fassungGemerkt, merken as fassungMerken,
            type Fassungen } from "../lib/fassung";
 
@@ -94,9 +95,9 @@
         kopierknoepfe(text);
         symboleAnbringen(text);
       }
-      await bibliothekLaden();                // das Buch nennt den Namen, unter dem die Fassung gemerkt ist
+      await Promise.all([bibliothekLaden(), meinsLaden()]);   // Buch (sein Name) und Vorlieben des Kontos
       const aufDerSeite = artikelEl ? fassungenAus(artikelEl) : null;
-      meineFassung = aufDerSeite && buch ? fassungGemerkt(buch.name) : "";
+      meineFassung = aufDerSeite && buch ? (meins.vorlieben[`fassung:${buch.name}`] ?? fassungGemerkt(buch.name)) : "";
       fassungen = aufDerSeite && buch
         ? { ...aufDerSeite, optionen: bekannteFassungen(buch.name, [...aufDerSeite.optionen, meineFassung]) }
         : aufDerSeite;
@@ -202,7 +203,10 @@
 
   function fassungWaehlen(f: string) {
     meineFassung = f;
-    if (buch) fassungMerken(buch.name, f);
+    if (buch) {
+      fassungMerken(buch.name, f);                       // sofort auf diesem Gerät
+      void vorliebeSetzen(`fassung:${buch.name}`, f);    // und für alle Geräte des Kontos
+    }
     if (artikelEl && fassungen) gibtEsInFassung = fassungAnwenden(artikelEl, f, fassungen.produkt);
   }
 
@@ -228,6 +232,42 @@
     if (/\s/.test(name)) return false;
     return /[_$\\]|::|->|\(\)$/.test(name) || /^[a-z]/.test(name) || /[a-z][A-Z]/.test(name);
   }
+
+  // --- Merken und Lesestand (Meins) ---
+  const LESESTAND_TAKT_MS = 20_000;
+  const eintrag = $derived(buch && artikel ? gemerkt(buch.name, artikel.pfad) : undefined);
+
+  async function merkenUmschalten() {
+    if (!artikel) return;
+    try {
+      if (eintrag) await vergessen(eintrag.id);
+      else await merken(artikel.buch, artikel.pfad, artikel.titel, artikel.bild);
+    } catch (f) {
+      fehler = seitenFehler(f);
+    }
+  }
+
+  // Lesestand: gedrosselt beim Lesen, dazu beim Verlassen der Seite (nur Seiten im Lesedesign)
+  $effect(() => {
+    const a = artikel;
+    if (!a || a.darstellung !== "lesedesign") return;
+    let seit = Date.now();
+    const melden = () => {
+      const jetzt = Date.now();
+      const sekunden = Math.round((jetzt - seit) / 1000);
+      seit = jetzt;
+      const stelle = untrack(() => a.abschnitte.find((x) => x.anker === aktiv)?.titel ?? "");
+      void lesestandMelden({ buch: a.buch, pfad: a.pfad, titel: a.titel, bild: a.bild, abschnitt: stelle,
+                             anteil: Math.round(untrack(() => anteil) * 100) / 100, sekunden });
+    };
+    const takt = setInterval(melden, LESESTAND_TAKT_MS);
+    addEventListener("pagehide", melden);
+    return () => {
+      clearInterval(takt);
+      removeEventListener("pagehide", melden);
+      melden();
+    };
+  });
 
   const ORIGINAL = "/api/v1/inhalt/original/";
 
@@ -284,6 +324,8 @@
       <span>{artikel.titel}</span></div>
     <h1 class:code-titel={artikel.titelart === "code"}>{artikel.titel}</h1>
     <div class="werkzeuge">
+      <button class="knopf" class:an={!!eintrag} title={eintrag ? "Vom Merkzettel nehmen" : "Auf den Merkzettel"} onclick={merkenUmschalten}>
+        <i class="fa-{eintrag ? 'solid' : 'regular'} fa-bookmark"></i><span class="wort">{eintrag ? "Gemerkt" : "Merken"}</span></button>
       {#if artikel.darstellung !== "original"}
         <button class="knopf" class:an={original} title="Die Seite so, wie sie im Buch steht" onclick={() => (original = !original)}>
           <i class="fa-solid fa-file-code"></i><span class="wort">Original</span></button>

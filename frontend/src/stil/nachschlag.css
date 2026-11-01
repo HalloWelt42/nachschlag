@@ -180,11 +180,38 @@
 .leskarte { display: flex; flex-direction: column; background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten); overflow: hidden;
             text-decoration: none; color: var(--text); min-width: 0; }
 .leskarte:hover { box-shadow: var(--schatten), 0 0 0 2px var(--akzent-flaeche); }
+button.leskarte { border: 0; padding: 0; font: inherit; text-align: left; cursor: pointer; }
 .leskarte .bildflaeche { height: 150px; background: var(--mulde); display: grid; place-items: center; overflow: hidden; color: var(--text-3); }
 .leskarte .bildflaeche i { font-size: 28px; }
 .leskarte .bildflaeche img { width: 100%; height: 100%; object-fit: cover; }
 .leskarte .koerper { padding: var(--a3) var(--a4); display: flex; flex-direction: column; gap: 4px; }
 .leskarte .t { font-weight: 600; font-size: var(--gross); overflow-wrap: anywhere; }
+
+/* ----- Meins: Merkzettel und Verlauf (Entwürfe merkzettel.html, verlauf.html), Weiterlesen auf der Startseite ----- */
+.meins-seite { max-width: 1100px; padding: var(--a4) var(--a5) var(--a6); display: flex; flex-direction: column; gap: var(--a4); }
+.meins-kopf { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a3); }
+.meins-kopf h1 { margin: 0 var(--a3) 0 0; font-size: calc(var(--seitentitel) + 2px); font-weight: 600; }
+.meins-suche { max-width: 320px; height: var(--knopf-hoehe); }
+.liste { background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten); overflow: hidden; }
+.liste-zeile { display: flex; align-items: center; gap: var(--a2); padding-right: var(--a3); }
+.liste-zeile + .liste-zeile { box-shadow: inset 0 1px 0 var(--rand); }
+.liste-ziel { flex: 1; min-width: 0; display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: var(--a3); align-items: center; padding: 10px var(--a4);
+              background: transparent; border: 0; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.liste-ziel:hover:not(:disabled) { background: var(--flaeche-2); }
+.liste-ziel:disabled { cursor: default; opacity: .6; }
+.liste-ziel img, .liste-ziel .ohne-bild { width: 52px; height: 40px; border-radius: var(--r1); object-fit: cover; background: var(--flaeche-2); display: grid;
+                                          place-items: center; color: var(--text-3); }
+.liste-ziel .t { display: block; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.liste-ziel .u { display: block; font-size: var(--klein); color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.liste-ziel .rechts { font-size: var(--marke); color: var(--text-3); font-family: var(--schrift-zahl); white-space: nowrap; }
+.verlauf-tag h2 { margin: 0 0 var(--a2); font-size: var(--titel); font-weight: 600; display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--a3); }
+.verlauf-tag h2 .neben, .abschnitt-kopf .neben { font-size: var(--klein); font-weight: 400; color: var(--text-3); }
+.reihe { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: var(--a4); }
+.leskarte .stand { margin-top: auto; padding-top: var(--a2); display: flex; align-items: center; gap: var(--a2); font-size: var(--marke); color: var(--text-3); }
+.leskarte .stand .spur { flex: 1; height: 4px; border-radius: 2px; background: var(--mulde); overflow: hidden; }
+.leskarte .stand .spur span { display: block; height: 100%; background: var(--akzent-flaeche); }
+.leskarte .u { font-size: var(--klein); color: var(--text-2); }
+.abschnitt-kopf .alle { margin-left: auto; font-size: var(--klein); color: var(--akzent); font-weight: 600; background: none; border: 0; cursor: pointer; }
 
 /* ----- Startseite (Variante A) ----- */
 .start-innen { max-width: 1520px; margin: 0 auto; padding: var(--a5) var(--a5) var(--a7); display: flex; flex-direction: column; gap: var(--a6); }
@@ -432,7 +459,9 @@
   .fundband .knopf { margin-left: 0; }
   .kopf .suchanker .buchwahl, .kopf .suchanker kbd { display: none; }
   .artikel-kopf { padding-inline: var(--a3); }
-  .lesen, .uebersicht, .rubriken, .fragenliste { padding-inline: var(--a3); }
+  .lesen, .uebersicht, .rubriken, .fragenliste, .meins-seite { padding-inline: var(--a3); }
+  .liste-ziel { grid-template-columns: 44px minmax(0, 1fr); padding-inline: var(--a3); }
+  .liste-ziel .rechts { display: none; }
   .fragekarte { grid-template-columns: minmax(0, 1fr); gap: var(--a2); }
   .fk-zahlen { flex-direction: row; align-items: center; }
   .rubriken { columns: 1; }

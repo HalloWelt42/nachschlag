@@ -9,6 +9,7 @@
   import { artikelHolen, sucheHolen } from "../lib/schnittstelle";
   import type { Artikel, Suchergebnis, Treffer } from "../lib/typen";
   import { lesen } from "../lib/ziele";
+  import { gesuchtMelden } from "../lib/meins.svelte";
 
   const ANZAHL = 30;
 
@@ -44,6 +45,7 @@
     try {
       const neu = await sucheHolen(f, { buecher, anzahl: ANZAHL }, signal);
       ergebnis = neu;
+      void gesuchtMelden(f, neu.index_gesamt || neu.treffer.length);
       navigation.titel = `Suche: ${f}`;
       if (neu.treffer[0]) waehlen(neu.treffer[0]);
     } catch (e) {
