@@ -192,6 +192,8 @@ button.leskarte { border: 0; padding: 0; font: inherit; text-align: left; cursor
 .meins-kopf { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a3); }
 .meins-kopf h1 { margin: 0 var(--a3) 0 0; font-size: calc(var(--seitentitel) + 2px); font-weight: 600; }
 .meins-suche { max-width: 320px; height: var(--knopf-hoehe); }
+.meins-suche input { width: 100%; min-width: 0; }
+.meins-filter { flex-wrap: wrap; max-width: 100%; }
 .liste { background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten); overflow: hidden; }
 .liste-zeile { display: flex; align-items: center; gap: var(--a2); padding-right: var(--a3); }
 .liste-zeile + .liste-zeile { box-shadow: inset 0 1px 0 var(--rand); }
@@ -459,7 +461,9 @@ button.leskarte { border: 0; padding: 0; font: inherit; text-align: left; cursor
   .fundband .knopf { margin-left: 0; }
   .kopf .suchanker .buchwahl, .kopf .suchanker kbd { display: none; }
   .artikel-kopf { padding-inline: var(--a3); }
-  .lesen, .uebersicht, .rubriken, .fragenliste, .meins-seite { padding-inline: var(--a3); }
+  .lesen, .uebersicht, .rubriken, .fragenliste { padding-inline: var(--a3); }
+  .meins-seite { padding-inline: 0; }          /* den Seitenrand am Telefon gibt die Schale, nur einmal */
+  .meins-suche { max-width: none; flex: 1 1 100%; }
   .liste-ziel { grid-template-columns: 44px minmax(0, 1fr); padding-inline: var(--a3); }
   .liste-ziel .rechts { display: none; }
   .fragekarte { grid-template-columns: minmax(0, 1fr); gap: var(--a2); }

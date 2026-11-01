@@ -39,7 +39,7 @@
     <div class="meins-seite">
       <div class="meins-kopf">
         <h1>Merkzettel</h1>
-        <div class="segment">
+        <div class="segment meins-filter">
           {#each (["alle", "ungelesen", "angefangen", "gelesen"] as const) as f (f)}
             <button class:aktiv={filter === f} onclick={() => (filter = f)}>{f === "alle" ? "Alle" : f[0].toUpperCase() + f.slice(1)} {zahlen[f]}</button>
           {/each}

@@ -58,7 +58,7 @@
     <div class="meins-seite">
       <div class="meins-kopf">
         <h1>Verlauf</h1>
-        <div class="segment">
+        <div class="segment meins-filter">
           {#each ([["", "Alles"], ["artikel", "Gelesen"], ["suche", "Suchen"]] as const) as [wert, name] (wert)}
             <button class:aktiv={art === wert} onclick={() => { art = wert; void laden(true); }}>{name}</button>
           {/each}
