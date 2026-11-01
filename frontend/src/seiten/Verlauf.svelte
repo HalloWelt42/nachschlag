@@ -2,7 +2,7 @@
   // Verlauf (Entwurf mockups/verlauf.html): Gelesenes und Gesuchtes nach Tagen, jüngstes zuerst, mit Lesestand und
   // Lesezeit; auf allen Geräten des Kontos. Seitenweise (je 50), Suche im Verlauf, Leeren mit Bestätigung im Band.
   import { onMount } from "svelte";
-  import { seitenFehler } from "appkern-oberflaeche";
+  import { geraet, seitenFehler } from "appkern-oberflaeche";
   import { hole } from "appkern-oberflaeche";
   import { bibliothekLaden, buchName } from "../lib/bibliothek.svelte";
   import { verlaufHolen, type Verlaufseintrag } from "../lib/meins.svelte";
@@ -57,7 +57,7 @@
   <div class="rollfeld" style="padding: 0">
     <div class="meins-seite">
       <div class="meins-kopf">
-        <h1>Verlauf</h1>
+        {#if !geraet.mobil}<h1>Verlauf</h1>{/if}          <!-- am Telefon steht der Titel im Kopf -->
         <div class="segment meins-filter">
           {#each ([["", "Alles"], ["artikel", "Gelesen"], ["suche", "Suchen"]] as const) as [wert, name] (wert)}
             <button class:aktiv={art === wert} onclick={() => { art = wert; void laden(true); }}>{name}</button>

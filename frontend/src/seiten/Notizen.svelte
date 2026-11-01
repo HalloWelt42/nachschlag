@@ -58,7 +58,7 @@
     <div class="rollfeld" style="padding: 0">
       <div class="meins-seite">
         <div class="meins-kopf">
-          <h1>Notizen</h1>
+          {#if !geraet.mobil}<h1>Notizen</h1>{/if}          <!-- am Telefon steht der Titel im Kopf -->
           <div class="segment meins-filter">
             {#each FILTER as [f, name] (f)}
               <button class:aktiv={filter === f} onclick={() => (filter = f)}>{name} {zahlen[f]}</button>

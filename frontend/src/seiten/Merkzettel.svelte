@@ -2,7 +2,7 @@
   // Merkzettel (Entwurf mockups/merkzettel.html): gemerkte Seiten mit Buch, Zeitpunkt und Lesestand; Filter nach
   // Lesestand, Suche im Merkzettel, Entfernen. Gilt auf allen Geräten des Kontos.
   import { onMount } from "svelte";
-  import { seitenFehler } from "appkern-oberflaeche";
+  import { geraet, seitenFehler } from "appkern-oberflaeche";
   import { bibliothekLaden, buchName } from "../lib/bibliothek.svelte";
   import { meins, meinsLaden, vergessen, wann, type Merkeintrag } from "../lib/meins.svelte";
   import { lesen } from "../lib/ziele";
@@ -38,7 +38,7 @@
   <div class="rollfeld" style="padding: 0">
     <div class="meins-seite">
       <div class="meins-kopf">
-        <h1>Merkzettel</h1>
+        {#if !geraet.mobil}<h1>Merkzettel</h1>{/if}          <!-- am Telefon steht der Titel im Kopf -->
         <div class="segment meins-filter">
           {#each (["alle", "ungelesen", "angefangen", "gelesen"] as const) as f (f)}
             <button class:aktiv={filter === f} onclick={() => (filter = f)}>{f === "alle" ? "Alle" : f[0].toUpperCase() + f.slice(1)} {zahlen[f]}</button>
