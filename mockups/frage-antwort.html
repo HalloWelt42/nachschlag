@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Vorlage Frage und Antwort</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="schrift/jetbrains-mono/schrift.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Baustein Frage und Antwort (Erzeuger sotoki) im Grunddesign der Artikelansicht A: gleiche Schale, gleicher
+       Artikelkopf, links Inhalt (Frage und Antworten mit Stimmen), rechts der Steckbrief (Stimmen, Antworten, Datum,
+       Schlagwörter, Verwandt). Eigen: Stimmen neben jedem Beitrag, akzeptierte Antwort mit Streifen, Kommentare
+       eingeklappt, Code im Theme des Editors der Codeschmiede. Inhalt echt aus vi.stackexchange.com_en_all_2026-10
+       (Frage 84), auf Deutsch von uns übersetzt; Befehle und Code unverändert. -->
+  <body class="va">
+    <div class="fenster-voll">
+      <div data-teil="kopf"></div>
+      <div></div>
+      <div class="geruest">
+        <nav class="leiste-schmal">
+          <button title="Start"><i class="fa-solid fa-house"></i></button>
+          <button class="aktiv" title="Lesen"><i class="fa-solid fa-book-open"></i></button>
+          <button title="Merkzettel"><i class="fa-solid fa-bookmark"></i></button>
+          <button title="Notizen"><i class="fa-solid fa-note-sticky"></i></button>
+          <button title="Themen"><i class="fa-solid fa-layer-group"></i></button>
+          <button class="unten" title="Einstellungen"><i class="fa-solid fa-sliders"></i></button>
+        </nav>
+        <div data-teil="nav:artikel"></div>
+
+        <section class="artikelseite">
+          <div class="artikel-kopf">
+            <div class="pfad"><i class="fa-solid fa-book"></i><b>Vi and Vim Q&amp;A</b><i class="fa-solid fa-chevron-right"></i>Fragen<i class="fa-solid fa-chevron-right"></i>84</div>
+            <h1>Wie kopiere ich Text aus Vim in die Zwischenablage des Systems?</h1>
+            <div class="werkzeuge">
+              <button class="knopf" title="Merken"><i class="fa-solid fa-bookmark"></i><span class="wort">Merken</span></button>
+              <button class="knopf" title="Notiz"><i class="fa-solid fa-note-sticky"></i><span class="wort">Notiz</span></button>
+              <button class="knopf" title="Vorlesen (Code wird übersprungen)"><i class="fa-solid fa-volume-high"></i><span class="wort">Vorlesen</span></button>
+              <button class="knopf" title="Zu einem Thema legen"><i class="fa-solid fa-layer-group"></i><span class="wort">Thema</span></button>
+              <span class="trenner"></span>
+              <button class="knopf still" title="Ähnliche Fragen"><i class="fa-solid fa-diagram-project"></i><span class="wort">Ähnlich</span></button>
+              <div class="rechts">
+                <span class="segment"><span>Original</span><span class="aktiv">Deutsch</span></span>
+                <button class="rund" title="Lesegröße"><i class="fa-solid fa-text-height"></i></button>
+              </div>
+            </div>
+          </div>
+          <div class="fundband uebersetzt"><i class="fa-solid fa-language"></i><span><b>Von uns übersetzt</b> aus dem Englischen · Befehle, Code und Namen unverändert</span><button class="knopf still"><i class="fa-solid fa-table-columns"></i>Nebeneinander</button></div>
+          <div class="rollfeld">
+            <div class="lesen">
+              <nav class="inhalt">
+                <div class="inhalt-titel">Inhalt</div>
+                <ol>
+                  <li><a href="#"><span class="nr">1</span>Frage</a></li>
+                  <li><a href="#"><span class="nr">2</span>15 Antworten</a></li>
+                  <li class="unter antwort-eintrag akz aktiv"><a href="#"><span class="st">585</span>Martin Tournoij</a></li>
+                  <li class="unter antwort-eintrag"><a href="#"><span class="st">53</span>Quincy Bowers</a></li>
+                  <li class="unter antwort-eintrag"><a href="#"><span class="st">28</span>200_success</a></li>
+                  <li class="unter antwort-eintrag"><a href="#"><span class="st">23</span>und 12 weitere</a></li>
+                </ol>
+                <div class="lesestand"><span style="width: 22%"></span></div>
+                <div class="lesestand-text">22 % gelesen</div>
+              </nav>
+              <article class="artikel">
+                <aside class="steckbrief">
+                  <div class="steckbrief-kopf">Frage 84</div>
+                  <dl class="steckbrief-werte" style="margin-top: var(--a3)">
+                    <dt>Stimmen</dt><dd><b class="zahl">520</b></dd>
+                    <dt>Antworten</dt><dd>15, eine akzeptiert</dd>
+                    <dt>Gefragt</dt><dd>03.02.2015 von thameera</dd>
+                    <dt>Bearbeitet</dt><dd>03.02.2015</dd>
+                  </dl>
+                  <div class="steckbrief-gruppe">Schlagwörter</div>
+                  <div class="schlagwoerter" style="margin: var(--a2) var(--a3) 0"><span>cut-copy-paste</span><span>os-clipboard</span></div>
+                  <div class="steckbrief-gruppe">Verwandt</div>
+                  <dl class="steckbrief-werte" style="grid-template-columns: minmax(0, 1fr)">
+                    <dd><a class="wl" href="#">Kopieren über eine SSH-Sitzung ohne +clipboard?</a></dd>
+                    <dd><a class="wl" href="#">Eigene Befehle für die Register * und +</a></dd>
+                    <dd><a class="wl" href="#">+clipboard unter Fedora 20?</a></dd>
+                  </dl>
+                  <div style="height: var(--a3)"></div>
+                </aside>
+
+                <section id="frage">
+                  <div class="qa-beitrag">
+                    <div class="qa-stimmen"><span class="zahl">520</span><span class="was">Stimmen</span></div>
+                    <div>
+                      <p>Gibt es eine Möglichkeit, einen Textblock in die Zwischenablage des Systems zu kopieren, damit ich ihn in einem anderen Programm einfügen kann?</p>
+                      <div class="schlagwoerter"><span>cut-copy-paste</span><span>os-clipboard</span></div>
+                      <div class="beitrag-fuss"><span>gefragt 03.02.2015 von <span class="wer">thameera</span></span><span class="kommentare-auf"><i class="fa-solid fa-comments"></i>4 Kommentare</span>
+                        <span class="rechts"><button class="rund" title="Notiz"><i class="fa-solid fa-note-sticky"></i></button></span></div>
+                    </div>
+                  </div>
+                </section>
+
+                <div class="antworten-kopf"><h2>15 Antworten</h2><span class="segment"><span class="aktiv">Stimmen</span><span>Neueste</span><span>Älteste</span></span>
+                  <span class="chip wahl"><i class="fa-solid fa-filter"></i>nur ab 10 Stimmen</span></div>
+
+                <div class="antwort akzeptiert">
+                  <div class="qa-beitrag">
+                    <div class="qa-stimmen"><span class="zahl">585</span><span class="was">Stimmen</span><span class="haken" title="akzeptierte Antwort"><i class="fa-solid fa-check"></i></span></div>
+                    <div>
+                      <span class="akz-marke"><i class="fa-solid fa-circle-check"></i>Akzeptierte Antwort</span>
+                      <p>Auf X11-Systemen (also Linux und den meisten anderen Unix-artigen Systemen) gibt es zwei Zwischenablagen, die voneinander unabhängig sind:</p>
+                      <ul>
+                        <li><code>PRIMARY</code>: kopiert beim Markieren und wird mit der mittleren Maustaste eingefügt.</li>
+                        <li><code>CLIPBOARD</code>: wird (meist) mit <code>^C</code> kopiert und mit <code>^V</code> eingefügt.</li>
+                      </ul>
+                      <p>OS X und Windows haben nur eine Zwischenablage. Vim hat zwei besondere Register für diese Zwischenablagen: <code>*</code> nutzt <code>PRIMARY</code> (Merkhilfe: Stern wie Select), <code>+</code> nutzt <code>CLIPBOARD</code> (Merkhilfe: Strg plus C).</p>
+<pre class="code"><span class="c-kw">noremap</span> &lt;Leader&gt;y <span class="c-str">"*y</span>
+<span class="c-kw">noremap</span> &lt;Leader&gt;p <span class="c-str">"*p</span>
+<span class="c-kw">noremap</span> &lt;Leader&gt;Y <span class="c-str">"+y</span>
+<span class="c-kw">noremap</span> &lt;Leader&gt;P <span class="c-str">"+p</span></pre>
+                      <p class="gekuerzt"><i class="fa-solid fa-scissors"></i>Im Entwurf gekürzt: Kopieren über SSH mit X11-Weiterleitung, mit Beispielen.</p>
+                      <div class="beitrag-fuss"><span>beantwortet 03.02.2015 von <span class="wer">Martin Tournoij</span></span><span class="kommentare-auf"><i class="fa-solid fa-comments"></i>19 Kommentare</span>
+                        <span class="rechts"><button class="rund" title="Kopieren"><i class="fa-regular fa-copy"></i></button><button class="rund" title="Notiz"><i class="fa-solid fa-note-sticky"></i></button></span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="antwort">
+                  <div class="qa-beitrag">
+                    <div class="qa-stimmen"><span class="zahl">53</span><span class="was">Stimmen</span></div>
+                    <div>
+                      <pre class="code"><span class="c-kw">set</span> clipboard=unnamedplus</pre>
+                      <p>Damit wird das Standardregister von Vim auf das Register <code>+</code> umgestellt, das mit der Zwischenablage des Systems verbunden ist. Aus <code>:h clipboard-unnamedplus</code>: eine Variante von "unnamed", die für alle Kopier-, Lösch-, Änderungs- und Einfügevorgänge das Register <code>+</code> statt <code>*</code> nutzt. Nur verfügbar mit der Eigenschaft <code>+X11</code>; prüfen lässt sich das mit <code>if has('unnamedplus')</code>.</p>
+                      <div class="beitrag-fuss"><span>beantwortet 03.02.2015 von <span class="wer">Quincy Bowers</span></span><span class="kommentare-auf"><i class="fa-solid fa-chevron-down"></i>2 Kommentare</span>
+                        <span class="rechts"><button class="rund" title="Kopieren"><i class="fa-regular fa-copy"></i></button><button class="rund" title="Notiz"><i class="fa-solid fa-note-sticky"></i></button></span></div>
+                      <ul class="kommentar-liste"><li><b>+2</b>Warum geht das bei mir nicht, wenn ich zwischen zwei Vim-Instanzen kopiere und einfüge (jede in einem eigenen Terminal)? <i>thinwybk</i></li><li><b>+3</b>Unter Linux, mit Vim mit +X11 und gesetztem clipboard=unnamedplus, solltest du in einer Instanz eine Zeile kopieren und in einer anderen einfügen können, ebenso in jedem anderen Programm mit Strg+V oder Umschalt+Einfg. <i>Quincy Bowers</i></li></ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="antwort">
+                  <div class="qa-beitrag">
+                    <div class="qa-stimmen"><span class="zahl">28</span><span class="was">Stimmen</span></div>
+                    <div>
+                      <p>Wo es unterstützt wird, ist das Register <code>*</code> die Zwischenablage des Systems. Um Text aus Vim dorthin zu kopieren, markierst du ihn im visuellen Modus und drückst <code>"*y</code>. Umgekehrt fügt <code>"*p</code> Text aus der Zwischenablage in Vim ein.</p>
+                      <div class="beitrag-fuss"><span>beantwortet 03.02.2015 von <span class="wer">200_success</span></span>
+                        <span class="rechts"><button class="rund" title="Notiz"><i class="fa-solid fa-note-sticky"></i></button></span></div>
+                    </div>
+                  </div>
+                </div>
+                <button class="knopf" style="margin-bottom: var(--a4)"><i class="fa-solid fa-chevron-down"></i>12 weitere Antworten</button>
+
+                <details class="ueber">
+                  <summary><i class="fa-solid fa-circle-info"></i>Über diese Seite<span>Quelle, Lizenz</span></summary>
+                  <dl><dt>Quelle</dt><dd>Vi and Vim Q&amp;A (vi.stackexchange.com_en_all, 2026-10)</dd><dt>Lizenz</dt><dd>CC BY-SA, Beiträge der genannten Nutzer</dd><dt>Übersetzung</dt><dd>von uns, über die Leitstelle, 01.11.2026</dd></dl>
+                </details>
+              </article>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div data-teil="fuss"></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

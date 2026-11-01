@@ -1,0 +1,41 @@
+# Nachschlag auf dem Pi, Port 8711. Vorne Caddy mit dem Zertifikat der Hausstelle (tools/ausrollen.sh stellt es aus),
+# dahinter die App ohne TLS, nur im eigenen Netz erreichbar. Daten in ./daten.
+services:
+  nachschlag:
+    build: .
+    image: nachschlag:aktuell
+    container_name: nachschlag
+    restart: unless-stopped
+    user: "1000:1000"
+    expose:
+      - "8000"
+    # Einstellungen, die nicht ins Repo gehören (etwa Adresse und Schlüssel der Leitstelle), stehen nur auf dem Pi
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      NACHSCHLAG_DATEN: /app/daten
+      NACHSCHLAG_CA_DATEI: /zertifikate/rootCA.pem
+      # erste Einrichtung von anderswo (Lehre 34): der Code liegt im eingebundenen Datenordner, gefunden auf dem Pi
+      NACHSCHLAG_EINRICHTUNGSCODE_DATEI: /app/daten/einrichtungscode
+      # wo der Code für den Menschen zu finden ist; das Ausrollen setzt rechner:ordner aus der privaten Wahrheit
+      NACHSCHLAG_EINRICHTUNGSCODE_ORT: ${EINRICHTUNGSCODE_ORT:-daten/einrichtungscode im Ordner der App}
+    volumes:
+      - ./daten:/app/daten
+      # Sicherungen der Datenbank nach der Regel des Appkerns: wöchentlich von der App, vor dem Neustart vom Ausrollen
+      - ./sicherungen:/app/sicherungen
+      - ./zertifikate:/zertifikate:ro
+      # Ortszeit des Pi (sonst UTC)
+      - /etc/localtime:/etc/localtime:ro
+
+  vorne:
+    image: caddy:2.11.7-alpine
+    container_name: nachschlag-vorne
+    restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
+    depends_on: [nachschlag]
+    ports:
+      - "8711:8711"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./zertifikate:/zertifikate:ro

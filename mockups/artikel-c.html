@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Artikel, Variante C: Ruhe</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Variante C: ohne Schale, nur das Blatt. Schmaler Kopf mit Zurück, Suche und Lesestand als Linie; alle Werkzeuge in
+       einer schwebenden Leiste unten. Inhaltsverzeichnis und Wissen als Tafeln auf Abruf. Hier läuft gerade das Vorlesen. -->
+  <body class="vc" data-liest="merkmale-1">
+    <div class="fenster-voll">
+      <header class="ruhe-kopf">
+        <button class="rund" title="Zurück"><i class="fa-solid fa-arrow-left"></i></button>
+        <span class="titel">Rotfuchs</span>
+        <span class="buch">· Wikipedia (Deutsch)</span>
+        <div class="suchanker" style="max-width: 520px">
+          <div class="suchfeld">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span class="platzhalter">fuchs in der stadt</span>
+            <kbd>/</kbd>
+          </div>
+          <div data-vorschlaege></div>
+        </div>
+        <div class="rechts">
+          <button class="rund" title="Inhalt"><i class="fa-solid fa-list"></i></button>
+          <button class="rund" title="Schale zeigen"><i class="fa-solid fa-table-columns"></i></button>
+        </div>
+        <span class="fortschritt" style="width: 18%"></span>
+      </header>
+      <div class="lesebereich">
+        <div class="rollfeld">
+          <div class="blatt">
+            <h1>Rotfuchs</h1>
+            <article class="artikel" data-artikel></article>
+          </div>
+        </div>
+        <div class="schwebeleiste">
+          <button title="Inhalt"><i class="fa-solid fa-list"></i>Inhalt</button>
+          <span class="trenner"></span>
+          <button class="haupt" title="Vorlesen anhalten"><i class="fa-solid fa-pause"></i>Liest vor · 1:12</button>
+          <button title="Merken"><i class="fa-solid fa-bookmark"></i></button>
+          <button title="Notiz"><i class="fa-solid fa-note-sticky"></i></button>
+          <button title="Ähnliche Artikel"><i class="fa-solid fa-diagram-project"></i></button>
+          <span class="trenner"></span>
+          <button title="Lesegröße und Thema"><i class="fa-solid fa-font"></i>Aa</button>
+        </div>
+      </div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

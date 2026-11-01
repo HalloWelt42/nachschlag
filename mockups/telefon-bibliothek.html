@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Bibliothek und Einstellungen am Telefon</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Telefon: Bibliothek als Liste mit Fähigkeiten, Einstellungen als Liste der Reiter, der Reiter Bilder mit Stand. -->
+  <body style="background: var(--hg)">
+    <div class="telefone">
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:41</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf">
+          <button class="rund still" title="Zurück"><i class="fa-solid fa-chevron-left"></i></button>
+          <h1>Bibliothek</h1>
+        </div>
+        <div class="t-inhalt t-hg">
+          <div class="buchkarte" style="margin-bottom: 10px"><span class="sym"><i class="fa-solid fa-book"></i></span><span class="t">Wikipedia (Deutsch)</span>
+            <span class="u"><span class="zahl">5,04 Mio</span> Einträge · 15.01.2026</span>
+            <div class="faehig"><span class="faehigkeit an"><i class="fa-solid fa-check"></i>Index</span><span class="faehigkeit teil"><i class="fa-solid fa-wand-magic-sparkles"></i>Bedeutung 37 %</span><span class="faehigkeit an"><i class="fa-solid fa-image"></i>Bilder</span></div></div>
+          <div class="buchkarte" style="margin-bottom: 10px"><span class="sym"><i class="fa-solid fa-book"></i></span><span class="t">Wikipedia (Englisch)</span>
+            <span class="u"><span class="zahl">18,98 Mio</span> Einträge · 15.02.2026</span>
+            <div class="faehig"><span class="faehigkeit an"><i class="fa-solid fa-check"></i>Index</span><span class="faehigkeit an"><i class="fa-solid fa-language"></i>Übersetzen</span><span class="faehigkeit an"><i class="fa-solid fa-image"></i>Bilder</span></div></div>
+          <div class="buchkarte"><span class="sym"><i class="fa-solid fa-temperature-arrow-up"></i></span><span class="t">Klimawandel</span>
+            <span class="u"><span class="zahl">4.102</span> Einträge · 17.07.2026</span>
+            <div class="faehig"><span class="faehigkeit an"><i class="fa-solid fa-check"></i>Index</span><span class="faehigkeit"><i class="fa-solid fa-image"></i>ohne Bilder</span></div></div>
+        </div>
+        <div class="t-leiste">
+          <button><i class="fa-solid fa-house"></i>Start</button>
+          <button><i class="fa-solid fa-shuffle"></i>Stöbern</button>
+          <button><i class="fa-solid fa-bookmark"></i>Merkzettel</button>
+          <button><i class="fa-solid fa-layer-group"></i>Themen</button>
+          <button class="aktiv"><i class="fa-solid fa-ellipsis"></i>Mehr</button>
+        </div>
+      </div></div>
+
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:42</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf">
+          <button class="rund still" title="Zurück"><i class="fa-solid fa-chevron-left"></i></button>
+          <h1>Einstellungen</h1>
+        </div>
+        <div class="t-inhalt t-hg">
+          <div class="liste">
+            <a href="#"><span class="ohne-bild"><i class="fa-solid fa-book-open"></i></span><span><span class="t">Lesen</span><span class="u">Ansicht, Startseite, Lesegröße</span></span><i class="fa-solid fa-chevron-right" style="color: var(--text-3)"></i></a>
+            <a href="#"><span class="ohne-bild"><i class="fa-solid fa-magnifying-glass"></i></span><span><span class="t">Suche</span><span class="u">Bedeutung + Index</span></span><i class="fa-solid fa-chevron-right" style="color: var(--text-3)"></i></a>
+            <a href="#"><span class="ohne-bild" style="color: var(--akzent)"><i class="fa-solid fa-image"></i></span><span><span class="t">Bilder</span><span class="u">läuft · 18.240 geladen</span></span><i class="fa-solid fa-chevron-right" style="color: var(--text-3)"></i></a>
+            <a href="#"><span class="ohne-bild"><i class="fa-solid fa-language"></i></span><span><span class="t">Übersetzen</span><span class="u">auf Knopfdruck</span></span><i class="fa-solid fa-chevron-right" style="color: var(--text-3)"></i></a>
+            <a href="#"><span class="ohne-bild"><i class="fa-solid fa-volume-high"></i></span><span><span class="t">Vorlesen</span><span class="u">Stimme und Tempo</span></span><i class="fa-solid fa-chevron-right" style="color: var(--text-3)"></i></a>
+            <a href="#"><span class="ohne-bild"><i class="fa-solid fa-swatchbook"></i></span><span><span class="t">Bibliothek</span><span class="u">Ordner und Vorgaben je Sprache</span></span><i class="fa-solid fa-chevron-right" style="color: var(--text-3)"></i></a>
+            <a href="#"><span class="ohne-bild"><i class="fa-solid fa-plug"></i></span><span><span class="t">Verbindungen</span><span class="u">Fundus, Leitstelle, Kellerwolke</span></span><i class="fa-solid fa-chevron-right" style="color: var(--text-3)"></i></a>
+          </div>
+        </div>
+        <div class="t-leiste">
+          <button><i class="fa-solid fa-house"></i>Start</button>
+          <button><i class="fa-solid fa-shuffle"></i>Stöbern</button>
+          <button><i class="fa-solid fa-bookmark"></i>Merkzettel</button>
+          <button><i class="fa-solid fa-layer-group"></i>Themen</button>
+          <button class="aktiv"><i class="fa-solid fa-ellipsis"></i>Mehr</button>
+        </div>
+      </div></div>
+
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:43</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf">
+          <button class="rund still" title="Zurück"><i class="fa-solid fa-chevron-left"></i></button>
+          <h1>Bilder</h1>
+          <button class="rund" title="Anhalten"><i class="fa-solid fa-pause"></i></button>
+        </div>
+        <div class="t-inhalt t-hg">
+          <div class="lagekarte" style="grid-template-columns: minmax(0, 1fr)">
+            <div class="zustand"><span class="pille aktiv"><i class="fa-solid fa-circle-play"></i>läuft, 1 Bild alle 3 s</span></div>
+            <div class="zahlen" style="grid-template-columns: repeat(2, minmax(0, 1fr))">
+              <div class="kennzahl"><span class="k">Geladen</span><span class="w">18.240</span></div>
+              <div class="kennzahl"><span class="k">Belegt</span><span class="w">5,4 GB</span></div>
+            </div>
+            <div class="stufenliste">
+              <div class="stufenzeile fertig" style="grid-template-columns: 24px minmax(0, 1fr)"><i class="fa-solid fa-circle-check"></i><span>Gelesen, gemerkt, Themen · 2.140</span></div>
+              <div class="stufenzeile jetzt" style="grid-template-columns: 24px minmax(0, 1fr)"><i class="fa-solid fa-circle-play"></i><span>Steckbriefbilder · 16.100 von 1,1 Mio</span></div>
+              <div class="stufenzeile" style="grid-template-columns: 24px minmax(0, 1fr)"><i class="fa-regular fa-circle"></i><span>Übrige Bilder · 0 von 2,4 Mio</span></div>
+            </div>
+          </div>
+          <div class="t-gruppe"><span>Tempo und Platz</span></div>
+          <div class="liste">
+            <a href="#"><span class="ohne-bild"><i class="fa-solid fa-gauge"></i></span><span><span class="t">Abstand</span><span class="u">3 Sekunden je Bild</span></span><i class="fa-solid fa-chevron-right" style="color: var(--text-3)"></i></a>
+            <a href="#"><span class="ohne-bild"><i class="fa-solid fa-moon"></i></span><span><span class="t">Wann laden</span><span class="u">immer</span></span><i class="fa-solid fa-chevron-right" style="color: var(--text-3)"></i></a>
+            <a href="#"><span class="ohne-bild"><i class="fa-solid fa-hard-drive"></i></span><span><span class="t">Platz höchstens</span><span class="u">200 GB, belegt 5,4 GB</span></span><i class="fa-solid fa-chevron-right" style="color: var(--text-3)"></i></a>
+            <a href="#"><span class="ohne-bild"><i class="fa-solid fa-image"></i></span><span><span class="t">Größte Breite</span><span class="u">1.600 Pixel</span></span><i class="fa-solid fa-chevron-right" style="color: var(--text-3)"></i></a>
+          </div>
+        </div>
+        <div class="t-leiste">
+          <button><i class="fa-solid fa-house"></i>Start</button>
+          <button><i class="fa-solid fa-shuffle"></i>Stöbern</button>
+          <button><i class="fa-solid fa-bookmark"></i>Merkzettel</button>
+          <button><i class="fa-solid fa-layer-group"></i>Themen</button>
+          <button class="aktiv"><i class="fa-solid fa-ellipsis"></i>Mehr</button>
+        </div>
+      </div></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

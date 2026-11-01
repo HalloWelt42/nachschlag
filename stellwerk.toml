@@ -1,0 +1,11 @@
+name = "Nachschlag"
+beschreibung = "liest jedes Buch der Bibliothek"
+oberflaeche = "http://127.0.0.1:8711"
+
+[[teile]]
+kennung = "backend"
+name = "Backend"
+ordner = "~/Entwicklung/Werkzeuge/nachschlag/backend"
+befehl = [".venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8711", "--log-level", "warning"]
+port = 8711
+speicher_gb = 0.3

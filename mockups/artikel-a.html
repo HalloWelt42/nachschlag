@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Artikel, Variante A: Lesespalte</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Variante A: die gewohnte Schale (Kopf, Seitenleiste, Fuß), der Artikel als ruhige Lesespalte, Inhaltsverzeichnis
+       links mitlaufend, Steckbrief rechts im Text. Gekommen über die Bedeutungssuche: Band oben, Fundstelle markiert. -->
+  <body class="va" data-fundstelle="lebensraum-2">
+    <div class="fenster-voll">
+      <header class="kopf">
+        <div class="marke"><span class="symbol"><i class="fa-solid fa-book-open"></i></span> Nachschlag</div>
+        <div class="suchanker">
+          <div class="suchfeld">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span class="platzhalter">fuchs in der stadt</span>
+            <span class="buchwahl"><i class="fa-solid fa-book"></i>Deutsch</span>
+            <kbd>/</kbd>
+          </div>
+          <div data-vorschlaege></div>
+        </div>
+        <div class="kopf-rechts">
+          <span class="pille gut text-weg" title="Bedeutungssuche über Fundus und Index der Bücher antworten"><span class="punkt"></span>Bedeutung + Index</span>
+          <button class="rund" title="Hilfe"><i class="fa-solid fa-circle-question"></i></button>
+        </div>
+      </header>
+      <div></div>
+      <div class="geruest">
+        <nav class="leiste-schmal">
+          <button title="Start"><i class="fa-solid fa-house"></i></button>
+          <button class="aktiv" title="Lesen"><i class="fa-solid fa-book-open"></i></button>
+          <button title="Merkzettel"><i class="fa-solid fa-bookmark"></i></button>
+          <button title="Notizen"><i class="fa-solid fa-note-sticky"></i></button>
+          <button title="Themen"><i class="fa-solid fa-layer-group"></i></button>
+          <button class="unten" title="Einstellungen"><i class="fa-solid fa-sliders"></i></button>
+        </nav>
+        <nav class="nav">
+          <div class="nav-gruppe">Lesen</div>
+          <a class="nav-eintrag"><i class="fa-solid fa-house"></i>Start</a>
+          <a class="nav-eintrag aktiv"><i class="fa-solid fa-book-open"></i>Artikel</a>
+          <a class="nav-eintrag"><i class="fa-solid fa-shuffle"></i>Stöbern</a>
+          <a class="nav-eintrag"><i class="fa-solid fa-images"></i>Medien</a>
+          <a class="nav-eintrag"><i class="fa-solid fa-swatchbook"></i>Bibliothek<span class="zahl">5</span></a>
+          <div class="nav-gruppe">Meins</div>
+          <a class="nav-eintrag"><i class="fa-solid fa-bookmark"></i>Merkzettel<span class="zahl">12</span></a>
+          <a class="nav-eintrag"><i class="fa-solid fa-note-sticky"></i>Notizen<span class="zahl">7</span></a>
+          <a class="nav-eintrag"><i class="fa-solid fa-layer-group"></i>Themen<span class="zahl">4</span></a>
+          <a class="nav-eintrag"><i class="fa-solid fa-clock-rotate-left"></i>Verlauf</a>
+          <div class="nav-gruppe">App</div>
+          <a class="nav-eintrag"><i class="fa-solid fa-sliders"></i>Einstellungen</a>
+          <div class="nav-fuss">
+            <div class="konto"><span class="bild">A</span><span><div class="wer">admin</div><div class="wie">angemeldet</div></span></div>
+          </div>
+        </nav>
+
+        <section class="artikelseite">
+          <div class="artikel-kopf">
+            <div class="pfad"><i class="fa-solid fa-book"></i><b>Wikipedia (Deutsch)</b><i class="fa-solid fa-chevron-right"></i>Rotfuchs</div>
+            <h1>Rotfuchs</h1>
+            <div class="werkzeuge">
+              <button class="knopf an" title="Auf dem Merkzettel"><i class="fa-solid fa-bookmark"></i><span class="wort">Gemerkt</span></button>
+              <button class="knopf" title="Notiz zum Artikel"><i class="fa-solid fa-note-sticky"></i><span class="wort">Notiz</span></button>
+              <button class="knopf" title="Vorlesen ab hier"><i class="fa-solid fa-volume-high"></i><span class="wort">Vorlesen</span></button>
+              <button class="knopf" title="Zu einem Thema legen"><i class="fa-solid fa-layer-group"></i><span class="wort">Thema</span></button>
+              <span class="trenner"></span>
+              <button class="knopf still" title="Ähnliche Artikel"><i class="fa-solid fa-diagram-project"></i><span class="wort">Ähnlich</span></button>
+              <div class="rechts">
+                <span class="sprachwahl"><i class="fa-solid fa-language"></i>auch auf Englisch</span>
+                <button class="rund" title="Lesegröße"><i class="fa-solid fa-text-height"></i></button>
+              </div>
+            </div>
+          </div>
+          <div class="fundband">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Gefunden zu <span class="frage">"fuchs in der stadt"</span> im Abschnitt Lebensraum</span>
+            <span class="weg">Bedeutung</span>
+            <button class="knopf still"><i class="fa-solid fa-arrow-down"></i>Zur Stelle</button>
+            <button class="knopf still"><i class="fa-solid fa-chevron-right"></i>Nächster Treffer</button>
+          </div>
+          <div class="rollfeld">
+            <div class="lesen">
+              <nav class="inhalt">
+                <div class="inhalt-titel">Inhalt</div>
+                <ol>
+                  <li class="gelesen"><a href="#"><span class="nr">1</span>Merkmale</a></li>
+                  <li class="unter gelesen"><a href="#">Allgemeine Merkmale</a></li>
+                  <li class="unter gelesen"><a href="#">Spuren</a></li>
+                  <li class="unter"><a href="#">Stimme</a></li>
+                  <li><a href="#"><span class="nr">2</span>Verbreitung und Lebensraum</a></li>
+                  <li class="unter"><a href="#">Verbreitungsgebiet</a></li>
+                  <li class="unter aktiv"><a href="#">Lebensraum, Streifgebiet</a></li>
+                  <li><a href="#"><span class="nr">3</span>Lebensweise</a></li>
+                  <li><a href="#"><span class="nr">4</span>Systematik</a></li>
+                  <li><a href="#"><span class="nr">5</span>Nutzung, Bejagung, Artenschutz</a></li>
+                  <li><a href="#"><span class="nr">6</span>Kulturelle Bedeutung</a></li>
+                </ol>
+                <div class="lesestand"><span style="width: 34%"></span></div>
+                <div class="lesestand-text">34 % gelesen · noch 25 Min</div>
+              </nav>
+              <article class="artikel" data-artikel></article>
+            </div>
+          </div>
+        </section>
+      </div>
+      <footer class="fuss">
+        <div class="verbindungen">
+          <span class="verbindung"><span class="punkt"></span>Bibliothek: 5 Bücher</span>
+          <span class="verbindung"><span class="punkt"></span>Fundus</span>
+          <span class="verbindung"><span class="punkt"></span>Leitstelle</span>
+        </div>
+        <div class="rechts"><span>Bilder in groß: 18.240 geladen</span></div>
+      </footer>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

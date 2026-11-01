@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Schnittstelle</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="schrift/jetbrains-mono/schrift.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Schnittstelle und Doku: alle Wege der öffentlichen Schnittstelle /api/v1 nach Bereich (die eigene Oberfläche nutzt nur
+       diese), dazu die MCP-Werkzeuge. Je Weg: Zweck, Parameter mit Typ und Beispiel, Aufruf als curl oder fetch, echte
+       Antwort, Fehler und Grenzen. Rechts Ausprobieren mit dem eigenen Zugang. Oben die Abdeckung: jeder Weg beschrieben,
+       sonst schlägt die Prüfung an. Doku entsteht aus den Pydantic-Modellen (OpenAPI). -->
+  <body class="api">
+    <div class="fenster-voll">
+      <div data-teil="kopf"></div>
+      <div></div>
+      <div class="geruest">
+        <nav class="leiste-schmal">
+          <button title="Start"><i class="fa-solid fa-house"></i></button>
+          <button title="Lesen"><i class="fa-solid fa-book-open"></i></button>
+          <button title="Merkzettel"><i class="fa-solid fa-bookmark"></i></button>
+          <button title="Themen"><i class="fa-solid fa-layer-group"></i></button>
+          <button class="aktiv" title="Schnittstelle"><i class="fa-solid fa-plug"></i></button>
+          <button class="unten" title="Einstellungen"><i class="fa-solid fa-sliders"></i></button>
+        </nav>
+        <div data-teil="nav:einstellungen"></div>
+
+        <aside class="api-baum">
+          <div class="kopfzeile">
+            <b style="display: flex; gap: 8px; align-items: center"><i class="fa-solid fa-plug" style="color: var(--akzent)"></i>Schnittstelle v1</b>
+            <span class="suche"><i class="fa-solid fa-filter"></i>Weg oder Feld suchen</span>
+          </div>
+          <div class="rollfeld">
+            <div class="api-gruppe">Bücher</div>
+            <a class="api-weg" href="#"><span class="methode get">GET</span><code>/buecher</code></a>
+            <a class="api-weg" href="#"><span class="methode get">GET</span><code>/buecher/{buch}</code></a>
+            <div class="api-gruppe">Artikel</div>
+            <a class="api-weg" href="#"><span class="methode get">GET</span><code>/artikel/{buch}/{pfad}</code></a>
+            <a class="api-weg" href="#"><span class="methode get">GET</span><code>/artikel/.../abschnitte</code></a>
+            <a class="api-weg" href="#"><span class="methode get">GET</span><code>/artikel/.../vorlesetext</code></a>
+            <div class="api-gruppe">Suche</div>
+            <a class="api-weg hier" href="#"><span class="methode get">GET</span><code>/suche</code></a>
+            <a class="api-weg" href="#"><span class="methode get">GET</span><code>/vorschlaege</code></a>
+            <a class="api-weg" href="#"><span class="methode get">GET</span><code>/medien/suche</code></a>
+            <div class="api-gruppe">Meins</div>
+            <a class="api-weg" href="#"><span class="methode get">GET</span><code>/merkzettel</code></a>
+            <a class="api-weg" href="#"><span class="methode post">POST</span><code>/merkzettel</code></a>
+            <a class="api-weg" href="#"><span class="methode get">GET</span><code>/notizen</code></a>
+            <a class="api-weg" href="#"><span class="methode post">POST</span><code>/notizen</code></a>
+            <a class="api-weg" href="#"><span class="methode patch">PATCH</span><code>/notizen/{id}</code></a>
+            <a class="api-weg" href="#"><span class="methode get">GET</span><code>/themen</code></a>
+            <a class="api-weg" href="#"><span class="methode get">GET</span><code>/verlauf</code></a>
+            <div class="api-gruppe">Dienste</div>
+            <a class="api-weg" href="#"><span class="methode post">POST</span><code>/uebersetzen</code></a>
+            <a class="api-weg" href="#"><span class="methode get">GET</span><code>/bildholer/stand</code></a>
+            <a class="api-weg" href="#"><span class="methode get">GET</span><code>/buecherlader/stand</code></a>
+            <div class="api-gruppe">Für KI (MCP)</div>
+            <a class="api-weg" href="#"><span class="methode mcp">MCP</span><code>nachschlag_suchen</code></a>
+            <a class="api-weg" href="#"><span class="methode mcp">MCP</span><code>nachschlag_lesen</code></a>
+          </div>
+        </aside>
+
+        <section class="seite">
+          <div class="api-kopfband">
+            <span>Grundadresse <code>/api/v1</code></span>
+            <span>Zugang: Anmeldung über die Kellerwolke oder App-Schlüssel</span>
+            <span class="abdeckung"><i class="fa-solid fa-circle-check"></i>21 von 21 Wegen beschrieben</span>
+            <span class="rechts"><button class="knopf still"><i class="fa-solid fa-file-code"></i>OpenAPI</button><button class="knopf still"><i class="fa-solid fa-cloud"></i>Als Markdown in die Kellerwolke</button></span>
+          </div>
+          <div class="rollfeld" style="padding: 0">
+            <div class="api-seite">
+              <h1><span class="methode get">GET</span><code>/api/v1/suche</code></h1>
+              <p>Sucht in allen oder ausgewählten Büchern: der Index der Bücher antwortet immer, die Bedeutungssuche über Fundus kommt dazu, wenn sie rechtzeitig antwortet. Jeder Treffer sagt, welcher Weg ihn fand. Antwortet die Bedeutungssuche nicht, steht <code>nur_index: true</code> in der Antwort.</p>
+
+              <h2>Parameter</h2>
+              <table class="api-tabelle">
+                <thead><tr><th>Name</th><th>Typ</th><th>Beschreibung</th><th>Beispiel</th></tr></thead>
+                <tbody>
+                  <tr><td><code>frage</code> <span class="pflicht">Pflicht</span></td><td class="typ">string</td><td>Begriff, Name oder Frage in eigenen Worten, 1 bis 400 Zeichen</td><td><code>Füchse in Städten</code></td></tr>
+                  <tr><td><code>buecher</code></td><td class="typ">string[]</td><td>Kennungen der Bücher; leer: alle mit Index</td><td><code>wikipedia_de_all</code></td></tr>
+                  <tr><td><code>wege</code></td><td class="typ">enum</td><td><code>beide</code>, <code>bedeutung</code> oder <code>index</code></td><td><code>beide</code></td></tr>
+                  <tr><td><code>art</code></td><td class="typ">enum</td><td><code>alles</code>, <code>artikel</code>, <code>stellen</code> oder <code>medien</code></td><td><code>stellen</code></td></tr>
+                  <tr><td><code>uebersetzt</code></td><td class="typ">bool</td><td>englische Treffer übersetzt dazunehmen (markiert)</td><td><code>true</code></td></tr>
+                  <tr><td><code>anzahl</code>, <code>seite</code></td><td class="typ">int</td><td>Treffer je Seite (1 bis 50) und Seite</td><td><code>20</code>, <code>1</code></td></tr>
+                </tbody>
+              </table>
+
+              <h2>Aufruf</h2>
+              <div class="code-kasten">
+                <div class="ck-kopf"><span class="segment"><span class="aktiv">curl</span><span>fetch</span><span>Python</span></span><span class="rechts"><button class="knopf still"><i class="fa-regular fa-copy"></i>Kopieren</button></span></div>
+<pre><span class="c-fn">curl</span> -s <span class="c-str">"https://nachschlag/api/v1/suche?frage=F%C3%BCchse%20in%20St%C3%A4dten&amp;art=stellen&amp;anzahl=2"</span> \
+  -H <span class="c-str">"Authorization: Bearer $APP_SCHLUESSEL"</span></pre>
+              </div>
+
+              <h2>Antwort <span style="font-weight: 400; color: var(--text-3); font-size: var(--klein)">200, gekürzt</span></h2>
+              <div class="code-kasten">
+<pre class="antwort-k">{
+  <span class="c-key">"frage"</span>: <span class="c-str">"Füchse in Städten"</span>,
+  <span class="c-key">"nur_index"</span>: <span class="c-kw">false</span>,
+  <span class="c-key">"zeiten"</span>: { <span class="c-key">"index_ms"</span>: <span class="c-num">11</span>, <span class="c-key">"bedeutung_ms"</span>: <span class="c-num">640</span> },
+  <span class="c-key">"beste_stelle"</span>: {
+    <span class="c-key">"buch"</span>: <span class="c-str">"wikipedia_de_all"</span>,
+    <span class="c-key">"pfad"</span>: <span class="c-str">"Rotfuchs"</span>,
+    <span class="c-key">"abschnitt"</span>: <span class="c-str">"Lebensraum, Streifgebietsgröße"</span>,
+    <span class="c-key">"text"</span>: <span class="c-str">"Die ersten Stadtfüchse wurden in den 1930er Jahren in Londoner Vororten bekannt."</span>,
+    <span class="c-key">"wege"</span>: [<span class="c-str">"bedeutung"</span>, <span class="c-str">"index"</span>]
+  },
+  <span class="c-key">"treffer"</span>: [
+    { <span class="c-key">"titel"</span>: <span class="c-str">"Stadtökologie"</span>, <span class="c-key">"abschnitt"</span>: <span class="c-str">"Einleitung"</span>, <span class="c-key">"wege"</span>: [<span class="c-str">"bedeutung"</span>], <span class="c-key">"uebersetzt"</span>: <span class="c-kw">false</span> },
+    { <span class="c-key">"titel"</span>: <span class="c-str">"Stadtwildtiere"</span>, <span class="c-key">"original"</span>: <span class="c-str">"Urban wildlife"</span>, <span class="c-key">"wege"</span>: [<span class="c-str">"bedeutung"</span>], <span class="c-key">"uebersetzt"</span>: <span class="c-kw">true</span> }
+  ],
+  <span class="c-key">"weiter"</span>: <span class="c-num">2</span>
+}</pre>
+              </div>
+
+              <h2>Fehler</h2>
+              <dl class="fehler-liste">
+                <dt>401</dt><dd>ohne gültige Anmeldung oder App-Schlüssel</dd>
+                <dt>403</dt><dd>der App-Schlüssel darf dieses Buch nicht lesen</dd>
+                <dt>422</dt><dd>Parameter ungültig, mit Feld und Grund in deutscher Sprache</dd>
+                <dt>200 + nur_index</dt><dd>kein Fehler: die Bedeutungssuche antwortete nicht rechtzeitig, die Liste kommt aus dem Index</dd>
+              </dl>
+              <h2>Grenzen</h2>
+              <p>Höchstens 50 Treffer je Seite, Wartezeit auf die Bedeutungssuche einstellbar (Vorgabe 1,5 Sekunden), Abrufe je App gezählt und im Protokoll sichtbar.</p>
+            </div>
+          </div>
+        </section>
+
+        <aside class="probe">
+          <div class="rollfeld">
+            <h3>Ausprobieren</h3>
+            <span style="color: var(--text-3)">mit deinem Zugang, gegen die echte Bibliothek</span>
+            <div class="feld-p"><label>frage</label><span class="eingabe-p">Füchse in Städten</span></div>
+            <div class="feld-p"><label>art</label><span class="segment"><span>alles</span><span class="aktiv">stellen</span></span></div>
+            <div class="feld-p"><label>wege</label><span class="segment"><span class="aktiv">beide</span><span>index</span></span></div>
+            <div class="feld-p"><label>anzahl</label><span class="eingabe-p">2</span></div>
+            <button class="knopf primaer" style="align-self: flex-start"><i class="fa-solid fa-play"></i>Senden</button>
+            <div class="ergebnis-kopf"><span class="ok">200</span><span>651 ms</span><span style="color: var(--text-3)">Index 11 ms, Bedeutung 640 ms</span></div>
+            <div class="code-kasten">
+<pre class="antwort-k" style="font-size: 12.5px">{
+  <span class="c-key">"nur_index"</span>: <span class="c-kw">false</span>,
+  <span class="c-key">"beste_stelle"</span>: {
+    <span class="c-key">"pfad"</span>: <span class="c-str">"Rotfuchs"</span>,
+    <span class="c-key">"abschnitt"</span>: <span class="c-str">"Lebensraum, ..."</span>
+  },
+  <span class="c-key">"treffer"</span>: [ ... 2 ]
+}</pre>
+            </div>
+            <div style="color: var(--text-3)"><i class="fa-solid fa-code"></i> Für KI: derselbe Weg als MCP-Werkzeug <code style="font-family: var(--schrift-editor)">nachschlag_suchen</code>, gleiche Parameter.</div>
+          </div>
+        </aside>
+      </div>
+      <div data-teil="fuss"></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Einstellungen, Bilder</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Einstellungen mit Reitern (eigene Adresse je Reiter, volle Breite, wie im Appkern). Reiter Bilder: der Bildnachlader
+       ist ein eigenes Programm (Bildholer, Container auf dem Pi); Nachschlag zeigt seinen Stand und stellt ihn ein. Ein Bild alle
+       paar Sekunden, in Stufen nach Vorrang, mit Platzgrenze. -->
+  <body>
+    <div class="fenster-voll">
+      <div data-teil="kopf"></div>
+      <div></div>
+      <div class="geruest">
+        <div data-teil="nav:einstellungen"></div>
+        <section class="seite einstellungen">
+          <div class="seiten-kopf"><h1>Einstellungen</h1></div>
+          <div class="reiterleiste">
+            <button>Lesen</button><button onclick="location.href='einstellungen-suche.html'">Suche</button><button class="aktiv">Bilder<span class="reiter-punkt" title="läuft"></span></button><button>Übersetzen</button>
+            <button>Vorlesen</button><button>Bibliothek</button><button>Verbindungen</button><button>Gestaltung</button>
+          </div>
+          <div class="rollfeld">
+            <div class="einstellungen-seite">
+              <div class="lagekarte">
+                <div>
+                  <div class="zustand"><b>Große Bilder nachladen</b><span class="pille aktiv"><i class="fa-solid fa-circle-play"></i>läuft, 1 Bild alle 3 s</span></div>
+                  <div class="karte-unter" style="color: var(--text-2); font-size: var(--klein); margin-top: 4px">Der Bildholer lädt zu den Vorschaubildern der ZIM das Original aus der Bildquelle der Enzyklopädie, mit Lizenz und Urheber. Bis ein großes Bild da ist, zeigt Nachschlag das Vorschaubild.</div>
+                </div>
+                <div class="aktionen"><button class="knopf"><i class="fa-solid fa-pause"></i>Anhalten</button><button class="rund" title="Protokoll"><i class="fa-solid fa-clock-rotate-left"></i></button></div>
+                <div class="zahlen">
+                  <div class="kennzahl"><span class="k">Geladen</span><span class="w">18.240</span></div>
+                  <div class="kennzahl"><span class="k">Heute</span><span class="w">9.812</span></div>
+                  <div class="kennzahl"><span class="k">Belegt</span><span class="w">5,4 GB</span></div>
+                  <div class="kennzahl"><span class="k">Übersprungen</span><span class="w">312</span></div>
+                </div>
+                <div class="stufenliste">
+                  <div class="stufenzeile fertig"><i class="fa-solid fa-circle-check"></i><span>1 Gelesen, gemerkt, in Themen</span><span class="spur"><span style="width: 100%"></span></span><span class="zahl">2.140 von 2.140</span></div>
+                  <div class="stufenzeile jetzt"><i class="fa-solid fa-circle-play"></i><span>2 Steckbriefbilder</span><span class="spur"><span style="width: 1.4%"></span></span><span class="zahl">16.100 von 1,1 Mio</span></div>
+                  <div class="stufenzeile"><i class="fa-regular fa-circle"></i><span>3 Übrige Bilder</span><span class="spur"><span style="width: 0%"></span></span><span class="zahl">0 von 2,4 Mio</span></div>
+                </div>
+                <div class="zuletzt"><span>Zuletzt:</span><img src="beispiel/saturn_planet_.jpg" alt=""><span class="vorher">330 → 960 px</span><img src="beispiel/orionnebel.jpg" alt=""><span class="vorher">330 → 1.600 px</span><img src="beispiel/fuchs.jpg" alt=""><span class="vorher">330 → 799 px</span></div>
+              </div>
+
+              <div class="karte">
+                <h2><i class="fa-solid fa-gauge"></i>Tempo und Zeit</h2>
+                <div class="feld"><div class="was"><div class="name">Abstand zwischen zwei Bildern</div><div class="beschreibung">Ein Bild nach dem anderen, nie gleichzeitig. Kleiner heißt schneller, aber mehr Last bei der Bildquelle.</div></div>
+                  <span class="wert-zahl"><button class="knopf"><i class="fa-solid fa-minus"></i></button><b>3</b><button class="knopf"><i class="fa-solid fa-plus"></i></button><span class="einheit">Sekunden</span></span></div>
+                <div class="feld"><div class="was"><div class="name">Beim Öffnen eines Artikels sofort laden</div><div class="beschreibung">Zusätzlich zum Laden im Hintergrund: öffnest du einen Artikel, holt der Bildholer seine Bilder sofort, sichtbare zuerst. Im Artikel wird jedes Vorschaubild scharf, sobald das große da ist.</div></div>
+                  <button class="schalter an" aria-label="Beim Öffnen sofort laden"></button></div>
+                <div class="feld"><div class="was"><div class="name">Tempo beim Öffnen</div><div class="beschreibung">Gilt nur für den geöffneten Artikel; danach geht es im Hintergrund im gewohnten Abstand weiter.</div></div>
+                  <span class="wert-zahl"><button class="knopf"><i class="fa-solid fa-minus"></i></button><b>1</b><button class="knopf"><i class="fa-solid fa-plus"></i></button><span class="einheit">Bild je Sekunde</span></span></div>
+                <div class="feld"><div class="was"><div class="name">Wann laden</div><div class="beschreibung">Nur in Ruhezeiten schont das Heimnetz am Tag.</div></div>
+                  <span class="segment"><span class="aktiv">Immer</span><span>Nur nachts</span><span>Nur wenn niemand liest</span></span></div>
+                <div class="feld"><div class="was"><div class="name">Bei Fehlern der Bildquelle</div><div class="beschreibung">Bei Ablehnung oder zu vielen Anfragen wartet der Bildholer und verdoppelt den Abstand, bis es wieder geht.</div></div>
+                  <span class="segment"><span class="aktiv">Warten und langsamer</span><span>Anhalten</span></span></div>
+              </div>
+
+              <div class="karte">
+                <h2><i class="fa-solid fa-image"></i>Größe und Platz</h2>
+                <div class="feld"><div class="was"><div class="name">Größte Breite</div><div class="beschreibung">Ist das Original kleiner, nimmt der Bildholer das Original; nie aufgeblasen.</div></div>
+                  <span class="segment"><span>1.280 px</span><span class="aktiv">1.600 px</span><span>2.048 px</span><span>Original</span></span></div>
+                <div class="feld"><div class="was"><div class="name">Platz höchstens</div><div class="beschreibung">Ist die Grenze erreicht, hält der Bildholer an und meldet es; nichts wird gelöscht.</div></div>
+                  <div class="platzbalken">
+                    <span class="wert-zahl"><button class="knopf"><i class="fa-solid fa-minus"></i></button><b>200</b><button class="knopf"><i class="fa-solid fa-plus"></i></button><span class="einheit">GB, frei auf dem Pi 1,3 TB</span></span>
+                    <span class="spur"><span class="bilder" style="width: 2.7%"></span></span>
+                    <span class="legende"><span><i class="fa-solid fa-square" style="color: var(--akzent-flaeche)"></i> Bilder 5,4 GB von 200 GB</span></span>
+                  </div></div>
+                <div class="feld"><div class="was"><div class="name">Was nie geladen wird</div><div class="beschreibung">Formeln und Symbole sind als SVG schon scharf, Karten aus Kacheln zu groß.</div></div>
+                  <span class="wert-rechts"><span class="chip an"><i class="fa-solid fa-square-check"></i>Formeln</span><span class="chip an"><i class="fa-solid fa-square-check"></i>Symbole und Flaggen</span><span class="chip"><i class="fa-solid fa-square"></i>Karten</span></span></div>
+              </div>
+
+              <div class="karte">
+                <h2><i class="fa-solid fa-list-ol"></i>Reihenfolge</h2>
+                <div class="feld"><div class="was"><div class="name">Vorrang</div><div class="beschreibung">Zuerst, was du wirklich ansiehst. Ein neu geöffneter Artikel springt immer nach vorn: seine Bilder kommen als Nächstes.</div></div>
+                  <div class="reihenfolge">
+                    <span><i class="fa-solid fa-grip-vertical"></i><span class="nr">1</span>Gelesen, gemerkt, in Themen</span>
+                    <span><i class="fa-solid fa-grip-vertical"></i><span class="nr">2</span>Steckbriefbilder aller Artikel</span>
+                    <span><i class="fa-solid fa-grip-vertical"></i><span class="nr">3</span>Übrige Bilder</span>
+                  </div></div>
+                <div class="feld"><div class="was"><div class="name">Bücher</div><div class="beschreibung">Für welche Bücher große Bilder geladen werden.</div></div>
+                  <span class="wert-rechts"><span class="chip an"><i class="fa-solid fa-square-check"></i>Wikipedia (Deutsch)</span><span class="chip"><i class="fa-solid fa-square"></i>Wikipedia (Englisch)</span></span></div>
+              </div>
+
+              <div class="karte">
+                <h2><i class="fa-solid fa-plug"></i>Bildholer</h2>
+                <div class="feld"><div class="was"><div class="name">Programm</div><div class="beschreibung">Eigenes Programm als Container auf dem Pi; Nachschlag liest nur seine Ablage.</div></div>
+                  <span class="wert-rechts"><span class="pille gut"><span class="punkt"></span>läuft</span><span class="einheit">Bildholer 0.1.0 · Ablage /mnt/data/nachschlag/bilder</span></span></div>
+                <div class="feld"><div class="was"><div class="name">Absender bei der Bildquelle</div><div class="beschreibung">Die Bildquelle verlangt eine Kennung mit Kontakt, sonst sperrt sie.</div></div>
+                  <span class="eingabe-schein">Nachschlag-Bildholer/0.1 (privat, Heimnetz)</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div data-teil="fuss"></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

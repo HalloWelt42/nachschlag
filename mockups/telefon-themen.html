@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Themen und Notizen am Telefon</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Telefon: ein Thema mit Bereichen (Umsortieren über Halten und Ziehen), die Notizen, und eine Notiz an einer
+       markierten Stelle anlegen (Text halten, Werkzeugleiste, Blatt von unten). -->
+  <body style="background: var(--hg)">
+    <div class="telefone">
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:41</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf">
+          <button class="rund still" title="Zurück"><i class="fa-solid fa-chevron-left"></i></button>
+          <h1>Sternenhimmel</h1>
+          <button class="rund still" title="Vorlesen"><i class="fa-solid fa-volume-high"></i></button>
+          <button class="rund still" title="Mehr"><i class="fa-solid fa-ellipsis"></i></button>
+        </div>
+        <div class="t-inhalt t-hg">
+          <div class="angebot-artikel streifen-kasten" style="background: var(--flaeche); box-shadow: inset 3px 0 0 var(--akzent-flaeche); border-radius: 0"><span class="ohne-bild" style="width: 52px; height: 40px; display: grid; place-items: center; color: var(--akzent)"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+            <span><span class="t">3 neu passend</span><span class="u">Orionnebel, Milchstraße, Venus</span></span><i class="fa-solid fa-chevron-right" style="color: var(--text-3)"></i></div>
+          <div class="t-gruppe"><span>Planeten · 4</span></div>
+          <div class="liste kompakt">
+            <a href="#"><img src="beispiel/saturn_planet_.jpg" alt=""><span><span class="t">Saturn (Planet)</span><span class="u">1 Notiz</span></span></a>
+            <a href="#"><img src="beispiel/jupiter_planet_.png" alt=""><span><span class="t">Jupiter (Planet)</span><span class="u">gelesen</span></span></a>
+            <a href="#"><img src="beispiel/mars_planet_.png" alt=""><span><span class="t">Mars (Planet)</span><span class="u">noch nicht gelesen</span></span></a>
+          </div>
+          <div class="t-gruppe"><span>Galaxien und Nebel · 2</span></div>
+          <div class="liste kompakt">
+            <a href="#"><img src="beispiel/andromedagalaxie.jpg" alt=""><span><span class="t">Andromedagalaxie</span><span class="u">61 % gelesen</span></span></a>
+            <a href="#"><img src="beispiel/schwarzes_loch.jpg" alt=""><span><span class="t">Schwarzes Loch</span><span class="u">noch nicht gelesen</span></span></a>
+          </div>
+          <div class="t-gruppe"><span>Monde · 1</span></div>
+          <div class="liste kompakt">
+            <a href="#"><img src="beispiel/mond.jpg" alt=""><span><span class="t">Mond</span><span class="u">gelesen</span></span></a>
+          </div>
+        </div>
+        <div class="t-leiste">
+          <button><i class="fa-solid fa-house"></i>Start</button>
+          <button><i class="fa-solid fa-shuffle"></i>Stöbern</button>
+          <button><i class="fa-solid fa-bookmark"></i>Merkzettel</button>
+          <button class="aktiv"><i class="fa-solid fa-layer-group"></i>Themen</button>
+          <button><i class="fa-solid fa-ellipsis"></i>Mehr</button>
+        </div>
+      </div></div>
+
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:42</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf" style="padding-left: 14px">
+          <h1>Notizen</h1>
+          <button class="rund still" title="Suchen"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </div>
+        <div class="t-inhalt t-hg">
+          <div class="segment" style="margin-bottom: 12px"><button class="aktiv">Alle 7</button><button>An Stellen</button><button>Am Artikel</button></div>
+          <div class="notiz">
+            <div class="zitat">"Die häufigste Farbvariante ist der Birkfuchs ..."</div>
+            <div class="text">Birkfuchs = häufigste Farbe, mit Bild aus dem Wildpark vergleichen</div>
+            <div class="wo"><span><i class="fa-solid fa-book-open"></i>Rotfuchs</span><span class="zahl">29.10.</span></div>
+          </div>
+          <div class="notiz">
+            <div class="text">Fragen für den Wildpark: Wie alt werden Füchse in Gefangenschaft?</div>
+            <div class="wo"><span><i class="fa-solid fa-book-open"></i>Rotfuchs</span><span class="zahl">28.10.</span></div>
+          </div>
+          <div class="notiz">
+            <div class="zitat">"... mit bloßem Auge beobachtet werden kann."</div>
+            <div class="text">Mit bloßem Auge sichtbar, am besten im Herbst.</div>
+            <div class="wo"><span><i class="fa-solid fa-book-open"></i>Andromedagalaxie</span><span class="zahl">27.10.</span></div>
+          </div>
+          <div class="notiz">
+            <div class="zitat uebersetzt">"Die Ringe bestehen zum größten Teil aus Wassereis ..."</div>
+            <div class="text">Ringe für die Sternenwarte vormerken.</div>
+            <div class="wo"><span><i class="fa-solid fa-language"></i>Ringe des Saturn, übersetzt</span><span class="zahl">26.10.</span></div>
+          </div>
+        </div>
+        <div class="t-leiste">
+          <button><i class="fa-solid fa-house"></i>Start</button>
+          <button><i class="fa-solid fa-shuffle"></i>Stöbern</button>
+          <button><i class="fa-solid fa-bookmark"></i>Merkzettel</button>
+          <button><i class="fa-solid fa-layer-group"></i>Themen</button>
+          <button class="aktiv"><i class="fa-solid fa-ellipsis"></i>Mehr</button>
+        </div>
+      </div></div>
+
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:44</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf">
+          <button class="rund still" title="Zurück"><i class="fa-solid fa-chevron-left"></i></button>
+          <h1>Andromedagalaxie</h1>
+          <button class="rund still" title="Suchen"><i class="fa-solid fa-magnifying-glass"></i></button>
+          <button class="rund still" title="Mehr"><i class="fa-solid fa-ellipsis"></i></button>
+        </div>
+        <div class="t-inhalt">
+          <div class="t-titel">Andromedagalaxie</div>
+          <div class="artikel">
+            <p>Die <b>Andromedagalaxie</b>, auch (veraltet) Andromedanebel oder Großer Andromedanebel genannt, ist mit rund 2,5 Millionen Lichtjahren Entfernung die am nächsten zur <a class="wl" href="#">Milchstraße</a> gelegene Spiralgalaxie. <span class="auswahl-griff"></span><span class="auswahl-text">Sie ist zugleich das entfernteste Objekt, das unter guten Bedingungen ohne technische Hilfsmittel mit bloßem Auge beobachtet werden kann.</span><span class="auswahl-griff ende"></span> Sie liegt im Sternbild Andromeda, von dem auch ihr Name stammt.</p>
+          </div>
+        </div>
+        <div class="t-leiste">
+          <button><i class="fa-solid fa-list"></i>Inhalt</button>
+          <button><i class="fa-solid fa-volume-high"></i>Vorlesen</button>
+          <button><i class="fa-solid fa-bookmark"></i>Merken</button>
+          <button class="aktiv"><i class="fa-solid fa-note-sticky"></i>Notiz</button>
+          <button><i class="fa-solid fa-diagram-project"></i>Ähnlich</button>
+        </div>
+        <div class="auswahl-leiste" style="top: 474px">
+          <button><i class="fa-solid fa-highlighter"></i>Markieren</button>
+          <button><i class="fa-solid fa-note-sticky"></i>Notiz</button>
+          <button><i class="fa-solid fa-volume-high"></i>Ab hier</button>
+          <button><i class="fa-solid fa-quote-right"></i>Zitieren</button>
+          <button><i class="fa-solid fa-magnifying-glass"></i>Suchen</button>
+        </div>
+      </div></div>
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:45</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf">
+          <button class="rund still" title="Zurück"><i class="fa-solid fa-chevron-left"></i></button>
+          <h1>Andromedagalaxie</h1>
+          <button class="rund still" title="Suchen"><i class="fa-solid fa-magnifying-glass"></i></button>
+          <button class="rund still" title="Mehr"><i class="fa-solid fa-ellipsis"></i></button>
+        </div>
+        <div class="t-inhalt">
+          <div class="t-titel">Andromedagalaxie</div>
+          <div class="artikel">
+            <p>Die <b>Andromedagalaxie</b>, auch (veraltet) Andromedanebel oder Großer Andromedanebel genannt, ist mit rund 2,5 Millionen Lichtjahren Entfernung die am nächsten zur <a class="wl" href="#">Milchstraße</a> gelegene Spiralgalaxie. <span class="auswahl-griff"></span><span class="auswahl-text">Sie ist zugleich das entfernteste Objekt, das unter guten Bedingungen ohne technische Hilfsmittel mit bloßem Auge beobachtet werden kann.</span><span class="auswahl-griff ende"></span> Sie liegt im Sternbild Andromeda, von dem auch ihr Name stammt.</p>
+          </div>
+        </div>
+        <div class="t-leiste">
+          <button><i class="fa-solid fa-list"></i>Inhalt</button>
+          <button><i class="fa-solid fa-volume-high"></i>Vorlesen</button>
+          <button><i class="fa-solid fa-bookmark"></i>Merken</button>
+          <button class="aktiv"><i class="fa-solid fa-note-sticky"></i>Notiz</button>
+          <button><i class="fa-solid fa-diagram-project"></i>Ähnlich</button>
+        </div>
+        <div class="notizblatt">
+          <div class="griff"></div>
+          <div class="zeile"><b>Notiz zur Stelle</b><button class="knopf primaer">Fertig</button></div>
+          <div class="zitatbox streifen-kasten" style="padding: 8px 12px; background: var(--flaeche); font-size: 15px; color: var(--text-2); box-shadow: inset 3px 0 0 var(--akzent-flaeche); border-radius: 0">"Sie ist zugleich das entfernteste Objekt, das ... mit bloßem Auge beobachtet werden kann."</div>
+          <div class="schreibfeld">Mit bloßem Auge sichtbar, am besten im Herbst.</div>
+          <div class="chips"><span class="chip"><i class="fa-solid fa-layer-group"></i>Sternenhimmel</span><span class="chip wahl"><i class="fa-solid fa-plus"></i>Thema</span></div>
+        </div>
+      </div></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

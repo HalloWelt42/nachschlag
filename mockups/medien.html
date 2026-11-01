@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Medien</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Medien: Suche über Bildunterschriften und Alternativtexte aller Bilder (eigener Index, beim Einlesen gebaut), dazu
+       Töne. Jedes Bild zeigt, ob es nur als Vorschaubild oder schon groß da ist. Mit ?bild=1 die große Ansicht:
+       Bild, Pfeile, Streifen der übrigen Bilder des Artikels, rechts Angaben mit Lizenz und Urheber. Echte Bilder und
+       Unterschriften aus der ZIM. -->
+  <body>
+    <div class="fenster-voll">
+      <div data-teil="kopf"></div>
+      <div></div>
+      <div class="geruest">
+        <div data-teil="nav:medien"></div>
+        <section class="seite">
+          <div class="seiten-kopf">
+            <h1>Medien</h1>
+            <div class="medien-filter">
+              <span class="suche-gross"><i class="fa-solid fa-magnifying-glass" style="color: var(--text-3)"></i>fuchs</span>
+              <span class="chip wahl an"><i class="fa-solid fa-image"></i>Bilder</span>
+              <span class="chip wahl"><i class="fa-solid fa-map"></i>Karten</span>
+              <span class="chip wahl"><i class="fa-solid fa-volume-high"></i>Töne</span>
+              <span class="chip wahl"><i class="fa-solid fa-expand"></i>nur groß geladene</span>
+              <span class="chip wahl"><i class="fa-solid fa-layer-group"></i>aus meinen Themen</span>
+            </div>
+          </div>
+          <div class="rollfeld">
+            <div class="trefferzeile"><span>16 Bilder und 1 Ton aus 5 Artikeln</span><span class="weg"><i class="fa-solid fa-wand-magic-sparkles"></i> auch ohne das Wort "Fuchs" in der Unterschrift, über die Bedeutung</span></div>
+            <div class="mediengitter">
+              <div class="medium"><img src="beispiel/m_r_d_r_v_vulpes_vulpes.jpg" alt=""><span class="groesse gross">groß</span>
+                <div class="unter">Rot<em>fuchs</em> in einem dänischen Tierpark<div class="herkunft-m"><i class="fa-solid fa-book-open"></i>Rotfuchs</div></div></div>
+              <div class="medium ton"><button class="spiel" title="Abspielen"><i class="fa-solid fa-play"></i></button>
+                <div><b>Bellender <em>Fuchs</em></b><div class="welle"></div><div class="herkunft-m"><i class="fa-solid fa-book-open"></i>Rotfuchs · Ton</div></div></div>
+              <div class="medium"><img src="beispiel/m_alopex_lagopus_cub_in_grass.jpg" alt=""><span class="groesse">250 px</span>
+                <div class="unter">Junges, blaue Morphe<div class="herkunft-m"><i class="fa-solid fa-book-open"></i>Polar<em>fuchs</em></div></div></div>
+              <div class="medium"><img src="beispiel/m_nemui_kitune.jpg" alt=""><span class="groesse">250 px</span>
+                <div class="unter">Zwei Fenneks im Tokioter Zoo. Details der Fellzeichnung sowie die Ohr- und Zehenbehaarung sind gut zu erkennen.<div class="herkunft-m"><i class="fa-solid fa-book-open"></i>Fennek</div></div></div>
+              <div class="medium"><img src="beispiel/m_silberfuchs_os_01.jpg" alt=""><span class="groesse">250 px</span>
+                <div class="unter">Silber<em>fuchs</em> Zoo Osnabrück<div class="herkunft-m"><i class="fa-solid fa-book-open"></i>Rotfuchs</div></div></div>
+              <div class="medium"><img src="beispiel/m_polarb_r_26_polarfuchs_2004_11_17.jpg" alt=""><span class="groesse">250 px</span>
+                <div class="unter">Begegnung zwischen Polar<em>fuchs</em> und Eisbär<div class="herkunft-m"><i class="fa-solid fa-book-open"></i>Polarfuchs</div></div></div>
+              <div class="medium"><img src="beispiel/m_fox_2c_gray_urocyon_cineroargenteus_7_19_08_canet_.jpg" alt=""><span class="groesse">250 px</span>
+                <div class="unter">Grau<em>fuchs</em><div class="herkunft-m"><i class="fa-solid fa-book-open"></i>Graufuchs</div></div></div>
+              <div class="medium"><img src="beispiel/m_fennecus_res_furatur.jpg" alt=""><span class="groesse">250 px</span>
+                <div class="unter">Fenneks suchen regelmäßig menschliche Siedlungen und Zeltlager auf, um dort nach Nahrung zu suchen.<div class="herkunft-m"><i class="fa-solid fa-book-open"></i>Fennek</div></div></div>
+              <div class="medium"><img src="beispiel/m_vulpes_vulpes_skeleton.jpg" alt=""><span class="groesse">250 px</span>
+                <div class="unter">Skelett (Lomonossow-Universität, Moskau)<div class="herkunft-m"><i class="fa-solid fa-book-open"></i>Rotfuchs</div></div></div>
+              <div class="medium"><img src="beispiel/m_urocyon_littoralis_full_figure.jpg" alt=""><span class="groesse">260 px</span>
+                <div class="unter">Der Insel-Grau<em>fuchs</em> wird als eigenständige Art neben dem Graufuchs betrachtet.<div class="herkunft-m"><i class="fa-solid fa-book-open"></i>Graufuchs</div></div></div>
+              <div class="medium"><img src="beispiel/m_distribution_arctic_fox.jpg" alt=""><span class="groesse">250 px</span>
+                <div class="unter">Verbreitungsgebiet des Polar<em>fuchs</em>es<div class="herkunft-m"><i class="fa-solid fa-book-open"></i>Polarfuchs</div></div></div>
+              <div class="medium"><img src="beispiel/m_renardcr_ne.jpg" alt=""><span class="groesse">250 px</span>
+                <div class="unter">Schädel<div class="herkunft-m"><i class="fa-solid fa-book-open"></i>Rotfuchs</div></div></div>
+              <div class="medium"><img src="beispiel/m_gray_fox_fur_skins.jpg" alt=""><span class="groesse">190 px</span>
+                <div class="unter">Nordamerikanische Gris<em>fuchs</em>felle<div class="herkunft-m"><i class="fa-solid fa-book-open"></i>Graufuchs</div></div></div>
+              <div class="medium"><img src="beispiel/m_vulpes_zerda_mhnt_zoo_2010_11_236_5.jpg" alt=""><span class="groesse">250 px</span>
+                <div class="unter">Schädel von Vulpes zerda, Sammlung Museum von Toulouse<div class="herkunft-m"><i class="fa-solid fa-book-open"></i>Fennek</div></div></div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div data-teil="fuss"></div>
+    </div>
+
+    <div class="leuchtkasten">
+      <div class="buehne-b">
+        <div class="oben"><button class="rund" title="Schließen"><i class="fa-solid fa-xmark"></i></button><span class="zaehler">2 von 4 Bildern in Fennek</span>
+          <span style="margin-left: auto; display: flex; gap: 8px"><button class="rund" title="Vergrößern"><i class="fa-solid fa-magnifying-glass-plus"></i></button><button class="rund" title="Merken"><i class="fa-solid fa-bookmark"></i></button></span></div>
+        <div class="bild-b"><span class="ladeband"></span><button class="pfeil l" title="Voriges"><i class="fa-solid fa-chevron-left"></i></button><img src="beispiel/m_nemui_kitune.jpg" alt="Zwei Fenneks"><button class="pfeil r" title="Nächstes"><i class="fa-solid fa-chevron-right"></i></button></div>
+        <div class="streifen"><img src="beispiel/m_vulpes_zerda_mhnt_zoo_2010_11_236_5.jpg" alt=""><img class="an" src="beispiel/m_nemui_kitune.jpg" alt=""><img src="beispiel/m_vulpes_zerda_distribution.jpg" alt=""><img src="beispiel/m_fennecus_res_furatur.jpg" alt=""></div>
+      </div>
+      <aside class="angaben">
+        <b class="titel">Zwei Fenneks im Tokioter Zoo</b>
+        <span>Details der Fellzeichnung sowie die Ohr- und Zehenbehaarung sind gut zu erkennen.</span>
+        <span class="scharf laedt"><i class="fa-solid fa-spinner fa-spin"></i>Großes Bild wird geladen, gleich scharf</span>
+        <dl>
+          <dt>Artikel</dt><dd>Fennek, Abschnitt Merkmale</dd>
+          <dt>Größe</dt><dd>Vorschaubild 250 px, groß bis 1.600 px</dd>
+          <dt>Datei</dt><dd>Nemui_kitune.jpg</dd>
+          <dt>Lizenz</dt><dd>nach Angabe der Bildquelle, wird vom Bildholer mitgeladen</dd>
+        </dl>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px">
+          <button class="knopf"><i class="fa-solid fa-book-open"></i>Im Artikel zeigen</button>
+          <button class="knopf"><i class="fa-solid fa-layer-group"></i>Zu Thema</button>
+        </div>
+      </aside>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

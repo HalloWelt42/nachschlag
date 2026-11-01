@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Merkzettel</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="schrift/jetbrains-mono/schrift.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Merkzettel: gemerkte Artikel und gemerkte Stellen (Streifen links) über alle Bücher, mit Lesestand, Notizen und
+       Themen. Gezeigt: zwei Einträge ausgewählt, oben die Leiste für die Auswahl (Vorlesen als Folge, Zu Thema,
+       Gelesen, Als Markdown, Entfernen). -->
+  <body>
+    <div class="fenster-voll">
+      <div data-teil="kopf"></div>
+      <div></div>
+      <div class="geruest">
+        <div data-teil="nav:merkzettel"></div>
+        <section class="seite">
+          <div class="seiten-kopf">
+            <h1>Merkzettel</h1>
+            <span class="segment"><span class="aktiv">Alle 12</span><span>Ungelesen 5</span><span>Angefangen 4</span><span>Gelesen 3</span></span>
+            <span class="segment"><span class="aktiv">Artikel und Stellen</span><span>Nur Stellen</span></span>
+            <span class="suche"><i class="fa-solid fa-magnifying-glass"></i>Im Merkzettel suchen</span>
+            <span class="chip wahl"><i class="fa-solid fa-arrow-down-wide-short"></i>Zuletzt gemerkt</span>
+          </div>
+          <div class="rollfeld">
+            <div class="liste-seite">
+              <div class="auswahlleiste"><b>2 ausgewählt</b>
+                <button class="knopf"><i class="fa-solid fa-volume-high"></i>Als Folge vorlesen</button>
+                <button class="knopf"><i class="fa-solid fa-layer-group"></i>Zu Thema</button>
+                <button class="knopf"><i class="fa-solid fa-check"></i>Als gelesen</button>
+                <button class="knopf"><i class="fa-solid fa-file-export"></i>Als Markdown</button>
+                <span class="rechts"><button class="knopf"><i class="fa-solid fa-xmark"></i>Entfernen</button></span>
+              </div>
+
+              <div class="merkzeile gewaehlt"><i class="fa-solid fa-square-check wahl"></i><img src="beispiel/m_nemui_kitune.jpg" alt="">
+                <div><span class="t">Fennek</span><div class="wo"><span><i class="fa-solid fa-book"></i>Wikipedia (Deutsch)</span><span><i class="fa-solid fa-dice"></i>gemerkt beim Stöbern, heute 02:41</span></div></div>
+                <div class="stand-spalte"><span>ungelesen</span><span class="spur"><span style="width: 0%"></span></span></div>
+                <div class="aktionen"><button class="rund" title="Vorlesen"><i class="fa-solid fa-volume-high"></i></button><button class="rund" title="Entfernen"><i class="fa-solid fa-xmark"></i></button></div></div>
+
+              <div class="merkzeile stelle gewaehlt"><i class="fa-solid fa-square-check wahl"></i><img src="beispiel/stadtfuchs.jpg" alt="">
+                <div><span class="t">Rotfuchs › Stadtfüchse</span><div class="wo"><span><i class="fa-solid fa-paragraph"></i>gemerkte Stelle</span><span><i class="fa-solid fa-magnifying-glass"></i>aus der Suche "Füchse in Städten", heute 01:58</span></div>
+                  <div class="chips"><span class="chip">Füchse</span></div></div>
+                <div class="stand-spalte"><span>Stelle gelesen</span><span class="spur"><span style="width: 100%"></span></span></div>
+                <div class="aktionen"><button class="rund" title="Vorlesen"><i class="fa-solid fa-volume-high"></i></button><button class="rund" title="Entfernen"><i class="fa-solid fa-xmark"></i></button></div></div>
+
+              <div class="merkzeile"><i class="fa-regular fa-square wahl"></i><img src="beispiel/fuchs.jpg" alt="">
+                <div><span class="t">Rotfuchs</span><div class="wo"><span><i class="fa-solid fa-book"></i>Wikipedia (Deutsch)</span><span><i class="fa-solid fa-note-sticky"></i>2 Notizen</span><span>gemerkt 29.10.</span></div>
+                  <div class="chips"><span class="chip">Füchse</span></div></div>
+                <div class="stand-spalte"><span>bei Lebensraum · <span class="zahl">34 %</span></span><span class="spur"><span style="width: 34%"></span></span></div>
+                <div class="aktionen"><button class="rund" title="Weiterlesen"><i class="fa-solid fa-book-open"></i></button><button class="rund" title="Entfernen"><i class="fa-solid fa-xmark"></i></button></div></div>
+
+              <div class="merkzeile"><i class="fa-regular fa-square wahl"></i><span class="ohne-bild" style="color: var(--violett)"><i class="fa-solid fa-code"></i></span>
+                <div><span class="t code-titel">array_map</span><div class="wo"><span><i class="fa-solid fa-book"></i>PHP Docs</span><span><i class="fa-solid fa-user-pen"></i>1 eigenes Beispiel</span><span>gemerkt 01.11.</span></div></div>
+                <div class="stand-spalte"><span>bei Beispiele · <span class="zahl">45 %</span></span><span class="spur"><span style="width: 45%"></span></span></div>
+                <div class="aktionen"><button class="rund" title="Weiterlesen"><i class="fa-solid fa-book-open"></i></button><button class="rund" title="Entfernen"><i class="fa-solid fa-xmark"></i></button></div></div>
+
+              <div class="merkzeile"><i class="fa-regular fa-square wahl"></i><img src="beispiel/andromedagalaxie.jpg" alt="">
+                <div><span class="t">Andromedagalaxie</span><div class="wo"><span><i class="fa-solid fa-book"></i>Wikipedia (Deutsch)</span><span><i class="fa-solid fa-note-sticky"></i>1 Notiz</span><span>gemerkt 27.10.</span></div>
+                  <div class="chips"><span class="chip">Sternenhimmel</span></div></div>
+                <div class="stand-spalte"><span>bei Entdeckungsgeschichte · <span class="zahl">61 %</span></span><span class="spur"><span style="width: 61%"></span></span></div>
+                <div class="aktionen"><button class="rund" title="Weiterlesen"><i class="fa-solid fa-book-open"></i></button><button class="rund" title="Entfernen"><i class="fa-solid fa-xmark"></i></button></div></div>
+
+              <div class="merkzeile"><i class="fa-regular fa-square wahl"></i><span class="ohne-bild" style="color: var(--tuerkis)"><i class="fa-solid fa-language"></i></span>
+                <div><span class="t">Ringe des Saturn</span><div class="wo"><span class="marke-buch uebersetzt"><i class="fa-solid fa-language"></i>Englisch, von uns übersetzt</span><span>gemerkt 26.10.</span></div>
+                  <div class="chips"><span class="chip">Sternenhimmel</span></div></div>
+                <div class="stand-spalte"><span>bei Ringsystem · <span class="zahl">8 %</span></span><span class="spur"><span style="width: 8%"></span></span></div>
+                <div class="aktionen"><button class="rund" title="Weiterlesen"><i class="fa-solid fa-book-open"></i></button><button class="rund" title="Entfernen"><i class="fa-solid fa-xmark"></i></button></div></div>
+
+              <div class="merkzeile"><i class="fa-regular fa-square wahl"></i><img src="beispiel/polarfuchs.jpg" alt="">
+                <div><span class="t">Polarfuchs</span><div class="wo"><span><i class="fa-solid fa-book"></i>Wikipedia (Deutsch)</span><span>gemerkt 25.10.</span></div>
+                  <div class="chips"><span class="chip">Füchse</span></div></div>
+                <div class="stand-spalte fertig"><span><i class="fa-solid fa-circle-check"></i> gelesen</span><span class="spur"><span style="width: 100%"></span></span></div>
+                <div class="aktionen"><button class="rund" title="Lesen"><i class="fa-solid fa-book-open"></i></button><button class="rund" title="Entfernen"><i class="fa-solid fa-xmark"></i></button></div></div>
+
+              <div class="merkzeile"><i class="fa-regular fa-square wahl"></i><img src="beispiel/tollwut.jpg" alt="">
+                <div><span class="t">Tollwut</span><div class="wo"><span><i class="fa-solid fa-book"></i>Wikipedia (Deutsch)</span><span><i class="fa-solid fa-note-sticky"></i>1 Notiz</span><span>gemerkt 22.10.</span></div>
+                  <div class="chips"><span class="chip">Gesundheit Haustiere</span></div></div>
+                <div class="stand-spalte"><span>ungelesen</span><span class="spur"><span style="width: 0%"></span></span></div>
+                <div class="aktionen"><button class="rund" title="Lesen"><i class="fa-solid fa-book-open"></i></button><button class="rund" title="Entfernen"><i class="fa-solid fa-xmark"></i></button></div></div>
+
+              <button class="knopf" style="align-self: center"><i class="fa-solid fa-chevron-down"></i>4 weitere</button>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div data-teil="fuss"></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Katalog der Bücher</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Bibliothek, Reiter Katalog (WIKI-2): der Katalog der Bücher, nur Deutsch und Englisch (Einstellung), gruppiert nach
+       Art; je Art sichtbar, ob es dafür einen Baustein mit eigenem Lesedesign gibt. Je Buch die Ausgaben (mit Bildern,
+       ohne Bilder, klein) mit Größe, Stand, Zahl der Einträge; Abonnieren lädt und holt künftig neue Fassungen.
+       Alle Bücher, Größen und Stände echt aus dem Katalog (Stand 01.11.2026). -->
+  <body>
+    <div class="fenster-voll">
+      <div data-teil="kopf"></div>
+      <div></div>
+      <div class="geruest">
+        <div data-teil="nav:bibliothek"></div>
+        <section class="seite">
+          <div class="seiten-kopf"><h1>Bibliothek</h1></div>
+          <div class="reiterleiste"><button onclick="location.href='bibliothek.html'">Meine Bücher <span class="zahl">5</span></button><button class="aktiv">Katalog</button><button onclick="location.href='fassungen.html'">Fassungen und Laden<span class="reiter-punkt" title="lädt"></span></button></div>
+          <div class="rollfeld" style="padding-top: var(--a4)">
+            <div class="katalog-seite">
+              <div class="katalog-filter">
+                <span class="suche" style="min-width: 280px"><i class="fa-solid fa-magnifying-glass"></i>Im Katalog suchen</span>
+                <span class="chip wahl an"><i class="fa-solid fa-language"></i>Deutsch 311</span>
+                <span class="chip wahl an"><i class="fa-solid fa-language"></i>Englisch 1.309</span>
+                <span class="segment"><span class="aktiv">Alle Arten</span><span>Nachschlagewerke</span><span>Dokumentation</span><span>Frage und Antwort</span><span>Bücher</span><span>Videos</span></span>
+                <span class="chip wahl"><i class="fa-solid fa-check-double"></i>nur mit Lesedesign</span>
+                <span class="hinweis">Andere Sprachen ausgeblendet (Einstellungen, Bibliothek)</span>
+              </div>
+
+              <div class="art-kopf"><h2><i class="fa-solid fa-book"></i>Nachschlagewerke</h2><span class="baustein da"><i class="fa-solid fa-check"></i> Lesedesign Enzyklopädie</span><span class="neben">Wikipedia, Wikibooks, Wikivoyage, Wikisource, Klexikon und Ähnliche</span></div>
+              <div class="katalog-gitter">
+                <div class="katkarte abo">
+                  <div class="kopf-k"><span class="sym"><i class="fa-solid fa-book"></i></span><span><span class="t">Wikipedia</span><span class="u">Die freie Enzyklopädie · Deutsch</span></span></div>
+                  <div class="ausgaben"><span class="an">mit Bildern <span class="zahl">48,6 GB</span></span><span>ohne Bilder <span class="zahl">18,6 GB</span></span><span>klein <span class="zahl">4,7 GB</span></span></div>
+                  <div class="werte-k"><span><span class="zahl">5,15 Mio</span> Einträge</span><span>Stand <span class="zahl">01.10.2026</span></span><span class="neu-fassung">neuer als deine (01/2026)</span></div>
+                  <div class="fuss-k"><span class="stand-k"><i class="fa-solid fa-circle-check" style="color: var(--gut)"></i> abonniert</span><button class="knopf primaer"><i class="fa-solid fa-download"></i>Neue Fassung laden</button></div>
+                </div>
+                <div class="katkarte">
+                  <div class="kopf-k"><span class="sym"><i class="fa-solid fa-suitcase"></i></span><span><span class="t">Wikivoyage</span><span class="u">Freie Reiseinformationen rund um die Welt · Deutsch</span></span></div>
+                  <div class="ausgaben"><span class="an">mit Bildern <span class="zahl">1,12 GB</span></span><span>ohne Bilder <span class="zahl">0,22 GB</span></span></div>
+                  <div class="werte-k"><span><span class="zahl">33.096</span> Einträge</span><span>Stand <span class="zahl">13.10.2026</span></span></div>
+                  <div class="fuss-k"><span class="stand-k">nicht in der Bibliothek</span><button class="knopf"><i class="fa-solid fa-plus"></i>Abonnieren</button></div>
+                </div>
+                <div class="katkarte">
+                  <div class="kopf-k"><span class="sym"><i class="fa-solid fa-book-open-reader"></i></span><span><span class="t">Wikibooks</span><span class="u">Wikibooks in deutscher Sprache</span></span></div>
+                  <div class="ausgaben"><span class="an">mit Bildern <span class="zahl">3,37 GB</span></span><span>ohne Bilder <span class="zahl">2,82 GB</span></span></div>
+                  <div class="werte-k"><span><span class="zahl">43.602</span> Einträge</span><span>Stand <span class="zahl">27.10.2026</span></span></div>
+                  <div class="fuss-k"><span class="stand-k">nicht in der Bibliothek</span><button class="knopf"><i class="fa-solid fa-plus"></i>Abonnieren</button></div>
+                </div>
+                <div class="katkarte">
+                  <div class="kopf-k"><span class="sym"><i class="fa-solid fa-scroll"></i></span><span><span class="t">Wikisource</span><span class="u">Quellentexte in deutscher Sprache</span></span></div>
+                  <div class="ausgaben"><span class="an">mit Bildern <span class="zahl">2,58 GB</span></span><span>ohne Bilder <span class="zahl">1,21 GB</span></span></div>
+                  <div class="werte-k"><span><span class="zahl">323.947</span> Einträge</span><span>Stand <span class="zahl">27.09.2026</span></span></div>
+                  <div class="fuss-k"><span class="stand-k">nicht in der Bibliothek</span><button class="knopf"><i class="fa-solid fa-plus"></i>Abonnieren</button></div>
+                </div>
+                <div class="katkarte">
+                  <div class="kopf-k"><span class="sym"><i class="fa-solid fa-child"></i></span><span><span class="t">Klexikon, das Kinderlexikon</span><span class="u">Lexikon für Kinder · Deutsch</span></span></div>
+                  <div class="ausgaben"><span class="an">mit Bildern <span class="zahl">0,14 GB</span></span><span>ohne Bilder <span class="zahl">0,01 GB</span></span></div>
+                  <div class="werte-k"><span><span class="zahl">5.664</span> Einträge</span><span>Stand <span class="zahl">07.08.2026</span></span></div>
+                  <div class="fuss-k"><span class="stand-k">nicht in der Bibliothek</span><button class="knopf"><i class="fa-solid fa-plus"></i>Abonnieren</button></div>
+                </div>
+              </div>
+
+              <div class="art-kopf"><h2><i class="fa-solid fa-code"></i>Dokumentation</h2><span class="baustein da"><i class="fa-solid fa-check"></i> Lesedesign Dokumentation</span><span class="neben">Handbücher von Sprachen und Werkzeugen</span></div>
+              <div class="katalog-gitter">
+                <div class="katkarte abo">
+                  <div class="kopf-k"><span class="sym"><i class="fa-solid fa-code"></i></span><span><span class="t">PHP Docs</span><span class="u">PHP documentation · Englisch, übersetzbar</span></span></div>
+                  <div class="werte-k"><span><span class="zahl">7.555</span> Einträge</span><span>Stand <span class="zahl">18.08.2026</span></span><span><span class="zahl">7 MB</span></span></div>
+                  <div class="fuss-k"><span class="stand-k"><i class="fa-solid fa-circle-check" style="color: var(--gut)"></i> abonniert, aktuell</span><button class="knopf still"><i class="fa-solid fa-book-open"></i>Öffnen</button></div>
+                </div>
+                <div class="katkarte">
+                  <div class="kopf-k"><span class="sym"><i class="fa-solid fa-code"></i></span><span><span class="t">Python Docs</span><span class="u">Python documentation · Englisch, übersetzbar</span></span></div>
+                  <div class="werte-k"><span><span class="zahl">514</span> Einträge</span><span>Stand <span class="zahl">31.10.2026</span></span><span>unter 10 MB</span></div>
+                  <div class="fuss-k"><span class="stand-k">nicht in der Bibliothek</span><button class="knopf"><i class="fa-solid fa-plus"></i>Abonnieren</button></div>
+                </div>
+                <div class="katkarte">
+                  <div class="kopf-k"><span class="sym"><i class="fa-solid fa-code"></i></span><span><span class="t">JavaScript Docs</span><span class="u">JavaScript documentation · Englisch, übersetzbar</span></span></div>
+                  <div class="werte-k"><span><span class="zahl">1.301</span> Einträge</span><span>Stand <span class="zahl">01.10.2026</span></span><span>unter 10 MB</span></div>
+                  <div class="fuss-k"><span class="stand-k">nicht in der Bibliothek</span><button class="knopf"><i class="fa-solid fa-plus"></i>Abonnieren</button></div>
+                </div>
+              </div>
+
+              <div class="art-kopf"><h2><i class="fa-solid fa-circle-question"></i>Frage und Antwort</h2><span class="baustein fehlt"><i class="fa-solid fa-hourglass-half"></i> Lesedesign folgt, bis dahin Originalansicht</span></div>
+              <div class="katalog-gitter">
+                <div class="katkarte laedt">
+                  <div class="kopf-k"><span class="sym"><i class="fa-solid fa-circle-question"></i></span><span><span class="t">Stack Overflow</span><span class="u">Fragen und Antworten zur Programmierung · Englisch</span></span></div>
+                  <div class="werte-k"><span><span class="zahl">30,6 Mio</span> Einträge</span><span>Stand <span class="zahl">02.07.2026</span></span><span><span class="zahl">114,9 GB</span></span></div>
+                  <div class="ladeband-k"><span style="width: 14%"></span></div>
+                  <div class="fuss-k"><span class="stand-k"><i class="fa-solid fa-download" style="color: var(--info)"></i> lädt, 15,6 von 114,9 GB, noch etwa 2,5 Std.</span><button class="knopf still"><i class="fa-solid fa-pause"></i>Anhalten</button></div>
+                </div>
+                <div class="katkarte">
+                  <div class="kopf-k"><span class="sym"><i class="fa-solid fa-circle-question"></i></span><span><span class="t">Ask Ubuntu</span><span class="u">Fragen und Antworten für Ubuntu · Englisch</span></span></div>
+                  <div class="werte-k"><span><span class="zahl">781.750</span> Einträge</span><span>Stand <span class="zahl">19.10.2026</span></span><span><span class="zahl">2,77 GB</span></span></div>
+                  <div class="fuss-k"><span class="stand-k">nicht in der Bibliothek</span><button class="knopf"><i class="fa-solid fa-plus"></i>Abonnieren</button></div>
+                </div>
+                <div class="katkarte">
+                  <div class="kopf-k"><span class="sym"><i class="fa-solid fa-terminal"></i></span><span><span class="t">Unix &amp; Linux</span><span class="u">Fragen und Antworten zu Linux und Unix · Englisch</span></span></div>
+                  <div class="werte-k"><span><span class="zahl">414.242</span> Einträge</span><span>Stand <span class="zahl">19.10.2026</span></span><span><span class="zahl">1,32 GB</span></span></div>
+                  <div class="fuss-k"><span class="stand-k">nicht in der Bibliothek</span><button class="knopf"><i class="fa-solid fa-plus"></i>Abonnieren</button></div>
+                </div>
+              </div>
+
+              <div class="art-kopf"><h2><i class="fa-solid fa-book-bookmark"></i>Bücher</h2><span class="baustein fehlt"><i class="fa-solid fa-window-maximize"></i> Originalansicht</span></div>
+              <div class="katalog-gitter">
+                <div class="katkarte">
+                  <div class="kopf-k"><span class="sym"><i class="fa-solid fa-book-bookmark"></i></span><span><span class="t">Projekt Gutenberg-Bibliothek</span><span class="u">Freie E-Books in deutscher Sprache</span></span></div>
+                  <div class="werte-k"><span><span class="zahl">3.544</span> Einträge</span><span>Stand <span class="zahl">26.01.2026</span></span><span><span class="zahl">11,05 GB</span></span></div>
+                  <div class="fuss-k"><span class="stand-k">nicht in der Bibliothek</span><button class="knopf"><i class="fa-solid fa-plus"></i>Abonnieren</button></div>
+                </div>
+                <div class="katkarte">
+                  <div class="kopf-k"><span class="sym"><i class="fa-solid fa-life-ring"></i></span><span><span class="t">Ubuntuusers Wiki</span><span class="u">Wiki der deutschen Ubuntu-Gemeinschaft</span></span></div>
+                  <div class="werte-k"><span><span class="zahl">4.846</span> Einträge</span><span>Stand <span class="zahl">08.12.2017</span></span><span class="neu-fassung" style="background: var(--warn-weich); color: var(--warn)">veraltet</span></div>
+                  <div class="fuss-k"><span class="stand-k">nicht in der Bibliothek</span><button class="knopf"><i class="fa-solid fa-plus"></i>Abonnieren</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div data-teil="fuss"></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

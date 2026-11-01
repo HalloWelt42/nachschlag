@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Notizen</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Notizen: alle Notizen über alle Bücher, nach Artikel gruppiert. Eine Notiz hängt am Artikel oder an einer markierten
+       Stelle (Zitat). Rechts die gewählte Notiz zum Bearbeiten: speichert von selbst, Zur Stelle springt in den Artikel. -->
+  <body>
+    <div class="fenster-voll">
+      <header class="kopf">
+        <div class="marke"><span class="symbol"><i class="fa-solid fa-book-open"></i></span> Nachschlag</div>
+        <div class="suchanker">
+          <div class="suchfeld">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span class="platzhalter">Begriff, Name oder eine Frage in eigenen Worten</span>
+            <span class="buchwahl"><i class="fa-solid fa-book"></i>Alle Bücher</span>
+            <kbd>/</kbd>
+          </div>
+          <div data-vorschlaege></div>
+        </div>
+        <div class="kopf-rechts">
+          <span class="pille gut text-weg" title="Bedeutungssuche über Fundus und Index der Bücher antworten"><span class="punkt"></span>Bedeutung + Index</span>
+          <button class="rund" title="Hilfe"><i class="fa-solid fa-circle-question"></i></button>
+        </div>
+      </header>
+      <div></div>
+      <div class="geruest">
+        <nav class="nav">
+          <div class="nav-gruppe">Lesen</div>
+          <a class="nav-eintrag"><i class="fa-solid fa-house"></i>Start</a>
+          <a class="nav-eintrag"><i class="fa-solid fa-book-open"></i>Artikel</a>
+          <a class="nav-eintrag"><i class="fa-solid fa-shuffle"></i>Stöbern</a>
+          <a class="nav-eintrag"><i class="fa-solid fa-images"></i>Medien</a>
+          <a class="nav-eintrag"><i class="fa-solid fa-swatchbook"></i>Bibliothek<span class="zahl">5</span></a>
+          <div class="nav-gruppe">Meins</div>
+          <a class="nav-eintrag"><i class="fa-solid fa-bookmark"></i>Merkzettel<span class="zahl">12</span></a>
+          <a class="nav-eintrag aktiv"><i class="fa-solid fa-note-sticky"></i>Notizen<span class="zahl">7</span></a>
+          <a class="nav-eintrag" href="themen.html"><i class="fa-solid fa-layer-group"></i>Themen<span class="zahl">4</span></a>
+          <a class="nav-eintrag"><i class="fa-solid fa-clock-rotate-left"></i>Verlauf</a>
+          <div class="nav-gruppe">App</div>
+          <a class="nav-eintrag"><i class="fa-solid fa-sliders"></i>Einstellungen</a>
+          <div class="nav-fuss">
+            <div class="konto"><span class="bild">A</span><span><div class="wer">admin</div><div class="wie">angemeldet</div></span></div>
+          </div>
+        </nav>
+
+        <div class="notizseite">
+          <section class="seite">
+            <div class="seiten-kopf">
+              <h1>Notizen</h1>
+              <div class="notiz-filter">
+                <span class="segment"><span class="aktiv">Alle 7</span><span>An Stellen 5</span><span>Am Artikel 2</span></span>
+                <span class="suche"><i class="fa-solid fa-magnifying-glass"></i>In Notizen und Zitaten suchen</span>
+                <span class="chip wahl"><i class="fa-solid fa-layer-group"></i>Thema: alle</span>
+                <span class="chip wahl"><i class="fa-solid fa-arrow-down-wide-short"></i>Neueste zuerst</span>
+              </div>
+            </div>
+            <div class="rollfeld">
+              <div class="notiz-gruppe">
+                <div class="gruppenkopf"><img src="beispiel/fuchs.jpg" alt=""><b>Rotfuchs</b><span class="neben">2 Notizen</span><span class="marke-buch"><i class="fa-solid fa-book"></i>Deutsch</span></div>
+                <div class="notiz gewaehlt">
+                  <div class="zitat">"Insgesamt variiert die Fellfärbung stark. Die häufigste Farbvariante ist der Birkfuchs mit gelb-roter Oberseite, weißer Kehle und weißer Schwanzspitze."</div>
+                  <div class="text">Birkfuchs = häufigste Farbe, mit Bild aus dem Wildpark vergleichen</div>
+                  <div class="wo"><span><i class="fa-solid fa-paragraph"></i>Allgemeine Merkmale</span><span class="zahl">29.10.2026</span><span class="etikettchen">Füchse</span></div>
+                  <div class="aktionen"><button class="rund" title="Zur Stelle"><i class="fa-solid fa-arrow-up-right-from-square"></i></button><button class="rund" title="Vorlesen"><i class="fa-solid fa-volume-high"></i></button></div>
+                </div>
+                <div class="notiz">
+                  <div class="text">Fragen für den Wildpark: Wie alt werden Füchse in Gefangenschaft?</div>
+                  <div class="wo"><span><i class="fa-solid fa-file-lines"></i>am ganzen Artikel</span><span class="zahl">28.10.2026</span></div>
+                  <div class="aktionen"><button class="rund" title="Zum Artikel"><i class="fa-solid fa-arrow-up-right-from-square"></i></button><button class="rund" title="Vorlesen"><i class="fa-solid fa-volume-high"></i></button></div>
+                </div>
+              </div>
+
+              <div class="notiz-gruppe">
+                <div class="gruppenkopf"><img src="beispiel/andromedagalaxie.jpg" alt=""><b>Andromedagalaxie</b><span class="neben">1 Notiz</span><span class="marke-buch"><i class="fa-solid fa-book"></i>Deutsch</span></div>
+                <div class="notiz">
+                  <div class="zitat">"Sie ist zugleich das entfernteste Objekt, das unter guten Bedingungen ohne technische Hilfsmittel mit bloßem Auge beobachtet werden kann."</div>
+                  <div class="text">Mit bloßem Auge sichtbar, am besten im Herbst. Für die Sternenwarte vormerken.</div>
+                  <div class="wo"><span><i class="fa-solid fa-paragraph"></i>Einleitung</span><span class="zahl">27.10.2026</span><span class="etikettchen">Sternenhimmel</span></div>
+                  <div class="aktionen"><button class="rund" title="Zur Stelle"><i class="fa-solid fa-arrow-up-right-from-square"></i></button><button class="rund" title="Vorlesen"><i class="fa-solid fa-volume-high"></i></button></div>
+                </div>
+              </div>
+
+              <div class="notiz-gruppe">
+                <div class="gruppenkopf"><span class="ohne-bild" style="width: 44px; height: 34px; border-radius: var(--r1); background: var(--flaeche-2); display: grid; place-items: center; color: var(--tuerkis)"><i class="fa-solid fa-language"></i></span><b>Ringe des Saturn</b><span class="neben">1 Notiz</span><span class="marke-buch uebersetzt"><i class="fa-solid fa-language"></i>Englisch, von uns übersetzt</span></div>
+                <div class="notiz">
+                  <div class="zitat uebersetzt">"Die Ringe bestehen zum größten Teil aus Wassereis ..." <span style="color: var(--tuerkis)">· Übersetzung, Original anzeigen</span></div>
+                  <div class="text">Ringe für die Sternenwarte vormerken, Neigung ändert sich über die Jahre.</div>
+                  <div class="wo"><span><i class="fa-solid fa-paragraph"></i>Ringsystem</span><span class="zahl">26.10.2026</span><span class="etikettchen">Sternenhimmel</span></div>
+                  <div class="aktionen"><button class="rund" title="Zur Stelle"><i class="fa-solid fa-arrow-up-right-from-square"></i></button><button class="rund" title="Vorlesen"><i class="fa-solid fa-volume-high"></i></button></div>
+                </div>
+              </div>
+
+              <div class="notiz-gruppe">
+                <div class="gruppenkopf"><img src="beispiel/tollwut.jpg" alt=""><b>Tollwut</b><span class="neben">1 Notiz</span><span class="marke-buch"><i class="fa-solid fa-book"></i>Deutsch</span></div>
+                <div class="notiz">
+                  <div class="text">Impfstatus der Katze beim nächsten Tierarzttermin ansprechen.</div>
+                  <div class="wo"><span><i class="fa-solid fa-file-lines"></i>am ganzen Artikel</span><span class="zahl">22.10.2026</span><span class="etikettchen">Gesundheit Haustiere</span></div>
+                  <div class="aktionen"><button class="rund" title="Zum Artikel"><i class="fa-solid fa-arrow-up-right-from-square"></i></button><button class="rund" title="Vorlesen"><i class="fa-solid fa-volume-high"></i></button></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <aside class="bearbeiten">
+            <div class="leiste-kopf"><h2>Notiz bearbeiten</h2></div>
+            <div class="rollfeld">
+              <div class="feld-titel">Stelle</div>
+              <div class="zitatbox">Rotfuchs · Allgemeine Merkmale<br>"Insgesamt variiert die Fellfärbung stark. Die häufigste Farbvariante ist der Birkfuchs ..."</div>
+              <div class="feld-titel">Notiz</div>
+              <div class="schreibfeld">Birkfuchs = häufigste Farbe, mit Bild aus dem Wildpark vergleichen<span class="cursor"></span></div>
+              <div class="gespeichert"><i class="fa-solid fa-check"></i>Gespeichert vor 2 Sekunden</div>
+              <div class="feld-titel">Thema</div>
+              <div class="chips"><span class="chip">Füchse <button title="Entfernen"><i class="fa-solid fa-xmark"></i></button></span><span class="chip wahl"><i class="fa-solid fa-plus"></i>Thema</span></div>
+              <div class="knopfreihe" style="display: flex; flex-wrap: wrap; gap: var(--a2)">
+                <button class="knopf"><i class="fa-solid fa-arrow-up-right-from-square"></i>Zur Stelle</button>
+                <button class="knopf"><i class="fa-solid fa-quote-right"></i>Zitieren</button>
+                <button class="knopf gefahr"><i class="fa-solid fa-trash"></i>Löschen</button>
+              </div>
+              <div class="ablage">
+                <span><i class="fa-solid fa-cloud"></i> Alle Notizen liegen zusätzlich als Markdown in der Kellerwolke, je Artikel eine Datei, mit Zitat und Verweis.</span>
+                <code>Apps/Nachschlag/Notizen/Rotfuchs.md</code>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+      <footer class="fuss">
+        <div class="verbindungen">
+          <span class="verbindung"><span class="punkt"></span>Bibliothek: 5 Bücher</span>
+          <span class="verbindung"><span class="punkt"></span>Fundus</span>
+          <span class="verbindung"><span class="punkt"></span>Leitstelle</span>
+        </div>
+        <div class="rechts"><span>Bilder in groß: 18.240 geladen</span></div>
+      </footer>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

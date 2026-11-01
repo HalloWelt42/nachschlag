@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Suchergebnisse am Telefon</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Telefon: Ergebnisse mit bester Stelle und Wegmarken; rechts derselbe Bildschirm, wenn nur der Index antwortet. -->
+  <body style="background: var(--hg)">
+    <div class="telefone">
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:41</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf" style="padding-left: 10px">
+          <div class="t-suche" style="flex: 1; margin: 0; height: 42px; color: var(--text)"><i class="fa-solid fa-magnifying-glass" style="color: var(--text-3)"></i>Füchse in Städten</div>
+          <button class="rund still" title="Filter"><i class="fa-solid fa-sliders"></i></button>
+        </div>
+        <div class="t-inhalt t-hg" style="display: flex; flex-direction: column; gap: 10px">
+          <div class="suchstand"><span class="weg-marke bedeutung"><i class="fa-solid fa-wand-magic-sparkles"></i>Bedeutung</span><span class="weg-marke index"><i class="fa-solid fa-magnifying-glass"></i>Index</span><span>gemischt</span></div>
+          <div class="beste-stelle" style="padding: 12px">
+            <span class="etikett"><i class="fa-solid fa-wand-magic-sparkles"></i>Beste Stelle</span>
+            <span class="ort"><b>Rotfuchs</b> · Lebensraum</span>
+            <blockquote style="font-size: 16px">Die ersten <em>Stadtfüchse wurden in den 1930er Jahren in Londoner Vororten bekannt</em>.</blockquote>
+            <div class="knopfreihe"><button class="knopf primaer"><i class="fa-solid fa-arrow-down"></i>Zur Stelle</button><button class="knopf"><i class="fa-solid fa-volume-high"></i></button></div>
+          </div>
+          <div class="treffer" style="grid-template-columns: 52px minmax(0, 1fr)"><span class="ohne-bild" style="width: 52px; height: 44px"><i class="fa-solid fa-city"></i></span>
+            <div><div class="zeile1"><span class="t" style="font-size: 17px">Stadtökologie</span></div><div class="ausschnitt">Ansätze im Spannungsfeld <em>Stadt und Ökologie</em>.</div>
+              <div style="margin-top: 4px"><span class="weg-marke bedeutung">Bedeutung</span></div></div></div>
+          <div class="treffer" style="grid-template-columns: 52px minmax(0, 1fr)"><span class="ohne-bild" style="width: 52px; height: 44px; color: var(--tuerkis)"><i class="fa-solid fa-language"></i></span>
+            <div><div class="zeile1"><span class="t" style="font-size: 17px">Stadtwildtiere</span></div><div class="ausschnitt"><em>Wildtiere, die städtische Umgebungen</em> bewohnen können.</div>
+              <div style="margin-top: 4px; display: flex; gap: 4px; flex-wrap: wrap"><span class="weg-marke bedeutung">Bedeutung</span><span class="marke-buch uebersetzt"><i class="fa-solid fa-language"></i>übersetzt</span></div></div></div>
+        </div>
+        <div class="t-leiste">
+          <button class="aktiv"><i class="fa-solid fa-house"></i>Start</button>
+          <button><i class="fa-solid fa-shuffle"></i>Stöbern</button>
+          <button><i class="fa-solid fa-bookmark"></i>Merkzettel</button>
+          <button><i class="fa-solid fa-layer-group"></i>Themen</button>
+          <button><i class="fa-solid fa-ellipsis"></i>Mehr</button>
+        </div>
+      </div></div>
+
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>23:12</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf" style="padding-left: 10px">
+          <div class="t-suche" style="flex: 1; margin: 0; height: 42px; color: var(--text)"><i class="fa-solid fa-magnifying-glass" style="color: var(--text-3)"></i>Füchse in Städten</div>
+          <button class="rund still" title="Filter"><i class="fa-solid fa-sliders"></i></button>
+        </div>
+        <div class="t-inhalt t-hg" style="display: flex; flex-direction: column; gap: 10px">
+          <div class="streifen-kasten" style="padding: 10px 12px; background: var(--warn-weich); color: var(--text); font-size: 15px; box-shadow: inset 3px 0 0 var(--warn); border-radius: 0"><b>Nur Index:</b> die Bedeutungssuche antwortet gerade nicht. Treffer passen nur dem Wortlaut nach.</div>
+          <div class="treffer" style="grid-template-columns: 52px minmax(0, 1fr)"><img src="beispiel/fuchs.jpg" alt="" style="width: 52px; height: 44px">
+            <div><div class="zeile1"><span class="t" style="font-size: 17px">Rotfuchs</span></div><div class="ausschnitt">... Tribus: Echte <em>Füchse</em> (Vulpini) ...</div><div style="margin-top: 4px"><span class="weg-marke index">Index</span></div></div></div>
+          <div class="treffer" style="grid-template-columns: 52px minmax(0, 1fr)"><span class="ohne-bild" style="width: 52px; height: 44px"><i class="fa-solid fa-palette"></i></span>
+            <div><div class="zeile1"><span class="t" style="font-size: 17px">Füchse (Franz Marc)</span></div><div class="ausschnitt">... Kubismus Delaunays regte Marc an ...</div><div style="margin-top: 4px"><span class="weg-marke index">Index</span></div></div></div>
+          <div class="treffer" style="grid-template-columns: 52px minmax(0, 1fr)"><span class="ohne-bild" style="width: 52px; height: 44px"><i class="fa-solid fa-hockey-puck"></i></span>
+            <div><div class="zeile1"><span class="t" style="font-size: 17px">Lausitzer Füchse</span></div><div class="ausschnitt">... Profi-Abteilung in Weißwasser ...</div><div style="margin-top: 4px"><span class="weg-marke index">Index</span></div></div></div>
+        </div>
+        <div class="t-leiste">
+          <button class="aktiv"><i class="fa-solid fa-house"></i>Start</button>
+          <button><i class="fa-solid fa-shuffle"></i>Stöbern</button>
+          <button><i class="fa-solid fa-bookmark"></i>Merkzettel</button>
+          <button><i class="fa-solid fa-layer-group"></i>Themen</button>
+          <button><i class="fa-solid fa-ellipsis"></i>Mehr</button>
+        </div>
+      </div></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

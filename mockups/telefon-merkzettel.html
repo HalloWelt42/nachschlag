@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Merkzettel und Verlauf am Telefon</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="schrift/jetbrains-mono/schrift.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Telefon: Merkzettel als Liste mit Lesestand; ein Eintrag zur Seite gewischt zeigt Vorlesen und Entfernen. Daneben
+       der Verlauf nach Tagen. -->
+  <body style="background: var(--hg)">
+    <div class="telefone">
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:41</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf" style="padding-left: 14px"><h1>Merkzettel</h1><button class="rund still" title="Als Folge vorlesen"><i class="fa-solid fa-volume-high"></i></button></div>
+        <div class="t-inhalt t-hg">
+          <div class="segment" style="margin-bottom: 12px"><button class="aktiv">Alle 12</button><button>Ungelesen</button><button>Angefangen</button></div>
+          <div class="liste kompakt">
+            <a href="#"><img src="beispiel/m_nemui_kitune.jpg" alt=""><span><span class="t">Fennek</span><span class="u">ungelesen · heute</span></span></a>
+            <div style="display: grid; grid-template-columns: minmax(0, 1fr) 70px 70px; border-top: 1px solid var(--rand)">
+              <a href="#" style="border: 0; transform: translateX(-4px)"><img src="beispiel/stadtfuchs.jpg" alt=""><span><span class="t">Rotfuchs › Stadtfüchse</span><span class="u">gemerkte Stelle</span></span></a>
+              <span style="display: grid; place-items: center; background: var(--akzent-flaeche); color: var(--auf-akzent); font-size: 13px; text-align: center"><span><i class="fa-solid fa-volume-high"></i><br>Vorlesen</span></span>
+              <span style="display: grid; place-items: center; background: var(--gefahr-flaeche); color: var(--auf-farbe); font-size: 13px; text-align: center"><span><i class="fa-solid fa-xmark"></i><br>Entfernen</span></span>
+            </div>
+            <a href="#"><img src="beispiel/fuchs.jpg" alt=""><span><span class="t">Rotfuchs</span><span class="u">bei Lebensraum</span><span class="stand"><span class="spur"><span style="width: 34%"></span></span>34 %</span></span></a>
+            <a href="#"><span class="ohne-bild" style="color: var(--violett)"><i class="fa-solid fa-code"></i></span><span><span class="t code-titel">array_map</span><span class="u">PHP Docs · bei Beispiele</span><span class="stand"><span class="spur"><span style="width: 45%"></span></span>45 %</span></span></a>
+            <a href="#"><img src="beispiel/andromedagalaxie.jpg" alt=""><span><span class="t">Andromedagalaxie</span><span class="u">bei Entdeckungsgeschichte</span><span class="stand"><span class="spur"><span style="width: 61%"></span></span>61 %</span></span></a>
+            <a href="#"><img src="beispiel/polarfuchs.jpg" alt=""><span><span class="t">Polarfuchs</span><span class="u" style="color: var(--gut)">gelesen</span></span></a>
+          </div>
+        </div>
+        <div class="t-leiste">
+          <button><i class="fa-solid fa-house"></i>Start</button>
+          <button><i class="fa-solid fa-shuffle"></i>Stöbern</button>
+          <button class="aktiv"><i class="fa-solid fa-bookmark"></i>Merkzettel</button>
+          <button><i class="fa-solid fa-layer-group"></i>Themen</button>
+          <button><i class="fa-solid fa-ellipsis"></i>Mehr</button>
+        </div>
+      </div></div>
+
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:42</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf" style="padding-left: 14px"><h1>Verlauf</h1><button class="rund still" title="Suchen"><i class="fa-solid fa-magnifying-glass"></i></button></div>
+        <div class="t-inhalt t-hg">
+          <div class="t-gruppe"><span>Heute · 38 Min</span></div>
+          <div class="liste kompakt">
+            <a href="#"><img src="beispiel/m_nemui_kitune.jpg" alt=""><span><span class="t">Fennek</span><span class="u">02:41 · Zufall</span></span></a>
+            <a href="#"><span class="ohne-bild" style="color: var(--violett)"><i class="fa-solid fa-code"></i></span><span><span class="t code-titel">array_map</span><span class="u">02:20 · PHP Docs, übersetzt</span></span></a>
+            <a href="#"><span class="ohne-bild"><i class="fa-solid fa-city"></i></span><span><span class="t">Stadtökologie</span><span class="u">02:05 · Pfad von Rotfuchs</span></span></a>
+            <a href="#"><img src="beispiel/stadtfuchs.jpg" alt=""><span><span class="t">Rotfuchs › Stadtfüchse</span><span class="u">01:58 · aus der Suche</span></span></a>
+            <a href="#"><span class="ohne-bild" style="color: var(--petrol)"><i class="fa-solid fa-magnifying-glass"></i></span><span><span class="t">"Füchse in Städten"</span><span class="u">01:57 · Suche</span></span></a>
+          </div>
+          <div class="t-gruppe"><span>Gestern · 22 Min</span></div>
+          <div class="liste kompakt">
+            <a href="#"><img src="beispiel/polarfuchs.jpg" alt=""><span><span class="t">Polarfuchs</span><span class="u">21:24 · vorgelesen</span></span></a>
+            <a href="#"><img src="beispiel/m_fox_2c_gray_urocyon_cineroargenteus_7_19_08_canet_.jpg" alt=""><span><span class="t">Graufuchs</span><span class="u">21:10 · Verweis aus Polarfuchs</span></span></a>
+          </div>
+        </div>
+        <div class="t-leiste">
+          <button><i class="fa-solid fa-house"></i>Start</button>
+          <button><i class="fa-solid fa-shuffle"></i>Stöbern</button>
+          <button><i class="fa-solid fa-bookmark"></i>Merkzettel</button>
+          <button><i class="fa-solid fa-layer-group"></i>Themen</button>
+          <button class="aktiv"><i class="fa-solid fa-ellipsis"></i>Mehr</button>
+        </div>
+      </div></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

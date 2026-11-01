@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Stöbern und Medien am Telefon</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Telefon: Zufall (nächster per Knopf oder Wischen nach oben), Mediensuche in zwei Spalten, großes Bild über den ganzen
+       Schirm mit Unterschrift. -->
+  <body style="background: var(--hg)">
+    <div class="telefone">
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:41</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf" style="padding-left: 14px"><h1>Stöbern</h1><button class="rund still" title="Filter"><i class="fa-solid fa-sliders"></i></button></div>
+        <div class="t-inhalt t-hg">
+          <div class="segment" style="margin-bottom: 12px"><button class="aktiv">Zufall</button><button>Pfad</button><button>Blättern</button></div>
+          <div class="leskarte">
+            <div class="bildflaeche" style="height: 220px"><img src="beispiel/m_nemui_kitune.jpg" alt=""></div>
+            <div class="koerper">
+              <span class="etikett"><i class="fa-solid fa-dice"></i>Zufallsfund</span>
+              <span class="t" style="font-size: 22px">Fennek</span>
+              <span style="color: var(--text-2); font-size: 16px; line-height: 1.5">Der Fennek oder Wüstenfuchs ist eine Fuchsart aus der Gattung Vulpes. Er ist der kleinste aller Wildhunde und bewohnt die Sandwüsten Nordafrikas.</span>
+              <div style="display: flex; gap: 8px; margin-top: 10px">
+                <button class="knopf primaer" style="flex: 1; justify-content: center"><i class="fa-solid fa-book-open"></i>Lesen</button>
+                <button class="knopf"><i class="fa-solid fa-bookmark"></i></button>
+                <button class="knopf"><i class="fa-solid fa-forward"></i>Nächster</button>
+              </div>
+            </div>
+          </div>
+          <div style="text-align: center; color: var(--text-3); font-size: 14px; margin-top: 12px"><i class="fa-solid fa-angles-up"></i> nach oben wischen für den nächsten</div>
+        </div>
+        <div class="t-leiste">
+          <button><i class="fa-solid fa-house"></i>Start</button>
+          <button class="aktiv"><i class="fa-solid fa-shuffle"></i>Stöbern</button>
+          <button><i class="fa-solid fa-bookmark"></i>Merkzettel</button>
+          <button><i class="fa-solid fa-layer-group"></i>Themen</button>
+          <button><i class="fa-solid fa-ellipsis"></i>Mehr</button>
+        </div>
+      </div></div>
+
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:42</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf" style="padding-left: 10px">
+          <div class="t-suche" style="flex: 1; margin: 0; height: 42px; color: var(--text)"><i class="fa-solid fa-magnifying-glass" style="color: var(--text-3)"></i>fuchs</div>
+        </div>
+        <div class="t-inhalt t-hg">
+          <div class="filterzeile" style="margin-bottom: 10px"><span class="chip wahl an">Bilder</span><span class="chip wahl">Karten</span><span class="chip wahl">Töne</span></div>
+          <div class="mediengitter" style="columns: 2; column-gap: 8px">
+            <div class="medium"><img src="beispiel/m_r_d_r_v_vulpes_vulpes.jpg" alt=""><span class="groesse gross">groß</span><div class="unter">Rotfuchs in einem dänischen Tierpark</div></div>
+            <div class="medium"><img src="beispiel/m_alopex_lagopus_cub_in_grass.jpg" alt=""><div class="unter">Junges, blaue Morphe</div></div>
+            <div class="medium"><img src="beispiel/m_nemui_kitune.jpg" alt=""><span class="groesse">250 px</span><div class="unter">Zwei Fenneks im Tokioter Zoo</div></div>
+            <div class="medium"><img src="beispiel/m_silberfuchs_os_01.jpg" alt=""><div class="unter">Silberfuchs Zoo Osnabrück</div></div>
+            <div class="medium"><img src="beispiel/m_polarb_r_26_polarfuchs_2004_11_17.jpg" alt=""><div class="unter">Polarfuchs und Eisbär</div></div>
+            <div class="medium"><img src="beispiel/m_fox_2c_gray_urocyon_cineroargenteus_7_19_08_canet_.jpg" alt=""><div class="unter">Graufuchs</div></div>
+          </div>
+        </div>
+        <div class="t-leiste">
+          <button><i class="fa-solid fa-house"></i>Start</button>
+          <button><i class="fa-solid fa-shuffle"></i>Stöbern</button>
+          <button><i class="fa-solid fa-bookmark"></i>Merkzettel</button>
+          <button><i class="fa-solid fa-layer-group"></i>Themen</button>
+          <button class="aktiv"><i class="fa-solid fa-ellipsis"></i>Mehr</button>
+        </div>
+      </div></div>
+
+      <div class="telefon"><div class="schirm" style="background: #06090e; color: #e9eef5; grid-template-rows: 47px auto minmax(0, 1fr) auto">
+        <div class="statusleiste" style="background: #06090e; color: #fff"><span>9:43</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf" style="background: transparent; box-shadow: none">
+          <button class="rund still" title="Schließen" style="color: #fff"><i class="fa-solid fa-xmark"></i></button>
+          <h1 style="color: #b4c2d3; font-size: 15px; font-family: var(--schrift-zahl)">2 von 4 · Fennek</h1>
+          <button class="rund still" title="Merken" style="color: #fff"><i class="fa-solid fa-bookmark"></i></button>
+        </div>
+        <div style="display: grid; place-items: center; min-height: 0; padding: 0 8px"><img src="beispiel/m_nemui_kitune.jpg" alt="" style="width: 100%; border-radius: 3px"></div>
+        <div style="padding: 14px 16px 34px; display: flex; flex-direction: column; gap: 8px; font-size: 15px">
+          <b style="font-size: 18px; color: #fff">Zwei Fenneks im Tokioter Zoo</b>
+          <span style="color: #b4c2d3">Details der Fellzeichnung sowie die Ohr- und Zehenbehaarung sind gut zu erkennen.</span>
+          <span style="color: #8fb3ff"><i class="fa-solid fa-spinner fa-spin"></i> Großes Bild wird geladen</span>
+          <div style="display: flex; gap: 8px"><button class="knopf" style="background: rgba(255,255,255,.08); color: #fff; border-color: rgba(255,255,255,.14)"><i class="fa-solid fa-book-open"></i>Im Artikel</button><button class="knopf" style="background: rgba(255,255,255,.08); color: #fff; border-color: rgba(255,255,255,.14)"><i class="fa-solid fa-circle-info"></i>Lizenz</button></div>
+        </div>
+      </div></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

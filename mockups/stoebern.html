@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Stöbern</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Stöbern: drei Arten zu blättern. Zufall (mit Filtern, Leertaste für den nächsten), der Entdeckungspfad (von hier
+       weiter nach Bedeutung oder über Verweise, der Weg bleibt sichtbar) und Blättern wie im gedruckten Lexikon (Titel in
+       der Reihenfolge des Buchs, echte Nachbarn von Rotfuchs aus der ZIM). -->
+  <body>
+    <div class="fenster-voll">
+      <div data-teil="kopf"></div>
+      <div></div>
+      <div class="geruest">
+        <div data-teil="nav:stoebern"></div>
+        <section class="seite">
+          <div class="seiten-kopf">
+            <h1>Stöbern</h1>
+            <div class="filterzeile">
+              <span class="chip wahl an"><i class="fa-solid fa-book"></i>Wikipedia (Deutsch)</span>
+              <span class="chip wahl an"><i class="fa-solid fa-image"></i>nur mit Bild</span>
+              <span class="chip wahl"><i class="fa-solid fa-ruler-horizontal"></i>lang</span>
+              <span class="chip wahl"><i class="fa-solid fa-layer-group"></i>nahe an meinen Themen</span>
+              <span class="chip wahl"><i class="fa-solid fa-eye-slash"></i>noch nicht gelesen</span>
+            </div>
+          </div>
+          <div class="rollfeld">
+            <div class="stoebern-seite">
+              <section>
+                <div class="abschnitt-kopf"><h2><i class="fa-solid fa-dice"></i>Zufall</h2><span class="neben">aus 3,2 Mio Artikeln, mit Bild und noch nicht gelesen</span></div>
+                <div class="zufall-buehne">
+                  <div class="zufall-gross">
+                    <div class="bildflaeche"><img src="beispiel/m_nemui_kitune.jpg" alt=""></div>
+                    <div class="koerper">
+                      <span class="etikett"><i class="fa-solid fa-dice"></i>Zufallsfund</span>
+                      <span class="t">Fennek</span>
+                      <p>Der Fennek oder Wüstenfuchs (<i>Vulpes zerda</i>) ist eine Fuchsart aus der Gattung Vulpes. Er ist der kleinste aller Wildhunde und bewohnt die Sandwüsten Nordafrikas. Die Art zeigt zahlreiche Anpassungen an das Wüstenklima, etwa die geringe Körpergröße, behaarte Sohlen und große Ohren, die der Wärmeregulation dienen.</p>
+                      <div class="knopfreihe">
+                        <button class="knopf primaer"><i class="fa-solid fa-book-open"></i>Lesen</button>
+                        <button class="knopf"><i class="fa-solid fa-bookmark"></i>Merken</button>
+                        <button class="knopf"><i class="fa-solid fa-route"></i>Von hier weiter</button>
+                        <button class="knopf still"><i class="fa-solid fa-forward"></i>Nächster <kbd>Leertaste</kbd></button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="eben">
+                    <span class="etikett"><i class="fa-solid fa-clock-rotate-left"></i>Eben gesehen</span>
+                    <div class="liste kompakt">
+                      <a href="#"><img src="beispiel/sachigo_river.png" alt=""><span><span class="t">Sachigo River</span><span class="u">Nebenfluss in Ontario</span></span></a>
+                      <a href="#"><img src="beispiel/m_fox_2c_gray_urocyon_cineroargenteus_7_19_08_canet_.jpg" alt=""><span><span class="t">Graufuchs</span><span class="u">gemerkt</span></span></a>
+                      <a href="#"><img src="beispiel/orionnebel.jpg" alt=""><span><span class="t">Orionnebel</span><span class="u">zum Thema Sternenhimmel gelegt</span></span></a>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <div class="abschnitt-kopf"><h2><i class="fa-solid fa-route"></i>Entdeckungspfad</h2><span class="neben">von Artikel zu Artikel, der Weg bleibt sichtbar</span></div>
+                <div class="pfad-leiste">
+                  <span class="schritt-p"><img src="beispiel/fuchs.jpg" alt="">Rotfuchs</span><i class="fa-solid fa-chevron-right"></i>
+                  <span class="schritt-p"><i class="fa-solid fa-paragraph"></i>Abschnitt Stadtfüchse</span><i class="fa-solid fa-chevron-right"></i>
+                  <span class="schritt-p jetzt"><i class="fa-solid fa-city"></i>Stadtökologie</span>
+                  <span class="rechts"><button class="knopf still"><i class="fa-solid fa-layer-group"></i>Pfad als Thema</button><button class="knopf still"><i class="fa-solid fa-rotate-left"></i>Neu beginnen</button></span>
+                </div>
+                <div class="schritte-gitter">
+                  <div class="schritt-spalte">
+                    <h3><i class="fa-solid fa-wand-magic-sparkles"></i>Ähnlich nach Bedeutung<span class="weg">Bedeutung</span></h3>
+                    <div class="liste kompakt">
+                      <a href="#"><span class="ohne-bild"><i class="fa-solid fa-temperature-half"></i></span><span><span class="t">Städtische Wärmeinsel</span><span class="u">Städte sind wärmer als ihr Umland</span></span></a>
+                      <a href="#"><span class="ohne-bild"><i class="fa-solid fa-tree"></i></span><span><span class="t">Stadtnatur</span><span class="u">Natur im Siedlungsraum</span></span></a>
+                      <a href="#"><span class="ohne-bild"><i class="fa-solid fa-tree-city"></i></span><span><span class="t">Stadtwald</span><span class="u">Wald im Eigentum oder Gebiet einer Stadt</span></span></a>
+                    </div>
+                  </div>
+                  <div class="schritt-spalte">
+                    <h3><i class="fa-solid fa-arrow-right-from-bracket"></i>Verweist von hier</h3>
+                    <div class="liste kompakt">
+                      <a href="#"><span class="ohne-bild"><i class="fa-solid fa-cloud-sun"></i></span><span><span class="t">Stadtklima</span><span class="u">im ersten Abschnitt</span></span></a>
+                      <a href="#"><span class="ohne-bild"><i class="fa-solid fa-mountain-sun"></i></span><span><span class="t">Landschaftsökologie</span><span class="u">in der Einleitung</span></span></a>
+                      <a href="#"><span class="ohne-bild"><i class="fa-solid fa-seedling"></i></span><span><span class="t">Ruderalvegetation</span><span class="u">bei Böden</span></span></a>
+                    </div>
+                  </div>
+                  <div class="schritt-spalte">
+                    <h3><i class="fa-solid fa-arrow-right-to-bracket"></i>Verweist hierher</h3>
+                    <div class="liste kompakt">
+                      <a href="#"><span class="ohne-bild"><i class="fa-solid fa-city"></i></span><span><span class="t">Urbanisierung</span><span class="u">Verstädterung</span></span></a>
+                      <a href="#"><span class="ohne-bild"><i class="fa-solid fa-map"></i></span><span><span class="t">Stadtgeographie</span><span class="u">Teilgebiet der Geographie</span></span></a>
+                      <a href="#"><span class="ohne-bild"><i class="fa-solid fa-compass-drafting"></i></span><span><span class="t">Stadtplanung</span><span class="u">Planung der räumlichen Entwicklung</span></span></a>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <div class="abschnitt-kopf"><h2><i class="fa-solid fa-book-open"></i>Blättern wie im Buch</h2><span class="neben">Titel in der Reihenfolge des Buchs, ohne Weiterleitungen</span></div>
+                <div class="alphabet"><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span><span>I</span><span>J</span><span>K</span><span>L</span><span>M</span><span>N</span><span>O</span><span>P</span><span>Q</span><span class="an">R</span><span>S</span><span>T</span><span>U</span><span>V</span><span>W</span><span>X</span><span>Y</span><span>Z</span></div>
+                <div class="blaettern">
+                  <div class="buchseite">
+                    <div class="lauf"><span>Rotflügeltinamu</span><span>Rotfuß</span></div>
+                    <a href="#">Rotflügeltinamu<span class="art">Vogel</span></a>
+                    <a href="#">Rotfranch</a>
+                    <a href="#">Rotfront</a>
+                    <a href="#">Rotfront!</a>
+                    <a href="#">Rotfront (Band)</a>
+                    <a href="#">Rotfrüchtige Zaunrübe<span class="art">Pflanze</span></a>
+                    <a href="#" class="hier">Rotfuchs<span class="art">gelesen 34 %</span></a>
+                    <a href="#">Rotfuchs (Begriffsklärung)<span class="art">Begriffsklärung</span></a>
+                    <a href="#">Rotfuchs (Film)</a>
+                    <a href="#">Rotfuchs (Zeitschrift)</a>
+                    <a href="#">Rotfuchsfell</a>
+                    <a href="#">Rotfunk</a>
+                    <a href="#">Rotfuß</a>
+                    <div class="blaetter"><button class="knopf"><i class="fa-solid fa-chevron-left"></i>Seite zurück</button><button class="knopf">Seite vor<i class="fa-solid fa-chevron-right"></i></button></div>
+                  </div>
+                  <div class="vorschau-spalte">
+                    <img src="beispiel/fuchs.jpg" alt="">
+                    <div class="koerper">
+                      <b>Rotfuchs</b>
+                      <p>Der Rotfuchs ist der einzige mitteleuropäische Vertreter der Füchse und wird daher meistens als "der Fuchs" bezeichnet. Er ist in Europa der häufigste Wildhund.</p>
+                      <div style="display: flex; gap: var(--a2); flex-wrap: wrap"><button class="knopf primaer"><i class="fa-solid fa-book-open"></i>Weiterlesen</button><button class="knopf"><i class="fa-solid fa-bookmark"></i>Gemerkt</button></div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div data-teil="fuss"></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

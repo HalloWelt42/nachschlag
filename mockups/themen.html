@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Themen</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Themen: links alle eigenen Themen, rechts das gewählte. Ein Thema hat Bereiche (frei benannt, jederzeit
+       umsortierbar), kann mit einer gespeicherten Suche mitwachsen (neue passende Artikel kommen als Vorschlag, nie von
+       selbst hinein) und lässt sich auf Knopfdruck von der KI in Bereiche gliedern. Gezeigt: eine Karte wird gerade gezogen. -->
+  <body>
+    <div class="fenster-voll">
+      <header class="kopf">
+        <div class="marke"><span class="symbol"><i class="fa-solid fa-book-open"></i></span> Nachschlag</div>
+        <div class="suchanker">
+          <div class="suchfeld">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span class="platzhalter">Begriff, Name oder eine Frage in eigenen Worten</span>
+            <span class="buchwahl"><i class="fa-solid fa-book"></i>Alle Bücher</span>
+            <kbd>/</kbd>
+          </div>
+          <div data-vorschlaege></div>
+        </div>
+        <div class="kopf-rechts">
+          <span class="pille gut text-weg" title="Bedeutungssuche über Fundus und Index der Bücher antworten"><span class="punkt"></span>Bedeutung + Index</span>
+          <button class="rund" title="Hilfe"><i class="fa-solid fa-circle-question"></i></button>
+        </div>
+      </header>
+      <div></div>
+      <div class="geruest">
+        <nav class="nav">
+          <div class="nav-gruppe">Lesen</div>
+          <a class="nav-eintrag"><i class="fa-solid fa-house"></i>Start</a>
+          <a class="nav-eintrag"><i class="fa-solid fa-book-open"></i>Artikel</a>
+          <a class="nav-eintrag"><i class="fa-solid fa-shuffle"></i>Stöbern</a>
+          <a class="nav-eintrag"><i class="fa-solid fa-images"></i>Medien</a>
+          <a class="nav-eintrag"><i class="fa-solid fa-swatchbook"></i>Bibliothek<span class="zahl">5</span></a>
+          <div class="nav-gruppe">Meins</div>
+          <a class="nav-eintrag"><i class="fa-solid fa-bookmark"></i>Merkzettel<span class="zahl">12</span></a>
+          <a class="nav-eintrag" href="notizen.html"><i class="fa-solid fa-note-sticky"></i>Notizen<span class="zahl">7</span></a>
+          <a class="nav-eintrag aktiv"><i class="fa-solid fa-layer-group"></i>Themen<span class="zahl">4</span></a>
+          <a class="nav-eintrag"><i class="fa-solid fa-clock-rotate-left"></i>Verlauf</a>
+          <div class="nav-gruppe">App</div>
+          <a class="nav-eintrag"><i class="fa-solid fa-sliders"></i>Einstellungen</a>
+          <div class="nav-fuss">
+            <div class="konto"><span class="bild">A</span><span><div class="wer">admin</div><div class="wie">angemeldet</div></span></div>
+          </div>
+        </nav>
+
+        <section class="seite">
+          <div class="zweiteilig" style="flex: 1; min-height: 0">
+            <aside class="themenliste">
+              <div class="kopfzeile"><h1>Themen</h1><button class="knopf primaer"><i class="fa-solid fa-plus"></i>Neu</button></div>
+              <div class="rollfeld">
+                <div class="thema-eintrag aktiv">
+                  <div class="mini"><img src="beispiel/saturn_planet_.jpg" alt=""><img src="beispiel/andromedagalaxie.jpg" alt=""><img src="beispiel/jupiter_planet_.png" alt=""><img src="beispiel/orionnebel.jpg" alt=""></div>
+                  <span><span class="t">Sternenhimmel</span><span class="u"><span class="zahl">23</span> Artikel · 4 Bereiche <span class="punkt-neu" title="3 neu passend"></span></span></span>
+                </div>
+                <div class="thema-eintrag">
+                  <div class="mini"><img src="beispiel/fuchs.jpg" alt=""><img src="beispiel/polarfuchs.jpg" alt=""><img src="beispiel/silberfuchs.jpg" alt=""><img src="beispiel/stadtfuchs.jpg" alt=""></div>
+                  <span><span class="t">Füchse</span><span class="u"><span class="zahl">9</span> Artikel · von Hand</span></span>
+                </div>
+                <div class="thema-eintrag">
+                  <div class="mini"><img src="beispiel/photosynthese.jpeg" alt=""><img src="beispiel/sonne.jpg" alt=""><img src="beispiel/schnee.jpg" alt=""><img src="beispiel/karte.png" alt=""></div>
+                  <span><span class="t">Klima und Pflanzen</span><span class="u"><span class="zahl">14</span> Artikel · aus 2 Büchern</span></span>
+                </div>
+                <div class="thema-eintrag">
+                  <div class="mini"><img src="beispiel/tollwut.jpg" alt=""><span></span><span></span><span></span></div>
+                  <span><span class="t">Gesundheit Haustiere</span><span class="u"><span class="zahl">3</span> Artikel · ohne Bereiche</span></span>
+                </div>
+              </div>
+            </aside>
+
+            <div class="seite">
+              <div class="thema-kopf">
+                <h2>Sternenhimmel <i class="fa-solid fa-pen stift"></i></h2>
+                <p>Was ich mit der Sternenwarte beobachten will, und alles, was dazu gehört.</p>
+                <div class="regel">
+                  <span class="chip"><i class="fa-solid fa-wand-magic-sparkles"></i>wächst mit: "Planeten, Galaxien und Nebel"</span>
+                  <span class="chip aus"><i class="fa-solid fa-book"></i>nur Deutsch</span>
+                  <span style="color: var(--text-3)">neue Treffer kommen als Vorschlag, nie von selbst</span>
+                </div>
+                <div class="werkzeuge">
+                  <button class="knopf"><i class="fa-solid fa-folder-plus"></i><span class="wort">Bereich</span></button>
+                  <button class="knopf"><i class="fa-solid fa-wand-magic-sparkles"></i><span class="wort">Bereiche vorschlagen</span></button>
+                  <button class="knopf"><i class="fa-solid fa-volume-high"></i><span class="wort">Thema vorlesen</span></button>
+                  <span class="trenner"></span>
+                  <span class="segment"><span class="aktiv"><i class="fa-solid fa-grip"></i> Karten</span><span><i class="fa-solid fa-list"></i> Liste</span><span><i class="fa-solid fa-diagram-project"></i> Netz</span></span>
+                  <div class="rechts">
+                    <button class="rund" title="Als Markdown in die Kellerwolke"><i class="fa-solid fa-file-export"></i></button>
+                    <button class="rund" title="Mehr"><i class="fa-solid fa-ellipsis"></i></button>
+                  </div>
+                </div>
+              </div>
+              <div class="rollfeld" style="padding: 0">
+                <div class="vorschlagsband">
+                  <div class="zeile1"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--akzent)"></i><b>3 neu passend</b><span class="neben">aus der Suche "Planeten, Galaxien und Nebel"</span><button class="knopf still">Alle übernehmen</button></div>
+                  <div class="reihe">
+                    <div class="angebot-artikel"><img src="beispiel/orionnebel.jpg" alt=""><span><span class="t">Orionnebel</span><span class="u">Emissionsnebel im Sternbild Orion</span></span>
+                      <span class="ja-nein"><button class="rund ja" title="Übernehmen"><i class="fa-solid fa-check"></i></button><button class="rund" title="Passt nicht"><i class="fa-solid fa-xmark"></i></button></span></div>
+                    <div class="angebot-artikel"><img src="beispiel/milchstra_e.jpg" alt=""><span><span class="t">Milchstraße</span><span class="u">unsere Galaxie</span></span>
+                      <span class="ja-nein"><button class="rund ja" title="Übernehmen"><i class="fa-solid fa-check"></i></button><button class="rund" title="Passt nicht"><i class="fa-solid fa-xmark"></i></button></span></div>
+                    <div class="angebot-artikel"><img src="beispiel/venus_planet_.jpg" alt=""><span><span class="t">Venus (Planet)</span><span class="u">zweiter Planet von der Sonne aus</span></span>
+                      <span class="ja-nein"><button class="rund ja" title="Übernehmen"><i class="fa-solid fa-check"></i></button><button class="rund" title="Passt nicht"><i class="fa-solid fa-xmark"></i></button></span></div>
+                  </div>
+                </div>
+
+                <div class="bereiche">
+                  <section>
+                    <div class="bereich-kopf"><i class="fa-solid fa-grip-vertical griff"></i><h3>Planeten</h3><span class="zahl">5</span>
+                      <span class="rechts"><button class="rund" title="Bereich vorlesen"><i class="fa-solid fa-volume-high"></i></button><button class="rund" title="Umbenennen"><i class="fa-solid fa-pen"></i></button></span></div>
+                    <div class="karten">
+                      <div class="artikelkarte"><img src="beispiel/saturn_planet_.jpg" alt=""><span><span class="t">Saturn (Planet)</span><span class="u"><i class="fa-solid fa-note-sticky marke-notiz"></i>1 Notiz</span></span><i class="fa-solid fa-grip-vertical griff"></i></div>
+                      <div class="artikelkarte"><img src="beispiel/jupiter_planet_.png" alt=""><span><span class="t">Jupiter (Planet)</span><span class="u"><i class="fa-solid fa-circle-check gelesen"></i>gelesen</span></span><i class="fa-solid fa-grip-vertical griff"></i></div>
+                      <div class="artikelkarte"><img src="beispiel/mars_planet_.png" alt=""><span><span class="t">Mars (Planet)</span><span class="u">noch nicht gelesen</span></span><i class="fa-solid fa-grip-vertical griff"></i></div>
+                      <div class="artikelkarte platzhalter"><img src="beispiel/mond.jpg" alt=""><span><span class="t">Mond</span><span class="u">-</span></span></div>
+                      <div class="artikelkarte"><span class="ohne-bild"><i class="fa-solid fa-language"></i></span><span><span class="t">Ringe des Saturn</span><span class="u"><span class="marke-buch uebersetzt"><i class="fa-solid fa-language"></i>übersetzt</span></span></span><i class="fa-solid fa-grip-vertical griff"></i></div>
+                    </div>
+                  </section>
+                  <section>
+                    <div class="bereich-kopf"><i class="fa-solid fa-grip-vertical griff"></i><h3>Galaxien und Nebel</h3><span class="zahl">2</span>
+                      <span class="rechts"><button class="rund" title="Bereich vorlesen"><i class="fa-solid fa-volume-high"></i></button><button class="rund" title="Umbenennen"><i class="fa-solid fa-pen"></i></button></span></div>
+                    <div class="karten">
+                      <div class="artikelkarte"><img src="beispiel/andromedagalaxie.jpg" alt=""><span><span class="t">Andromedagalaxie</span><span class="u">61 % gelesen</span></span><i class="fa-solid fa-grip-vertical griff"></i></div>
+                      <div class="artikelkarte"><img src="beispiel/schwarzes_loch.jpg" alt=""><span><span class="t">Schwarzes Loch</span><span class="u">noch nicht gelesen</span></span><i class="fa-solid fa-grip-vertical griff"></i></div>
+                    </div>
+                  </section>
+                  <section>
+                    <div class="bereich-kopf"><i class="fa-solid fa-grip-vertical griff"></i><h3>Monde</h3><span class="zahl">0</span>
+                      <span class="rechts"><button class="rund" title="Umbenennen"><i class="fa-solid fa-pen"></i></button></span></div>
+                    <div class="karten">
+                      <div class="leer-bereich ziel"><i class="fa-solid fa-arrow-down"></i>Hier ablegen: Mond kommt nach Monde</div>
+                      <div class="artikelkarte zieht" style="margin-top: -6px"><img src="beispiel/mond.jpg" alt=""><span><span class="t">Mond</span><span class="u"><i class="fa-solid fa-circle-check gelesen"></i>gelesen</span></span><i class="fa-solid fa-grip-vertical griff"></i>
+                        <span class="ziehhinweis">aus Planeten nach Monde</span></div>
+                    </div>
+                  </section>
+                  <section>
+                    <div class="bereich-kopf"><i class="fa-solid fa-inbox" style="color: var(--text-3)"></i><h3>Ohne Bereich</h3><span class="zahl">16</span>
+                      <span class="rechts"><button class="knopf still"><i class="fa-solid fa-wand-magic-sparkles"></i>Einsortieren lassen</button></span></div>
+                    <div class="karten">
+                      <div class="artikelkarte"><img src="beispiel/sonne.jpg" alt=""><span><span class="t">Sonne</span><span class="u">noch nicht gelesen</span></span><i class="fa-solid fa-grip-vertical griff"></i></div>
+                      <div class="artikelkarte"><span class="ohne-bild"><i class="fa-solid fa-book"></i></span><span><span class="t">Fernrohr</span><span class="u">aus dem Merkzettel</span></span><i class="fa-solid fa-grip-vertical griff"></i></div>
+                      <div class="artikelkarte"><span class="ohne-bild"><i class="fa-solid fa-book"></i></span><span><span class="t">Sternbild</span><span class="u">noch nicht gelesen</span></span><i class="fa-solid fa-grip-vertical griff"></i></div>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <footer class="fuss">
+        <div class="verbindungen">
+          <span class="verbindung"><span class="punkt"></span>Bibliothek: 5 Bücher</span>
+          <span class="verbindung"><span class="punkt"></span>Fundus</span>
+          <span class="verbindung"><span class="punkt"></span>Leitstelle</span>
+        </div>
+        <div class="rechts"><span>Bilder in groß: 18.240 geladen</span></div>
+      </footer>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

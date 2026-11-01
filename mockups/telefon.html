@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Artikel am Telefon</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Telefon: eigene Ansicht, für alle drei Varianten gleich. Links Lesen (Steckbrief eingeklappt), Mitte Vorlesen mit
+       mitlaufender Markierung, rechts das Inhaltsverzeichnis als Blatt von unten. -->
+  <body style="background: var(--hg)">
+    <div class="telefone">
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:41</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf">
+          <button class="rund still" title="Zurück"><i class="fa-solid fa-chevron-left"></i></button>
+          <h1>Rotfuchs</h1>
+          <button class="rund still" title="Suchen"><i class="fa-solid fa-magnifying-glass"></i></button>
+          <button class="rund still" title="Mehr"><i class="fa-solid fa-ellipsis"></i></button>
+        </div>
+        <div class="t-inhalt">
+          <div class="t-titel">Rotfuchs</div>
+          <button class="steckbrief-auf"><img src="beispiel/fuchs.jpg" alt=""><span>Steckbrief<span class="u">Raubtiere · Hunde · Vulpes vulpes</span></span><i class="fa-solid fa-chevron-down"></i></button>
+          <article class="artikel" data-artikel></article>
+        </div>
+        <div class="t-leiste">
+          <button title="Inhalt"><i class="fa-solid fa-list"></i>Inhalt</button>
+          <button title="Vorlesen"><i class="fa-solid fa-volume-high"></i>Vorlesen</button>
+          <button class="aktiv" title="Gemerkt"><i class="fa-solid fa-bookmark"></i>Gemerkt</button>
+          <button title="Notiz"><i class="fa-solid fa-note-sticky"></i>Notiz</button>
+          <button title="Ähnlich"><i class="fa-solid fa-diagram-project"></i>Ähnlich</button>
+        </div>
+      </div></div>
+
+      <div class="telefon"><div class="schirm" data-liest-hier>
+        <div class="statusleiste"><span>9:43</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf">
+          <button class="rund still" title="Zurück"><i class="fa-solid fa-chevron-left"></i></button>
+          <h1>Rotfuchs</h1>
+          <button class="rund still" title="Suchen"><i class="fa-solid fa-magnifying-glass"></i></button>
+          <button class="rund still" title="Mehr"><i class="fa-solid fa-ellipsis"></i></button>
+        </div>
+        <div class="t-inhalt">
+          <div class="t-titel">Rotfuchs</div>
+          <article class="artikel" data-artikel></article>
+        </div>
+        <div class="t-spieler">
+          <button class="gross" title="Anhalten"><i class="fa-solid fa-pause"></i></button>
+          <div class="was"><b>Allgemeine Merkmale</b><span style="color: var(--text-3)">Abschnitt 2 von 27 · 1:12</span><div class="spur"><span style="width: 18%"></span></div></div>
+          <button class="rund" title="Nächster Abschnitt"><i class="fa-solid fa-forward-step"></i></button>
+        </div>
+      </div></div>
+
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:44</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf">
+          <button class="rund still" title="Zurück"><i class="fa-solid fa-chevron-left"></i></button>
+          <h1>Rotfuchs</h1>
+          <button class="rund still" title="Suchen"><i class="fa-solid fa-magnifying-glass"></i></button>
+          <button class="rund still" title="Mehr"><i class="fa-solid fa-ellipsis"></i></button>
+        </div>
+        <div class="t-inhalt">
+          <div class="t-titel">Rotfuchs</div>
+          <article class="artikel" data-artikel></article>
+        </div>
+        <div class="t-leiste">
+          <button class="aktiv" title="Inhalt"><i class="fa-solid fa-list"></i>Inhalt</button>
+          <button title="Vorlesen"><i class="fa-solid fa-volume-high"></i>Vorlesen</button>
+          <button title="Gemerkt"><i class="fa-solid fa-bookmark"></i>Gemerkt</button>
+          <button title="Notiz"><i class="fa-solid fa-note-sticky"></i>Notiz</button>
+          <button title="Ähnlich"><i class="fa-solid fa-diagram-project"></i>Ähnlich</button>
+        </div>
+        <div class="schleier"></div>
+        <div class="blatt-unten">
+          <div class="griff"></div>
+          <h3>Inhalt</h3>
+          <nav class="inhalt">
+            <ol>
+              <li class="gelesen"><a href="#"><span class="nr">1</span>Merkmale</a></li>
+              <li class="unter aktiv"><a href="#">Allgemeine Merkmale</a></li>
+              <li class="unter"><a href="#">Spuren</a></li>
+              <li class="unter"><a href="#">Stimme</a></li>
+              <li><a href="#"><span class="nr">2</span>Verbreitung und Lebensraum</a></li>
+              <li><a href="#"><span class="nr">3</span>Lebensweise</a></li>
+              <li><a href="#"><span class="nr">4</span>Systematik</a></li>
+              <li><a href="#"><span class="nr">5</span>Nutzung, Bejagung, Artenschutz</a></li>
+              <li><a href="#"><span class="nr">6</span>Kulturelle Bedeutung</a></li>
+            </ol>
+            <div class="lesestand"><span style="width: 12%"></span></div>
+            <div class="lesestand-text">12 % gelesen · noch 33 Min</div>
+          </nav>
+        </div>
+      </div></div>
+    </div>
+    <script src="mockup.js"></script>
+    <script>
+      // Mittleres Telefon: der vorgelesene Absatz trägt die Markierung (nur in diesem Rahmen)
+      setTimeout(() => {
+        const p = document.querySelector('[data-liest-hier] [data-absatz="merkmale-1"]');
+        if (p) { p.closest('.t-inhalt').scrollTop = p.offsetTop - 120; p.classList.add("liest"); p.innerHTML = p.innerHTML.replace("Körpergewicht", '<span class="liest-wort">Körpergewicht</span>'); }
+      }, 300);
+    </script>
+  </body>
+</html>

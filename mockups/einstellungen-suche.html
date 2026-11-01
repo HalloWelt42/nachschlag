@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Einstellungen, Suche</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Reiter Suche: die Regel "Index immer, Bedeutung dazu, ohne Vektor nur Index" mit allen Stellschrauben, dazu der
+       gerade gemessene Stand beider Wege. Was das System kennt, ist eine Auswahl mit lesbaren Namen, nie ein Textfeld. -->
+  <body>
+    <div class="fenster-voll">
+      <div data-teil="kopf"></div>
+      <div></div>
+      <div class="geruest">
+        <div data-teil="nav:einstellungen"></div>
+        <section class="seite einstellungen">
+          <div class="seiten-kopf"><h1>Einstellungen</h1></div>
+          <div class="reiterleiste">
+            <button>Lesen</button><button class="aktiv">Suche</button><button onclick="location.href='einstellungen-bilder.html'">Bilder<span class="reiter-punkt" title="läuft"></span></button><button>Übersetzen</button>
+            <button>Vorlesen</button><button>Bibliothek</button><button>Verbindungen</button><button>Gestaltung</button>
+          </div>
+          <div class="rollfeld">
+            <div class="einstellungen-seite">
+              <div class="lagekarte">
+                <div>
+                  <div class="zustand"><b>Suche gerade</b><span class="pille gut"><span class="punkt"></span>Bedeutung + Index</span></div>
+                  <div style="color: var(--text-2); font-size: var(--klein); margin-top: 4px">Der Index der Bücher antwortet immer. Die Bedeutungssuche läuft über Fundus und die Leitstelle am Mac; antwortet sie nicht rechtzeitig, zeigt Nachschlag die Indextreffer mit dem Hinweis "nur Index".</div>
+                </div>
+                <div class="aktionen"><button class="knopf"><i class="fa-solid fa-stethoscope"></i>Jetzt prüfen</button></div>
+                <div class="zahlen">
+                  <div class="kennzahl"><span class="k">Index, Antwort</span><span class="w">11 ms</span></div>
+                  <div class="kennzahl"><span class="k">Vorschläge, Antwort</span><span class="w">70 ms</span></div>
+                  <div class="kennzahl"><span class="k">Bedeutung, Antwort</span><span class="w">640 ms</span></div>
+                  <div class="kennzahl"><span class="k">Heute nur Index</span><span class="w">4 von 63</span></div>
+                </div>
+              </div>
+
+              <div class="karte">
+                <h2><i class="fa-solid fa-code-merge"></i>Bedeutung und Index</h2>
+                <div class="feld"><div class="was"><div class="name">Bedeutungssuche</div><div class="beschreibung">Findet auch Stellen, die die Frage mit anderen Worten beantworten. Aus: nur Index.</div></div>
+                  <button class="schalter an" aria-label="Bedeutungssuche"></button></div>
+                <div class="feld"><div class="was"><div class="name">Warten auf die Bedeutungssuche höchstens</div><div class="beschreibung">Danach kommen die Indextreffer allein; späte Bedeutungstreffer werden nachgereicht, ohne dass die Liste springt.</div></div>
+                  <span class="wert-zahl"><button class="knopf"><i class="fa-solid fa-minus"></i></button><b>1,5</b><button class="knopf"><i class="fa-solid fa-plus"></i></button><span class="einheit">Sekunden</span></span></div>
+                <div class="feld"><div class="was"><div class="name">Mischung</div><div class="beschreibung">Wie Treffer beider Wege zu einer Liste werden. Ausgewogen nutzt die Rangfolge beider (RRF).</div></div>
+                  <span class="segment"><span>Mehr Index</span><span class="aktiv">Ausgewogen</span><span>Mehr Bedeutung</span></span></div>
+                <div class="feld"><div class="was"><div class="name">Sammlung in Fundus</div><div class="beschreibung">Welche Sammlung die Bedeutungssuche für ein Buch nutzt; angeboten wird, was Fundus kennt.</div></div>
+                  <span class="eingabe-schein" style="justify-content: space-between">Wikipedia (Deutsch) · 1,18 Mio Artikel <i class="fa-solid fa-chevron-down" style="color: var(--text-3)"></i></span></div>
+              </div>
+
+              <div class="karte">
+                <h2><i class="fa-solid fa-sliders"></i>Komfort</h2>
+                <div class="feld"><div class="was"><div class="name">Vorschläge beim Tippen</div><div class="beschreibung">Titel mit Bild und Kurztext, darunter passende Stellen.</div></div>
+                  <span class="segment"><span>Nur Titel</span><span class="aktiv">Titel und Stellen</span></span></div>
+                <div class="feld"><div class="was"><div class="name">Tippfehler verzeihen</div><div class="beschreibung">"Andromeda galaxie" findet Andromedagalaxie.</div></div>
+                  <button class="schalter an" aria-label="Tippfehler verzeihen"></button></div>
+                <div class="feld"><div class="was"><div class="name">Bücher in der Suche</div><div class="beschreibung">Englische Treffer kommen nach den deutschen, markiert; die Frage wird dafür übersetzt.</div></div>
+                  <span class="wert-rechts"><span class="chip an"><i class="fa-solid fa-square-check"></i>Deutsch</span><span class="chip an"><i class="fa-solid fa-square-check"></i>Englisch</span><span class="chip an"><i class="fa-solid fa-square-check"></i>Klimawandel</span></span></div>
+                <div class="feld"><div class="was"><div class="name">Treffer direkt an der Stelle öffnen</div><div class="beschreibung">Ein Bedeutungstreffer springt in den Abschnitt und markiert die Fundstelle.</div></div>
+                  <button class="schalter an" aria-label="Direkt an der Stelle öffnen"></button></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div data-teil="fuss"></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

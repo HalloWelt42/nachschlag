@@ -1,0 +1,7 @@
+# Ausrollen auf den Pi mit tools/ausrollen.sh (Ablauf und Prüfungen im Appkern: appkern.werkzeuge.ausrollen).
+# Rechner, Ordner, Adresse, Namen im Zertifikat und Leitstelle gehören dem Haus und stehen nicht im Repo:
+# tools/ausrollen.sh holt sie aus der privaten Wahrheit (handbuch ziel nachschlag --toml) als Ergänzung.
+kennung = "nachschlag"
+repo = "https://github.com/HalloWelt42/nachschlag.git"
+# ton: die App nutzt den Tondienst (Tonarbeit auf dem Mac über die Leitstelle); geprüft wird, ob die Leitstelle ihn meldet
+ton = false

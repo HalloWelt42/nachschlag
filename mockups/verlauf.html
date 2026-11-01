@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Verlauf</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="schrift/jetbrains-mono/schrift.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Verlauf: Zeitstrahl nach Tagen, Lesesitzungen zusammengefasst; jeder Eintrag sagt, wie man hinkam (Suche, Verweis,
+       Stöbern, Pfad) und wie weit man las. Suchen stehen mit im Strahl. Ganze Sitzung als Pfad sichern oder als Thema;
+       einzelne Einträge entfernen; Verlauf anhalten. -->
+  <body>
+    <div class="fenster-voll">
+      <div data-teil="kopf"></div>
+      <div></div>
+      <div class="geruest">
+        <div data-teil="nav:verlauf"></div>
+        <section class="seite">
+          <div class="seiten-kopf">
+            <h1>Verlauf</h1>
+            <span class="segment"><span class="aktiv">Alles</span><span>Gelesen</span><span>Suchen</span></span>
+            <span class="suche"><i class="fa-solid fa-magnifying-glass"></i>Im Verlauf suchen</span>
+            <span class="chip wahl"><i class="fa-solid fa-mobile-screen"></i>alle Geräte</span>
+            <button class="knopf still" style="margin-left: auto"><i class="fa-solid fa-pause"></i>Verlauf anhalten</button>
+          </div>
+          <div class="rollfeld">
+            <div class="liste-seite" style="max-width: 980px">
+              <div class="tag-kopf"><h3>Heute</h3><span class="neben">Sonntag, 1. November · <span class="zahl">5</span> Artikel · <span class="zahl">38</span> Minuten gelesen</span></div>
+              <div class="zeitstrahl">
+                <div class="sitzung"><i class="fa-solid fa-route"></i>Sitzung 01:52 bis 02:47 · am Rechner<button class="knopf still"><i class="fa-solid fa-layer-group"></i>Als Thema sichern</button></div>
+                <div class="ereignis lesen"><span class="zeit">02:41</span>
+                  <div><span class="t">Fennek</span><div class="wie"><i class="fa-solid fa-dice"></i>Zufall beim Stöbern · gemerkt</div></div>
+                  <div class="rechts"><span class="zahl">2 Min</span><button class="rund" title="Aus dem Verlauf entfernen" style="background: transparent"><i class="fa-solid fa-xmark"></i></button></div></div>
+                <div class="ereignis lesen"><span class="zeit">02:20</span>
+                  <div><span class="t code-titel">array_map</span><div class="wie"><i class="fa-solid fa-book"></i>PHP Docs · auf Deutsch übersetzt · eigenes Beispiel angelegt</div></div>
+                  <div class="rechts"><span class="zahl">45 %</span><span class="zahl">14 Min</span></div></div>
+                <div class="ereignis lesen"><span class="zeit">02:05</span>
+                  <div><span class="t">Stadtökologie</span><div class="wie"><i class="fa-solid fa-route"></i>Pfad von Rotfuchs › Stadtfüchse</div></div>
+                  <div class="rechts"><span class="zahl">20 %</span><span class="zahl">4 Min</span></div></div>
+                <div class="ereignis lesen"><span class="zeit">01:58</span>
+                  <div><span class="t">Rotfuchs › Stadtfüchse</span><div class="wie"><i class="fa-solid fa-wand-magic-sparkles"></i>aus der Suche, beste Stelle · Stelle gemerkt</div></div>
+                  <div class="rechts"><span class="zahl">34 %</span><span class="zahl">11 Min</span></div></div>
+                <div class="ereignis suche"><span class="zeit">01:57</span>
+                  <div><span class="t">"Füchse in Städten"</span><div class="wie"><i class="fa-solid fa-magnifying-glass"></i>Suche · Bedeutung und Index · 38 Stellen</div></div>
+                  <div class="rechts"><button class="knopf still">Erneut suchen</button></div></div>
+              </div>
+
+              <div class="tag-kopf"><h3>Gestern</h3><span class="neben">Samstag, 31. Oktober · <span class="zahl">3</span> Artikel · <span class="zahl">22</span> Minuten gelesen</span></div>
+              <div class="zeitstrahl">
+                <div class="sitzung"><i class="fa-solid fa-mobile-screen"></i>Sitzung 21:10 bis 21:32 · am Telefon, vorgelesen</div>
+                <div class="ereignis lesen"><span class="zeit">21:24</span>
+                  <div><span class="t">Polarfuchs</span><div class="wie"><i class="fa-solid fa-volume-high"></i>vorgelesen bis zum Ende · aus Thema Füchse</div></div>
+                  <div class="rechts"><span class="zahl">100 %</span><span class="zahl">12 Min</span></div></div>
+                <div class="ereignis lesen"><span class="zeit">21:10</span>
+                  <div><span class="t">Graufuchs</span><div class="wie"><i class="fa-solid fa-arrow-right-to-bracket"></i>Verweis aus Polarfuchs · gemerkt</div></div>
+                  <div class="rechts"><span class="zahl">40 %</span><span class="zahl">6 Min</span></div></div>
+                <div class="sitzung"><i class="fa-solid fa-mobile-screen"></i>Sitzung 09:02 bis 09:06 · am Telefon</div>
+                <div class="ereignis lesen"><span class="zeit">09:02</span>
+                  <div><span class="t">Saturn (Planet)</span><div class="wie"><i class="fa-solid fa-sun"></i>Heute für dich auf der Startseite</div></div>
+                  <div class="rechts"><span class="zahl">15 %</span><span class="zahl">4 Min</span></div></div>
+              </div>
+              <button class="knopf" style="align-self: center; margin-top: var(--a3)"><i class="fa-solid fa-chevron-down"></i>Ältere Tage</button>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div data-teil="fuss"></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

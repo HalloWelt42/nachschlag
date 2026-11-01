@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Dokumentation am Telefon</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="schrift/jetbrains-mono/schrift.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Telefon: eine Funktionsseite (Signatur oben, Code rollt in sich, nie die Seite), der Funktionsbaum als Blatt von unten. -->
+  <body style="background: var(--hg)">
+    <div class="telefone">
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:41</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf">
+          <button class="rund still" title="Zurück"><i class="fa-solid fa-chevron-left"></i></button>
+          <h1 style="font-family: var(--schrift-code)">array_map</h1>
+          <button class="rund still" title="Original oder Deutsch"><i class="fa-solid fa-language"></i></button>
+        </div>
+        <div class="t-inhalt">
+          <div class="doku-seite" style="padding: 0; --lesen: 17px">
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px"><span class="fassungswahl"><i class="fa-solid fa-code-branch"></i>PHP <b>8.3</b><i class="fa-solid fa-chevron-down"></i></span></div>
+            <div class="uebersetzt-band"><i class="fa-solid fa-language"></i><span><b>Von uns übersetzt</b>, Code unverändert</span></div>
+            <div class="kopfzeile"><span class="versionen"><span class="blass">PHP 4 ≥ 4.0.6</span><span class="blass">5</span><span class="blass">7</span><span class="deine">8 · deine</span></span></div>
+            <p class="kurz">Wendet den Callback auf die Elemente der übergebenen Arrays an</p>
+            <div class="signatur" style="font-size: 15px"><span class="name">array_map</span>(<span class="typ">?callable</span> <span class="var">$callback</span>, <span class="typ">array</span> <span class="var">$array</span>, <span class="typ">array</span> ...<span class="var">$arrays</span>): <span class="typ">array</span></div>
+            <h2>Parameter</h2>
+            <dl class="parameter" style="grid-template-columns: minmax(0, 1fr)">
+              <dt>$callback<span class="typ">?callable</span></dt><dd>Ein Callable, das für jedes Element jedes Arrays ausgeführt wird.</dd>
+              <dt>$array<span class="typ">array</span></dt><dd>Ein Array, das durch die Callback-Funktion läuft.</dd>
+            </dl>
+            <div class="beispiel">
+              <div class="bkopf"><i class="fa-solid fa-code"></i>Beispiel 1<span class="rechts"><button class="knopf"><i class="fa-regular fa-copy"></i></button></span></div>
+<pre style="font-size: 13px"><span class="c-var">$a</span> = [<span class="c-num">1</span>, <span class="c-num">2</span>, <span class="c-num">3</span>, <span class="c-num">4</span>, <span class="c-num">5</span>];
+<span class="c-var">$b</span> = <span class="c-fn">array_map</span>(<span class="c-str">'cube'</span>, <span class="c-var">$a</span>);</pre>
+            </div>
+          </div>
+        </div>
+        <div class="t-leiste">
+          <button><i class="fa-solid fa-list"></i>Inhalt</button>
+          <button><i class="fa-solid fa-volume-high"></i>Vorlesen</button>
+          <button><i class="fa-solid fa-bookmark"></i>Merken</button>
+          <button><i class="fa-solid fa-note-sticky"></i>Notiz</button>
+          <button><i class="fa-solid fa-diagram-project"></i>Ähnlich</button>
+        </div>
+      </div></div>
+
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:42</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf">
+          <button class="rund still" title="Zurück"><i class="fa-solid fa-chevron-left"></i></button>
+          <h1 style="font-family: var(--schrift-code)">array_map</h1>
+        </div>
+        <div class="t-inhalt"><div class="doku-seite" style="padding: 0; --lesen: 17px"><p class="kurz">Wendet den Callback auf die Elemente der übergebenen Arrays an</p></div></div>
+        <div class="t-leiste">
+          <button class="aktiv"><i class="fa-solid fa-list"></i>Inhalt</button>
+          <button><i class="fa-solid fa-volume-high"></i>Vorlesen</button>
+          <button><i class="fa-solid fa-bookmark"></i>Merken</button>
+          <button><i class="fa-solid fa-note-sticky"></i>Notiz</button>
+          <button><i class="fa-solid fa-diagram-project"></i>Ähnlich</button>
+        </div>
+        <div class="schleier"></div>
+        <div class="blatt-unten">
+          <div class="griff"></div>
+          <h3>Inhalt und Nachbarn</h3>
+          <span class="suche" style="margin-bottom: 8px"><i class="fa-solid fa-filter"></i>array</span>
+          <div style="overflow-y: auto; font-size: 16px">
+            <div class="baum-gruppe"><i class="fa-solid fa-chevron-down"></i>Arrays<span class="zahl">60</span></div>
+            <a class="baum-eintrag" href="#">array_filter</a>
+            <a class="baum-eintrag" href="#">array_keys</a>
+            <a class="baum-eintrag hier" href="#">array_map</a>
+            <a class="baum-eintrag" href="#">array_merge</a>
+            <a class="baum-eintrag" href="#">array_reduce</a>
+            <a class="baum-eintrag" href="#">array_search</a>
+            <a class="baum-eintrag" href="#">array_values</a>
+            <a class="baum-eintrag" href="#">array_walk</a>
+          </div>
+        </div>
+      </div></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

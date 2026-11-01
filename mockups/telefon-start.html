@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Startseite am Telefon</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Telefon: Startseite (Suche oben, Weiterlesen, Merkzettel, Stöbern als Liste; nichts rollt seitlich) und die
+       geöffnete Suche mit Vorschlägen über den ganzen Schirm. Unten die Bereiche der App. -->
+  <body style="background: var(--hg)">
+    <div class="telefone">
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:41</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf" style="padding-left: 14px">
+          <h1>Nachschlag</h1>
+          <span class="pille gut" title="Bedeutung + Index"><span class="punkt"></span>Bedeutung</span>
+        </div>
+        <div class="t-inhalt t-hg">
+          <div class="t-suche"><i class="fa-solid fa-magnifying-glass"></i>Begriff oder Frage</div>
+          <div class="t-gruppe"><span>Weiterlesen</span><a href="#">Verlauf</a></div>
+          <div class="liste kompakt">
+            <a href="#"><img src="beispiel/fuchs.jpg" alt=""><span><span class="t">Rotfuchs</span><span class="u">bei Lebensraum</span>
+              <span class="stand"><span class="spur"><span style="width: 34%"></span></span>34 %</span></span></a>
+            <a href="#"><img src="beispiel/andromedagalaxie.jpg" alt=""><span><span class="t">Andromedagalaxie</span><span class="u">bei Entdeckungsgeschichte</span>
+              <span class="stand"><span class="spur"><span style="width: 61%"></span></span>61 %</span></span></a>
+          </div>
+          <div class="t-gruppe"><span>Heute für dich</span></div>
+          <a class="leskarte" href="#"><div class="bildflaeche" style="height: 150px; background: #05070b"><img src="beispiel/saturn_planet_.jpg" alt="" style="object-fit: contain"></div>
+            <div class="koerper"><span class="t">Saturn (Planet)</span><span class="u">passt zu deinem Thema Sternenhimmel</span></div></a>
+          <div class="t-gruppe"><span>Merkzettel</span><a href="#">Alle 12</a></div>
+          <div class="liste kompakt">
+            <a href="#"><img src="beispiel/stadtfuchs.jpg" alt=""><span><span class="t">Stadtfuchs</span><span class="u">heute</span></span></a>
+            <a href="#"><img src="beispiel/polarfuchs.jpg" alt=""><span><span class="t">Polarfuchs</span><span class="u">gestern</span></span></a>
+          </div>
+        </div>
+        <div class="t-leiste">
+          <button class="aktiv"><i class="fa-solid fa-house"></i>Start</button>
+          <button><i class="fa-solid fa-shuffle"></i>Stöbern</button>
+          <button><i class="fa-solid fa-bookmark"></i>Merkzettel</button>
+          <button><i class="fa-solid fa-layer-group"></i>Themen</button>
+          <button><i class="fa-solid fa-ellipsis"></i>Mehr</button>
+        </div>
+      </div></div>
+
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:42</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf" style="padding-left: 10px">
+          <div class="t-suche" style="flex: 1; margin: 0; height: 42px; color: var(--text); box-shadow: 0 0 0 2px var(--akzent-flaeche)"><i class="fa-solid fa-magnifying-glass" style="color: var(--text-3)"></i>fuchs in der stadt</div>
+          <button class="knopf still">Fertig</button>
+        </div>
+        <div class="t-inhalt telefon-vorschlaege" style="padding: 0"><div data-vorschlaege></div></div>
+        <div class="t-leiste">
+          <button class="aktiv"><i class="fa-solid fa-house"></i>Start</button>
+          <button><i class="fa-solid fa-shuffle"></i>Stöbern</button>
+          <button><i class="fa-solid fa-bookmark"></i>Merkzettel</button>
+          <button><i class="fa-solid fa-layer-group"></i>Themen</button>
+          <button><i class="fa-solid fa-ellipsis"></i>Mehr</button>
+        </div>
+      </div></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

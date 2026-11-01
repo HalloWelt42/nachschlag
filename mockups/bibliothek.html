@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Bibliothek</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Bibliothek: jede ZIM-Datei im Ordner ist ein Buch. Was ein Buch kann, liest Nachschlag aus der Datei (Sprache,
+       Titel- und Volltextindex, Erzeuger, Bilder, Videos) und aus Fundus (Anteil der Bedeutungssuche); daraus folgt die
+       Darstellung (Lesedesign oder Originalansicht). Neue Dateien erscheinen von selbst; unten ein solches Beispiel. -->
+  <body>
+    <div class="fenster-voll">
+      <div data-teil="kopf"></div>
+      <div></div>
+      <div class="geruest">
+        <div data-teil="nav:bibliothek"></div>
+        <section class="seite">
+          <div class="seiten-kopf">
+            <h1>Bibliothek</h1>
+            <span class="segment"><span class="aktiv">Alle 5</span><span>Deutsch 2</span><span>Englisch 3</span></span>
+            <span class="suche"><i class="fa-solid fa-magnifying-glass"></i>Buch suchen</span>
+          </div>
+          <div class="reiterleiste"><button class="aktiv">Meine Bücher <span class="zahl">5</span></button><button onclick="location.href='katalog.html'">Katalog</button><button onclick="location.href='fassungen.html'">Fassungen und Laden<span class="reiter-punkt" title="lädt"></span></button></div>
+          <div class="rollfeld" style="padding-top: var(--a4)">
+            <div class="bibliothek">
+              <div class="ordnerzeile">
+                <i class="fa-solid fa-folder-open"></i><span>Bücher aus <code>/mnt/data/zim</code> auf dem Pi, nur lesend; neue Dateien erscheinen von selbst.</span>
+                <span class="rechts"><span>belegt <b class="zahl">176,5 GB</b></span></span>
+              </div>
+
+              <div class="buch-gross">
+                <span class="sym"><i class="fa-solid fa-book"></i></span>
+                <div class="kopfzeile"><b>Wikipedia (Deutsch)</b><span class="marke-buch"><i class="fa-solid fa-language"></i>Deutsch</span><span class="datei">wikipedia_de_all_maxi_2026-01.zim</span></div>
+                <div class="aktionen"><button class="knopf"><i class="fa-solid fa-magnifying-glass"></i>Durchsuchen</button><button class="knopf"><i class="fa-solid fa-dice"></i>Zufall</button><button class="rund" title="Mehr"><i class="fa-solid fa-ellipsis"></i></button></div>
+                <div class="beschr">Die freie Enzyklopädie · Stand 15.01.2026 · Vorgabe für Deutsch · Darstellung: Lesedesign</div>
+                <div class="kennzahlen">
+                  <div class="kennzahl"><span class="k">Einträge</span><span class="w">5,04 Mio</span></div>
+                  <div class="kennzahl"><span class="k">Medien</span><span class="w">4,67 Mio</span></div>
+                  <div class="kennzahl"><span class="k">Größe</span><span class="w">52,4 GB</span></div>
+                  <div class="kennzahl"><span class="k">Bedeutungssuche</span><span class="w">37 %</span><span class="spur"><span style="width: 37%"></span></span></div>
+                  <div class="kennzahl"><span class="k">Bilder groß</span><span class="w">18.240</span></div>
+                </div>
+                <div class="faehig">
+                  <span class="faehigkeit an"><i class="fa-solid fa-heading"></i>Titelindex</span>
+                  <span class="faehigkeit an"><i class="fa-solid fa-magnifying-glass"></i>Volltextindex</span>
+                  <span class="faehigkeit teil"><i class="fa-solid fa-wand-magic-sparkles"></i>Bedeutung, 1,18 von 3,2 Mio Artikeln</span>
+                  <span class="faehigkeit an"><i class="fa-solid fa-image"></i>Bilder</span>
+                  <span class="faehigkeit"><i class="fa-solid fa-gears"></i>Erzeuger mwoffliner</span>
+                </div>
+              </div>
+
+              <div class="buch-gross">
+                <span class="sym"><i class="fa-solid fa-book"></i></span>
+                <div class="kopfzeile"><b>Wikipedia (Englisch)</b><span class="marke-buch"><i class="fa-solid fa-language"></i>Englisch</span><span class="datei">wikipedia_en_all_maxi_2026-02.zim</span></div>
+                <div class="aktionen"><button class="knopf"><i class="fa-solid fa-magnifying-glass"></i>Durchsuchen</button><button class="knopf"><i class="fa-solid fa-dice"></i>Zufall</button><button class="rund" title="Mehr"><i class="fa-solid fa-ellipsis"></i></button></div>
+                <div class="beschr">The free encyclopedia · Stand 15.02.2026 · Vorgabe für Englisch · Darstellung: Lesedesign, auf Wunsch übersetzt</div>
+                <div class="kennzahlen">
+                  <div class="kennzahl"><span class="k">Einträge</span><span class="w">18,98 Mio</span></div>
+                  <div class="kennzahl"><span class="k">Medien</span><span class="w">8,22 Mio</span></div>
+                  <div class="kennzahl"><span class="k">Größe</span><span class="w">124,0 GB</span></div>
+                  <div class="kennzahl"><span class="k">Bedeutungssuche</span><span class="w text">nicht eingebettet</span></div>
+                  <div class="kennzahl"><span class="k">Übersetzt</span><span class="w">214 Artikel</span></div>
+                </div>
+                <div class="faehig">
+                  <span class="faehigkeit an"><i class="fa-solid fa-heading"></i>Titelindex</span>
+                  <span class="faehigkeit an"><i class="fa-solid fa-magnifying-glass"></i>Volltextindex</span>
+                  <span class="faehigkeit an"><i class="fa-solid fa-language"></i>Übersetzen ins Deutsche</span>
+                  <span class="faehigkeit an"><i class="fa-solid fa-image"></i>Bilder</span>
+                  <span class="faehigkeit"><i class="fa-solid fa-gears"></i>Erzeuger mwoffliner</span>
+                </div>
+              </div>
+
+              <div class="buch-gross">
+                <span class="sym"><i class="fa-solid fa-temperature-arrow-up"></i></span>
+                <div class="kopfzeile"><b>Klimawandel</b><span class="marke-buch"><i class="fa-solid fa-language"></i>Deutsch</span><span class="datei">wikipedia_de_climate-change_nopic_2026-07.zim</span></div>
+                <div class="aktionen"><button class="knopf"><i class="fa-solid fa-magnifying-glass"></i>Durchsuchen</button><button class="rund" title="Mehr"><i class="fa-solid fa-ellipsis"></i></button></div>
+                <div class="beschr">Auswahl von Wikipedia-Artikeln zum Thema Klimawandel · Stand 17.07.2026 · Teilmenge der deutschen Wikipedia, in der Suche zusammengefasst</div>
+                <div class="kennzahlen">
+                  <div class="kennzahl"><span class="k">Einträge</span><span class="w">4.102</span></div>
+                  <div class="kennzahl"><span class="k">Medien</span><span class="w">784</span></div>
+                  <div class="kennzahl"><span class="k">Größe</span><span class="w">27,4 MB</span></div>
+                  <div class="kennzahl"><span class="k">Bedeutungssuche</span><span class="w text">über Deutsch</span></div>
+                  <div class="kennzahl"><span class="k">Bilder</span><span class="w text">keine</span></div>
+                </div>
+                <div class="faehig">
+                  <span class="faehigkeit an"><i class="fa-solid fa-heading"></i>Titelindex</span>
+                  <span class="faehigkeit an"><i class="fa-solid fa-magnifying-glass"></i>Volltextindex</span>
+                  <span class="faehigkeit"><i class="fa-solid fa-image"></i>ohne Bilder (nopic)</span>
+                </div>
+              </div>
+
+              <div class="buch-gross">
+                <span class="sym" style="color: var(--violett)"><i class="fa-solid fa-code"></i></span>
+                <div class="kopfzeile"><b>PHP Docs</b><span class="marke-buch"><i class="fa-solid fa-language"></i>Englisch</span><span class="datei">devdocs_en_php_2026-08.zim</span></div>
+                <div class="aktionen"><button class="knopf"><i class="fa-solid fa-magnifying-glass"></i>Durchsuchen</button><button class="rund" title="Mehr"><i class="fa-solid fa-ellipsis"></i></button></div>
+                <div class="beschr">PHP documentation · Stand 18.08.2026 · Darstellung: Lesedesign Dokumentation, auf Wunsch übersetzt · Meine Fassung: PHP 8.3</div>
+                <div class="kennzahlen">
+                  <div class="kennzahl"><span class="k">Einträge</span><span class="w">7.555</span></div>
+                  <div class="kennzahl"><span class="k">Medien</span><span class="w">0</span></div>
+                  <div class="kennzahl"><span class="k">Größe</span><span class="w">7 MB</span></div>
+                  <div class="kennzahl"><span class="k">Bedeutungssuche</span><span class="w text">nicht eingebettet</span></div>
+                  <div class="kennzahl"><span class="k">Eigene Beispiele</span><span class="w">1</span></div>
+                </div>
+                <div class="faehig"><span class="faehigkeit an"><i class="fa-solid fa-heading"></i>Titelindex</span><span class="faehigkeit an"><i class="fa-solid fa-magnifying-glass"></i>Volltextindex</span><span class="faehigkeit an"><i class="fa-solid fa-language"></i>Übersetzen</span><span class="faehigkeit"><i class="fa-solid fa-gears"></i>Erzeuger devdocs2zim</span></div>
+              </div>
+
+              <div class="buch-gross">
+                <span class="sym" style="color: var(--violett)"><i class="fa-solid fa-window-maximize"></i></span>
+                <div class="kopfzeile"><b>PHP Manual</b><span class="marke-buch"><i class="fa-solid fa-language"></i>Englisch</span><span class="datei">php.net_en_all_2024-08.zim</span></div>
+                <div class="aktionen"><button class="knopf"><i class="fa-solid fa-magnifying-glass"></i>Durchsuchen</button><button class="rund" title="Mehr"><i class="fa-solid fa-ellipsis"></i></button></div>
+                <div class="beschr">Spiegel von php.net · Stand 13.08.2024 · Darstellung: Lesedesign Dokumentation aus dem Hauptbereich gelöst, Rückfall Originalansicht · mit Notizen der Nutzer</div>
+                <div class="kennzahlen">
+                  <div class="kennzahl"><span class="k">Einträge</span><span class="w">11.604</span></div>
+                  <div class="kennzahl"><span class="k">Medien</span><span class="w">76</span></div>
+                  <div class="kennzahl"><span class="k">Größe</span><span class="w">33 MB</span></div>
+                  <div class="kennzahl"><span class="k">Bedeutungssuche</span><span class="w text">nicht eingebettet</span></div>
+                  <div class="kennzahl"><span class="k">Verweise ohne Ziel</span><span class="w">0 %</span></div>
+                </div>
+                <div class="faehig"><span class="faehigkeit an"><i class="fa-solid fa-heading"></i>Titelindex</span><span class="faehigkeit an"><i class="fa-solid fa-magnifying-glass"></i>Volltextindex</span><span class="faehigkeit"><i class="fa-solid fa-gears"></i>Erzeuger zimit, warc2zim 2.1</span></div>
+              </div>
+
+              <div class="buch-gross neu">
+                <span class="sym"><i class="fa-solid fa-download"></i></span>
+                <div class="kopfzeile"><b>Stack Overflow</b><span class="marke-buch" style="color: var(--info)">wird geladen</span><span class="datei">stackoverflow.com_en_all_2026-07.zim</span></div>
+                <div class="aktionen"><button class="knopf still" onclick="location.href='fassungen.html'"><i class="fa-solid fa-list-check"></i>Zum Laden</button></div>
+                <div class="beschr">Abonniert aus dem Katalog. Nach dem Laden prüft Nachschlag die Datei und wählt die Darstellung; für Frage und Antwort folgt ein eigenes Lesedesign, bis dahin Originalansicht.</div>
+                <div class="pruefschritte">
+                  <span class="laeuft"><i class="fa-solid fa-spinner fa-spin"></i>Laden 15,6 von 114,9 GB</span>
+                  <span><i class="fa-regular fa-circle"></i>Prüfsumme</span>
+                  <span><i class="fa-regular fa-circle"></i>Öffnen und zählen</span>
+                  <span><i class="fa-regular fa-circle"></i>Darstellung wählen</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div data-teil="fuss"></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Frage und Antwort am Telefon</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="schrift/jetbrains-mono/schrift.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Telefon: Frage oben mit Stimmen, darunter die akzeptierte Antwort; Leiste wie beim Artikel. -->
+  <body style="background: var(--hg)">
+    <div class="telefone">
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:41</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf"><button class="rund still" title="Zurück"><i class="fa-solid fa-chevron-left"></i></button><h1>Frage 84</h1><button class="rund still" title="Original oder Deutsch"><i class="fa-solid fa-language"></i></button></div>
+        <div class="t-inhalt">
+          <div class="artikel" style="--lesen: 17px">
+            <div class="t-titel" style="font-size: 24px">Wie kopiere ich Text aus Vim in die Zwischenablage des Systems?</div>
+            <div class="suchstand" style="margin-bottom: 10px"><span><b class="zahl">520</b> Stimmen</span><span>15 Antworten</span><span class="marke-buch uebersetzt"><i class="fa-solid fa-language"></i>übersetzt</span></div>
+            <p>Gibt es eine Möglichkeit, einen Textblock in die Zwischenablage des Systems zu kopieren, damit ich ihn in einem anderen Programm einfügen kann?</p>
+            <div class="schlagwoerter" style="margin-bottom: 14px"><span>cut-copy-paste</span><span>os-clipboard</span></div>
+            <div class="antwort akzeptiert" style="padding: 10px 12px">
+              <span class="akz-marke"><i class="fa-solid fa-circle-check"></i>Akzeptiert · 585 Stimmen</span>
+              <p>Vim hat zwei besondere Register: <code>*</code> nutzt <code>PRIMARY</code>, <code>+</code> nutzt <code>CLIPBOARD</code>.</p>
+<pre class="code" style="font-size: 13px"><span class="c-kw">noremap</span> &lt;Leader&gt;y <span class="c-str">"*y</span>
+<span class="c-kw">noremap</span> &lt;Leader&gt;Y <span class="c-str">"+y</span></pre>
+              <div class="beitrag-fuss" style="margin-top: 4px"><span>Martin Tournoij</span><span class="kommentare-auf"><i class="fa-solid fa-comments"></i>19</span></div>
+            </div>
+            <div class="antwort" style="padding: 10px 12px">
+              <span class="akz-marke" style="color: var(--text-3)">53 Stimmen</span>
+              <pre class="code" style="font-size: 13px"><span class="c-kw">set</span> clipboard=unnamedplus</pre>
+            </div>
+          </div>
+        </div>
+        <div class="t-leiste">
+          <button><i class="fa-solid fa-list"></i>Antworten</button>
+          <button><i class="fa-solid fa-volume-high"></i>Vorlesen</button>
+          <button><i class="fa-solid fa-bookmark"></i>Merken</button>
+          <button><i class="fa-solid fa-note-sticky"></i>Notiz</button>
+          <button><i class="fa-solid fa-diagram-project"></i>Ähnlich</button>
+        </div>
+      </div></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

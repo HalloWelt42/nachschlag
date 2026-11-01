@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Schnittstelle am Telefon</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="schrift/jetbrains-mono/schrift.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Telefon: Wege nach Bereich als Liste, ein Weg mit Parametern und Beispiel; Code rollt im Kasten, nie die Seite. -->
+  <body style="background: var(--hg)" class="api-telefon">
+    <div class="telefone">
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:41</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf"><button class="rund still" title="Zurück"><i class="fa-solid fa-chevron-left"></i></button><h1>Schnittstelle v1</h1></div>
+        <div class="t-inhalt t-hg">
+          <span class="abdeckung" style="margin-bottom: 8px"><i class="fa-solid fa-circle-check"></i>21 von 21 Wegen beschrieben</span>
+          <div class="t-gruppe"><span>Suche</span></div>
+          <div class="liste">
+            <a href="#" style="grid-template-columns: 52px minmax(0, 1fr) auto"><span class="methode get">GET</span><span><span class="t" style="font-family: var(--schrift-editor)">/suche</span><span class="u">Index und Bedeutung, mit Rückfall</span></span><i class="fa-solid fa-chevron-right" style="color: var(--text-3)"></i></a>
+            <a href="#" style="grid-template-columns: 52px minmax(0, 1fr) auto"><span class="methode get">GET</span><span><span class="t" style="font-family: var(--schrift-editor)">/vorschlaege</span><span class="u">beim Tippen</span></span><i class="fa-solid fa-chevron-right" style="color: var(--text-3)"></i></a>
+          </div>
+          <div class="t-gruppe"><span>Meins</span></div>
+          <div class="liste">
+            <a href="#" style="grid-template-columns: 52px minmax(0, 1fr) auto"><span class="methode get">GET</span><span><span class="t" style="font-family: var(--schrift-editor)">/merkzettel</span><span class="u">gemerkte Artikel und Stellen</span></span><i class="fa-solid fa-chevron-right" style="color: var(--text-3)"></i></a>
+            <a href="#" style="grid-template-columns: 52px minmax(0, 1fr) auto"><span class="methode post">POST</span><span><span class="t" style="font-family: var(--schrift-editor)">/notizen</span><span class="u">Notiz an Artikel oder Stelle</span></span><i class="fa-solid fa-chevron-right" style="color: var(--text-3)"></i></a>
+          </div>
+          <div class="t-gruppe"><span>Für KI</span></div>
+          <div class="liste">
+            <a href="#" style="grid-template-columns: 52px minmax(0, 1fr) auto"><span class="methode mcp">MCP</span><span><span class="t" style="font-family: var(--schrift-editor)">nachschlag_suchen</span><span class="u">wie /suche</span></span><i class="fa-solid fa-chevron-right" style="color: var(--text-3)"></i></a>
+          </div>
+        </div>
+        <div class="t-leiste">
+          <button><i class="fa-solid fa-house"></i>Start</button>
+          <button><i class="fa-solid fa-shuffle"></i>Stöbern</button>
+          <button><i class="fa-solid fa-bookmark"></i>Merkzettel</button>
+          <button><i class="fa-solid fa-layer-group"></i>Themen</button>
+          <button class="aktiv"><i class="fa-solid fa-ellipsis"></i>Mehr</button>
+        </div>
+      </div></div>
+
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:42</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf"><button class="rund still" title="Zurück"><i class="fa-solid fa-chevron-left"></i></button><h1 style="font-family: var(--schrift-editor)">GET /suche</h1></div>
+        <div class="t-inhalt">
+          <div class="api-seite" style="padding: 0; gap: 10px">
+            <p>Sucht in allen oder ausgewählten Büchern; jeder Treffer sagt, welcher Weg ihn fand.</p>
+            <h2>Parameter</h2>
+            <dl class="fehler-liste" style="grid-template-columns: minmax(0, 1fr)">
+              <dt style="font-family: var(--schrift-editor); color: var(--ed-feld)">frage <span class="pflicht" style="font-family: var(--schrift); font-size: 13px; color: var(--gefahr)">Pflicht</span></dt><dd>Begriff oder Frage, 1 bis 400 Zeichen</dd>
+              <dt style="font-family: var(--schrift-editor); color: var(--ed-feld)">wege</dt><dd>beide, bedeutung oder index</dd>
+              <dt style="font-family: var(--schrift-editor); color: var(--ed-feld)">art</dt><dd>alles, artikel, stellen, medien</dd>
+            </dl>
+            <h2>Aufruf</h2>
+            <div class="code-kasten"><pre style="font-size: 12.5px"><span class="c-fn">curl</span> -s <span class="c-str">".../api/v1/suche?frage=..."</span> \
+  -H <span class="c-str">"Authorization: Bearer $APP_SCHLUESSEL"</span></pre></div>
+            <button class="knopf primaer" style="justify-content: center"><i class="fa-solid fa-play"></i>Ausprobieren</button>
+          </div>
+        </div>
+        <div class="t-leiste">
+          <button><i class="fa-solid fa-house"></i>Start</button>
+          <button><i class="fa-solid fa-shuffle"></i>Stöbern</button>
+          <button><i class="fa-solid fa-bookmark"></i>Merkzettel</button>
+          <button><i class="fa-solid fa-layer-group"></i>Themen</button>
+          <button class="aktiv"><i class="fa-solid fa-ellipsis"></i>Mehr</button>
+        </div>
+      </div></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

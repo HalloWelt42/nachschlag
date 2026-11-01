@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Artikel, Variante B: Arbeitsplatz</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Variante B: Seitenleiste als Symbole, Inhaltsverzeichnis links, Text in der Mitte, rechts die Wissensleiste mit
+       Reitern (Steckbrief, Verwandt, Notizen, Medien). Vorschau beim Überfahren eines Verweises. -->
+  <body class="vb">
+    <div class="fenster-voll">
+      <header class="kopf">
+        <div class="marke"><span class="symbol"><i class="fa-solid fa-book-open"></i></span> Nachschlag</div>
+        <div class="suchanker">
+          <div class="suchfeld">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span class="platzhalter">fuchs in der stadt</span>
+            <span class="buchwahl"><i class="fa-solid fa-book"></i>Deutsch</span>
+            <kbd>/</kbd>
+          </div>
+          <div data-vorschlaege></div>
+        </div>
+        <div class="kopf-rechts">
+          <span class="pille gut text-weg" title="Bedeutungssuche über Fundus und Index der Bücher antworten"><span class="punkt"></span>Bedeutung + Index</span>
+          <button class="rund" title="Hilfe"><i class="fa-solid fa-circle-question"></i></button>
+        </div>
+      </header>
+      <div></div>
+      <div class="geruest">
+        <nav class="leiste-schmal">
+          <button title="Start"><i class="fa-solid fa-house"></i></button>
+          <button class="aktiv" title="Artikel"><i class="fa-solid fa-book-open"></i></button>
+          <button title="Stöbern"><i class="fa-solid fa-shuffle"></i></button>
+          <button title="Medien"><i class="fa-solid fa-images"></i></button>
+          <button title="Merkzettel"><i class="fa-solid fa-bookmark"></i></button>
+          <button title="Notizen"><i class="fa-solid fa-note-sticky"></i></button>
+          <button title="Themen"><i class="fa-solid fa-layer-group"></i></button>
+          <button class="unten" title="Einstellungen"><i class="fa-solid fa-sliders"></i></button>
+        </nav>
+
+        <section class="artikelseite">
+          <div class="artikel-kopf">
+            <div class="pfad"><i class="fa-solid fa-book"></i><b>Wikipedia (Deutsch)</b><i class="fa-solid fa-chevron-right"></i>Rotfuchs</div>
+            <h1>Rotfuchs</h1>
+            <div class="werkzeuge">
+              <button class="knopf an" title="Auf dem Merkzettel"><i class="fa-solid fa-bookmark"></i><span class="wort">Gemerkt</span></button>
+              <button class="knopf" title="Notiz zum Artikel"><i class="fa-solid fa-note-sticky"></i><span class="wort">Notiz</span></button>
+              <button class="knopf" title="Vorlesen ab hier"><i class="fa-solid fa-volume-high"></i><span class="wort">Vorlesen</span></button>
+              <button class="knopf" title="Zu einem Thema legen"><i class="fa-solid fa-layer-group"></i><span class="wort">Thema</span></button>
+              <div class="rechts">
+                <span class="sprachwahl"><i class="fa-solid fa-language"></i>auch auf Englisch</span>
+                <button class="rund" title="Lesegröße"><i class="fa-solid fa-text-height"></i></button>
+              </div>
+            </div>
+          </div>
+          <div class="rollfeld">
+            <div class="lesen">
+              <nav class="inhalt">
+                <div class="inhalt-titel">Inhalt</div>
+                <ol>
+                  <li class="gelesen"><a href="#"><span class="nr">1</span>Merkmale</a></li>
+                  <li class="unter aktiv"><a href="#">Allgemeine Merkmale</a></li>
+                  <li class="unter"><a href="#">Spuren</a></li>
+                  <li class="unter"><a href="#">Stimme</a></li>
+                  <li><a href="#"><span class="nr">2</span>Verbreitung und Lebensraum</a></li>
+                  <li><a href="#"><span class="nr">3</span>Lebensweise</a></li>
+                  <li><a href="#"><span class="nr">4</span>Systematik</a></li>
+                  <li><a href="#"><span class="nr">5</span>Nutzung, Bejagung, Artenschutz</a></li>
+                  <li><a href="#"><span class="nr">6</span>Kulturelle Bedeutung</a></li>
+                </ol>
+                <div class="lesestand"><span style="width: 12%"></span></div>
+                <div class="lesestand-text">12 % gelesen · noch 33 Min</div>
+              </nav>
+              <div style="position: relative; min-width: 0">
+                <article class="artikel" data-artikel></article>
+                <div class="vorschau-karte" style="top: 128px; left: 120px">
+                  <div class="vk-kopf">
+                    <div><b>Wildhund</b>Mehrdeutiger Begriff, gemeint sein kann:</div>
+                  </div>
+                  <div class="verwandt" style="padding: 0 var(--a2) var(--a2)">
+                    <a href="#"><span class="ohne-bild"><i class="fa-solid fa-paw"></i></span><span><span class="t">Afrikanischer Wildhund</span><span class="u">Hyänenhund</span></span></a>
+                    <a href="#"><span class="ohne-bild"><i class="fa-solid fa-paw"></i></span><span><span class="t">Asiatischer Wildhund</span><span class="u">Rothund</span></span></a>
+                  </div>
+                  <div class="vk-fuss"><span><i class="fa-solid fa-signs-post"></i>Begriffsklärung öffnen</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="wissen">
+          <div class="reiter">
+            <button class="aktiv"><i class="fa-solid fa-id-card"></i>Steckbrief</button>
+            <button><i class="fa-solid fa-diagram-project"></i>Verwandt</button>
+            <button><i class="fa-solid fa-note-sticky"></i><span>Notizen <span class="zahl">1</span></span></button>
+            <button><i class="fa-solid fa-images"></i><span>Medien <span class="zahl">32</span></span></button>
+          </div>
+          <div class="rollfeld">
+            <div data-steckbrief-ziel></div>
+            <h4><i class="fa-solid fa-wand-magic-sparkles"></i>Ähnlich<span class="weg">Bedeutung</span></h4>
+            <div class="verwandt">
+              <a href="#"><img src="beispiel/silberfuchs.jpg" alt=""><span><span class="t">Silberfuchs</span><span class="u">Farbvariante des Rotfuchses</span></span></a>
+              <a href="#"><span class="ohne-bild"><i class="fa-solid fa-paw"></i></span><span><span class="t">Polarfuchs</span><span class="u">Fuchs der arktischen Tundra</span></span></a>
+              <a href="#"><img src="beispiel/stadtfuchs.jpg" alt=""><span><span class="t">Stadtfuchs</span><span class="u">Rotfüchse im Siedlungsraum</span></span></a>
+            </div>
+            <h4><i class="fa-solid fa-arrow-right-to-bracket"></i>Verweist hierher</h4>
+            <div class="verwandt">
+              <a href="#"><span class="ohne-bild"><i class="fa-solid fa-book"></i></span><span><span class="t">Fuchsjagd</span><span class="u">Jagd auf Füchse mit Hunden</span></span></a>
+              <a href="#"><span class="ohne-bild"><i class="fa-solid fa-book"></i></span><span><span class="t">Tollwut</span><span class="u">Virusinfektion, Fuchs als Hauptträger</span></span></a>
+            </div>
+            <h4><i class="fa-solid fa-note-sticky"></i>Deine Notiz</h4>
+            <div class="notiz-karte">
+              <div class="zitat">"Die häufigste Farbvariante ist der Birkfuchs ..."</div>
+              Birkfuchs = häufigste Farbe, mit Bild aus dem Wildpark vergleichen
+              <div class="wann">29.10.2026 · Abschnitt Allgemeine Merkmale</div>
+            </div>
+            <h4><i class="fa-solid fa-images"></i>Medien</h4>
+            <div class="medienreihe">
+              <img src="beispiel/tierpark.jpg" alt=""><img src="beispiel/silberfuchs.jpg" alt=""><img src="beispiel/schnee.jpg" alt="">
+            </div>
+          </div>
+        </aside>
+      </div>
+      <footer class="fuss">
+        <div class="verbindungen">
+          <span class="verbindung"><span class="punkt"></span>Bibliothek: 5 Bücher</span>
+          <span class="verbindung"><span class="punkt"></span>Fundus</span>
+          <span class="verbindung"><span class="punkt"></span>Leitstelle</span>
+        </div>
+        <div class="rechts"><span>Bilder in groß: 18.240 geladen</span></div>
+      </footer>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

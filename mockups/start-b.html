@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Startseite, Variante B: Magazin</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Startseite B: wie ein Magazin. Groß ein Artikel für heute (aus den eigenen Themen gewählt, mit Grund), daneben
+       Weiterlesen und Merkzettel; darunter das Thema als Reihe, Stöbern und die Bibliothek. Suche im Kopf wie im Artikel. -->
+  <body class="start">
+    <div class="fenster-voll">
+      <header class="kopf">
+        <div class="marke"><span class="symbol"><i class="fa-solid fa-book-open"></i></span> Nachschlag</div>
+        <div class="suchanker">
+          <div class="suchfeld">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span class="platzhalter">Begriff, Name oder eine Frage in eigenen Worten</span>
+            <span class="buchwahl"><i class="fa-solid fa-book"></i>Alle Bücher</span>
+            <kbd>/</kbd>
+          </div>
+          <div data-vorschlaege></div>
+        </div>
+        <div class="kopf-rechts">
+          <span class="pille gut text-weg" title="Bedeutungssuche über Fundus und Index der Bücher antworten"><span class="punkt"></span>Bedeutung + Index</span>
+          <button class="rund" title="Hilfe"><i class="fa-solid fa-circle-question"></i></button>
+        </div>
+      </header>
+      <div></div>
+      <div class="geruest">
+        <nav class="nav">
+          <div class="nav-gruppe">Lesen</div>
+          <a class="nav-eintrag aktiv"><i class="fa-solid fa-house"></i>Start</a>
+          <a class="nav-eintrag"><i class="fa-solid fa-book-open"></i>Artikel</a>
+          <a class="nav-eintrag"><i class="fa-solid fa-shuffle"></i>Stöbern</a>
+          <a class="nav-eintrag"><i class="fa-solid fa-images"></i>Medien</a>
+          <a class="nav-eintrag"><i class="fa-solid fa-swatchbook"></i>Bibliothek<span class="zahl">5</span></a>
+          <div class="nav-gruppe">Meins</div>
+          <a class="nav-eintrag"><i class="fa-solid fa-bookmark"></i>Merkzettel<span class="zahl">12</span></a>
+          <a class="nav-eintrag"><i class="fa-solid fa-note-sticky"></i>Notizen<span class="zahl">7</span></a>
+          <a class="nav-eintrag"><i class="fa-solid fa-layer-group"></i>Themen<span class="zahl">4</span></a>
+          <a class="nav-eintrag"><i class="fa-solid fa-clock-rotate-left"></i>Verlauf</a>
+          <div class="nav-gruppe">App</div>
+          <a class="nav-eintrag"><i class="fa-solid fa-sliders"></i>Einstellungen</a>
+          <div class="nav-fuss">
+            <div class="konto"><span class="bild">A</span><span><div class="wer">admin</div><div class="wie">angemeldet</div></span></div>
+          </div>
+        </nav>
+
+        <section class="seite">
+          <div class="rollfeld">
+            <div class="start-innen">
+              <div class="buehne">
+                <a class="aufmacher" href="#">
+                  <div class="bildflaeche"><img src="beispiel/saturn_planet_.jpg" alt="Saturn"></div>
+                  <div class="koerper">
+                    <span class="etikett"><i class="fa-solid fa-sun"></i>Heute für dich</span>
+                    <span class="t">Saturn (Planet)</span>
+                    <p>Der Saturn ist von der Sonne aus gesehen der sechste Planet des Sonnensystems und mit einem Äquatordurchmesser von etwa 120.500 Kilometern nach Jupiter der zweitgrößte. Wegen seines auffallenden, schon im kleinen Fernrohr sichtbaren Ringsystems wird er oft auch der Ringplanet genannt.</p>
+                    <div class="warum"><i class="fa-solid fa-wand-magic-sparkles"></i>Gewählt, weil er zu deinem Thema <b>Sternenhimmel</b> passt und du ihn noch nicht gelesen hast</div>
+                  </div>
+                </a>
+                <div class="seitenspalte">
+                  <section>
+                    <div class="abschnitt-kopf"><h2><i class="fa-solid fa-book-open-reader"></i>Weiterlesen</h2><a class="alle" href="#">Verlauf</a></div>
+                    <div class="liste kompakt">
+                      <a href="artikel-a.html"><img src="beispiel/fuchs.jpg" alt=""><span><span class="t">Rotfuchs</span><span class="u">bei Lebensraum, Streifgebietsgröße</span>
+                        <span class="stand"><span class="spur"><span style="width: 34%"></span></span>34 %</span></span></a>
+                      <a href="#"><img src="beispiel/andromedagalaxie.jpg" alt=""><span><span class="t">Andromedagalaxie</span><span class="u">bei Entdeckungsgeschichte</span>
+                        <span class="stand"><span class="spur"><span style="width: 61%"></span></span>61 %</span></span></a>
+                      <a href="#"><img src="beispiel/photosynthese.jpeg" alt=""><span><span class="t">Photosynthese</span><span class="u">bei Lichtreaktion</span>
+                        <span class="stand"><span class="spur"><span style="width: 12%"></span></span>12 %</span></span></a>
+                    </div>
+                  </section>
+                  <section>
+                    <div class="abschnitt-kopf"><h2><i class="fa-solid fa-bookmark"></i>Merkzettel</h2><span class="neben">12</span><a class="alle" href="#">Alle</a></div>
+                    <div class="liste kompakt">
+                      <a href="#"><img src="beispiel/stadtfuchs.jpg" alt=""><span><span class="t">Stadtfuchs</span><span class="u">gemerkt aus Rotfuchs · heute</span></span></a>
+                      <a href="#"><img src="beispiel/polarfuchs.jpg" alt=""><span><span class="t">Polarfuchs</span><span class="u">Thema Füchse · gestern</span></span></a>
+                    </div>
+                  </section>
+                </div>
+              </div>
+
+              <section>
+                <div class="abschnitt-kopf"><h2><i class="fa-solid fa-layer-group"></i>Aus deinem Thema Sternenhimmel</h2><span class="neben">23 Artikel, 3 neu passend</span><a class="alle" href="#">Thema öffnen</a></div>
+                <div class="reihe">
+                  <a class="leskarte" href="#"><div class="bildflaeche enthalten" style="background: #05070b"><img src="beispiel/jupiter_planet_.png" alt=""></div>
+                    <div class="koerper"><span class="t">Jupiter (Planet)</span><span class="u">der größte Planet des Sonnensystems, fünfter von der Sonne aus</span></div></a>
+                  <a class="leskarte" href="#"><div class="bildflaeche enthalten" style="background: #05070b"><img src="beispiel/mond.jpg" alt=""></div>
+                    <div class="koerper"><span class="t">Mond</span><span class="u">der derzeit einzige bekannte natürliche Satellit der Erde</span></div></a>
+                  <a class="leskarte" href="#"><div class="bildflaeche"><img src="beispiel/schwarzes_loch.jpg" alt=""></div>
+                    <div class="koerper"><span class="t">Schwarzes Loch</span><span class="u">Objekt, dessen Masse die Raumzeit so stark krümmt, dass nichts entkommt</span><span class="neu">neu passend</span></div></a>
+                  <a class="leskarte" href="#"><div class="bildflaeche"><img src="beispiel/andromedagalaxie.jpg" alt=""></div>
+                    <div class="koerper"><span class="t">Andromedagalaxie</span><span class="u">die am nächsten zur Milchstraße gelegene Spiralgalaxie</span>
+                      <div class="stand"><span class="spur"><span style="width: 61%"></span></span><span class="zahl">61 %</span></div></div></a>
+                </div>
+              </section>
+
+              <section>
+                <div class="abschnitt-kopf"><h2><i class="fa-solid fa-shuffle"></i>Stöbern</h2><a class="alle" href="#">Mehr stöbern</a></div>
+                <div class="stoebern">
+                  <div class="kachel-zufall">
+                    <div>
+                      <span class="etikett"><i class="fa-solid fa-dice"></i>Zufallsfund</span>
+                      <span class="t">Sachigo River</span>
+                      <p>Der Sachigo River ist ein 467 km langer linker Nebenfluss des Severn River im Nordwesten der kanadischen Provinz Ontario.</p>
+                    </div>
+                    <img src="beispiel/sachigo_river.png" alt="">
+                    <div class="knopfreihe"><button class="knopf"><i class="fa-solid fa-book-open"></i>Lesen</button><button class="knopf still"><i class="fa-solid fa-rotate"></i>Neuer Zufall</button></div>
+                  </div>
+                  <a class="themenkarte" href="#">
+                    <span class="etikett"><i class="fa-solid fa-layer-group"></i>Dein Thema</span>
+                    <div class="collage"><img src="beispiel/fuchs.jpg" alt=""><img src="beispiel/polarfuchs.jpg" alt=""><img src="beispiel/silberfuchs.jpg" alt=""></div>
+                    <span class="t">Füchse</span><span class="u">9 Artikel · von Hand zusammengestellt</span>
+                  </a>
+                  <a class="themenkarte neues-thema" href="#">
+                    <i class="fa-solid fa-plus"></i>
+                    <span class="t">Neues Thema</span><span class="u">von Hand oder aus einer Suche, die mitwächst</span>
+                  </a>
+                </div>
+              </section>
+
+              <section>
+                <div class="abschnitt-kopf"><h2><i class="fa-solid fa-swatchbook"></i>Bibliothek</h2><span class="neben">5 Bücher, 1 lädt</span><a class="alle" href="#">Verwalten</a></div>
+                <div class="buecher">
+                  <div class="buchkarte"><span class="sym"><i class="fa-solid fa-book"></i></span><span class="t">Wikipedia (Deutsch)</span>
+                    <span class="u"><span class="zahl">5,04 Mio</span> Einträge · Stand 15.01.2026</span>
+                    <div class="faehig"><span class="faehigkeit an"><i class="fa-solid fa-check"></i>Index</span><span class="faehigkeit teil"><i class="fa-solid fa-wand-magic-sparkles"></i>Bedeutung 37 %</span><span class="faehigkeit an"><i class="fa-solid fa-image"></i>Bilder</span></div></div>
+                  <div class="buchkarte"><span class="sym"><i class="fa-solid fa-book"></i></span><span class="t">Wikipedia (Englisch)</span>
+                    <span class="u"><span class="zahl">18,98 Mio</span> Einträge · Stand 15.02.2026</span>
+                    <div class="faehig"><span class="faehigkeit an"><i class="fa-solid fa-check"></i>Index</span><span class="faehigkeit an"><i class="fa-solid fa-language"></i>Übersetzen</span><span class="faehigkeit an"><i class="fa-solid fa-image"></i>Bilder</span></div></div>
+                  <div class="buchkarte"><span class="sym"><i class="fa-solid fa-temperature-arrow-up"></i></span><span class="t">Klimawandel</span>
+                    <span class="u"><span class="zahl">4.102</span> Einträge · Stand 17.07.2026</span>
+                    <div class="faehig"><span class="faehigkeit an"><i class="fa-solid fa-check"></i>Index</span><span class="faehigkeit"><i class="fa-solid fa-image"></i>ohne Bilder</span></div></div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+      </div>
+      <footer class="fuss">
+        <div class="verbindungen">
+          <span class="verbindung"><span class="punkt"></span>Bibliothek: 5 Bücher</span>
+          <span class="verbindung"><span class="punkt"></span>Fundus</span>
+          <span class="verbindung"><span class="punkt"></span>Leitstelle</span>
+        </div>
+        <div class="rechts"><span>Bilder in groß: 18.240 geladen</span></div>
+      </footer>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

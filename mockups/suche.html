@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Suchergebnisse</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Suchergebnisse: oben die Frage und der Stand beider Wege, links Filter, in der Mitte die beste Stelle und die
+       gemischte Liste (jeder Treffer zeigt, welcher Weg ihn fand), rechts die Vorschau des gewählten Treffers.
+       ?nurindex=1 zeigt den Rückfall: Bedeutungssuche antwortet nicht, nur Index mit Hinweis. Indextreffer und
+       Ausschnitte echt aus der ZIM (Frage "Füchse in Städten"). -->
+  <body>
+    <div class="fenster-voll">
+      <div data-teil="kopf"></div>
+      <div></div>
+      <div class="geruest">
+        <div data-teil="nav:artikel"></div>
+        <section class="seite">
+          <div class="suchkopf">
+            <div class="zeile">
+              <div class="grosssuche"><div class="suchfeld"><i class="fa-solid fa-magnifying-glass"></i><span class="platzhalter">Füchse in Städten</span><span class="buchwahl"><i class="fa-solid fa-book"></i>Alle Bücher</span></div></div>
+              <span class="segment"><span class="aktiv">Alles</span><span>Artikel</span><span>Stellen</span><span>Medien</span></span>
+            </div>
+            <div class="suchstand">
+              <span class="mit-bedeutung"><span class="weg-marke bedeutung"><i class="fa-solid fa-wand-magic-sparkles"></i>Bedeutung</span> 38 Stellen · <span class="zahl">640 ms</span></span>
+              <span><span class="weg-marke index"><i class="fa-solid fa-magnifying-glass"></i>Index</span> rund 2.000 Artikel · <span class="zahl">11 ms</span></span>
+              <span class="mit-bedeutung">gemischt nach Rang beider Wege</span>
+              <span class="nur-im-index">sortiert nach Index, ohne Bedeutung</span>
+            </div>
+          </div>
+          <div class="fundband nur-index-band" style="background: var(--warn-weich); margin-top: var(--a3)"><i class="fa-solid fa-triangle-exclamation" style="color: var(--warn)"></i>
+            <span><b>Nur Index:</b> die Bedeutungssuche antwortet gerade nicht (der Mac schläft). Treffer passen deshalb nur dem Wortlaut nach; kommt sie zurück, wird die Liste ergänzt.</span>
+            <button class="knopf still"><i class="fa-solid fa-rotate"></i>Erneut versuchen</button></div>
+          <div class="suchseite" style="flex: 1; min-height: 0">
+            <aside class="filterspalte">
+              <div class="filtergruppe"><h4>Bücher</h4>
+                <label class="an"><i class="fa-solid fa-square-check"></i>Wikipedia (Deutsch)<span class="zahl">2.000</span></label>
+                <label class="an"><i class="fa-solid fa-square-check"></i>Wikipedia (Englisch)<span class="zahl">312</span></label>
+                <label class="an"><i class="fa-solid fa-square-check"></i>Klimawandel<span class="zahl">4</span></label>
+                <label class="aus"><i class="fa-regular fa-square"></i>PHP Docs<span class="zahl">0</span></label>
+                <label class="aus"><i class="fa-solid fa-download"></i>Stack Overflow lädt</label>
+              </div>
+              <div class="filtergruppe"><h4>Gefunden über</h4>
+                <label class="an"><i class="fa-solid fa-circle-dot"></i>beide Wege</label>
+                <label><i class="fa-regular fa-circle"></i>nur Bedeutung</label>
+                <label><i class="fa-regular fa-circle"></i>nur Wortlaut</label>
+              </div>
+              <div class="filtergruppe"><h4>Eingrenzen</h4>
+                <label><i class="fa-regular fa-square"></i>nur mit Bild</label>
+                <label><i class="fa-regular fa-square"></i>noch nicht gelesen</label>
+                <label><i class="fa-regular fa-square"></i>in meinen Themen</label>
+                <label><i class="fa-regular fa-square"></i>Englisch übersetzt zeigen</label>
+              </div>
+              <div class="filtergruppe"><h4>Suche</h4>
+                <label><i class="fa-solid fa-bookmark"></i>Suche merken</label>
+                <label><i class="fa-solid fa-layer-group"></i>Als Thema, das mitwächst</label>
+              </div>
+            </aside>
+
+            <div class="rollfeld" style="padding: 0">
+              <div class="ergebnisse">
+                <div class="beste-stelle mit-bedeutung">
+                  <span class="etikett"><i class="fa-solid fa-wand-magic-sparkles"></i>Beste Stelle</span>
+                  <span class="ort"><b>Rotfuchs</b> · Verbreitung und Lebensraum › Lebensraum, Streifgebietsgröße</span>
+                  <blockquote>Die ersten <em>Stadtfüchse wurden in den 1930er Jahren in Londoner Vororten bekannt</em>. Als Ursache wird ein damals neuer Baustil vermutet, bei dem sich ländlich geprägte Gebiete zu locker bebautem Siedlungsraum mit hohem Grünflächenanteil verwandelten.</blockquote>
+                  <div class="knopfreihe"><button class="knopf primaer"><i class="fa-solid fa-arrow-down"></i>Zur Stelle</button><button class="knopf"><i class="fa-solid fa-volume-high"></i>Vorlesen</button><button class="knopf"><i class="fa-solid fa-bookmark"></i>Merken</button><button class="knopf still"><i class="fa-solid fa-chevron-right"></i>Nächste Stelle im Artikel</button></div>
+                </div>
+
+                <div class="treffer gewaehlt mit-bedeutung"><img src="beispiel/fuchs.jpg" alt="">
+                  <div><div class="zeile1"><span class="t">Rotfuchs</span><span class="treffer-abschnitt">› Lebensraum, Streifgebietsgröße</span><span class="marken"><span class="weg-marke bedeutung"><i class="fa-solid fa-wand-magic-sparkles"></i>Bedeutung</span><span class="weg-marke index"><i class="fa-solid fa-magnifying-glass"></i>Index</span></span></div>
+                    <div class="ausschnitt">... für den <em>Großraum Berlin</em> wurden anhand von 2010 bis 2015 erhobenen Daten zwei genetisch unterschiedliche Populationen nachgewiesen, die sich weitgehend mit den Gebieten des <em>städtischen Ballungsraums</em> und des angrenzenden ländlichen Raums deckten.</div></div></div>
+
+                <div class="treffer nur-bedeutung"><span class="ohne-bild"><i class="fa-solid fa-city"></i></span>
+                  <div><div class="zeile1"><span class="t">Stadtökologie</span><span class="treffer-abschnitt">› Einleitung</span><span class="marken"><span class="weg-marke bedeutung"><i class="fa-solid fa-wand-magic-sparkles"></i>Bedeutung</span></span></div>
+                    <div class="ausschnitt">Mit dem Begriff Stadtökologie (bzw. der engl. Entsprechung urban ecology) wird eine Reihe verschiedener Ansätze im Spannungsfeld <em>Stadt und Ökologie</em> bezeichnet.</div></div></div>
+
+                <div class="treffer nur-bedeutung"><span class="ohne-bild" style="color: var(--tuerkis)"><i class="fa-solid fa-language"></i></span>
+                  <div><div class="zeile1"><span class="t">Stadtwildtiere</span><span class="treffer-abschnitt">Urban wildlife</span><span class="marke-buch uebersetzt"><i class="fa-solid fa-language"></i>Englisch, von uns übersetzt</span><span class="marken"><span class="weg-marke bedeutung"><i class="fa-solid fa-wand-magic-sparkles"></i>Bedeutung</span></span></div>
+                    <div class="ausschnitt">Stadtwildtiere sind <em>Wildtiere, die städtische oder vorstädtische Umgebungen</em> oder dicht besiedelte menschliche Siedlungen wie Städte und Stadtparks bewohnen können.</div></div></div>
+
+                <div class="treffer nur-bedeutung"><img src="beispiel/fuchs.jpg" alt="">
+                  <div><div class="zeile1"><span class="t">Rotfuchs</span><span class="treffer-abschnitt">› Lebensraum, Streifgebietsgröße</span><span class="marken"><span class="weg-marke bedeutung"><i class="fa-solid fa-wand-magic-sparkles"></i>Bedeutung</span></span></div>
+                    <div class="ausschnitt">Wälder, Grasland, Äcker und in jüngerer Zeit zunehmend auch <em>Siedlungsgebiete</em> sind unterschiedlich geeignete Lebensräume für die Rotfüchse.</div></div></div>
+
+                <div class="trenner-text mit-bedeutung">nur dem Wortlaut nach, ohne Bezug zur Frage</div>
+
+                <div class="treffer nur-im-index"><img src="beispiel/fuchs.jpg" alt="">
+                  <div><div class="zeile1"><span class="t">Rotfuchs</span><span class="marken"><span class="weg-marke index"><i class="fa-solid fa-magnifying-glass"></i>Index</span></span></div>
+                    <div class="ausschnitt">... Systematik Ordnung: Raubtiere (Carnivora) Unterordnung: Hundeartige (Caniformia) Familie: Hunde (Canidae) Tribus: Echte <em>Füchse</em> (Vulpini) Gattung: Vulpes ...</div></div></div>
+                <div class="treffer weit"><span class="ohne-bild"><i class="fa-solid fa-palette"></i></span>
+                  <div><div class="zeile1"><span class="t">Füchse (Franz Marc)</span><span class="marken"><span class="weg-marke index"><i class="fa-solid fa-magnifying-glass"></i>Index</span></span></div>
+                    <div class="ausschnitt">... in Paris besuchte. Der farbige, orphische Kubismus Delaunays regte Marc ebenso an wie die rhythmischen Zersplitterungen der italienischen Futuristen ...</div></div></div>
+                <div class="treffer weit"><span class="ohne-bild"><i class="fa-solid fa-hockey-puck"></i></span>
+                  <div><div class="zeile1"><span class="t">Lausitzer Füchse</span><span class="marken"><span class="weg-marke index"><i class="fa-solid fa-magnifying-glass"></i>Index</span></span></div>
+                    <div class="ausschnitt">... in Weißwasser (Oberlausitz). Die offizielle Bezeichnung der Profi-Abteilung ist dabei: »EHC "Lausitzer Füchse" Spielbetriebs-GmbH« ...</div></div></div>
+                <div class="treffer weit"><span class="ohne-bild"><i class="fa-solid fa-hockey-puck"></i></span>
+                  <div><div class="zeile1"><span class="t">Füchse Duisburg</span><span class="marken"><span class="weg-marke index"><i class="fa-solid fa-magnifying-glass"></i>Index</span></span></div>
+                    <div class="ausschnitt">... in die Eishockey-Bundesliga 1979, Aufstieg in die Deutsche Eishockey Liga 2005 ...</div></div></div>
+                <div class="treffer weit"><span class="ohne-bild"><i class="fa-solid fa-landmark"></i></span>
+                  <div><div class="zeile1"><span class="t">Gasthof zum Fuchsen (Wemding)</span><span class="marken"><span class="weg-marke index"><i class="fa-solid fa-magnifying-glass"></i>Index</span></span></div>
+                    <div class="ausschnitt">... in Wemding, einer <em>Stadt</em> im schwäbischen Landkreis Donau-Ries in Bayern, wurde 1930 errichtet ...</div></div></div>
+                <button class="knopf" style="align-self: center"><i class="fa-solid fa-chevron-down"></i>Weitere Treffer</button>
+              </div>
+            </div>
+
+            <aside class="vorschau-leiste">
+              <div class="rollfeld">
+                <img src="beispiel/stadtfuchs.jpg" alt="" style="width: 100%; height: 170px; object-fit: cover; border-radius: var(--r3)">
+                <h2>Rotfuchs</h2>
+                <p>Der Rotfuchs ist der einzige mitteleuropäische Vertreter der Füchse und wird daher meistens als "der Fuchs" bezeichnet. Er ist in Europa der häufigste Wildhund.</p>
+                <div class="etikett"><i class="fa-solid fa-list"></i>Treffer in diesem Artikel</div>
+                <div class="abschnitte">
+                  <a href="#" class="treff"><span>Lebensraum, Streifgebietsgröße</span><span class="weg-marke bedeutung">3 Stellen</span></a>
+                  <a href="#"><span>Verbreitungsgebiet</span><span class="weg-marke bedeutung">1 Stelle</span></a>
+                  <a href="#"><span>Nahrung</span><span class="weg-marke index">Wortlaut</span></a>
+                </div>
+                <div style="display: flex; gap: var(--a2); flex-wrap: wrap"><button class="knopf primaer"><i class="fa-solid fa-book-open"></i>Öffnen an der Stelle</button><button class="knopf"><i class="fa-solid fa-bookmark"></i>Gemerkt</button></div>
+              </div>
+            </aside>
+          </div>
+        </section>
+      </div>
+      <div data-teil="fuss"></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Fassungen und Laden</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Bibliothek, Reiter Fassungen und Laden (WIKI-2): oben die laufenden Ladeaufträge mit Schritten (laden, Prüfsumme,
+       öffnen und zählen, umschalten), darunter je abonniertem Buch die drei Plätze vorige, aktiv, neu; unten die Regeln
+       des Bücherladers. Stand und Größen echt (Stack Overflow lädt gerade wirklich auf den Pi). -->
+  <body>
+    <div class="fenster-voll">
+      <div data-teil="kopf"></div>
+      <div></div>
+      <div class="geruest">
+        <div data-teil="nav:bibliothek"></div>
+        <section class="seite einstellungen">
+          <div class="seiten-kopf"><h1>Bibliothek</h1></div>
+          <div class="reiterleiste"><button onclick="location.href='bibliothek.html'">Meine Bücher <span class="zahl">5</span></button><button onclick="location.href='katalog.html'">Katalog</button><button class="aktiv">Fassungen und Laden<span class="reiter-punkt" title="lädt"></span></button></div>
+          <div class="rollfeld">
+            <div class="einstellungen-seite">
+              <div class="abschnitt-kopf" style="margin: 0"><h2><i class="fa-solid fa-download"></i>Laden</h2><span class="neben">1 läuft, 1 wartet · Ordner /mnt/data/zim, frei 1,3 TB</span></div>
+              <div class="auftragskarte">
+                <span class="sym"><i class="fa-solid fa-circle-question"></i></span>
+                <div><span class="t">Stack Overflow</span><div class="u">stackoverflow.com_en_all, Stand 02.07.2026 · neu abonniert</div></div>
+                <div style="display: flex; gap: var(--a2)"><button class="knopf"><i class="fa-solid fa-pause"></i>Anhalten</button></div>
+                <div class="balken-a"><span style="width: 14%"></span></div>
+                <div class="schritte-a"><span class="jetzt"><i class="fa-solid fa-download"></i> Laden 15,6 von 114,9 GB · 11 MB/s · noch etwa 2,5 Std.</span><span><i class="fa-regular fa-circle"></i> Prüfsumme</span><span><i class="fa-regular fa-circle"></i> Öffnen und zählen</span><span><i class="fa-regular fa-circle"></i> In die Bibliothek</span></div>
+              </div>
+              <div class="auftragskarte" style="box-shadow: var(--schatten), inset 3px 0 0 var(--text-3); border-radius: 0">
+                <span class="sym" style="background: var(--flaeche-2); color: var(--text-3)"><i class="fa-solid fa-book"></i></span>
+                <div><span class="t">Wikipedia (Deutsch), neue Fassung 2026-10</span><div class="u">48,6 GB · wartet, bis Stack Overflow fertig ist (immer nur ein Buch zugleich)</div></div>
+                <div style="display: flex; gap: var(--a2)"><button class="knopf still"><i class="fa-solid fa-arrow-up"></i>Vorziehen</button></div>
+              </div>
+
+              <div class="abschnitt-kopf" style="margin: var(--a4) 0 0"><h2><i class="fa-solid fa-code-branch"></i>Fassungen je Buch</h2><span class="neben">vorige bleibt als Rückfall, bis die neue eingelaufen ist</span></div>
+              <table class="fassungen-tabelle">
+                <thead><tr><th>Buch</th><th>Vorige</th><th>Aktiv</th><th>Neu</th><th></th></tr></thead>
+                <tbody>
+                  <tr><td>Wikipedia (Deutsch)</td>
+                    <td><div class="platz-f leer"><span class="f">-</span><span class="z">keine</span></div></td>
+                    <td><div class="platz-f aktiv"><span class="f">2026-01</span><span class="z">aktiv · 52,4 GB · Bedeutung 37 %</span></div></td>
+                    <td><div class="platz-f neu"><span class="f">2026-10</span><span class="z">im Katalog · wartet aufs Laden</span></div></td>
+                    <td><button class="knopf still"><i class="fa-solid fa-ellipsis"></i></button></td></tr>
+                  <tr><td>Wikipedia (Englisch)</td>
+                    <td><div class="platz-f leer"><span class="f">-</span><span class="z">keine</span></div></td>
+                    <td><div class="platz-f aktiv"><span class="f">2026-02</span><span class="z">aktiv · 124,0 GB</span></div></td>
+                    <td><div class="platz-f neu"><span class="f">2026-08</span><span class="z">im Katalog · 127,4 GB · nur gemeldet</span></div></td>
+                    <td><button class="knopf still"><i class="fa-solid fa-ellipsis"></i></button></td></tr>
+                  <tr><td>PHP Docs</td>
+                    <td><div class="platz-f leer"><span class="f">-</span><span class="z">keine</span></div></td>
+                    <td><div class="platz-f aktiv"><span class="f">2026-08</span><span class="z">aktiv · aktuell</span></div></td>
+                    <td><div class="platz-f leer"><span class="f">-</span><span class="z">nichts Neueres</span></div></td>
+                    <td><button class="knopf still"><i class="fa-solid fa-ellipsis"></i></button></td></tr>
+                  <tr><td>Beispiel nach dem Umschalten</td>
+                    <td><div class="platz-f vorige"><span class="f">2026-01</span><span class="z">Rückfall · wird nach 14 Tagen entfernt</span></div></td>
+                    <td><div class="platz-f aktiv"><span class="f">2026-10</span><span class="z">seit 3 Tagen aktiv · Fundus bettet Änderungen ein</span></div></td>
+                    <td><div class="platz-f leer"><span class="f">-</span><span class="z">nichts Neueres</span></div></td>
+                    <td><button class="knopf still"><i class="fa-solid fa-rotate-left"></i>Zurück</button></td></tr>
+                </tbody>
+              </table>
+
+              <div class="karte">
+                <h2><i class="fa-solid fa-sliders"></i>Regeln des Bücherladers</h2>
+                <div class="feld"><div class="was"><div class="name">Sprachen im Katalog</div><div class="beschreibung">Andere Sprachen erscheinen im Katalog nicht.</div></div>
+                  <span class="wert-rechts"><span class="chip an"><i class="fa-solid fa-square-check"></i>Deutsch</span><span class="chip an"><i class="fa-solid fa-square-check"></i>Englisch</span><span class="chip"><i class="fa-solid fa-square"></i>Mehrsprachige</span></span></div>
+                <div class="feld"><div class="was"><div class="name">Nach neuen Fassungen sehen</div><div class="beschreibung">Für alle abonnierten Bücher.</div></div>
+                  <span class="segment"><span>Täglich</span><span class="aktiv">Wöchentlich</span><span>Monatlich</span></span></div>
+                <div class="feld"><div class="was"><div class="name">Neue Fassung</div><div class="beschreibung">Melden zeigt sie hier und auf der Startseite; Laden holt sie selbst; Umschalten bleibt in beiden Fällen eine eigene Regel.</div></div>
+                  <span class="segment"><span>Nur melden</span><span class="aktiv">Laden</span></span></div>
+                <div class="feld"><div class="was"><div class="name">Umschalten auf die neue Fassung</div><div class="beschreibung">Erst nach geprüfter Prüfsumme und erfolgreichem Öffnen; Lesen und Suche setzen dabei nicht aus.</div></div>
+                  <span class="segment"><span>Von selbst</span><span class="aktiv">Nach Bestätigung</span></span></div>
+                <div class="feld"><div class="was"><div class="name">Vorige Fassung behalten</div><div class="beschreibung">Als Rückfall; danach wird sie entfernt, nie früher, als Fundus die Änderungen eingebettet hat.</div></div>
+                  <span class="wert-zahl"><button class="knopf"><i class="fa-solid fa-minus"></i></button><b>14</b><button class="knopf"><i class="fa-solid fa-plus"></i></button><span class="einheit">Tage</span></span></div>
+                <div class="feld"><div class="was"><div class="name">Laden wann</div><div class="beschreibung">Ein Buch nach dem anderen; fortsetzbar nach Abbruch.</div></div>
+                  <span class="segment"><span>Immer</span><span class="aktiv">Nachts zuerst</span><span>Nur nachts</span></span></div>
+                <div class="feld"><div class="was"><div class="name">Platz für Bücher höchstens</div><div class="beschreibung">Reicht der Platz für eine neue Fassung nicht, wird gemeldet statt geladen.</div></div>
+                  <div class="platzbalken">
+                    <span class="wert-zahl"><button class="knopf"><i class="fa-solid fa-minus"></i></button><b>1.000</b><button class="knopf"><i class="fa-solid fa-plus"></i></button><span class="einheit">GB, belegt 176,5 GB + 15,6 GB im Laden</span></span>
+                    <span class="spur"><span class="zim" style="width: 17.6%"></span><span class="bilder" style="width: 1.6%"></span></span>
+                    <span class="legende"><span><i class="fa-solid fa-square" style="color: var(--stahl)"></i> Bücher</span><span><i class="fa-solid fa-square" style="color: var(--akzent-flaeche)"></i> im Laden</span></span>
+                  </div></div>
+                <div class="feld"><div class="was"><div class="name">Quelle</div><div class="beschreibung">Adresse des Katalogs der Bücher; Spiegel in der Nähe werden bevorzugt.</div></div>
+                  <span class="eingabe-schein">opds.library.kiwix.org/catalog/v2 · Spiegel: Erlangen</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div data-teil="fuss"></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

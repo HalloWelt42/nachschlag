@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Katalog und Fassungen am Telefon</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Telefon: Katalog als Liste nach Art, Fassungen und Laden mit dem laufenden Auftrag. -->
+  <body style="background: var(--hg)">
+    <div class="telefone">
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:41</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf"><button class="rund still" title="Zurück"><i class="fa-solid fa-chevron-left"></i></button><h1>Katalog</h1><button class="rund still" title="Suchen"><i class="fa-solid fa-magnifying-glass"></i></button></div>
+        <div class="t-inhalt t-hg">
+          <div class="filterzeile" style="margin-bottom: 4px"><span class="chip wahl an">Deutsch</span><span class="chip wahl an">Englisch</span><span class="chip wahl">nur mit Lesedesign</span></div>
+          <div class="t-gruppe"><span>Nachschlagewerke</span></div>
+          <div class="liste kompakt">
+            <a href="#"><span class="ohne-bild" style="color: var(--petrol)"><i class="fa-solid fa-book"></i></span><span><span class="t">Wikipedia</span><span class="u">abonniert · neue Fassung 10/2026</span></span></a>
+            <a href="#"><span class="ohne-bild"><i class="fa-solid fa-suitcase"></i></span><span><span class="t">Wikivoyage</span><span class="u">1,12 GB · 33.096 Einträge</span></span></a>
+            <a href="#"><span class="ohne-bild"><i class="fa-solid fa-book-open-reader"></i></span><span><span class="t">Wikibooks</span><span class="u">3,37 GB · 43.602 Einträge</span></span></a>
+          </div>
+          <div class="t-gruppe"><span>Dokumentation</span></div>
+          <div class="liste kompakt">
+            <a href="#"><span class="ohne-bild" style="color: var(--violett)"><i class="fa-solid fa-code"></i></span><span><span class="t">PHP Docs</span><span class="u">abonniert · aktuell</span></span></a>
+            <a href="#"><span class="ohne-bild"><i class="fa-solid fa-code"></i></span><span><span class="t">Python Docs</span><span class="u">unter 10 MB · 514 Einträge</span></span></a>
+          </div>
+          <div class="t-gruppe"><span>Frage und Antwort</span></div>
+          <div class="liste kompakt">
+            <a href="#"><span class="ohne-bild" style="color: var(--info)"><i class="fa-solid fa-download"></i></span><span><span class="t">Stack Overflow</span><span class="u">lädt · 15,6 von 114,9 GB</span><span class="stand"><span class="spur"><span style="width: 14%; background: var(--info)"></span></span>14 %</span></span></a>
+          </div>
+        </div>
+        <div class="t-leiste">
+          <button><i class="fa-solid fa-house"></i>Start</button>
+          <button><i class="fa-solid fa-shuffle"></i>Stöbern</button>
+          <button><i class="fa-solid fa-bookmark"></i>Merkzettel</button>
+          <button><i class="fa-solid fa-layer-group"></i>Themen</button>
+          <button class="aktiv"><i class="fa-solid fa-ellipsis"></i>Mehr</button>
+        </div>
+      </div></div>
+
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:42</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf"><button class="rund still" title="Zurück"><i class="fa-solid fa-chevron-left"></i></button><h1>Fassungen und Laden</h1></div>
+        <div class="t-inhalt t-hg" style="display: flex; flex-direction: column; gap: 10px">
+          <div class="auftragskarte" style="grid-template-columns: 40px minmax(0, 1fr)">
+            <span class="sym" style="width: 40px; height: 40px"><i class="fa-solid fa-circle-question"></i></span>
+            <div><span class="t">Stack Overflow</span><div class="u">11 MB/s · noch etwa 2,5 Std.</div></div>
+            <div class="balken-a"><span style="width: 14%"></span></div>
+            <div class="schritte-a"><span class="jetzt">Laden 15,6 von 114,9 GB</span><span>dann Prüfsumme</span></div>
+          </div>
+          <div class="t-gruppe" style="padding-top: 8px"><span>Wikipedia (Deutsch)</span></div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px">
+            <div class="platz-f leer" style="min-width: 0"><span class="f">-</span><span class="z">vorige</span></div>
+            <div class="platz-f aktiv" style="min-width: 0"><span class="f">2026-01</span><span class="z">aktiv</span></div>
+            <div class="platz-f neu" style="min-width: 0"><span class="f">2026-10</span><span class="z">neu, wartet</span></div>
+          </div>
+          <div class="t-gruppe" style="padding-top: 8px"><span>Wikipedia (Englisch)</span></div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px">
+            <div class="platz-f leer" style="min-width: 0"><span class="f">-</span><span class="z">vorige</span></div>
+            <div class="platz-f aktiv" style="min-width: 0"><span class="f">2026-02</span><span class="z">aktiv</span></div>
+            <div class="platz-f neu" style="min-width: 0"><span class="f">2026-08</span><span class="z">gemeldet</span></div>
+          </div>
+          <button class="knopf primaer" style="justify-content: center; margin-top: 8px"><i class="fa-solid fa-download"></i>Neue Fassungen laden</button>
+        </div>
+        <div class="t-leiste">
+          <button><i class="fa-solid fa-house"></i>Start</button>
+          <button><i class="fa-solid fa-shuffle"></i>Stöbern</button>
+          <button><i class="fa-solid fa-bookmark"></i>Merkzettel</button>
+          <button><i class="fa-solid fa-layer-group"></i>Themen</button>
+          <button class="aktiv"><i class="fa-solid fa-ellipsis"></i>Mehr</button>
+        </div>
+      </div></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>
