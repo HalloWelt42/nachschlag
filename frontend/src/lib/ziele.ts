@@ -6,6 +6,7 @@ export interface Herkunft {
   frage?: string;
   abschnitt?: string;
   weg?: string;
+  notiz?: string;               // zu dieser Notiz springen (aus der Seite Notizen)
 }
 
 export function lesenZiel(buch: string, pfad: string, herkunft: Herkunft = {}, anker = ""): string {
@@ -13,6 +14,7 @@ export function lesenZiel(buch: string, pfad: string, herkunft: Herkunft = {}, a
   if (herkunft.frage) p.set("frage", herkunft.frage);
   if (herkunft.abschnitt) p.set("abschnitt", herkunft.abschnitt);
   if (herkunft.weg) p.set("weg", herkunft.weg);
+  if (herkunft.notiz) p.set("notiz", herkunft.notiz);
   if (anker) p.set("anker", anker);
   const zusatz = p.toString();
   return `lesen/${buch}/${pfad}${zusatz ? "?" + zusatz : ""}`;

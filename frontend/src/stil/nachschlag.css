@@ -435,10 +435,81 @@ button.leskarte { border: 0; padding: 0; font: inherit; text-align: left; cursor
                         white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rubrik .code-liste a:hover { text-decoration: underline; }
 
+/* ----- Notizen (Entwürfe notizen.html, telefon-themen.html): Markierungen im Text, Leiste an der Auswahl, Blatt ----- */
+.artikel-text mark.notiz { background: color-mix(in srgb, var(--akzent-flaeche) 26%, transparent); color: inherit; border-radius: 2px; padding: 0 1px; cursor: pointer; }
+.artikel-text .notiz-marke { display: inline-grid; place-items: center; width: 22px; height: 22px; margin: 0 2px; border-radius: var(--r1); vertical-align: 2px;
+                             font-size: var(--marke); background: var(--akzent-flaeche); color: var(--auf-akzent); cursor: pointer; }
+.werkzeuge .knopf .zahl { font-family: var(--schrift-zahl); font-size: var(--marke); color: var(--text-3); }
+.auswahl-leiste { position: fixed; z-index: 45; transform: translateY(-100%); display: flex; gap: 2px; padding: 6px; border-radius: 14px; background: var(--text);
+                  box-shadow: 0 8px 24px color-mix(in srgb, var(--schattenfarbe) 30%, transparent); }
+.auswahl-leiste.unten { transform: none; }
+.auswahl-leiste button { border: 0; background: transparent; color: var(--hg); font: inherit; font-size: var(--marke); display: flex; flex-direction: column;
+                         align-items: center; gap: 3px; padding: 5px 9px; border-radius: var(--r2); cursor: pointer; }
+.auswahl-leiste button:hover { background: color-mix(in srgb, var(--hg) 16%, transparent); }
+.auswahl-leiste button i { font-size: 17px; }
+.notizblatt { position: fixed; z-index: 40; right: var(--a5); bottom: calc(var(--fuss-hoehe) + var(--a4)); width: min(440px, calc(100vw - 2 * var(--a4)));
+              max-height: calc(100dvh - var(--kopf-hoehe) - var(--fuss-hoehe) - 2 * var(--a4)); overflow-y: auto; display: flex; flex-direction: column; gap: var(--a3);
+              padding: var(--a3) var(--a4) var(--a4); background: var(--leiste); border-radius: var(--r3);
+              box-shadow: 0 12px 40px color-mix(in srgb, var(--schattenfarbe) 28%, transparent), 0 0 0 1px var(--rand); }
+.notizblatt .blatt-griff { display: none; }
+.notizblatt .blatt-kopf { display: flex; align-items: center; gap: var(--a3); }
+.notizblatt .blatt-kopf b { flex: 1; font-size: var(--titel); font-weight: 600; }
+.notiz-bearbeiten { display: flex; flex-direction: column; gap: var(--a3); }
+.notiz-bearbeiten .feld-titel { font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; margin-bottom: calc(-1 * var(--a2)); }
+.notiz-bearbeiten .zitatbox { display: flex; flex-direction: column; gap: 4px; padding: var(--a2) var(--a3); background: var(--flaeche); font-size: var(--klein); color: var(--text-2);
+                              box-shadow: inset 3px 0 0 var(--akzent-flaeche); border-radius: 0; overflow-wrap: anywhere; }
+.notiz-bearbeiten .zitatbox b { color: var(--text); font-weight: 600; }
+.notiz-bearbeiten .zitatbox .zitat { font-style: italic; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
+.notiz-bearbeiten .schreibfeld { min-height: 150px; resize: vertical; padding: var(--a3); border-radius: var(--r2); background: var(--flaeche); color: var(--text);
+                                 border: 1px solid var(--akzent-flaeche); box-shadow: 0 0 0 3px var(--akzent-weich); font: inherit; font-size: var(--gross); line-height: 1.55; }
+.notiz-bearbeiten .schreibfeld:focus { outline: none; }
+.notiz-bearbeiten .gespeichert { font-size: var(--marke); color: var(--gut); display: flex; gap: 6px; align-items: center; }
+.notiz-bearbeiten .gespeichert.fehlt { color: var(--gefahr); }
+.notiz-bearbeiten .notiz-knoepfe { display: flex; flex-wrap: wrap; gap: var(--a2); }
+.notiz-bearbeiten .fundband { margin: 0; flex-wrap: wrap; }
+.deine-notizen { clear: both; margin-top: var(--a6); display: flex; flex-direction: column; gap: var(--a2); }
+.deine-notizen h2 { display: flex; align-items: center; gap: var(--a2); margin: 0 0 var(--a2); font-size: var(--titel); font-weight: 600; }
+.deine-notizen h2 i { color: var(--akzent); }
+.deine-notizen h2 .zahl { font-family: var(--schrift-zahl); font-size: var(--marke); color: var(--text-3); font-weight: 400; }
+.notiz-karte { display: flex; flex-direction: column; gap: 4px; width: 100%; padding: var(--a2) var(--a3); border: 0; background: var(--flaeche); color: var(--text);
+               font: inherit; font-size: var(--klein); text-align: left; cursor: pointer; box-shadow: inset 3px 0 0 var(--akzent-flaeche); border-radius: 0; overflow-wrap: anywhere; }
+.notiz-karte:hover { background: var(--flaeche-2); }
+.notiz-karte .zitat { color: var(--text-3); font-style: italic; }
+.notiz-karte .wann { color: var(--text-3); font-size: var(--marke); font-family: var(--schrift-zahl); }
+
+/* Seite Notizen: Liste nach Artikeln, rechts die gewählte Notiz (Leiste des Appkerns) */
+.notizseite { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 380px; }
+.notizseite .meins-suche { flex: 1 1 260px; }
+.notiz-gruppe { display: flex; flex-direction: column; gap: var(--a2); }
+.notiz-gruppe .gruppenkopf { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2) var(--a3); padding: 0; border: 0; background: transparent; color: var(--text);
+                             font: inherit; text-align: left; cursor: pointer; }
+.notiz-gruppe .gruppenkopf img, .notiz-gruppe .gruppenkopf .ohne-bild { width: 44px; height: 34px; object-fit: cover; border-radius: var(--r1); background: var(--flaeche-2);
+                                                                         display: grid; place-items: center; color: var(--text-3); }
+.notiz-gruppe .gruppenkopf b { font-size: var(--titel); font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.notiz-gruppe .gruppenkopf .neben { color: var(--text-3); font-size: var(--klein); }
+.notiz-gruppe .gruppenkopf .marke-buch { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: var(--marke); color: var(--text-2);
+                                         padding: 2px 8px; border-radius: var(--r1); background: var(--flaeche-2); }
+.notiz-eintrag { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--a1) var(--a4); padding: var(--a3) var(--a4); border-radius: var(--r3); background: var(--flaeche);
+         box-shadow: var(--schatten); cursor: pointer; }
+.notiz-eintrag.gewaehlt { box-shadow: var(--schatten), 0 0 0 2px var(--akzent-flaeche); }
+.notiz-eintrag .zitat { grid-column: 1; font-size: var(--klein); color: var(--text-2); padding-left: var(--a3); overflow-wrap: anywhere;
+                box-shadow: inset 3px 0 0 color-mix(in srgb, var(--akzent-flaeche) 70%, transparent); border-radius: 0; }
+.notiz-eintrag .text { grid-column: 1; font-size: var(--gross); overflow-wrap: anywhere; white-space: pre-line; }
+.notiz-eintrag .text.ohne-text { color: var(--text-3); font-style: italic; font-size: var(--klein); }
+.notiz-eintrag .wo { grid-column: 1; display: flex; flex-wrap: wrap; gap: var(--a1) var(--a3); font-size: var(--marke); color: var(--text-3); }
+.notiz-eintrag .wo span { display: inline-flex; gap: 5px; align-items: center; }
+.notiz-eintrag .wo .zahl { font-family: var(--schrift-zahl); }
+.notiz-eintrag .notiz-aktionen { grid-column: 2; grid-row: 1 / span 3; display: flex; flex-direction: column; gap: 4px; align-self: start; }
+.notiz-eintrag .notiz-aktionen .rund { background: transparent; color: var(--text-3); }
+.notiz-eintrag .notiz-aktionen .rund:hover { color: var(--text); background: var(--flaeche-2); }
+
 /* ===== Breiten: Inhaltsverzeichnis und Leisten weichen, nie seitlich rollen ===== */
 @media (max-width: 1360px) {
   .suchseite { grid-template-columns: 220px minmax(0, 1fr); }
   .vorschau-leiste { display: none; }
+}
+@media (max-width: 1280px) {
+  .notizseite { grid-template-columns: minmax(0, 1fr); }      /* die Leiste fährt dann als Tafel herein (Appkern) */
 }
 @media (max-width: 1180px) {
   .lesen { grid-template-columns: minmax(0, 1fr); }
@@ -476,4 +547,9 @@ button.leskarte { border: 0; padding: 0; font: inherit; text-align: left; cursor
   .beispiel pre, .artikel-text pre.codeblock, .signatur { white-space: pre-wrap; overflow-wrap: anywhere; }
   .start-innen { padding-inline: 0; }          /* den Seitenrand am Telefon gibt die Schale, nur einmal */
   .treffer .marken { margin-left: 0; }
+  .notizblatt { left: 0; right: 0; bottom: 0; width: auto; max-height: 82dvh; border-radius: 18px 18px 0 0;
+                padding: var(--a2) var(--a4) calc(var(--a4) + env(safe-area-inset-bottom)); }
+  .notizblatt .blatt-griff { display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--rand-stark); margin: 0 auto; }
+  .notiz-eintrag { padding: var(--a3); }
+  .notiz-gruppe .gruppenkopf .marke-buch { margin-left: 0; }
 }

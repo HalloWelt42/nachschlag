@@ -1,6 +1,6 @@
 <script lang="ts">
   // Artikel lesen, Variante A (Entwurf mockups/artikel-a.html): ruhige Lesespalte, Inhalt links mitlaufend mit
-  // Lesestand, Steckbrief rechts im Text. Weg: /lesen/<buch>/<pfad>?frage=&abschnitt=&anker=. Bücher ohne eigenes
+  // Lesestand, Steckbrief rechts im Text. Weg: /lesen/<buch>/<pfad>?frage=&abschnitt=&anker=&notiz=. Bücher ohne eigenes
   // Lesedesign zeigen ihre Seite unverändert (Originalansicht). Verweise im Text bleiben in der App.
   import { gehe, navigation, seitenFehler } from "appkern-oberflaeche";
   import { tick, untrack } from "svelte";
@@ -9,7 +9,12 @@
   import type { Artikel } from "../lib/typen";
   import { lesen, lesenZiel, suchen, verweisZiel } from "../lib/ziele";
   import { Auswahl } from "appkern-oberflaeche";
-  import { gemerkt, lesestandMelden, meins, meinsLaden, merken, vergessen, vorliebeSetzen } from "../lib/meins.svelte";
+  import { kopieren } from "../lib/kopieren";
+  import { gemerkt, lesestandMelden, meins, meinsLaden, merken, notieren, vergessen, vorliebeSetzen, wann, type Notiz,
+           type NotizNeu } from "../lib/meins.svelte";
+  import { markieren, stelleAus, type Stelle } from "../lib/stellen";
+  import { geraet } from "appkern-oberflaeche";
+  import NotizBlatt from "../teile/NotizBlatt.svelte";
   import { anwenden as fassungAnwenden, bekannte as bekannteFassungen, fassungenAus, gemerkt as fassungGemerkt, merken as fassungMerken,
            type Fassungen } from "../lib/fassung";
 
@@ -39,6 +44,7 @@
   const abschnitt = $derived(zusatz.get("abschnitt") ?? "");
   const weg = $derived(zusatz.get("weg") ?? "");
   const anker = $derived(zusatz.get("anker") ?? "");
+  const notizZiel = $derived(zusatz.get("notiz") ?? "");
   const buch = $derived(buchVon(buchKennung));
   const zeigeOriginal = $derived(!!artikel && (artikel.darstellung === "original" || original));
   const restMinuten = $derived(Math.max(1, Math.round((woerter * (1 - anteil)) / WOERTER_JE_MINUTE)));
@@ -84,6 +90,8 @@
     laedt = true;
     fehler = "";
     original = false;
+    blatt = null;
+    textwahl = null;
     void bibliothekLaden();
     try {
       const neu = await artikelHolen(b, p, signal);
@@ -104,6 +112,7 @@
       if (artikelEl && fassungen) {
         gibtEsInFassung = fassungAnwenden(artikelEl, meineFassung, fassungen.produkt);
       }
+      await tick();                                            // Markierungen der Notizen stehen
       zurStelle();
     } catch (f) {
       if (!signal.aborted) fehler = seitenFehler(f);
@@ -115,6 +124,7 @@
   // Ein anderer Anker im selben Artikel (Verweis auf einen Abschnitt, Inhaltsverzeichnis)
   $effect(() => {
     void anker;
+    void notizZiel;
     if (untrack(() => artikel && !laedt)) untrack(zurStelle);
   });
 
@@ -123,10 +133,21 @@
     return [...(text?.querySelectorAll<HTMLElement>("h2, h3, h4") ?? [])].find((h) => h.innerText.trim().toLowerCase() === gesucht) ?? null;
   }
 
-  /** Springt zu Anker (aus dem Weg oder der Weiterleitung) oder zur Fundstelle aus der Suche; sonst nach oben. */
+  /** Springt zu einer Notiz (aus der Seite Notizen), zum Anker (aus dem Weg oder der Weiterleitung) oder zur
+   *  Fundstelle aus der Suche; sonst nach oben. */
   function zurStelle() {
     if (!rollfeld || !text) return;
     text.querySelectorAll(".fundstelle").forEach((e) => e.classList.remove("fundstelle"));
+    if (notizZiel) {
+      const n = meins.notizen.find((x) => x.id === notizZiel);
+      if (n) blatt = { notiz: n, entwurf: null };
+      const mark = text.querySelector<HTMLElement>(`mark[data-notiz="${CSS.escape(notizZiel)}"]`);
+      if (mark) {
+        stelleZeigen(mark, "instant");
+        mitlaufen();
+        return;
+      }
+    }
     const ziel = anker || artikel?.anker || "";
     let el: HTMLElement | null = ziel ? text.querySelector<HTMLElement>(`#${CSS.escape(ziel)}`) : null;
     if (!el && abschnitt) {
@@ -158,8 +179,18 @@
     gehe(lesenZiel(buchKennung, pfad, { frage, abschnitt, weg }, ziel), true);
   }
 
-  /** Verweise im Text bleiben in der App; Orte und Online-Verweise gibt es im Text nicht (stehen in "Über"). */
+  /** Verweise im Text bleiben in der App; Orte und Online-Verweise gibt es im Text nicht (stehen in "Über"). Eine
+   *  markierte Stelle öffnet ihre Notiz (in einem Verweis nur über ihr Zeichen). */
   function klick(e: MouseEvent) {
+    const stelle = (e.target as HTMLElement).closest<HTMLElement>(".notiz-marke, mark.notiz");
+    if (stelle && (stelle.classList.contains("notiz-marke") || !stelle.closest("a")) && !window.getSelection()?.toString()) {
+      const n = meins.notizen.find((x) => x.id === stelle.dataset.notiz);
+      if (n) {
+        e.preventDefault();
+        blatt = { notiz: n, entwurf: null };
+        return;
+      }
+    }
     const a = (e.target as HTMLElement).closest("a");
     if (!a || e.ctrlKey || e.metaKey || e.shiftKey) return;
     const ziel = verweisZiel(a.getAttribute("href") ?? "");
@@ -210,20 +241,6 @@
     if (artikelEl && fassungen) gibtEsInFassung = fassungAnwenden(artikelEl, f, fassungen.produkt);
   }
 
-  /** In die Zwischenablage; ohne sicheren Zusammenhang (http im Heimnetz) über ein Textfeld im Klick. */
-  async function kopieren(text: string) {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      const feld = document.createElement("textarea");
-      feld.value = text;
-      document.body.append(feld);
-      feld.select();
-      document.execCommand("copy");
-      feld.remove();
-    }
-  }
-
   /** Ein Eintrag ist ein Name aus dem Code (Funktion, Klasse, Methode), wenn er Zeichen aus dem Code trägt, klein
    *  beginnt (basename) oder Binnengroßbuchstaben hat (ArrayObject); nur dann steht er in der Schrift des Editors.
    *  Kapitelnamen ("Getting Started", "Types") bleiben Text. */
@@ -268,6 +285,90 @@
       melden();
     };
   });
+
+  // --- Notizen und Markierungen ---
+  const TEXTWAHL_WARTEN_MS = 250;
+  const LEISTE_ABSTAND_PX = 10;
+  const STELLE_OBEN_ANTEIL = 0.2;
+
+  let blatt = $state<{ notiz: Notiz | null; entwurf: NotizNeu | null } | null>(null);
+  let textwahl = $state<{ stelle: Stelle; x: number; y: number; unten: boolean } | null>(null);
+  let wahlLeiste = $state<HTMLElement>();
+  let wahlWarten: ReturnType<typeof setTimeout> | undefined;
+
+  const artikelNotizen = $derived(buch && artikel ? meins.notizen.filter((n) => n.buch_name === buch.name && n.pfad === artikel!.pfad) : []);
+
+  // Markierungen im Text, sobald Text oder Notizen sich ändern (nur im Lesedesign; die Originalseite bleibt unberührt)
+  $effect(() => {
+    const t = text, notizen = artikelNotizen;
+    if (t && artikel?.darstellung === "lesedesign") untrack(() => markieren(t, notizen));
+  });
+
+  /** Eine Auswahl im Text bietet die Werkzeugleiste an (über der Auswahl, am Telefon darunter, weil dort das Menü
+   *  des Geräts über ihr steht). */
+  function auswahlGeaendert() {
+    clearTimeout(wahlWarten);
+    wahlWarten = setTimeout(() => {
+      const wahl = window.getSelection();
+      const stelle = text ? stelleAus(text, wahl) : null;
+      if (!stelle || !wahl) {
+        textwahl = null;
+        return;
+      }
+      const r = wahl.getRangeAt(0).getBoundingClientRect();
+      const unten = geraet.mobil || r.top < 140;
+      textwahl = { stelle, x: r.left + r.width / 2, y: unten ? r.bottom + LEISTE_ABSTAND_PX : r.top - LEISTE_ABSTAND_PX, unten };
+    }, TEXTWAHL_WARTEN_MS);
+  }
+
+  // Leiste ganz im Fenster halten
+  const wahlLinks = $derived.by(() => {
+    if (!textwahl) return 0;
+    const breite = wahlLeiste?.offsetWidth ?? 0;
+    return Math.min(Math.max(textwahl.x - breite / 2, 8), innerWidth - breite - 8);
+  });
+
+  async function anStelle(mitBlatt: boolean) {
+    if (!artikel || !textwahl) return;
+    const { stelle } = textwahl;
+    textwahl = null;
+    window.getSelection()?.removeAllRanges();
+    try {
+      const n = await notieren({ buch: artikel.buch, pfad: artikel.pfad, titel: artikel.titel, bild: artikel.bild, ...stelle, text: "" });
+      if (mitBlatt) blatt = { notiz: n, entwurf: null };
+    } catch (f) {
+      fehler = seitenFehler(f);
+    }
+  }
+
+  function zitieren() {
+    if (!artikel || !textwahl) return;
+    const { zitat, abschnitt } = textwahl.stelle;
+    void kopieren(`"${zitat}" (${[artikel.titel, abschnitt, buch ? bezeichnung(buch) : ""].filter(Boolean).join(", ")})`);
+    textwahl = null;
+  }
+
+  function notizZumArtikel() {
+    if (!artikel) return;
+    blatt = { notiz: null, entwurf: { buch: artikel.buch, pfad: artikel.pfad, titel: artikel.titel, bild: artikel.bild,
+                                      abschnitt: "", zitat: "", davor: "", text: "" } };
+  }
+
+  function notizZeigen(n: Notiz) {
+    blatt = { notiz: n, entwurf: null };
+    const mark = text?.querySelector<HTMLElement>(`mark[data-notiz="${CSS.escape(n.id)}"]`);
+    if (mark) stelleZeigen(mark, "smooth");
+  }
+
+  /** Eine Stelle ins obere Fünftel rollen: darunter steht das Blatt der Notiz und soll sie nicht verdecken. */
+  function stelleZeigen(el: HTMLElement, wie: ScrollBehavior) {
+    let roller: HTMLElement | null = el.parentElement;        // am Rechner das Rollfeld, am Telefon die Seite
+    while (roller && !(/(auto|scroll)/.test(getComputedStyle(roller).overflowY) && roller.scrollHeight > roller.clientHeight)) roller = roller.parentElement;
+    const feld = roller ?? (document.scrollingElement as HTMLElement);
+    const oben = roller ? roller.getBoundingClientRect().top : 0;
+    const hoehe = roller ? roller.clientHeight : innerHeight;
+    feld.scrollBy({ top: el.getBoundingClientRect().top - oben - hoehe * STELLE_OBEN_ANTEIL, behavior: wie });
+  }
 
   const ORIGINAL = "/api/v1/inhalt/original/";
 
@@ -326,6 +427,8 @@
     <div class="werkzeuge">
       <button class="knopf" class:an={!!eintrag} title={eintrag ? "Vom Merkzettel nehmen" : "Auf den Merkzettel"} onclick={merkenUmschalten}>
         <i class="fa-{eintrag ? 'solid' : 'regular'} fa-bookmark"></i><span class="wort">{eintrag ? "Gemerkt" : "Merken"}</span></button>
+      <button class="knopf" title="Notiz zum ganzen Artikel; für eine Stelle den Text markieren" onclick={notizZumArtikel}>
+        <i class="fa-regular fa-note-sticky"></i><span class="wort">Notiz</span>{#if artikelNotizen.length}<span class="zahl">{artikelNotizen.length}</span>{/if}</button>
       {#if artikel.darstellung !== "original"}
         <button class="knopf" class:an={original} title="Die Seite so, wie sie im Buch steht" onclick={() => (original = !original)}>
           <i class="fa-solid fa-file-code"></i><span class="wort">Original</span></button>
@@ -460,6 +563,18 @@
             </aside>
           {/if}
           <div class="artikel-text" bind:this={text} role="presentation" onclick={klick} onkeydown={() => {}}>{@html artikel.html}</div>
+          {#if artikelNotizen.length}
+            <section class="deine-notizen">
+              <h2><i class="fa-solid fa-note-sticky"></i>Deine Notizen<span class="zahl">{artikelNotizen.length}</span></h2>
+              {#each artikelNotizen as n (n.id)}
+                <button class="notiz-karte" onclick={() => notizZeigen(n)}>
+                  {#if n.zitat}<span class="zitat">"{n.zitat}"</span>{/if}
+                  <span class="text">{n.text || "Markierung ohne Notiz"}</span>
+                  <span class="wann">{wann(n.geaendert)} · {n.zitat ? `Abschnitt ${n.abschnitt || "Einleitung"}` : "am ganzen Artikel"}</span>
+                </button>
+              {/each}
+            </section>
+          {/if}
           <details class="ueber">
             <summary><i class="fa-solid fa-circle-info"></i>Über diesen Artikel<span>Quelle, Verweise</span></summary>
             <dl>
@@ -480,3 +595,18 @@
 {/if}
 {#if bibliothek.meldung && !artikel}<div class="fehlertext">{bibliothek.meldung}</div>{/if}
 </div>
+
+<svelte:document onselectionchange={auswahlGeaendert} />
+{#if textwahl}
+  <!-- die Auswahl bleibt beim Tippen auf die Leiste bestehen -->
+  <div class="auswahl-leiste" class:unten={textwahl.unten} bind:this={wahlLeiste} role="toolbar" tabindex="-1" aria-label="Stelle"
+       style="left: {wahlLinks}px; top: {textwahl.y}px" onpointerdown={(e) => e.preventDefault()} onmousedown={(e) => e.preventDefault()}>
+    <button onclick={() => anStelle(false)}><i class="fa-solid fa-highlighter"></i>Markieren</button>
+    <button onclick={() => anStelle(true)}><i class="fa-solid fa-note-sticky"></i>Notiz</button>
+    <button onclick={zitieren}><i class="fa-solid fa-quote-right"></i>Zitieren</button>
+    <button onclick={() => { const z = textwahl!.stelle.zitat; textwahl = null; suchen(z.slice(0, 200)); }}><i class="fa-solid fa-magnifying-glass"></i>Suchen</button>
+  </div>
+{/if}
+{#if blatt}
+  <NotizBlatt notiz={blatt.notiz} entwurf={blatt.entwurf} onzu={() => (blatt = null)} />
+{/if}

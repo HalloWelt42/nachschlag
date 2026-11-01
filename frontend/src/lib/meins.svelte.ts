@@ -1,6 +1,6 @@
-// Meins in der Oberfläche: Merkzettel, Verlauf mit Lesestand, Vorlieben des Kontos (auf allen Geräten gleich, der
-// Server hält sie). Eine Stelle für alle Seiten: Artikel (Merken, Lesestand), Start (Weiterlesen, Merkzettel), Suche
-// (gesucht), Merkzettel und Verlauf.
+// Meins in der Oberfläche: Merkzettel, Notizen, Verlauf mit Lesestand, Vorlieben des Kontos (auf allen Geräten gleich,
+// der Server hält sie). Eine Stelle für alle Seiten: Artikel (Merken, Notizen, Lesestand), Start (Weiterlesen,
+// Merkzettel), Suche (gesucht), Merkzettel, Notizen und Verlauf.
 import { hole, json } from "appkern-oberflaeche";
 
 export interface Merkeintrag {
@@ -31,17 +31,37 @@ export interface Verlaufseintrag {
   zuletzt: string;
 }
 
-export const meins = $state<{ merkzettel: Merkeintrag[]; geladen: boolean; vorlieben: Record<string, string> }>({
-  merkzettel: [], geladen: false, vorlieben: {} });
+/** Notiz am ganzen Artikel (ohne Zitat) oder an einer markierten Stelle; ohne Text ist sie eine Markierung. */
+export interface Notiz {
+  id: string;
+  buch_name: string;
+  buch: string;
+  pfad: string;
+  titel: string;
+  bild: string;
+  abschnitt: string;
+  zitat: string;
+  davor: string;
+  text: string;
+  angelegt: string;
+  geaendert: string;
+}
+
+export type NotizNeu = Pick<Notiz, "buch" | "pfad" | "titel" | "bild" | "abschnitt" | "zitat" | "davor" | "text">;
+
+export const meins = $state<{ merkzettel: Merkeintrag[]; notizen: Notiz[]; geladen: boolean; vorlieben: Record<string, string> }>({
+  merkzettel: [], notizen: [], geladen: false, vorlieben: {} });
 
 let laufend: Promise<void> | null = null;
 
-/** Merkzettel und Vorlieben einmal laden (danach hält diese Stelle sie aktuell). */
+/** Merkzettel, Notizen und Vorlieben einmal laden (danach hält diese Stelle sie aktuell). */
 export function meinsLaden(neu = false): Promise<void> {
   if (laufend && !neu) return laufend;
-  laufend = Promise.all([hole<Merkeintrag[]>("/meins/merkzettel"), hole<Record<string, string>>("/meins/vorlieben")])
-    .then(([liste, vorlieben]) => {
+  laufend = Promise.all([hole<Merkeintrag[]>("/meins/merkzettel"), hole<Notiz[]>("/meins/notizen"),
+                         hole<Record<string, string>>("/meins/vorlieben")])
+    .then(([liste, notizen, vorlieben]) => {
       meins.merkzettel = liste;
+      meins.notizen = notizen;
       meins.vorlieben = vorlieben;
       meins.geladen = true;
     })
@@ -63,6 +83,23 @@ export async function merken(buch: string, pfad: string, titel: string, bild = "
 export async function vergessen(id: string): Promise<void> {
   await hole("/meins/merkzettel/" + encodeURIComponent(id), { method: "DELETE" });
   meins.merkzettel = meins.merkzettel.filter((m) => m.id !== id);
+}
+
+export async function notieren(neu: NotizNeu): Promise<Notiz> {
+  const notiz = await hole<Notiz>("/meins/notizen", { method: "POST", ...json(neu) });
+  meins.notizen = [notiz, ...meins.notizen];
+  return notiz;
+}
+
+export async function notizAendern(id: string, text: string): Promise<Notiz> {
+  const notiz = await hole<Notiz>("/meins/notizen/" + encodeURIComponent(id), { method: "PATCH", ...json({ text }) });
+  meins.notizen = [notiz, ...meins.notizen.filter((n) => n.id !== id)];
+  return notiz;
+}
+
+export async function notizLoeschen(id: string): Promise<void> {
+  await hole("/meins/notizen/" + encodeURIComponent(id), { method: "DELETE" });
+  meins.notizen = meins.notizen.filter((n) => n.id !== id);
 }
 
 export const verlaufHolen = (anzahl = 50, ab = 0, art = "") =>
