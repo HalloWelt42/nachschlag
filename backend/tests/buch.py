@@ -195,6 +195,12 @@ SPIEGEL_SEITE = """<html><head><title>PHP: array_map - Manual</title><script src
 <li class="current"><a href="function.array-map.php" title="array_map">array_&#8203;map</a></li></ul></li></ul></aside></body></html>"""
 
 
+SPIEGEL_INHALT = """<html><body><section id="layout-content"><h1>PHP Manual</h1><ul class="chunklist chunklist_set">
+<li><a href="copyright.php">Copyright</a></li><li><a href="funcref.php">Function Reference</a>
+<ul class="chunklist chunklist_set chunklist_children"><li><a href="function.array-map.php">array_map</a></li>
+<li><a href="function.array-keys.php">array_keys</a></li></ul></li></ul></section></body></html>"""
+
+
 def bauen_spiegel(ordner: Path, name: str = "probespiegel_en_all_2024-08") -> Path:
     ordner.mkdir(parents=True, exist_ok=True)
     datei = ordner / f"{name}.zim"
@@ -207,4 +213,5 @@ def bauen_spiegel(ordner: Path, name: str = "probespiegel_en_all_2024-08") -> Pa
             c.add_metadata(schluessel, wert)
         c.add_item(_Seite("www.php.net/manual/en/function.array-map.php", "array_map", SPIEGEL_SEITE))
         c.add_item(_Seite("www.php.net/manual/en/function.array-keys.php", "array_keys", "<html><body><p>keys</p></body></html>"))
+        c.add_item(_Seite("www.php.net/manual/en/index.php", "PHP Manual", SPIEGEL_INHALT))
     return datei

@@ -329,7 +329,8 @@
                          box-shadow: inset 3px 0 0 var(--info); border-radius: 0; font-size: var(--klein); }
 .artikel-text .hinweis p:last-child { margin-bottom: 0; }
 .inhalt .nachbarn-titel { margin-top: var(--a5); }
-.inhalt .code-liste a { font-family: var(--schrift-editor); font-size: .95em; padding-left: var(--a2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.inhalt .code-liste a { font-size: .95em; padding-left: var(--a2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.code-liste a.code { font-family: var(--schrift-editor); font-variant-ligatures: none; }
 .inhalt .code-liste li.aktiv > a { background: var(--flaeche); color: var(--text); font-weight: 600; box-shadow: inset 3px 0 0 var(--akzent-flaeche); border-radius: 0; }
 
 /* Startseite eines Handbuchs: Rubriken mit ihren Seiten */
@@ -337,9 +338,9 @@
 .rubrik { break-inside: avoid; margin-bottom: var(--a4); background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten); padding: var(--a3) var(--a4); }
 .rubrik-titel { margin: 0 0 var(--a2); font-size: var(--titel); font-weight: 600; display: flex; align-items: baseline; gap: var(--a2); min-width: 0;
                 overflow-wrap: anywhere; }
-.rubrik-titel .zahl { margin-left: auto; font-family: var(--schrift-zahl); font-size: var(--marke); color: var(--text-3); font-weight: 400; }
+.rubrik-titel .zahl { flex: none; overflow-wrap: normal; margin-left: auto; font-family: var(--schrift-zahl); font-size: var(--marke); color: var(--text-3); font-weight: 400; }
 .rubrik .code-liste { list-style: none; margin: 0; padding: 0; max-height: 280px; overflow-y: auto; }
-.rubrik .code-liste a { display: block; padding: 2px 0; font-family: var(--schrift-editor); font-size: var(--klein); color: var(--himmel); text-decoration: none;
+.rubrik .code-liste a { display: block; padding: 2px 0; font-size: var(--klein); color: var(--himmel); text-decoration: none;
                         white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rubrik .code-liste a:hover { text-decoration: underline; }
 

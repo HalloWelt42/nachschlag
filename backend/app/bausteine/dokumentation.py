@@ -236,6 +236,30 @@ def _spiegel_umgebung(doc, seite, pfad: str) -> tuple[str, list[Nachbar], int]:
     return rubrik, umgebung, notizen
 
 
+def _spiegel_inhaltsverzeichnis(seite, pfad: str) -> list[Gruppe]:
+    """Das Inhaltsverzeichnis einer Seite ohne eigenen Text (Startseite des Handbuchs: ul.chunklist mit Kapiteln und
+    ihren Seiten) als Rubriken; einzelne Seiten ohne Unterseiten (Copyright, Preface) bilden eine eigene Rubrik vorn.
+    Hat die Seite eigenen Inhalt (Funktion, Kapiteltext), keine."""
+    liste = next(iter(seite.xpath(".//ul[contains(@class,'chunklist_set') and not(contains(@class,'chunklist_children'))]")), None)
+    if liste is None or seite.xpath(".//*[contains(@class,'refentry')]") or any(
+            len(h.text_von(p)) > 80 for p in seite.iter("p")):
+        return []
+    einzeln: list[Nachbar] = []
+    rubriken: list[Gruppe] = []
+    for li in liste.findall("li"):
+        a = li.find("a")
+        if a is None:
+            continue
+        eigene = Nachbar(pfad=h.ziel_im_buch(pfad, a.get("href") or ""), titel=h.text_von(a))
+        kinder = [Nachbar(pfad=h.ziel_im_buch(pfad, k.get("href") or ""), titel=h.text_von(k))
+                  for k in li.xpath("./ul/li/a")]
+        if kinder:
+            rubriken.append(Gruppe(titel=eigene.titel, eintraege=[Nachbar(pfad=eigene.pfad, titel="Überblick"), *kinder]))
+        else:
+            einzeln.append(eigene)
+    return ([Gruppe(titel="Allgemein", eintraege=einzeln)] if einzeln else []) + rubriken
+
+
 def _fenster(eintraege: list[Nachbar], pfad: str) -> list[Nachbar]:
     """Die Umgebung einer Seite in ihrer Rubrik: NACHBARN_UM Seiten davor und danach."""
     if not eintraege:
@@ -256,7 +280,8 @@ class Dokumentation:
     def passt(self, eintrag: Eintrag) -> bool:
         if not eintrag.mime.startswith("text/html"):
             return False
-        return b'class="_page' in eintrag.inhalt or (b'id="layout-content"' in eintrag.inhalt and b"layout-menu" in eintrag.inhalt)
+        return b'class="_page' in eintrag.inhalt or (b'id="layout-content"' in eintrag.inhalt
+                                                    and (b"layout-menu" in eintrag.inhalt or b"chunklist" in eintrag.inhalt))
 
     def _gliederung(self, buch: Buch, wege: Wege) -> Gliederung:
         schluessel = (buch.kennung, buch.stand)
@@ -282,6 +307,9 @@ class Dokumentation:
             seite = next(iter(doc.xpath("//*[@id='layout-content']")), None)
             if seite is None:
                 return Aufbereitet(titel=eintrag.titel)
+            rubriken = _spiegel_inhaltsverzeichnis(seite, eintrag.pfad)
+            if rubriken:                                            # Inhaltsverzeichnis des Handbuchs (Startseite)
+                return Aufbereitet(titel=buch.titel, gruppen=rubriken, darstellung="uebersicht")
             rubrik_titel, umgebung, notizen = _spiegel_umgebung(doc, seite, eintrag.pfad)
 
         kopf = next(iter(seite.xpath(".//h1|.//h2")), None)

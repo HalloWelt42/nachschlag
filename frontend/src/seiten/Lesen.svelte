@@ -184,6 +184,15 @@
     }
   }
 
+  /** Ein Eintrag ist ein Name aus dem Code (Funktion, Klasse, Methode), wenn er Zeichen aus dem Code trägt, klein
+   *  beginnt (basename) oder Binnengroßbuchstaben hat (ArrayObject); nur dann steht er in der Schrift des Editors.
+   *  Kapitelnamen ("Getting Started", "Types") bleiben Text. */
+  function istCode(titel: string): boolean {
+    const name = titel.replace(/\s*\((class|interface|enum|trait)\)$/, "");
+    if (/\s/.test(name)) return false;
+    return /[_$\\]|::|->|\(\)$/.test(name) || /^[a-z]/.test(name) || /[a-z][A-Z]/.test(name);
+  }
+
   const ORIGINAL = "/api/v1/inhalt/original/";
 
   /** Verweise in der Originalseite führen in die App: eine Seite desselben Buchs öffnet im Lesen (mit eigenem
@@ -273,7 +282,8 @@
               <h2 class="rubrik-titel">{g.titel}<span class="zahl">{g.eintraege.length}</span></h2>
               <ol class="code-liste">
                 {#each g.eintraege as e, ei (ei)}
-                  <li><a href={"/" + lesenZiel(artikel.buch, e.pfad)} onclick={(k) => { k.preventDefault(); lesen(artikel!.buch, e.pfad); }}>{e.titel}</a></li>
+                  <li><a class:code={istCode(e.titel)} href={"/" + lesenZiel(artikel.buch, e.pfad)}
+                         onclick={(k) => { k.preventDefault(); lesen(artikel!.buch, e.pfad); }}>{e.titel}</a></li>
                 {/each}
               </ol>
             </section>
@@ -316,7 +326,7 @@
               <div class="inhalt-titel nachbarn-titel">Nachbarn in {artikel.rubrik}</div>
               <ol class="code-liste">
                 {#each artikel.nachbarn as n, ni (ni)}
-                  <li class:aktiv={n.pfad === artikel.pfad}><a href={"/" + lesenZiel(artikel.buch, n.pfad)}
+                  <li class:aktiv={n.pfad === artikel.pfad}><a class:code={istCode(n.titel)} href={"/" + lesenZiel(artikel.buch, n.pfad)}
                       onclick={(e) => { e.preventDefault(); lesen(artikel!.buch, n.pfad); }}>{n.titel}</a></li>
                 {/each}
               </ol>

@@ -49,7 +49,8 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     app.state.geruest = geruest
     app.state.bibliothek = bibliothek
     app.include_router(router(geruest, bibliothek, leser, suche))
-    geruest.oberflaeche_ausliefern(app)
+    # unter /lesen trägt der Weg Pfade aus Büchern, oft mit Punkt (function.array-map.php): immer eine Seite
+    geruest.oberflaeche_ausliefern(app, seiten=["lesen"])
     return app
 
 

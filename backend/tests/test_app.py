@@ -266,3 +266,22 @@ async def test_spiegel_von_php_net_wie_die_dokumentation(nachschlag):
     assert '<pre><span class="c-tag">&lt;?php</span>\n<span class="c-var">$b</span> = <span class="c-fn">array_map</span>(<span class="c-str">\'cube\'</span>);\n<span class="c-tag">?&gt;</span></pre>' in html
     assert "<script" not in html and "select" not in html and "first" not in html
     assert "<dt>Notizen</dt><dd>2 der Nutzer</dd>" in a["steckbrief"]["html"]
+
+
+async def test_inhaltsverzeichnis_des_spiegels_als_rubriken(nachschlag):
+    c, _, _ = nachschlag
+    a = (await c.get("/api/v1/artikel/probespiegel_en_all_2024-08/www.php.net/manual/en/index.php")).json()
+    assert a["darstellung"] == "uebersicht"
+    assert [(g["titel"], [e["titel"] for e in g["eintraege"]]) for g in a["gruppen"]] == [
+        ("Allgemein", ["Copyright"]), ("Function Reference", ["Überblick", "array_map", "array_keys"])]
+    assert a["gruppen"][1]["eintraege"][1]["pfad"] == "www.php.net/manual/en/function.array-map.php"
+
+
+async def test_seitenpfade_mit_punkt_bleiben_seiten(nachschlag):
+    """Direkt geöffnete Wege unter /lesen mit Punkt (Pfade aus Büchern) bekommen die Oberfläche, nie 404."""
+    c, _, _ = nachschlag
+    for weg in ("/lesen/probespiegel_en_all_2024-08/www.php.net/manual/en/function.array-map.php",
+                f"/lesen/{DOKU}/language.types.array"):
+        r = await c.get(weg)
+        assert r.status_code == 200 and "Nicht gefunden" not in r.text, weg
+    assert (await c.get("/sonst/datei.php")).status_code == 404          # außerhalb von /lesen gilt die Dateiregel
