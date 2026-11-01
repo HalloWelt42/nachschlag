@@ -597,6 +597,58 @@ button.leskarte { border: 0; padding: 0; font: inherit; text-align: left; cursor
 .thema-wahl-liste form { display: flex; gap: var(--a2); margin-top: var(--a2); padding-top: var(--a2); box-shadow: 0 -1px 0 var(--rand); }
 .thema-wahl-liste form .eingabe { flex: 1; min-width: 0; }
 
+/* ----- Stöbern (Entwurf stoebern.html): Zufall, Entdeckungspfad, Blättern wie im Buch ----- */
+.stoebern-seite { max-width: 1240px; padding: var(--a4) var(--a5) var(--a6); display: flex; flex-direction: column; gap: var(--a6); }
+.filterzeile { display: flex; flex-wrap: wrap; gap: var(--a2); align-items: center; }
+.filterzeile .chip.an { background: var(--akzent-weich); color: var(--akzent); font-weight: 600; }
+.zufall-buehne { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--a4); }
+.zufall-buehne.mit-eben { grid-template-columns: minmax(0, 1fr) 280px; }
+.zufall-gross { display: grid; grid-template-columns: 330px minmax(0, 1fr); background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten); overflow: hidden; }
+.zufall-gross.laedt, .schritte-gitter.laedt { opacity: .6; }
+.zufall-gross.ohne-bild { grid-template-columns: minmax(0, 1fr); }
+.zufall-gross .bildflaeche { background: var(--mulde); display: grid; place-items: center; min-height: 240px; color: var(--text-3); font-size: calc(var(--seitentitel) + 10px); }
+.zufall-gross .bildflaeche img { max-width: 100%; max-height: 300px; }
+.zufall-gross .koerper { padding: var(--a4) var(--a5); display: flex; flex-direction: column; gap: var(--a2); min-width: 0; }
+.zufall-gross .t { font-size: calc(var(--seitentitel) + 2px); font-weight: 600; line-height: 1.15; overflow-wrap: anywhere; }
+.zufall-gross p { margin: 0; color: var(--text-2); line-height: 1.6; }
+.zufall-knoepfe { margin-top: auto; display: flex; flex-wrap: wrap; gap: var(--a2); align-items: center; }
+.zufall-knoepfe kbd { font-family: var(--schrift-zahl); font-size: var(--marke); padding: 1px 6px; border-radius: var(--r1); box-shadow: inset 0 0 0 1px var(--rand-stark); }
+.eben { display: flex; flex-direction: column; gap: var(--a2); min-width: 0; }
+.liste-ziel.kompakt { grid-template-columns: 44px minmax(0, 1fr); padding-block: 8px; }
+.liste-ziel.kompakt img, .liste-ziel.kompakt .ohne-bild { width: 44px; height: 34px; }
+.liste-ziel.ohne-bildspalte { grid-template-columns: minmax(0, 1fr); }
+.liste > .liste-ziel { width: 100%; }
+.liste .liste-ziel + .liste-ziel { box-shadow: inset 0 1px 0 var(--rand); }
+.pfad-leiste { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2); padding: var(--a3) var(--a4); border-radius: var(--r3); background: var(--flaeche); box-shadow: var(--schatten); }
+.pfad-leiste .schritt-p { display: inline-flex; align-items: center; gap: var(--a2); padding: 4px 10px; border: 0; border-radius: var(--r2); background: var(--flaeche-2);
+                          color: var(--text); font: inherit; font-size: var(--klein); cursor: pointer; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
+.pfad-leiste .schritt-p img { width: 26px; height: 20px; object-fit: cover; border-radius: 2px; flex: none; }
+.pfad-leiste .schritt-p.jetzt { background: var(--akzent-weich); color: var(--akzent); font-weight: 600; }
+.pfad-leiste > i { color: var(--text-3); font-size: var(--marke); }
+.pfad-leiste .rechts { margin-left: auto; display: flex; flex-wrap: wrap; gap: var(--a2); }
+.schritte-gitter { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: var(--a4); margin-top: var(--a3); }
+.schritt-spalte { min-width: 0; }
+.schritt-spalte h3 { margin: 0 0 var(--a2); font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.schritt-spalte h3 .weg { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--petrol); }
+.alphabet { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: var(--a3); }
+.alphabet button { width: 32px; height: 32px; display: grid; place-items: center; border: 0; border-radius: var(--r2); background: var(--flaeche); font: inherit; font-weight: 600;
+                   font-size: var(--klein); color: var(--text-2); cursor: pointer; }
+.alphabet button.an { background: var(--akzent-flaeche); color: var(--auf-akzent); }
+.buch-blaettern { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: var(--a4); align-items: start; }
+.buchseite { background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten); padding: var(--a2) 0; min-width: 0; }
+.buchseite .lauf { display: flex; justify-content: space-between; gap: var(--a3); padding: var(--a2) var(--a4); font-size: var(--marke); color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; }
+.buchseite > button { display: flex; align-items: baseline; gap: var(--a3); width: 100%; padding: 6px var(--a4); border: 0; background: transparent; color: var(--text); font: inherit;
+                      text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+.buchseite > button:hover { background: var(--flaeche-2); }
+.buchseite > button .art { font-size: var(--marke); color: var(--text-3); margin-left: auto; white-space: nowrap; font-weight: 400; }
+.buchseite > button.hier { background: var(--akzent-weich); box-shadow: inset 3px 0 0 var(--akzent-flaeche); font-weight: 600; border-radius: 0; }
+.buchseite .blaetter { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--a2); padding: var(--a2) var(--a4) var(--a1); }
+.vorschau-spalte { background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten); overflow: hidden; }
+.vorschau-spalte img { width: 100%; height: 180px; object-fit: cover; display: block; }
+.vorschau-spalte .koerper { padding: var(--a3) var(--a4) var(--a4); display: flex; flex-direction: column; gap: var(--a2); }
+.vorschau-spalte b { font-size: var(--titel); overflow-wrap: anywhere; }
+.vorschau-spalte p { margin: 0; font-size: var(--klein); color: var(--text-2); line-height: 1.55; }
+
 /* ===== Breiten: Inhaltsverzeichnis und Leisten weichen, nie seitlich rollen ===== */
 @media (max-width: 1360px) {
   .suchseite { grid-template-columns: 220px minmax(0, 1fr); }
@@ -607,6 +659,7 @@ button.leskarte { border: 0; padding: 0; font: inherit; text-align: left; cursor
 }
 @media (max-width: 1180px) {
   .themen-seite { grid-template-columns: 240px minmax(0, 1fr); }
+  .zufall-buehne.mit-eben, .buch-blaettern { grid-template-columns: minmax(0, 1fr); }
   .lesen { grid-template-columns: minmax(0, 1fr); }
   .lesen .inhalt { display: none; }
 }
@@ -647,6 +700,14 @@ button.leskarte { border: 0; padding: 0; font: inherit; text-align: left; cursor
   .notizblatt .blatt-griff { display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--rand-stark); margin: 0 auto; }
   .notiz-eintrag { padding: var(--a3); }
   .notiz-gruppe .gruppenkopf .marke-buch { margin-left: 0; }
+  .stoebern-seite { padding-inline: 0; }
+  .zufall-gross { grid-template-columns: minmax(0, 1fr); }
+  .zufall-gross .koerper { padding: var(--a3) var(--a4) var(--a4); }
+  .zufall-knoepfe { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .zufall-knoepfe .knopf { justify-content: center; }
+  .stoebern-seite .abschnitt-kopf { flex-wrap: wrap; row-gap: 2px; }
+  .stoebern-seite .abschnitt-kopf .neben { flex-basis: 100%; }
+  .pfad-leiste .rechts { margin-left: 0; }
   /* Themen: erst die Liste, nach der Wahl das Thema allein (Zurück im Kopf) */
   .themen-seite { grid-template-columns: minmax(0, 1fr); }
   .themen-seite.mit-thema .themenliste, .themen-seite:not(.mit-thema) .thema-flaeche { display: none; }

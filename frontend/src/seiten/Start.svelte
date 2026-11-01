@@ -96,7 +96,7 @@
 
     {#if mitLesedesign.length}
       <section>
-        <div class="abschnitt-kopf"><h2><i class="fa-solid fa-shuffle"></i>Stöbern</h2></div>
+        <div class="abschnitt-kopf"><h2><i class="fa-solid fa-shuffle"></i>Stöbern</h2><button class="alle" onclick={() => gehe("stoebern")}>Mehr stöbern</button></div>
         <div class="stoebern">
           {#each mitLesedesign as b (b.kennung)}
             {@const f = funde[b.kennung]}

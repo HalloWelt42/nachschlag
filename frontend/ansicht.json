@@ -67,6 +67,10 @@
     {
       "name": "themen",
       "pfad": "/themen"
+    },
+    {
+      "name": "stoebern",
+      "pfad": "/stoebern"
     }
   ]
 }

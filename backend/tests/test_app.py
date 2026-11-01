@@ -411,6 +411,32 @@ async def test_themen_bereiche_eintraege_und_angebote(nachschlag):
     assert (await c.get(w)).status_code == 404 and (await c.get("/api/v1/meins/themen")).json() == []
 
 
+async def test_stoebern_zufall_pfad_und_blaettern(nachschlag):
+    """Zufall mit Bild und noch nicht gelesen; Schritt im Entdeckungspfad mit Verweisen und Nennungen; Blättern um einen
+    Artikel, ab einem Buchstaben und seitenweise vor und zurück, ohne Weiterleitungen und Bilder."""
+    c, _, _ = nachschlag
+    buch = "probe_de_all_2026-01"
+    z = (await c.get(f"/api/v1/stoebern/zufall/{buch}", params={"mit_bild": True})).json()
+    assert z["bild"] and z["titel"] and z["buch"] == buch
+    s = (await c.get(f"/api/v1/stoebern/schritt/{buch}/Rotfuchs")).json()
+    assert s["fund"]["titel"] == "Rotfuchs" and s["fund"]["auszug"].startswith("Der Rotfuchs")
+    assert s["von_hier"] and all(n["pfad"] != "Rotfuchs" for n in s["von_hier"]) and s["von_hier"][0]["hinweis"]
+    assert s["aehnlich"] == [] and all(n["pfad"] != "Rotfuchs" for n in s["erwaehnt_in"])
+    seite = (await c.get(f"/api/v1/stoebern/blaettern/{buch}", params={"um": "Vulpes_vulpes", "anzahl": 5})).json()
+    pfade = [e["pfad"] for e in seite["eintraege"]]
+    assert seite["hier"] == "Rotfuchs" and "Rotfuchs" in pfade and "Vulpes_vulpes" not in pfade and "Stadtfuchs" not in pfade
+    assert pfade == sorted(pfade) and not any(p.startswith("_") for p in pfade)
+    r = (await c.get(f"/api/v1/stoebern/blaettern/{buch}", params={"buchstabe": "R", "anzahl": 3})).json()
+    assert r["eintraege"][0]["pfad"] >= "R"
+    alle = (await c.get(f"/api/v1/stoebern/blaettern/{buch}", params={"buchstabe": "A", "anzahl": 3})).json()
+    weiter = (await c.get(f"/api/v1/stoebern/blaettern/{buch}", params={"ab": alle["naechste"], "anzahl": 3})).json()
+    zurueck = (await c.get(f"/api/v1/stoebern/blaettern/{buch}", params={"bis": weiter["erste"], "anzahl": 3})).json()
+    assert zurueck["eintraege"] == alle["eintraege"] and weiter["eintraege"][0]["pfad"] > alle["eintraege"][-1]["pfad"]
+    await c.put("/api/v1/meins/verlauf/lesestand", json={"buch": buch, "pfad": z["pfad"], "titel": z["titel"], "anteil": 0.1})
+    for _ in range(5):
+        assert (await c.get(f"/api/v1/stoebern/zufall/{buch}", params={"ungelesen": True})).json()["pfad"] != z["pfad"]
+
+
 async def test_meins_trennt_konten(tmp_path):
     """Was ein Konto merkt, sieht kein anderes."""
     from appkern.datenbank import Datenbank

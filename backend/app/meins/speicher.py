@@ -142,6 +142,11 @@ class Meins(Begleiter):
         return [Verlaufseintrag(**{k: z[k] for k in Verlaufseintrag.model_fields if k in z},
                                 buch=await self._kennung_von(z["buch_name"]) if z["buch_name"] else "") for z in zeilen]
 
+    async def gelesen(self, konto: str, buch: str, pfad: str) -> bool:
+        """Hat das Konto die Seite schon geöffnet (steht sie im Verlauf)? `buch` ist die Kennung."""
+        return await self._db.zeile("SELECT 1 AS ja FROM verlauf WHERE konto=? AND art='artikel' AND buch_name=? AND pfad=?",
+                                    (konto, await self._name_von(buch), pfad)) is not None
+
     async def verlauf_leeren(self, konto: str) -> int:
         return await self._db.ausfuehren("DELETE FROM verlauf WHERE konto=?", (konto,))
 
