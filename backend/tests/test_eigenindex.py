@@ -280,3 +280,29 @@ def test_mac_wartet_auf_den_pi(tmp_path):
     mac = httpx.Client(transport=httpx.MockTransport(pi), base_url="http://pi.test")
     Arbeiter(mac, tmp_path, tmp_path / "mac", abstaende=(0.01,)).laufen(halt)        # kein Fehler, nur Warten
     assert len(versuche) >= 3
+
+
+def test_korrektur_ueber_den_wortschatz(buecher, tmp_path):
+    """Suchkorrektur (WIKI-41): unbekannte Wörter werden durch ähnliche, häufige des Index ersetzt; bekannte bleiben."""
+    from app.korrektur.dienst import abstand, ueber_wortschatz
+    ziel = tmp_path / schema.dateiname(DOKU)
+    _bauen(buecher, DOKU, ziel)
+    assert ueber_wortschatz([ziel], "array_map") == ""                          # bekannt: nichts zu korrigieren
+    assert abstand("clipbaord", "clipboard", 2) == 1 and abstand("abc", "xyz", 1) == 2
+    assert ueber_wortschatz([], "irgendwas") == ""
+
+
+async def test_korrektor_fragt_das_modell_nur_wenn_erlaubt(tmp_path):
+    from app.korrektur import Korrektor
+
+    class Leitstelle:
+        aufrufe = 0
+
+        async def chat(self, nachrichten, **optionen):
+            Leitstelle.aufrufe += 1
+            return type("Antwort", (), {"text": '{"text": "Rotfuchs"}'})()
+
+    k = Korrektor(lambda buecher: [], lambda: Leitstelle(), lambda: "")
+    assert (await k.korrigieren("Rotfuhcs", [])).vorschlag == "" and Leitstelle.aufrufe == 0
+    v = await k.korrigieren("Rotfuhcs", [], mit_modell=True)
+    assert (v.vorschlag, v.quelle) == ("Rotfuchs", "modell")

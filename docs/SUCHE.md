@@ -38,6 +38,11 @@ fehlenden Feldern (Schlagwörter, Stimmen, Autoren, Rubriken).
    Notizen.
 9. **Suchkorrektur:** normal "Meintest du: ..." zum Antippen; bei null Treffern sucht Nachschlag gleich mit der
    Korrektur und sagt das deutlich. Zuerst über die Titel der Bücher, das lokale Modell nur, wenn die nichts hergeben.
+   **Umgesetzt (Schritt 5, WIKI-41):** Vorschlag aus dem Wortschatz der eigenen Indizes: ein Wort der Frage weicht
+   einem ähnlichen (Schreibabstand 1, ab 8 Zeichen 2, Vertauschen zählt 1), das häufig genug ist und mindestens 20-mal
+   häufiger als es selbst; häufige Schreibfehler (subsitute, autocomand) führen so zum richtigen Wort. Ohne Treffer
+   sucht die Seite gleich mit dem Vorschlag (?statt=) und bietet "Doch nach ... suchen" (?genau=1); erst dann fragt
+   sie auch das Modell (dieselbe Einstellung wie die Übersetzung).
 10. **Register:** eigener Bereich mit Reitern Schlagwörter und Autoren (später Rubriken), Wahl "alle Bücher" oder ein
     Buch. Schlagwörter und Autorennamen in Artikeln und Treffern führen dorthin. Je Autor eine Seite mit allen
     Beiträgen, Stimmen und Zeitraum.

@@ -340,6 +340,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .treffer .buchname { font-size: var(--marke); color: var(--text-3); }
 .treffer .marken { margin-left: auto; display: flex; gap: 4px; }
 .fundband.uebersetzt span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.meintest { border: 0; padding: 0; background: none; font: inherit; font-weight: 600; color: var(--verweis); cursor: pointer; text-decoration: underline; }
 .uebersetzung-aendern { flex: 1; display: flex; flex-wrap: wrap; gap: var(--a2); align-items: center; }
 /* Ausnahme: mindestens 16px, sonst vergrößert iOS die Seite beim Tippen */
 .uebersetzung-aendern input { flex: 1 1 240px; min-width: 0; font: inherit; font-size: max(16px, 1em); padding: 6px 10px;

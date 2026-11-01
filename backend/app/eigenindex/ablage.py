@@ -21,6 +21,14 @@ class Eigenindizes:
         ordner = self._ordner()
         return Path(ordner) / schema.dateiname(kennung) if ordner else None
 
+    def alle(self, kennungen: list[str] | None = None) -> list[Path]:
+        """Die geltenden Indizes aller (oder der genannten) Quellen."""
+        ordner = self._ordner()
+        if not ordner or not Path(ordner).is_dir():
+            return []
+        namen = kennungen if kennungen else [p.name.removesuffix(".sqlite") for p in Path(ordner).glob("*.sqlite")]
+        return [d for k in namen if (d := self.datei(k))]
+
     def datei(self, kennung: str) -> Path | None:
         """Der geltende Index eines Buchs, sonst None."""
         pfad = self.pfad(kennung)

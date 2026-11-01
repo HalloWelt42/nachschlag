@@ -26,9 +26,10 @@ class AppEinstellungen(Grundeinstellungen):
                                             "Nachschlag liest nur.")
 
     # --- Suche ------------------------------------------------------------------------------------------------------
-    uebersetzung_modell: str = Field("", title="Modell für die übersetzte Suche", json_schema_extra=SUCHE,
-                                     description="Übersetzt eine Frage für englische Quellen ins Englische (Fachbegriffe und "
-                                                 "Code bleiben). Leer: die Kette der App in der Leitstelle.")
+    suchmodell: str = Field("", title="Modell für Übersetzung und Korrektur", json_schema_extra=SUCHE,
+                            description="Übersetzt eine Frage für englische Quellen ins Englische (Fachbegriffe und Code "
+                                        "bleiben) und korrigiert Tippfehler, wenn der Wortschatz der Quellen nichts hergibt. "
+                                        "Leer: die Kette der App in der Leitstelle.")
     eigene_indizes: Literal["keine", "handbuecher", "handbuecher_fragen", "alle"] = Field(
         "handbuecher_fragen", title="Quellen mit eigenem Index", json_schema_extra={**SUCHE, "beschriftungen": EIGENE_INDIZES},
         description="Ein eigener Index findet Namen aus dem Code (array_map), Rubriken und Einleitungen und sucht in Quellen "

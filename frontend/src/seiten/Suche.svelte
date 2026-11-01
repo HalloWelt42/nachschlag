@@ -4,12 +4,14 @@
   // dem gesucht wurde, zuerst. Links die Bücher als Filter, rechts die Vorschau. Weg: /suche?frage=&buch=&nur=1
   // Englische Quellen fragt die Seite zusätzlich mit der Übersetzung der Frage (WIKI-40, Punkt 5): deren Treffer kommen
   // dazu, sobald die Übersetzung da ist; sie steht sichtbar über den Treffern und lässt sich ändern.
-  import { navigation, seitenFehler } from "appkern-oberflaeche";
+  // Suchkorrektur (WIKI-41, Punkt 9): sonst "Meintest du ...?" (aus dem Wortschatz), ohne Treffer sucht die Seite gleich mit der
+  // Korrektur (?statt=) und sagt das; "Doch nach ... suchen" (?genau=1) sucht ohne Korrektur.
+  import { gehe, navigation, seitenFehler } from "appkern-oberflaeche";
   import { untrack } from "svelte";
   import Suchfeld from "../teile/Suchfeld.svelte";
   import Buchmarke from "../teile/Buchmarke.svelte";
   import { bibliothek, bibliothekLaden, zahl } from "../lib/bibliothek.svelte";
-  import { artikelHolen, sucheHolen, uebersetzungHolen, uebersetzungKorrigieren, type Uebersetzung } from "../lib/schnittstelle";
+  import { artikelHolen, korrekturHolen, sucheHolen, uebersetzungHolen, uebersetzungKorrigieren, type Uebersetzung } from "../lib/schnittstelle";
   import type { Artikel, Buch, Suchergebnis, Treffer } from "../lib/typen";
   import { lesen, suchen } from "../lib/ziele";
   import { gesuchtMelden } from "../lib/meins.svelte";
@@ -49,11 +51,14 @@
   let aendern = $state(false);
   let neuText = $state("");
   let nochmal = $state(0);                    // nach einer Korrektur der Übersetzung neu fragen
+  let meintest = $state("");
 
   const zusatz = $derived(new URLSearchParams(navigation.suche));
   const frage = $derived(zusatz.get("frage") ?? "");
   const kontext = $derived(zusatz.get("buch") ?? "");
   const nur = $derived(zusatz.get("nur") === "1" && !!kontext);
+  const statt = $derived(zusatz.get("statt") ?? "");          // korrigiert aus dieser Frage (sie fand nichts)
+  const genau = $derived(zusatz.get("genau") === "1");        // ohne Korrektur, so wie getippt
   const durchsucht = $derived(bibliothek.buecher.filter((b) => b.faehigkeiten.volltext));
   // Reihenfolge: das Buch, aus dem gesucht wurde, dann die übrigen wie in der Bibliothek
   const reihenfolge = $derived.by((): Buch[] => {
@@ -86,6 +91,7 @@
     uebersetzung = null;
     uebersetzungGrund = "";
     aendern = false;
+    meintest = "";
     const englisch = buecher.filter((b) => bibliothek.buecher.find((x) => x.kennung === b)?.sprache === "eng");
     const anzahl = (b: string) => n ? NUR_EIN_BUCH : b === k ? IM_KONTEXT : JE_BUCH;
     const uebersetzt = englisch.length ? uebersetztFragen(f, englisch, anzahl, signal) : Promise.resolve();
@@ -103,7 +109,29 @@
         if (buecher.length === 1) fehler = seitenFehler(e);
       }
     })]);
-    if (!signal.aborted) void gesuchtMelden(f, Object.values(staende).reduce((x, s) => x + (s.ergebnis?.index_gesamt ?? 0), 0));
+    if (signal.aborted) return;
+    const summe = Object.values(staende).reduce((x, s) => x + (s.ergebnis?.index_gesamt ?? 0), 0);
+    void gesuchtMelden(f, summe);
+    if (!genau && !statt) void korrekturAnbieten(f, buecher, summe === 0, signal);
+  }
+
+  /** Ein Vorschlag zum Antippen; ohne Treffer gleich mit der Korrektur suchen (die Seite sagt das), dann auch übers Modell. */
+  async function korrekturAnbieten(f: string, buecher: string[], keine: boolean, signal: AbortSignal) {
+    try {
+      const k = await korrekturHolen(f, buecher, keine, signal);
+      if (signal.aborted || !k.vorschlag) return;
+      if (keine) weiterSuchen(k.vorschlag, { statt: f }, true);
+      else meintest = k.vorschlag;
+    } catch {
+      // ohne Korrektur bleibt die Suche, wie sie ist
+    }
+  }
+
+  function weiterSuchen(f: string, mehr: Record<string, string> = {}, ersetzen = false) {
+    const p = new URLSearchParams({ frage: f, ...mehr });
+    if (kontext) p.set("buch", kontext);
+    if (nur) p.set("nur", "1");
+    gehe(`suche?${p}`, ersetzen);
   }
 
   /** Die englischen Quellen noch einmal mit der Übersetzung; ohne Leitstelle steht der Grund über den Treffern. */
@@ -116,6 +144,10 @@
       return;
     }
     if (signal.aborted) return;
+    if (u.von === "keine") {
+      uebersetzungGrund = u.grund;
+      return;
+    }
     uebersetzung = u;
     if (gleich(u.text, f)) return;
     await Promise.all(buecher.map(async (b) => {
@@ -191,6 +223,15 @@
 {#if hinweisBedeutung}
   <div class="fundband warn"><i class="fa-solid fa-triangle-exclamation"></i>
     <span><b>Nur Index:</b> {hinweisBedeutung}. Treffer passen deshalb nur dem Wortlaut nach.</span></div>
+{/if}
+<!-- Suchkorrektur (WIKI-41) -->
+{#if statt}
+  <div class="fundband"><i class="fa-solid fa-spell-check"></i>
+    <span>Keine Treffer für <b>{statt}</b>, gezeigt werden die für <b>{frage}</b>.</span>
+    <button class="knopf still" onclick={() => weiterSuchen(statt, { genau: "1" })}>Doch nach {statt} suchen</button></div>
+{:else if meintest}
+  <div class="fundband"><i class="fa-solid fa-spell-check"></i>
+    <span>Meintest du <button class="meintest" onclick={() => weiterSuchen(meintest)}>{meintest}</button>?</span></div>
 {/if}
 <!-- Übersetzte Suche (WIKI-40): womit die englischen Quellen zusätzlich gefragt werden, änderbar -->
 {#if uebersetzung && !gleich(uebersetzung.text, frage)}
