@@ -452,6 +452,11 @@ async def test_medien_im_artikel_und_suche(nachschlag):
     assert (await c.get(f"/api/v1/medien/artikel/{buch}/GibtEsNicht")).status_code == 404
 
 
+def test_stimmen_mit_tausenderpunkt():
+    from app.bausteine.frage_antwort import _deutsche_zahl
+    assert (_deutsche_zahl("27527"), _deutsche_zahl("-3"), _deutsche_zahl("1234567"), _deutsche_zahl("x")) == ("27.527", "-3", "1.234.567", "x")
+
+
 def test_formeln_als_mathml_ohne_ersatzbild():
     """Formeln der Quelle (verstecktes MathML und schwarzes Ersatzbild) werden zu sichtbarem MathML ohne Bild und ohne
     TeX-Quelle; der Text danach bleibt; abgesetzte Formeln stehen in einem eigenen Kasten."""

@@ -403,9 +403,9 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .artikel-text pre.codeblock { margin: 0 0 1em; padding: 12px 14px; font-family: var(--schrift-editor); font-variant-ligatures: none;
                               font-size: calc(var(--klein) - 1px); line-height: 1.55; overflow-x: auto; background: var(--ed-grund); color: var(--ed-text);
                               box-shadow: var(--schatten); border-radius: var(--r2); }
-.qa-beitrag { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: var(--a3); }
+.qa-beitrag { display: grid; grid-template-columns: minmax(64px, max-content) minmax(0, 1fr); gap: var(--a3); }   /* Spalten fluchten, große Zahlen weiten sie */
 .qa-stimmen { display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 4px; }
-.qa-stimmen .zahl { font-family: var(--schrift-zahl); font-size: calc(var(--titel) + 2px); font-weight: 600; }
+.qa-stimmen .zahl { font-family: var(--schrift-zahl); font-size: calc(var(--titel) + 2px); font-weight: 600; white-space: nowrap; }   /* Zahlen brechen nie um */
 .qa-stimmen .was { font-size: var(--marke); color: var(--text-3); }
 .qa-stimmen .haken { width: 34px; height: 34px; display: grid; place-items: center; background: var(--gut); color: var(--auf-farbe); }
 .qa-stimmen .haken i { font-size: 16px; }
@@ -436,7 +436,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .fragekarte:hover { box-shadow: var(--schatten), 0 0 0 2px var(--akzent-flaeche); }
 .fk-zahlen { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; font-size: var(--marke); color: var(--text-3); }
 .fk-zahlen > span { display: flex; align-items: baseline; gap: 5px; }
-.fk-zahlen b { font-family: var(--schrift-zahl); font-size: var(--gross); color: var(--text); font-weight: 600; }
+.fk-zahlen b { font-family: var(--schrift-zahl); font-size: var(--gross); color: var(--text); font-weight: 600; white-space: nowrap; }
 .fk-antworten.akzeptiert { padding: 1px 6px; background: var(--gut-weich); color: var(--gut); font-weight: 600; }
 .fk-antworten.akzeptiert b { color: var(--gut); }
 .fk-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }

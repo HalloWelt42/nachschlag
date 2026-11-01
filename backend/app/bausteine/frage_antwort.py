@@ -46,6 +46,14 @@ def _zahl(el, xpath: str) -> int:
     return int(re.sub(r"\D", "", _text(el, xpath)) or 0)
 
 
+def _deutsche_zahl(roh: str) -> str:
+    """Zahl mit Tausenderpunkt wie überall in der App (27527 -> 27.527, -3 bleibt -3); Unlesbares bleibt, wie es ist."""
+    try:
+        return f"{int(roh):,}".replace(",", ".")
+    except ValueError:
+        return roh
+
+
 def _listentitel(quelle: str) -> str:
     """Feste Überschriften der Fragenlisten, wie Nachschlag sie nennt."""
     if quelle.lower() in ("most popular", "top questions", "highest scored questions", "newest questions", "all questions"):
@@ -96,7 +104,7 @@ def _kommentare(beitrag):
 
 def _beitrag(quelle, art: str, akzeptiert: bool = False):
     """Ein Beitrag (Frage oder Antwort) als qa-beitrag: Stimmen links, Text, Fuß mit Wer und Wann, Kommentare."""
-    stimmen = quelle.get("data-score") or "0"
+    stimmen = _deutsche_zahl(quelle.get("data-score") or "0")
     kasten = lhtml.Element("div")
     kasten.set("class", "qa-beitrag")
     links = SubElement(kasten, "div")
