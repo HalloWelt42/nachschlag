@@ -18,6 +18,8 @@
   import { geraet } from "appkern-oberflaeche";
   import NotizBlatt from "../teile/NotizBlatt.svelte";
   import ThemaWahl from "../teile/ThemaWahl.svelte";
+  import Lesegroesse from "../teile/Lesegroesse.svelte";
+  import { groesseFuer } from "../lib/lesegroesse.svelte";
   import Kachel from "../teile/Kachel.svelte";
   import Leuchtkasten from "../teile/Leuchtkasten.svelte";
   import { medienImArtikel, type Medium } from "../lib/medien";
@@ -27,7 +29,6 @@
 
   const WOERTER_JE_MINUTE = 200;
   const MITLAUF_ABSTAND_PX = 90;          // eine Überschrift gilt als erreicht, sobald sie so nah am oberen Rand steht
-  const LESEGROESSE = "nachschlag.lesegroesse";
 
   let artikel = $state.raw<Artikel | null>(null);   // nur lesen, ohne Proxy
   let fehler = $state("");
@@ -38,7 +39,6 @@
   let aktiv = $state("");
   let anteil = $state(0);
   let woerter = $state(0);
-  let gross = $state(lesegroesseLesen());
   let artikelEl = $state<HTMLElement>();
   let fassungen = $state.raw<Fassungen | null>(null);   // Fassungen, die die Seite nennt (Dokumentation)
   let meineFassung = $state("");
@@ -56,23 +56,8 @@
   const zeigeOriginal = $derived(!!artikel && (artikel.darstellung === "original" || original));
   const restMinuten = $derived(Math.max(1, Math.round((woerter * (1 - anteil)) / WOERTER_JE_MINUTE)));
 
-  function lesegroesseLesen(): boolean {
-    try {
-      return localStorage.getItem(LESEGROESSE) === "gross";
-    } catch {
-      return false;
-    }
-  }
-
-  $effect(() => {
-    if (gross) document.documentElement.dataset.lesegroesse = "gross";
-    else delete document.documentElement.dataset.lesegroesse;
-    try {
-      localStorage.setItem(LESEGROESSE, gross ? "gross" : "normal");
-    } catch {
-      /* ohne Speicher im Browser gilt die Wahl nur bis zum Neuladen */
-    }
-  });
+  // Lesegröße dieses Buchs auf diesem Gerät (WIKI-29) als Zoom des Lesebereichs, auch in der Originalseite
+  const zoom = $derived(buch ? groesseFuer(buch.name) / 100 : 1);
 
   // Ohne Buch im Weg: die Startseite des Hauptbuchs
   $effect(() => {
@@ -416,8 +401,25 @@
   /** Verweise in der Originalseite führen in die App: eine Seite desselben Buchs öffnet im Lesen (mit eigenem
    *  Baustein, wenn sie einer liest); Online-Verweise öffnen neu. Der Rahmen hat die Herkunft der App, aber keine
    *  Skripte; darum hört die App selbst auf seine Klicks. */
+  // Am Telefon rollt der Inhalt der Schale, nicht der Rahmen: dort bekommt die Originalseite die Höhe ihres Inhalts
+  // (beim Laden und nach jedem nachgeladenen Bild gemessen); am Rechner füllt sie die Fläche und rollt selbst
+  let rahmenHoehe = $state(0);
+
+  let rahmen = $state<HTMLIFrameElement>();
+
+  $effect(() => {
+    const z = zoom, doc = rahmen?.contentDocument;
+    if (!doc?.documentElement) return;
+    doc.documentElement.style.zoom = String(z);
+    rahmenHoehe = doc.documentElement.scrollHeight;
+  });
+
   function rahmenGeladen(e: Event) {
     const doc = (e.currentTarget as HTMLIFrameElement).contentDocument;
+    const messen = () => (rahmenHoehe = doc?.documentElement.scrollHeight ?? 0);
+    if (doc) doc.documentElement.style.zoom = String(zoom);
+    messen();
+    doc?.addEventListener("load", messen, true);          // Bilder laden nach; "load" steigt nicht auf, im Einfangen kommt es an
     doc?.addEventListener("click", (k) => {
       const a = (k.target as Element | null)?.closest("a");
       if (!a || k.ctrlKey || k.metaKey || k.shiftKey) return;
@@ -483,10 +485,7 @@
                    optionen={[{ wert: "", titel: "Alle Fassungen" },
                               ...fassungen.optionen.map((f) => ({ wert: f, titel: `Meine Fassung: ${fassungen!.produkt} ${f}` }))]} />
         {/if}
-        {#if !zeigeOriginal}
-          <button class="rund" class:an={gross} title={gross ? "Lesegröße normal" : "Größer lesen"} onclick={() => (gross = !gross)}>
-            <i class="fa-solid fa-text-height"></i></button>
-        {/if}
+        {#if buch}<Lesegroesse buchName={buch.name} buchTitel={buch.titel} />{/if}
       </div>
     </div>
   </div>
@@ -509,7 +508,7 @@
   {/if}
   {#if artikel.darstellung === "uebersicht" && !original}
     <!-- Übersicht (etwa Startseite eines Buchs): Kacheln als Karten wie im Entwurf start-a.html -->
-    <div class="rollfeld" style="padding: 0">
+    <div class="rollfeld" style="padding: 0" style:zoom={zoom}>
       {#if artikel.gruppen.length}
         <!-- Handbuch: die Rubriken der Gliederung mit ihren Seiten -->
         <div class="rubriken">
@@ -561,11 +560,12 @@
     </div>
   {:else if zeigeOriginal}
     <!-- ohne Skripte, mit Herkunft der App: Stile und Bilder laden mit dem Lesezugang, die Seite kann nichts in der App tun -->
-    <iframe class="original" src={artikel.original} title="Originalseite: {artikel.titel}" sandbox="allow-same-origin allow-popups"
-            onload={rahmenGeladen}></iframe>
+    <iframe class="original" class:mit-inhalt={geraet.mobil} src={artikel.original} title="Originalseite: {artikel.titel}"
+            sandbox="allow-same-origin allow-popups" style:height={geraet.mobil && rahmenHoehe ? `${rahmenHoehe}px` : undefined}
+            bind:this={rahmen} onload={rahmenGeladen}></iframe>
   {:else}
     <div class="rollfeld" style="padding: 0" bind:this={rollfeld}>
-      <div class="lesen" class:ohne-inhalt={!inhalt.length && !artikel.nachbarn.length}>
+      <div class="lesen" class:ohne-inhalt={!inhalt.length && !artikel.nachbarn.length} style:zoom={zoom}>
         {#if inhalt.length || artikel.nachbarn.length}
           <nav class="inhalt" aria-label="Inhalt">
             <div class="inhalt-titel">Inhalt</div>
