@@ -37,10 +37,14 @@ fehlenden Feldern (Schlagwörter, Stimmen, Autoren, Rubriken).
 12. **Sichtbarkeit:** Jeder Aufbau läuft als Auftrag des Appkerns (Seite Aufträge, Fußleiste) mit Was, Fortschritt,
     bisheriger Dauer und Restzeit. Eine neue Fassung eines Buchs baut ihren Index neu; der alte gilt, bis der neue
     fertig ist.
-
 13. **Sicherung (WIKI-32):** Gesichert wird nur selbst Erzeugtes: die Datenbank und die eigenen Indizes (sie kosten
     Rechenzeit), nicht die Bücher (ZIM, lassen sich neu laden). Die Indizes kommen beim Bau in die zentrale Sicherung
     (Werkzeuge/Sicherungen, quellen.toml), mit einem eigenen Eintrag je Buch.
+14. **Vektoren als Verbesserung, nie als Bedingung:** Die Bedeutungssuche (Vektoren im Fundus) bleibt eine
+    austauschbare Stufe hinter einer Schnittstelle (heute `Bedeutung` mit `angebunden()`). Jedes Buch kann eine eigene
+    Sammlung bekommen (heute nur ein Buch); der eigene Index liefert dafür die Textabschnitte (Abschnitt, Text, Pfad),
+    damit Vektoren später ohne neues Lesen der Bücher entstehen. Index und Register arbeiten immer ohne Vektoren; fehlt
+    die Sammlung oder antwortet der Fundus nicht, sucht das Buch ohne sie und sagt das (Rückmeldung je Buch).
 
 ## Reihenfolge des Baus
 
