@@ -50,13 +50,19 @@ export interface Verweiszahlen {
   online: number;
 }
 
+export interface Kachel {
+  pfad: string;
+  titel: string;
+  bild: string;
+}
+
 export interface Artikel {
   buch: string;
   pfad: string;
   angefragt: string;
   anker: string;
   titel: string;
-  darstellung: "lesedesign" | "original";
+  darstellung: "lesedesign" | "uebersicht" | "original";
   baustein: string;
   html: string;
   einleitung: string;
@@ -66,6 +72,7 @@ export interface Artikel {
   verweise: Verweiszahlen;
   online: string[];
   original: string;
+  kacheln: Kachel[];
 }
 
 export type Weg = "bedeutung" | "index";

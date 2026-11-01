@@ -14,7 +14,7 @@ from .basis import Aufbereitet, Wege
 class Originalansicht:
     kennung = "original"
     arten = frozenset({"dokumentation", "frage_antwort", "webseite", "sonstiges"})
-    lesedesign = False
+    darstellung = "original"
 
     def passt(self, eintrag: Eintrag) -> bool:
         return True                      # zeigt jede Seite, so wie sie ist

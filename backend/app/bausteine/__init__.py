@@ -7,8 +7,9 @@ from ..modell.buch import Buch
 from .basis import Aufbereitet, Baustein, Wege
 from .enzyklopaedie import Enzyklopaedie
 from .original import Originalansicht
+from .uebersicht import Uebersicht
 
-BAUSTEINE: tuple[Baustein, ...] = (Enzyklopaedie(),)
+BAUSTEINE: tuple[Baustein, ...] = (Uebersicht(), Enzyklopaedie())
 RUECKFALL: Baustein = Originalansicht()
 
 

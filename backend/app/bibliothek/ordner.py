@@ -65,6 +65,16 @@ def art_aus(erzeuger: str) -> Art:
     return next((art for name, art in ERZEUGER if name in e), "sonstiges")
 
 
+def seiten_aus(a: Archive) -> int:
+    """Zahl der Seiten (HTML) laut Zähler der Datei (`Counter`: "text/html=3205144;image/webp=..."). Die Zahl der
+    Artikel der Datei zählt Weiterleitungen mit (deutsche Enzyklopädie 5,04 Mio. statt 3,2 Mio.); ohne Zähler bleibt
+    nur sie."""
+    zaehler = _angabe(a, "Counter")
+    seiten = sum(int(n) for art, _, n in (t.rpartition("=") for t in zaehler.split(";"))
+                 if art.startswith("text/html") and n.isdigit())
+    return seiten or a.article_count
+
+
 def buch_aus(kennung: str, a: Archive, groesse: int) -> Buch:
     erzeuger = _angabe(a, "Scraper")
     art = art_aus(erzeuger)
@@ -77,7 +87,7 @@ def buch_aus(kennung: str, a: Archive, groesse: int) -> Buch:
     return Buch(kennung=kennung, name=_angabe(a, "Name") or kennung, titel=_angabe(a, "Title") or kennung,
                 beschreibung=_angabe(a, "Description"), sprache=_angabe(a, "Language").split(",")[0],
                 stand=_angabe(a, "Date"), erzeuger=erzeuger, art=art, eintraege=a.entry_count,
-                artikel=a.article_count, medien=a.media_count, groesse=groesse, startseite=start,
+                artikel=seiten_aus(a), medien=a.media_count, groesse=groesse, startseite=start,
                 faehigkeiten=Faehigkeiten(titelindex=a.has_title_index, volltext=a.has_fulltext_index,
                                           bilder=a.media_count > 0, lesedesign=art in MIT_LESEDESIGN))
 

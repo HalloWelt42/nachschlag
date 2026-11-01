@@ -88,13 +88,13 @@ def _zelleninhalt(zelle, ziel) -> None:
         ziel.remove(ziel[-1])
 
 
-def _steckbrief(inhalt, titel: str) -> Steckbrief | None:
-    """Infobox oder Taxobox neu gesetzt: Kopf, Unterzeile, Bild mit Unterschrift, Gruppen, Werte und Namen (Entwurf
-    teile/artikel.html). Als Elementbaum gebaut (Inhalt der Zellen wandert mit Auszeichnung und Verweisen, nie als Text
-    zusammengesetzt) und gesäubert wie der Artikel: Attribute und Klassen der Quelle fallen weg, Text kommt maskiert."""
-    tabelle = next(iter(inhalt.xpath(".//table[contains(@class,'infobox') or contains(@class,'taxobox')]")), None)
-    if tabelle is None:
-        return None
+INFOKASTEN = ".//table[contains(@class,'infobox') or contains(@class,'taxobox')]"
+
+
+def _steckbrief_aus(tabelle) -> tuple[str | None, object] | None:
+    """Ein Infokasten (Infobox, Taxobox) neu gesetzt: Kopf, Unterzeile, Bild mit Unterschrift, Gruppen, Werte und
+    Namen (Entwurf teile/artikel.html). Als Elementbaum gebaut: der Inhalt der Zellen wandert mit Auszeichnung und
+    Verweisen, nie als Text zusammengesetzt. Liefert Kopf und Inhalt (noch ungesäubert) oder nichts, wenn nichts bleibt."""
     kopf: str | None = None
     wurzel = lhtml.Element("div")
     werte = None                         # die offene Liste von Namen und Werten (dl)
@@ -158,17 +158,43 @@ def _steckbrief(inhalt, titel: str) -> Steckbrief | None:
             werte = neu("dl", "steckbrief-werte")
         neu("dt", text=h.text_von(name).rstrip(":"), in_=werte)
         _zelleninhalt(wert, neu("dd", in_=werte))
-    tabelle.drop_tree()
-    if not len(wurzel):
-        return None
-    h.saeubern(wurzel)
-    return Steckbrief(titel=kopf or titel, html="".join(h.als_html(k) for k in wurzel))
+    return (kopf, wurzel) if len(wurzel) else None
+
+
+def _steckbriefe(inhalt, titel: str) -> Steckbrief | None:
+    """Der erste Infokasten wird der Steckbrief des Artikels (neben dem Text); jeder weitere (etwa die Organisation zu
+    einem Vertrag) wird an seiner Stelle gleich gesetzt und schwebt dort rechts im Text. Gesäubert wie der Artikel:
+    Attribute und Klassen der Quelle fallen weg, Text kommt maskiert."""
+    tabellen = inhalt.xpath(INFOKASTEN)
+    steckbrief: Steckbrief | None = None
+    for tabelle in tabellen:
+        if any(a in tabellen for a in tabelle.iterancestors()) or tabelle.getparent() is None:
+            continue                     # Kasten im Kasten: gehört zum äußeren
+        gebaut = _steckbrief_aus(tabelle)
+        if gebaut is None:
+            tabelle.drop_tree()
+            continue
+        kopf, wurzel = gebaut
+        if steckbrief is None:
+            h.saeubern(wurzel)
+            steckbrief = Steckbrief(titel=kopf or titel, html="".join(h.als_html(k) for k in wurzel))
+            tabelle.drop_tree()
+            continue
+        kasten = lhtml.Element("aside")
+        kasten.set("class", "steckbrief")
+        if kopf:
+            SubElement(kasten, "div").set("class", "steckbrief-kopf")
+            kasten[0].text = kopf
+        kasten.extend(list(wurzel))
+        kasten.tail = tabelle.tail
+        tabelle.getparent().replace(tabelle, kasten)
+    return steckbrief
 
 
 class Enzyklopaedie:
     kennung = "enzyklopaedie"
     arten = frozenset({"enzyklopaedie"})
-    lesedesign = True
+    darstellung = "lesedesign"
 
     def passt(self, eintrag: Eintrag) -> bool:
         """Nur Artikel (mit `#mw-content-text`); die Startseite des Buchs ist eine eigene Kachelseite."""
@@ -191,7 +217,7 @@ class Enzyklopaedie:
         verweise, online = h.verweise_umschreiben(inhalt, buch.kennung, eintrag.pfad, wege)
         online += [v for v in h.online_verweise(weblinks) if v not in online]
         bild = h.bilder_umschreiben(inhalt, buch.kennung, eintrag.pfad, wege)
-        steckbrief = _steckbrief(inhalt, titel)
+        steckbrief = _steckbriefe(inhalt, titel)
         for div in list(inhalt.xpath(".//div[contains(@class,'mw-heading')]")):
             div.drop_tag()
         abschnitte = h.ueberschriften(inhalt)

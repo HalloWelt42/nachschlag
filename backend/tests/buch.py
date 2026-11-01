@@ -72,10 +72,14 @@ AEGYPTEN = seite("Ancient Egypt", """
 """)
 
 
-#: Startseite wie bei mwoffliner: eigene Kachelseite ohne Artikelaufbau
-STARTSEITE = ('<html><head><title>Probelexikon</title><link href="./_res_/style.css" rel="stylesheet"></head><body>'
-              '<div class="item"><a href="Rotfuchs"><figure><img src="./_assets_/a/fuchs.png"><figcaption>Rotfuchs</figcaption>'
-              '</figure></a></div></body></html>')
+#: Startseite wie bei mwoffliner: eigene Kachelseite ohne Artikelaufbau, Anordnung per Skript; eine Kachel zeigt auf
+#: einen Artikel, den es im Buch nicht gibt
+STARTSEITE = ('<html><head><title>Probelexikon</title><script src="./_res_/masonry.min.js"></script></head>'
+              '<body class="article-list-home mw-body-content nojs"><div id="container"><div id="content">'
+              '<a class="item" href="Rotfuchs"><figure><img loading="lazy" src="./_assets_/a/fuchs.png"><figcaption>Rotfuchs</figcaption></figure></a>'
+              '<a class="item" href="Kreuzfuchs"><figure><figcaption>Kreuzfuchs</figcaption></figure></a>'
+              '<a class="item" href="Gibt_es_nicht"><figure><figcaption>Fehlt</figcaption></figure></a>'
+              '</div></div></body></html>')
 
 
 def artikel(titel: str, text: str) -> str:

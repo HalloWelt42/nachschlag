@@ -28,6 +28,7 @@ VERSTECKT = re.compile(r"display\s*:\s*none", re.I)
 LINIE = {"linie-unten": re.compile(r"border-bottom\s*:\s*[^;]*\d", re.I),
          "linie-links": re.compile(r"border-left\s*:\s*[^;]*\d", re.I)}
 SCHWEBT_RECHTS = re.compile(r"float\s*:\s*right", re.I)
+KURSIV = re.compile(r"font-style\s*:\s*italic", re.I)
 
 
 def gerade(text: str) -> str:
@@ -151,6 +152,8 @@ def stile_uebersetzen(wurzel) -> None:
             el.drop_tree()
             continue
         zusatz = [k for k, muster in LINIE.items() if el.tag in ("td", "th") and muster.search(stil)]
+        if el.tag == "span" and KURSIV.search(stil):
+            el.tag = "i"                 # Kursiv nur als Stil (etwa fremdsprachige Titel) wird echtes Kursiv
         if el.tag in ("table", "div") and SCHWEBT_RECHTS.search(stil):
             zusatz.append("rechts")
         if zusatz:
@@ -194,7 +197,7 @@ def leere_entfernen(wurzel) -> None:
             continue
         if not (el.text or "").strip() and not any(isinstance(k.tag, str) and (k.tag in SICHTBAR and k.tag != "br" or
                                                                               k.tag not in SICHTBAR) for k in el):
-            el.drop_tag() if el.tail and el.tail.strip() else el.drop_tree()
+            el.drop_tag()                # Hülle weg, ihr Text (auch ein einzelnes Leerzeichen) und Folgetext bleiben
     for el in wurzel.iter(*HUELLEN):
         while len(el) and el[-1].tag == "br" and not (el[-1].tail or "").strip():
             el.remove(el[-1])

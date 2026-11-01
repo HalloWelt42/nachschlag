@@ -79,6 +79,7 @@ async def test_buecher(nachschlag):
     b = stand["buecher"][0]
     assert b["kennung"] == "probe_de_all_2026-01" and b["art"] == "enzyklopaedie" and b["startseite"] == "index"
     assert b["faehigkeiten"] == {"titelindex": True, "volltext": True, "bilder": True, "lesedesign": True}
+    assert b["artikel"] == 8             # Seiten laut Zähler der Datei (index, sechs Artikel, eine Sprungseite), ohne Bilder
     assert (await c.get("/api/v1/buecher/gibt_es_nicht")).status_code == 404
 
 
@@ -128,12 +129,14 @@ async def test_steckbrief_aus_zellen_mit_klassen(nachschlag):
     assert "<figcaption>Map of the Nile</figcaption>" in s["html"] and "<dt>Religion</dt><dd>Egyptian religion</dd>" in s["html"]
 
 
-async def test_startseite_des_buchs_im_original(nachschlag):
-    """Die Startseite ist eine Kachelseite, kein Artikel: sie kommt unverändert, das Lesedesign zerlegt sie nicht."""
+async def test_startseite_des_buchs_als_uebersicht(nachschlag):
+    """Die Startseite ist eine Kachelseite, kein Artikel: Nachschlag liest ihre Kacheln aus (ohne Ziel fallen weg)."""
     c, _, _ = nachschlag
     a = (await c.get("/api/v1/artikel/probe_de_all_2026-01/index")).json()
-    assert a["darstellung"] == "original" and a["baustein"] == "original" and a["titel"] == "Probelexikon"
-    assert a["original"] == "/api/v1/inhalt/original/probe_de_all_2026-01/index"
+    assert a["darstellung"] == "uebersicht" and a["baustein"] == "uebersicht" and a["titel"] == "Probelexikon"
+    assert a["kacheln"] == [
+        {"pfad": "Rotfuchs", "titel": "Rotfuchs", "bild": "/api/v1/inhalt/medien/probe_de_all_2026-01/_assets_/a/fuchs.png"},
+        {"pfad": "Kreuzfuchs", "titel": "Kreuzfuchs", "bild": ""}]
 
 
 async def test_stammbaum_und_verstecktes(nachschlag):

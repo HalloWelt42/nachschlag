@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from typing import Protocol
 
 from ..bibliothek import Eintrag
-from ..modell.artikel import Abschnitt, Steckbrief, Verweiszahlen
+from ..modell.artikel import Abschnitt, Darstellung, Kachel, Steckbrief, Verweiszahlen
 from ..modell.buch import Art, Buch
 
 
@@ -34,12 +34,13 @@ class Aufbereitet:
     bild: str = ""
     verweise: Verweiszahlen = field(default_factory=Verweiszahlen)
     online: list[str] = field(default_factory=list)
+    kacheln: list[Kachel] = field(default_factory=list)
 
 
 class Baustein(Protocol):
     kennung: str
     arten: frozenset[Art]
-    lesedesign: bool
+    darstellung: Darstellung
 
     def passt(self, eintrag: Eintrag) -> bool:
         """Kann der Baustein diese Seite lesen? Auch ein Buch seiner Art hat Seiten anderer Bauart (etwa die

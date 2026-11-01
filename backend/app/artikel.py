@@ -33,10 +33,10 @@ class Artikelleser:
         baustein = baustein_fuer(b, eintrag)
         fertig = await asyncio.to_thread(baustein.aufbereiten, b, eintrag, self._wege)
         return Artikel(buch=buch, pfad=eintrag.pfad, angefragt=pfad, anker=eintrag.anker, titel=fertig.titel,
-                       darstellung="lesedesign" if baustein.lesedesign else "original", baustein=baustein.kennung,
+                       darstellung=baustein.darstellung, baustein=baustein.kennung,
                        html=fertig.html, einleitung=fertig.einleitung, abschnitte=fertig.abschnitte,
                        steckbrief=fertig.steckbrief, bild=fertig.bild, verweise=fertig.verweise, online=fertig.online,
-                       original=self._wege.original(buch, eintrag.pfad))
+                       original=self._wege.original(buch, eintrag.pfad), kacheln=fertig.kacheln)
 
     async def zufall(self, buch: str) -> str:
         """Pfad eines zufälligen Artikels (ohne Weiterleitungen)."""

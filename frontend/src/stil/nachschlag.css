@@ -7,7 +7,7 @@
 .inhalt-stufe { display: contents; }
 
 /* Lesegröße aus der Grundschrift dort, wo gelesen wird (auf :root gerechnet, folgte sie der Stufe des Inhalts nicht) */
-:root { --lese-zeile: 1.7; --lese-breite: 44em; }
+:root { --lese-zeile: 1.7; --lese-breite: 54em; }       /* breiter als im Entwurf (Nutzer 01.11.2026: "überall zu schmal") */
 .artikel { --lesen: calc(var(--gross) + 2px); }
 :root[data-lesegroesse="gross"] .artikel { --lesen: calc(var(--gross) + 5px); }
 
@@ -88,7 +88,7 @@
 
 /* ----- Der Artikel selbst (Variante A: Lesespalte). Regeln für den Fließtext gelten nur in .artikel-text, nie im
    Steckbrief daneben (sonst schlagen sie dessen eigene Abstände) ----- */
-.lesen { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: var(--a6); padding: var(--a4) var(--a5) 0; max-width: 1420px; }
+.lesen { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: var(--a6); padding: var(--a4) var(--a5) 0; max-width: 1680px; }
 .lesen .inhalt { position: sticky; top: var(--a4); align-self: start; max-height: calc(100vh - 260px); overflow-y: auto; }
 .lesen.ohne-inhalt { grid-template-columns: minmax(0, 1fr); }
 .artikel { font-size: var(--lesen); line-height: var(--lese-zeile); color: var(--text); min-width: 0; max-width: var(--lese-breite); }
@@ -110,7 +110,7 @@
 
 /* Bilder: in der Quelle nur Vorschaubilder bis rund 330 Pixel, darum nie größer als die Datei */
 .artikel-text figure { margin: 0; }
-.artikel-text figure { width: max-content; max-width: min(100%, 270px); background: var(--flaeche); border-radius: var(--r3); padding: 6px; box-shadow: var(--schatten);
+.artikel-text figure { width: max-content; max-width: min(100%, 300px); background: var(--flaeche); border-radius: var(--r3); padding: 6px; box-shadow: var(--schatten);
                        float: right; clear: right; margin: .3em 0 1em 1.4em; }
 .artikel-text figure img { display: block; max-width: 100%; height: auto; border-radius: var(--r1); }
 .artikel-text figcaption { font-size: var(--klein); line-height: 1.4; color: var(--text-2); padding: 6px 4px 2px; }
@@ -121,7 +121,7 @@
 .artikel-text th { background: var(--flaeche-2); font-weight: 600; }
 
 /* Kästen, die in der Quelle rechts schweben (etwa der Rahmen um einen Stammbaum) */
-.artikel-text table.rechts { display: table; float: right; clear: right; width: auto; max-width: min(100%, 320px); margin: .3em 0 1em 1.4em;
+.artikel-text table.rechts { display: table; float: right; clear: right; width: auto; max-width: min(100%, 380px); margin: .3em 0 1em 1.4em;
                              background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten); }
 .artikel-text table.rechts > tbody > tr > td { box-shadow: none; padding: var(--a2) var(--a3); }
 
@@ -135,7 +135,7 @@
 .artikel-text .klade td.linie-links.linie-unten { box-shadow: inset 2px 0 0 var(--text-3), inset 0 -2px 0 var(--text-3); border-radius: 0; }
 
 /* Steckbrief (Infobox und Taxobox der Quelle, neu gesetzt) */
-.steckbrief { float: right; width: 300px; margin: .3em 0 var(--a4) var(--a5); background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten);
+.steckbrief { float: right; width: 360px; margin: .3em 0 var(--a4) var(--a5); background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten);
               font-size: var(--klein); line-height: 1.45; overflow: hidden; }
 .steckbrief-kopf { padding: var(--a2) var(--a3); font-size: var(--titel); font-weight: 600; background: color-mix(in srgb, var(--minze) 14%, transparent); }
 .steckbrief-unter { margin: 0; padding: 4px var(--a3) 0; color: var(--text-2); }
@@ -146,7 +146,7 @@
                      color: var(--text-3); background: var(--flaeche-2); }
 .steckbrief-werte { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px var(--a3); margin: var(--a2) var(--a3) var(--a3); }
 .steckbrief-werte dt { color: var(--text-3); }
-.steckbrief-werte dd { margin: 0; }
+.steckbrief-werte dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .steckbrief-name { margin: var(--a2) var(--a3) var(--a3); font-size: var(--gross); }
 .steckbrief-name span { font-size: var(--klein); color: var(--text-2); }
 
@@ -172,8 +172,20 @@
 /* Ausnahme: Originalseiten setzen weißes Papier voraus, auch im dunklen Thema */
 .original { flex: 1; width: 100%; border: 0; background: #fff; min-height: 0; }
 
+/* ----- Übersicht (Kacheln einer Startseite eines Buchs), Karten wie "Weiterlesen" im Entwurf start-a.html ----- */
+.uebersicht { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: var(--a4); padding: var(--a4) var(--a5) var(--a6);
+              max-width: 1680px; }
+.leskarte { display: flex; flex-direction: column; background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten); overflow: hidden;
+            text-decoration: none; color: var(--text); min-width: 0; }
+.leskarte:hover { box-shadow: var(--schatten), 0 0 0 2px var(--akzent-flaeche); }
+.leskarte .bildflaeche { height: 150px; background: var(--mulde); display: grid; place-items: center; overflow: hidden; color: var(--text-3); }
+.leskarte .bildflaeche i { font-size: 28px; }
+.leskarte .bildflaeche img { width: 100%; height: 100%; object-fit: cover; }
+.leskarte .koerper { padding: var(--a3) var(--a4); display: flex; flex-direction: column; gap: 4px; }
+.leskarte .t { font-weight: 600; font-size: var(--gross); }
+
 /* ----- Startseite (Variante A) ----- */
-.start-innen { max-width: 1240px; margin: 0 auto; padding: var(--a5) var(--a5) var(--a7); display: flex; flex-direction: column; gap: var(--a6); }
+.start-innen { max-width: 1520px; margin: 0 auto; padding: var(--a5) var(--a5) var(--a7); display: flex; flex-direction: column; gap: var(--a6); }
 .abschnitt-kopf { display: flex; align-items: baseline; gap: var(--a3); margin-bottom: var(--a3); }
 .abschnitt-kopf h2 { margin: 0; font-size: var(--titel); font-weight: 600; display: flex; align-items: center; gap: var(--a2); }
 .abschnitt-kopf h2 i { color: var(--text-3); font-size: .9em; }
@@ -223,7 +235,7 @@
 .filtergruppe button.an i { color: var(--akzent); }
 .filtergruppe button.aus { color: var(--text-3); }
 .filtergruppe button .zahl { margin-left: auto; font-family: var(--schrift-zahl); color: var(--text-3); font-size: var(--marke); }
-.ergebnisse { padding: var(--a4) var(--a5) var(--a6); display: flex; flex-direction: column; gap: var(--a3); max-width: 900px; }
+.ergebnisse { padding: var(--a4) var(--a5) var(--a6); display: flex; flex-direction: column; gap: var(--a3); max-width: 1100px; }
 .beste-stelle { padding: var(--a4); background: var(--flaeche); box-shadow: var(--schatten), inset 3px 0 0 var(--petrol); border-radius: 0; display: flex; flex-direction: column; gap: var(--a2); }
 .beste-stelle .etikett i { color: var(--petrol); }
 .beste-stelle .ort { font-size: var(--klein); color: var(--text-2); }
@@ -275,7 +287,7 @@
   .fundband .knopf { margin-left: 0; }
   .kopf .suchanker .buchwahl, .kopf .suchanker kbd { display: none; }
   .artikel-kopf { padding-inline: var(--a3); }
-  .lesen { padding-inline: var(--a3); }
+  .lesen, .uebersicht { padding-inline: var(--a3); }
   .start-innen { padding-inline: 0; }          /* den Seitenrand am Telefon gibt die Schale, nur einmal */
   .treffer .marken { margin-left: 0; }
 }

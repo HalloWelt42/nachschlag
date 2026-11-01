@@ -10,6 +10,7 @@
   import { lesen, lesenZiel, suchen, verweisZiel } from "../lib/ziele";
 
   const WOERTER_JE_MINUTE = 200;
+  const MITLAUF_ABSTAND_PX = 90;          // eine Überschrift gilt als erreicht, sobald sie so nah am oberen Rand steht
   const LESEGROESSE = "nachschlag.lesegroesse";
 
   let artikel = $state.raw<Artikel | null>(null);   // nur lesen, ohne Proxy
@@ -120,11 +121,12 @@
 
   function mitlaufen() {
     if (!rollfeld || !text || !artikel) return;
-    const oben = rollfeld.scrollTop + 90;
+    // Lage der Überschriften im sichtbaren Rollfeld (offsetTop bezöge sich auf das nächste positionierte Element)
+    const oben = rollfeld.getBoundingClientRect().top + MITLAUF_ABSTAND_PX;
     let jetzt = "";
     for (const a of artikel.abschnitte) {
       const h = text.querySelector<HTMLElement>(`#${CSS.escape(a.anker)}`);
-      if (h && h.offsetTop <= oben) jetzt = a.anker;
+      if (h && h.getBoundingClientRect().top <= oben) jetzt = a.anker;
     }
     aktiv = jetzt;
     const weit = rollfeld.scrollHeight - rollfeld.clientHeight;
@@ -199,7 +201,7 @@
       <span>{artikel.titel}</span></div>
     <h1>{artikel.titel}</h1>
     <div class="werkzeuge">
-      {#if artikel.darstellung === "lesedesign"}
+      {#if artikel.darstellung !== "original"}
         <button class="knopf" class:an={original} title="Die Seite so, wie sie im Buch steht" onclick={() => (original = !original)}>
           <i class="fa-solid fa-file-code"></i><span class="wort">Original</span></button>
       {/if}
@@ -222,7 +224,21 @@
       <button class="knopf still" onclick={() => suchen(frage)}><i class="fa-solid fa-list"></i>Alle Treffer</button>
     </div>
   {/if}
-  {#if zeigeOriginal}
+  {#if artikel.darstellung === "uebersicht" && !original}
+    <!-- Übersicht (etwa Startseite eines Buchs): Kacheln als Karten wie im Entwurf start-a.html -->
+    <div class="rollfeld" style="padding: 0">
+      <div class="uebersicht">
+        {#each artikel.kacheln as k (k.pfad)}
+          <a class="leskarte" href={"/" + lesenZiel(artikel.buch, k.pfad)} onclick={(e) => { e.preventDefault(); lesen(artikel!.buch, k.pfad); }}>
+            <span class="bildflaeche">
+              {#if k.bild}<img src={k.bild} alt="" loading="lazy" />{:else}<i class="fa-solid fa-file-lines"></i>{/if}
+            </span>
+            <span class="koerper"><span class="t">{k.titel}</span></span>
+          </a>
+        {/each}
+      </div>
+    </div>
+  {:else if zeigeOriginal}
     <!-- ohne Skripte, mit Herkunft der App: Stile und Bilder laden mit dem Lesezugang, die Seite kann nichts in der App tun -->
     <iframe class="original" src={artikel.original} title="Originalseite: {artikel.titel}" sandbox="allow-same-origin allow-popups"
             onload={rahmenGeladen}></iframe>
