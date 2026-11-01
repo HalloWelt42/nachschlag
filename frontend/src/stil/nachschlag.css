@@ -94,6 +94,8 @@
 .artikel { font-size: var(--lesen); line-height: var(--lese-zeile); color: var(--text); min-width: 0; max-width: var(--lese-breite); }
 /* überlange Wörter (Befehle, Pfade, Adressen) brechen um, statt die Spalte zu sprengen */
 .artikel-text { overflow-wrap: anywhere; }
+/* in Tabellen bestimmt das längste Wort die Spaltenbreite; lange Wörter trennt der Browser nach der Sprache des Buchs */
+.artikel-text :is(th, td) { overflow-wrap: break-word; hyphens: auto; }
 .artikel-text p { margin: 0 0 1em; }
 .artikel-text h2 { font-size: calc(var(--lesen) + 9px); font-weight: 600; line-height: 1.25; margin: 1.6em 0 .5em; padding-bottom: .25em;
               border-bottom: 1px solid var(--rand); clear: both; }
@@ -152,6 +154,10 @@
 .steckbrief-name { margin: var(--a2) var(--a3) var(--a3); font-size: var(--gross); }
 .steckbrief-name span { font-size: var(--klein); color: var(--text-2); }
 
+/* Formeln: MathML, vom Browser in der Textfarbe gesetzt; abgesetzte Formeln mit eigenem Rollfeld (nie die Seite) */
+.artikel-text math { font-size: 1.08em; }
+.artikel-text .formel { margin: .6em 0; overflow-x: auto; overflow-y: hidden; }
+
 /* Fundstelle aus der Suche, im Text markiert */
 .artikel .fundstelle { background: color-mix(in srgb, var(--petrol) 9%, transparent); box-shadow: -10px 0 0 color-mix(in srgb, var(--petrol) 9%, transparent),
                        inset 3px 0 0 var(--petrol); padding: 4px 6px 4px 10px; margin-left: -10px; border-radius: 0; }
@@ -177,15 +183,51 @@
 /* ----- Übersicht (Kacheln einer Startseite eines Buchs), Karten wie "Weiterlesen" im Entwurf start-a.html ----- */
 .uebersicht { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: var(--a4); padding: var(--a4) var(--a5) var(--a6);
               max-width: 1680px; }
-.leskarte { display: flex; flex-direction: column; background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten); overflow: hidden;
-            text-decoration: none; color: var(--text); min-width: 0; }
-.leskarte:hover { box-shadow: var(--schatten), 0 0 0 2px var(--akzent-flaeche); }
-button.leskarte { border: 0; padding: 0; font: inherit; text-align: left; cursor: pointer; }
-.leskarte .bildflaeche { height: 150px; background: var(--mulde); display: grid; place-items: center; overflow: hidden; color: var(--text-3); }
-.leskarte .bildflaeche i { font-size: 28px; }
-.leskarte .bildflaeche img { width: 100%; height: 100%; object-fit: cover; }
-.leskarte .koerper { flex: 1; padding: var(--a3) var(--a4); display: flex; flex-direction: column; gap: 4px; }   /* füllt die Karte: der Fuß sitzt am Boden */
-.leskarte .t { font-weight: 600; font-size: var(--gross); overflow-wrap: anywhere; }
+
+/* ----- Baustein Kachel (teile/Kachel.svelte; .kachel gehört der Schale): eine Bauweise für alle Kartenarten, Fuß am Boden, leicht gerundet ----- */
+.kachel { position: relative; display: flex; flex-direction: column; min-width: 0; padding: 0; border: 0; border-radius: var(--r2); background: var(--flaeche);
+         box-shadow: var(--schatten); overflow: hidden; color: var(--text); font: inherit; text-align: left; text-decoration: none; }
+a.kachel, button.kachel { cursor: pointer; }
+a.kachel:hover, button.kachel:hover:not(:disabled) { box-shadow: var(--schatten), 0 0 0 2px var(--akzent-flaeche); }
+button.kachel:disabled { opacity: .6; cursor: default; }
+.kachel-bild { flex: none; display: grid; place-items: center; overflow: hidden; background: var(--mulde); color: var(--text-3); }
+.kachel-bild img { width: 100%; height: 100%; object-fit: cover; }
+.kachel.hoch .kachel-bild { height: 150px; font-size: calc(var(--seitentitel) + 4px); }
+.kachel.quer { flex-direction: row; align-items: center; gap: var(--a3); padding: var(--a2) var(--a3) var(--a2) var(--a2); }
+.kachel.quer .kachel-bild { width: 64px; height: 50px; border-radius: var(--r1); }
+.kachel.quer .kachel-bild.zeichen { width: 44px; height: 44px; border-radius: var(--r2); background: var(--flaeche-2); color: var(--petrol); font-size: var(--titel); }
+.kachel-koerper { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: var(--a3) var(--a4); }   /* füllt die Karte: der Fuß sitzt am Boden */
+.kachel.quer .kachel-koerper { padding: 0; align-self: stretch; justify-content: center; }
+.kachel.text .kachel-koerper { padding: var(--a4); gap: var(--a2); }
+.kachel.mit-ecke .kachel-koerper { padding-right: calc(var(--a4) + 28px); }
+.kachel.quer.mit-ecke .kachel-koerper { padding-right: 28px; }
+.kachel-titel { font-weight: 600; font-size: var(--gross); overflow-wrap: anywhere; }
+.kachel.quer .kachel-titel { font-size: inherit; }
+.kachel-unter { font-size: var(--klein); color: var(--text-2); overflow-wrap: anywhere; }
+.kachel-fuss { margin-top: auto; padding-top: var(--a2); }
+.kachel-ecke { position: absolute; top: var(--a2); right: var(--a2); display: flex; align-items: center; gap: 4px; }
+/* Teile, die in Karten wiederkehren */
+.lesestand-fuss { display: flex; align-items: center; gap: var(--a2); font-size: var(--marke); color: var(--text-3); }
+.lesestand-fuss .spur { flex: 1; height: 4px; border-radius: 2px; background: var(--mulde); overflow: hidden; }
+.lesestand-fuss .spur span { display: block; height: 100%; background: var(--akzent-flaeche); }
+.kachel .auszug { margin: 0; font-size: var(--klein); color: var(--text-2); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.kachel .faehig { display: flex; flex-wrap: wrap; gap: 6px; }
+.kachel.zieht { opacity: .45; }
+.kachel.davor { box-shadow: var(--schatten), 0 0 0 2px var(--akzent-flaeche); }
+.kachel .griff { font-size: var(--marke); color: var(--text-3); opacity: .7; cursor: grab; }
+.kachel .stand-zeile { font-size: var(--klein); color: var(--text-3); display: flex; gap: 6px; align-items: center; }
+.kachel .stand-zeile .gelesen { color: var(--gut); }
+.kachel .stand-zeile .marke-notiz { color: var(--akzent); }
+.kachel.quer .kachel-titel.knapp, .kachel .knapp { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Sprache und Buch auf einen Blick */
+.sprachmarke { display: inline-flex; align-items: center; gap: 4px; vertical-align: -1px; }
+.sprachmarke .fi { width: 1.25em; line-height: .94em; border-radius: 2px; box-shadow: 0 0 0 1px var(--rand); }
+.sprachmarke > i { color: var(--text-3); }
+.sprachmarke .sprachname { font-size: var(--marke); color: var(--text-2); }
+.nur-lesen { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.buchmarke { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.buchmarke > i { color: var(--text-3); }
+.buchmarke .buchtitel { min-width: 0; overflow-wrap: anywhere; }
 
 /* ----- Meins: Merkzettel und Verlauf (Entwürfe merkzettel.html, verlauf.html), Weiterlesen auf der Startseite ----- */
 .meins-seite { max-width: 1100px; padding: var(--a4) var(--a5) var(--a6); display: flex; flex-direction: column; gap: var(--a4); }
@@ -209,10 +251,6 @@ button.leskarte { border: 0; padding: 0; font: inherit; text-align: left; cursor
 .verlauf-tag h2 { margin: 0 0 var(--a2); font-size: var(--titel); font-weight: 600; display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--a3); }
 .verlauf-tag h2 .neben, .abschnitt-kopf .neben { font-size: var(--klein); font-weight: 400; color: var(--text-3); }
 .reihe { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: var(--a4); }
-.leskarte .stand { margin-top: auto; padding-top: var(--a2); display: flex; align-items: center; gap: var(--a2); font-size: var(--marke); color: var(--text-3); }
-.leskarte .stand .spur { flex: 1; height: 4px; border-radius: 2px; background: var(--mulde); overflow: hidden; }
-.leskarte .stand .spur span { display: block; height: 100%; background: var(--akzent-flaeche); }
-.leskarte .u { font-size: var(--klein); color: var(--text-2); }
 .abschnitt-kopf .alle { margin-left: auto; font-size: var(--klein); color: var(--akzent); font-weight: 600; background: none; border: 0; cursor: pointer; }
 
 /* ----- Startseite (Variante A) ----- */
@@ -230,21 +268,7 @@ button.leskarte { border: 0; padding: 0; font: inherit; text-align: left; cursor
 .grosssuche .suchfeld > i { font-size: 18px; }
 .etikett { font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; display: flex; align-items: center; gap: 6px; }
 .stoebern { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: var(--a4); }
-.kachel-zufall { background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten); padding: var(--a4); display: flex; flex-direction: column; gap: var(--a2); min-width: 0; }
-.kachel-zufall .t { font-weight: 600; font-size: var(--titel); display: block; overflow-wrap: anywhere; }
-.kachel-zufall p { margin: 0; font-size: var(--klein); color: var(--text-2); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
-.kachel-zufall .buchname { font-size: var(--marke); color: var(--text-3); }
-.kachel-zufall .knopfreihe { margin-top: auto; padding-top: var(--a2); }   /* Knöpfe einer Reihe auf einer Linie */
 .buecher { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: var(--a4); }
-.buchkarte { background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten); padding: var(--a3) var(--a4); display: grid;
-             grid-template-columns: 40px minmax(0, 1fr); gap: 4px var(--a3); align-items: center; cursor: pointer; text-align: left; border: 0; color: var(--text); font: inherit; }
-.buchkarte:hover { box-shadow: var(--schatten), 0 0 0 2px var(--akzent-flaeche); }
-.buchkarte .sym { grid-row: span 2; width: 40px; height: 40px; border-radius: var(--r2); display: grid; place-items: center; background: var(--flaeche-2); color: var(--petrol); }
-.buchkarte .sym i { font-size: 18px; }
-.buchkarte .t { font-weight: 600; overflow-wrap: anywhere; }
-.buchkarte .u { font-size: var(--klein); color: var(--text-3); }
-.buchkarte .u .zahl { font-family: var(--schrift-zahl); }
-.buchkarte .faehig { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .faehigkeit { font-size: var(--marke); padding: 2px 8px; border-radius: var(--r1); background: var(--flaeche-2); color: var(--text-2); display: inline-flex; gap: 5px; align-items: center; }
 .faehigkeit.an { background: var(--gut-weich); color: var(--gut); }
 
@@ -567,18 +591,6 @@ button.leskarte { border: 0; padding: 0; font: inherit; text-align: left; cursor
 .bereich-kopf .rechts .rund { background: transparent; color: var(--text-3); }
 .bereich-kopf .rechts .rund:hover { color: var(--text); background: var(--flaeche-2); }
 .thema-karten { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: var(--a3); }
-.artikelkarte { position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: var(--a3); align-items: center; padding: var(--a2) var(--a5) var(--a2) var(--a2);
-                border: 0; border-radius: var(--r3); background: var(--flaeche); box-shadow: var(--schatten); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
-.artikelkarte:hover:not(:disabled) { box-shadow: var(--schatten), 0 0 0 1px var(--rand-stark); }
-.artikelkarte:disabled { opacity: .6; cursor: default; }
-.artikelkarte img, .artikelkarte .ohne-bild { width: 64px; height: 50px; object-fit: cover; border-radius: var(--r1); background: var(--mulde); display: grid; place-items: center; color: var(--text-3); }
-.artikelkarte .t { font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.artikelkarte .u { font-size: var(--klein); color: var(--text-3); display: flex; gap: 6px; align-items: center; }
-.artikelkarte .griff { position: absolute; top: 8px; right: 10px; font-size: var(--marke); color: var(--text-3); opacity: .7; cursor: grab; }
-.artikelkarte .gelesen { color: var(--gut); }
-.artikelkarte .marke-notiz { color: var(--akzent); }
-.artikelkarte.zieht { opacity: .45; }
-.artikelkarte.davor { box-shadow: var(--schatten), 0 0 0 2px var(--akzent-flaeche); }
 .leer-bereich { display: flex; align-items: center; justify-content: center; gap: var(--a2); min-height: 66px; border-radius: var(--r3); box-shadow: inset 0 0 0 2px var(--rand);
                 color: var(--text-3); font-size: var(--klein); }
 .leer-bereich.ziel { box-shadow: inset 0 0 0 2px var(--akzent-flaeche); background: var(--akzent-weich); color: var(--akzent); }
@@ -719,6 +731,10 @@ button.leskarte { border: 0; padding: 0; font: inherit; text-align: left; cursor
   .artikel-text figure, .artikel-text table.rechts { float: none; margin: 0 auto 1em; }
   /* Diagramme (Stammbaum) sind breiter als ein Telefon: eigenes Rollfeld, nie die Seite */
   .artikel-text table.rechts { display: block; max-width: 100%; overflow-x: auto; }
+  /* Datentabellen (WIKI-18): ab drei Spalten bekommt jede Spalte Mindestbreite, die Tabelle ihr eigenes Rollfeld;
+     sonst würden alle Spalten auf Telefonbreite gequetscht und Wörter mehrfach umbrochen */
+  .artikel-text table:not(.rechts):has(tr > :nth-child(3)) { display: block; max-width: 100%; overflow-x: auto; }
+  .artikel-text table:not(.rechts):has(tr > :nth-child(3)) :is(th, td) { min-width: 8.5em; }
   .fundband { flex-wrap: wrap; margin-inline: var(--a3); }
   .fundband .knopf { margin-left: 0; }
   .kopf .suchanker .buchwahl, .kopf .suchanker kbd { display: none; }

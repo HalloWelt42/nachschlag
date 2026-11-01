@@ -1,6 +1,7 @@
 <script lang="ts">
   // Verlauf (Entwurf mockups/verlauf.html): Gelesenes und Gesuchtes nach Tagen, jüngstes zuerst, mit Lesestand und
   // Lesezeit; auf allen Geräten des Kontos. Seitenweise (je 50), Suche im Verlauf, Leeren mit Bestätigung im Band.
+  import Buchmarke from "../teile/Buchmarke.svelte";
   import { onMount } from "svelte";
   import { geraet, seitenFehler } from "appkern-oberflaeche";
   import { hole } from "appkern-oberflaeche";
@@ -90,7 +91,7 @@
                   <button class="liste-ziel" disabled={!e.buch} onclick={() => lesen(e.buch, e.pfad)}>
                     {#if e.bild}<img src={e.bild} alt="" loading="lazy" />{:else}<span class="ohne-bild"><i class="fa-solid fa-file-lines"></i></span>{/if}
                     <span><span class="t">{e.titel}{e.abschnitt ? ` › ${e.abschnitt}` : ""}</span>
-                      <span class="u">{e.buch ? buchName(e.buch) : e.buch_name} · {uhr(e.zuletzt)}</span></span>
+                      <span class="u"><Buchmarke kennung={e.buch} ersatz={e.buch_name} symbol={false} /> · {uhr(e.zuletzt)}</span></span>
                     <span class="rechts">{Math.round(e.anteil * 100)} %{e.sekunden >= 60 ? ` · ${Math.round(e.sekunden / 60)} Min` : ""}</span>
                   </button>
                 {/if}

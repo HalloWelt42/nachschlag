@@ -1,5 +1,6 @@
 // Die Bücher der Bibliothek, einmal geladen und von allen Seiten geteilt.
 import { seitenFehler } from "appkern-oberflaeche";
+import { spracheInWorten } from "./sprache";
 import { buecherHolen } from "./schnittstelle";
 import type { Buch } from "./typen";
 
@@ -46,11 +47,8 @@ export function datum(stand: string): string {
   return t ? `${t}.${m}.${j}` : m ? `${m}.${j}` : stand;
 }
 
-const SPRACHEN: Record<string, string> = { deu: "Deutsch", eng: "Englisch", fra: "Französisch", spa: "Spanisch", ita: "Italienisch",
-                                           nld: "Niederländisch", por: "Portugiesisch", rus: "Russisch", mul: "mehrsprachig" };
-
-/** Wie ein Buch heißt: sein Titel; tragen mehrere Bücher denselben (etwa die Enzyklopädie auf Deutsch und Englisch),
- *  mit der Sprache dahinter wie im Entwurf: "Wikipedia (Deutsch)". */
+/** Wie ein Buch in reinem Text heißt (Auswahllisten, Sätze): sein Titel; tragen mehrere Bücher denselben, mit der
+ *  Sprache dahinter: "Wikipedia (Deutsch)". Wo eine Buchmarke stehen kann, zeigt sie Titel und Flagge. */
 export function bezeichnung(b: Buch): string {
   const gleich = bibliothek.buecher.filter((x) => x.titel === b.titel).length > 1;
   return gleich ? `${b.titel} (${sprache(b.sprache)})` : b.titel;
@@ -62,7 +60,5 @@ export function buchName(kennung: string): string {
   return b ? bezeichnung(b) : kennung;
 }
 
-/** Sprache eines Buchs in Worten (das Buch nennt sie als Kürzel nach ISO 639-3, mehrere mit Komma). */
-export function sprache(kuerzel: string): string {
-  return kuerzel.split(",").map((k) => SPRACHEN[k.trim()] ?? k.trim()).join(", ");
-}
+/** Sprache eines Buchs in Worten (Kürzel nach ISO 639-3, mehrere mit Komma). */
+export const sprache = spracheInWorten;

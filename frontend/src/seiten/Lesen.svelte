@@ -2,6 +2,7 @@
   // Artikel lesen, Variante A (Entwurf mockups/artikel-a.html): ruhige Lesespalte, Inhalt links mitlaufend mit
   // Lesestand, Steckbrief rechts im Text. Weg: /lesen/<buch>/<pfad>?frage=&abschnitt=&anker=&notiz=. Bücher ohne eigenes
   // Lesedesign zeigen ihre Seite unverändert (Originalansicht). Verweise im Text bleiben in der App.
+  import Buchmarke from "../teile/Buchmarke.svelte";
   import { gehe, navigation, seitenFehler } from "appkern-oberflaeche";
   import { tick, untrack } from "svelte";
   import { bezeichnung, bibliothek, bibliothekLaden, buch as buchVon, datum, hauptbuch, zahl } from "../lib/bibliothek.svelte";
@@ -10,12 +11,14 @@
   import { lesen, lesenZiel, suchen, verweisZiel } from "../lib/ziele";
   import { Auswahl } from "appkern-oberflaeche";
   import { kopieren } from "../lib/kopieren";
+  import { htmlSprache } from "../lib/sprache";
   import { gemerkt, lesestandMelden, meins, meinsLaden, merken, notieren, vergessen, vorliebeSetzen, wann, type Notiz,
            type NotizNeu } from "../lib/meins.svelte";
   import { markieren, stelleAus, type Stelle } from "../lib/stellen";
   import { geraet } from "appkern-oberflaeche";
   import NotizBlatt from "../teile/NotizBlatt.svelte";
   import ThemaWahl from "../teile/ThemaWahl.svelte";
+  import Kachel from "../teile/Kachel.svelte";
   import Leuchtkasten from "../teile/Leuchtkasten.svelte";
   import { medienImArtikel, type Medium } from "../lib/medien";
   import { themenLaden } from "../lib/themen.svelte";
@@ -458,7 +461,7 @@
   <div class="laden">Lädt ...</div>
 {:else}
   <div class="artikel-kopf">
-    <div class="pfad"><i class="fa-solid fa-book"></i><b>{buch ? bezeichnung(buch) : artikel.buch}</b><i class="fa-solid fa-chevron-right"></i>
+    <div class="pfad"><i class="fa-solid fa-book"></i><b><Buchmarke kennung={artikel.buch} symbol={false} /></b><i class="fa-solid fa-chevron-right"></i>
       {#if artikel.rubrik}<span>{artikel.rubrik}</span><i class="fa-solid fa-chevron-right"></i>{/if}
       <span>{artikel.titel}</span></div>
     <h1 class:code-titel={artikel.titelart === "code"}>{artikel.titel}</h1>
@@ -552,12 +555,7 @@
       {/if}
       <div class="uebersicht">
         {#each artikel.kacheln as k, ki (ki)}
-          <a class="leskarte" href={"/" + lesenZiel(artikel.buch, k.pfad)} onclick={(e) => { e.preventDefault(); lesen(artikel!.buch, k.pfad); }}>
-            <span class="bildflaeche">
-              {#if k.bild}<img src={k.bild} alt="" loading="lazy" />{:else}<i class="fa-solid fa-file-lines"></i>{/if}
-            </span>
-            <span class="koerper"><span class="t">{k.titel}</span></span>
-          </a>
+          <Kachel bild={k.bild} titel={k.titel} adresse={"/" + lesenZiel(artikel.buch, k.pfad)} ziel={() => lesen(artikel!.buch, k.pfad)} />
         {/each}
       </div>
     </div>
@@ -601,7 +599,8 @@
               <div role="presentation" onclick={klick} onkeydown={() => {}}>{@html artikel.steckbrief.html}</div>
             </aside>
           {/if}
-          <div class="artikel-text" bind:this={text} role="presentation" onclick={klick} onkeydown={() => {}}>{@html artikel.html}</div>
+          <div class="artikel-text" lang={buch ? htmlSprache(buch.sprache) || undefined : undefined} bind:this={text} role="presentation"
+               onclick={klick} onkeydown={() => {}}>{@html artikel.html}</div>
           {#if artikelNotizen.length}
             <section class="deine-notizen">
               <h2><i class="fa-solid fa-note-sticky"></i>Deine Notizen<span class="zahl">{artikelNotizen.length}</span></h2>

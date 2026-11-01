@@ -4,7 +4,9 @@
   import { onMount } from "svelte";
   import { seitenFehler } from "appkern-oberflaeche";
   import Suchfeld from "../teile/Suchfeld.svelte";
-  import { bezeichnung, bibliothek, bibliothekLaden, datum, sprache, zahl } from "../lib/bibliothek.svelte";
+  import Kachel from "../teile/Kachel.svelte";
+  import Sprachmarke from "../teile/Sprachmarke.svelte";
+  import { bibliothek, bibliothekLaden, datum, zahl } from "../lib/bibliothek.svelte";
   import { artikelHolen, zufallHolen } from "../lib/schnittstelle";
   import type { Art, Buch } from "../lib/typen";
   import { lesen } from "../lib/ziele";
@@ -65,12 +67,11 @@
           <button class="alle" onclick={() => gehe("verlauf")}>Verlauf</button></div>
         <div class="reihe">
           {#each weiterlesen as e (e.id)}
-            <button class="leskarte" data-karte onclick={() => lesen(e.buch, e.pfad)}>
-              <span class="bildflaeche">{#if e.bild}<img src={e.bild} alt="" loading="lazy" />{:else}<i class="fa-solid fa-file-lines"></i>{/if}</span>
-              <span class="koerper"><span class="t">{e.titel}</span>
-                {#if e.abschnitt}<span class="u">bei {e.abschnitt}</span>{/if}
-                <span class="stand" data-fuss><span class="spur"><span style="width: {Math.round(e.anteil * 100)}%"></span></span>{Math.round(e.anteil * 100)} %</span></span>
-            </button>
+            <Kachel bild={e.bild} titel={e.titel} untertitel={e.abschnitt ? `bei ${e.abschnitt}` : ""} ziel={() => lesen(e.buch, e.pfad)}>
+              {#snippet fuss()}
+                <span class="lesestand-fuss"><span class="spur"><span style="width: {Math.round(e.anteil * 100)}%"></span></span>{Math.round(e.anteil * 100)} %</span>
+              {/snippet}
+            </Kachel>
           {/each}
         </div>
       </section>
@@ -100,20 +101,17 @@
         <div class="stoebern">
           {#each mitLesedesign as b (b.kennung)}
             {@const f = funde[b.kennung]}
-            <div class="kachel-zufall" data-karte>
-              <span class="etikett"><i class="fa-solid fa-dice"></i>Zufallsfund</span>
-              {#if f}
-                <span class="t">{f.titel}</span>
-                <span class="buchname">{bezeichnung(b)}</span>
-                <p>{f.einleitung}</p>
-                <div class="knopfreihe" data-fuss>
-                  <button class="knopf" onclick={() => lesen(b.kennung, f.pfad)}><i class="fa-solid fa-book-open"></i>Lesen</button>
+            <Kachel art="text" titel={f?.titel ?? "sucht ..."} untertitel={b.titel}>
+              {#snippet vorsatz()}<span class="etikett"><i class="fa-solid fa-dice"></i>Zufallsfund</span>{/snippet}
+              {#snippet ecke()}<Sprachmarke kuerzel={b.sprache} />{/snippet}
+              {#if f?.einleitung}<span class="auszug">{f.einleitung}</span>{/if}
+              {#snippet fuss()}
+                <span class="knopfreihe">
+                  <button class="knopf" disabled={!f} onclick={() => f && lesen(b.kennung, f.pfad)}><i class="fa-solid fa-book-open"></i>Lesen</button>
                   <button class="knopf still" onclick={() => zufallsfund(b)}><i class="fa-solid fa-rotate"></i>Neuer Zufall</button>
-                </div>
-              {:else}
-                <span class="buchname">{bezeichnung(b)}: sucht ...</span>
-              {/if}
-            </div>
+                </span>
+              {/snippet}
+            </Kachel>
           {/each}
         </div>
       </section>
@@ -128,17 +126,17 @@
       {/if}
       <div class="buecher">
         {#each bibliothek.buecher as b (b.kennung)}
-          <button class="buchkarte" title="Startseite des Buchs öffnen" onclick={() => lesen(b.kennung, b.startseite)}>
-            <span class="sym"><i class="fa-solid {SYMBOL[b.art]}"></i></span>
-            <span class="t">{bezeichnung(b)}</span>
-            <span class="u"><span class="zahl">{zahl(b.artikel)}</span> Artikel · Stand {datum(b.stand)}</span>
-            <span class="faehig">
-              {#if b.faehigkeiten.volltext}<span class="faehigkeit an"><i class="fa-solid fa-check"></i>Index</span>{/if}
-              {#if b.faehigkeiten.lesedesign}<span class="faehigkeit an"><i class="fa-solid fa-book-open-reader"></i>Lesedesign</span>
-              {:else}<span class="faehigkeit"><i class="fa-solid fa-file-code"></i>Originalansicht</span>{/if}
-              <span class="faehigkeit"><i class="fa-solid fa-language"></i>{sprache(b.sprache)}</span>
-            </span>
-          </button>
+          <Kachel art="quer" symbol={SYMBOL[b.art]} titel={b.titel} untertitel={`${zahl(b.artikel)} Artikel · Stand ${datum(b.stand)}`}
+                 hinweis="Startseite des Buchs öffnen" ziel={() => lesen(b.kennung, b.startseite)}>
+            {#snippet ecke()}<Sprachmarke kuerzel={b.sprache} />{/snippet}
+            {#snippet fuss()}
+              <span class="faehig">
+                {#if b.faehigkeiten.volltext}<span class="faehigkeit an"><i class="fa-solid fa-check"></i>Index</span>{/if}
+                {#if b.faehigkeiten.lesedesign}<span class="faehigkeit an"><i class="fa-solid fa-book-open-reader"></i>Lesedesign</span>
+                {:else}<span class="faehigkeit"><i class="fa-solid fa-file-code"></i>Originalansicht</span>{/if}
+              </span>
+            {/snippet}
+          </Kachel>
         {/each}
       </div>
       {#each bibliothek.fehler as f}<div class="fehlertext">{f}</div>{/each}

@@ -2,6 +2,7 @@
   // Ein Thema (Entwurf mockups/themen.html, rechte Seite): Kopf mit Beschreibung und Regel, Angebote der gespeicherten
   // Suche, Bereiche mit Artikeln als Karten oder Liste. Ziehen ordnet Artikel und Bereiche (am Rechner); in der Liste
   // wählt man den Bereich (überall, auch am Telefon).
+  import Buchmarke from "./Buchmarke.svelte";
   import { Auswahl, geraet, navigation, Rueckfrage, seitenFehler } from "appkern-oberflaeche";
   import { untrack } from "svelte";
   import { bezeichnung, bibliothek, bibliothekLaden, buchName } from "../lib/bibliothek.svelte";
@@ -10,6 +11,7 @@
     themaHolen, themaLoeschen, verschieben, type Angebot, type Thema, type Themeneintrag,
   } from "../lib/themen.svelte";
   import { lesen } from "../lib/ziele";
+  import Kachel from "./Kachel.svelte";
 
   let { id, ongeloescht }: { id: string; ongeloescht: () => void } = $props();
 
@@ -294,14 +296,13 @@
             <div class="thema-karten">
               {#each g.eintraege as e, ei (e.id)}
                 {@const stand = standVon(e)}
-                <button class="artikelkarte" class:zieht={ziehe?.id === e.id} class:davor={ziel?.bereich === g.id && ziel.platz === ei && ziehe?.art === "eintrag"}
-                        draggable="true" disabled={!e.buch} title={e.buch ? "Öffnen; ziehen zum Umordnen" : "Das Buch gibt es nicht mehr in der Bibliothek"}
-                        ondragstart={(d) => ziehenBeginnen(d, "eintrag", e.id)} ondragover={(d) => ueberKarte(d, g.id, ei)} onclick={() => oeffnen(e)}>
-                  {#if e.bild}<img src={e.bild} alt="" loading="lazy" />{:else}<span class="ohne-bild"><i class="fa-solid fa-file-lines"></i></span>{/if}
-                  <span><span class="t">{e.titel}</span>
-                    <span class="u">{#if stand.art === "notiz"}<i class="fa-solid fa-note-sticky marke-notiz"></i>{:else if stand.art === "gelesen"}<i class="fa-solid fa-circle-check gelesen"></i>{/if}{stand.text}</span></span>
-                  <i class="fa-solid fa-grip-vertical griff"></i>
-                </button>
+                <Kachel art="quer" bild={e.bild} titel={e.titel} gesperrt={!e.buch} ziel={() => oeffnen(e)}
+                       class={[ziehe?.id === e.id && "zieht", ziel?.bereich === g.id && ziel.platz === ei && ziehe?.art === "eintrag" && "davor"].filter(Boolean).join(" ")}
+                       hinweis={e.buch ? "Öffnen; ziehen zum Umordnen" : "Das Buch gibt es nicht mehr in der Bibliothek"}
+                       draggable="true" ondragstart={(d: DragEvent) => ziehenBeginnen(d, "eintrag", e.id)} ondragover={(d: DragEvent) => ueberKarte(d, g.id, ei)}>
+                  <span class="stand-zeile">{#if stand.art === "notiz"}<i class="fa-solid fa-note-sticky marke-notiz"></i>{:else if stand.art === "gelesen"}<i class="fa-solid fa-circle-check gelesen"></i>{/if}{stand.text}</span>
+                  {#snippet ecke()}<i class="fa-solid fa-grip-vertical griff"></i>{/snippet}
+                </Kachel>
               {/each}
               {#if !g.eintraege.length}
                 <div class="leer-bereich" class:ziel={ziel?.bereich === g.id && ziehe?.art === "eintrag"}><i class="fa-solid fa-arrow-down"></i>Artikel hierher ziehen</div>
@@ -316,7 +317,7 @@
                 <div class="liste-zeile">
                   <button class="liste-ziel" disabled={!e.buch} onclick={() => oeffnen(e)}>
                     {#if e.bild}<img src={e.bild} alt="" loading="lazy" />{:else}<span class="ohne-bild"><i class="fa-solid fa-file-lines"></i></span>{/if}
-                    <span><span class="t">{e.titel}</span><span class="u">{e.buch ? buchName(e.buch) : e.buch_name} · {stand.text}</span></span>
+                    <span><span class="t">{e.titel}</span><span class="u"><Buchmarke kennung={e.buch} ersatz={e.buch_name} symbol={false} /> · {stand.text}</span></span>
                   </button>
                   <Auswahl wert={e.bereich} klein symbol="fa-folder" titel="Bereich" optionen={bereichsWahl}
                            onwahl={(b) => b !== e.bereich && tun(() => verschieben(id, e.id, b, Number.MAX_SAFE_INTEGER))} />

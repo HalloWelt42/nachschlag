@@ -2,6 +2,7 @@
   // Notizen (Entwurf mockups/notizen.html): alle Notizen über alle Bücher, nach Artikel gruppiert. Eine Notiz hängt am
   // Artikel oder an einer markierten Stelle (Zitat). Rechts die gewählte Notiz zum Bearbeiten (Leiste des Appkerns,
   // schmaler als Tafel); am Telefon im Blatt von unten. Speichert von selbst, Zur Stelle springt in den Artikel.
+  import Buchmarke from "../teile/Buchmarke.svelte";
   import { onMount } from "svelte";
   import { Auswahl, geraet, Leiste, leisteOeffnen } from "appkern-oberflaeche";
   import { bibliothekLaden, buchName } from "../lib/bibliothek.svelte";
@@ -87,7 +88,7 @@
             <button class="gruppenkopf" disabled={!g.erste.buch} onclick={() => lesen(g.erste.buch, g.erste.pfad)} title="Artikel öffnen">
               {#if g.erste.bild}<img src={g.erste.bild} alt="" loading="lazy" />{:else}<span class="ohne-bild"><i class="fa-solid fa-file-lines"></i></span>{/if}
               <b>{g.erste.titel}</b><span class="neben">{g.notizen.length} {g.notizen.length === 1 ? "Notiz" : "Notizen"}</span>
-              <span class="marke-buch"><i class="fa-solid fa-book"></i>{g.erste.buch ? buchName(g.erste.buch) : g.erste.buch_name}</span>
+              <span class="marke-buch"><Buchmarke kennung={g.erste.buch} ersatz={g.erste.buch_name} /></span>
             </button>
             {#each g.notizen as n (n.id)}
               <div class="notiz-eintrag" class:gewaehlt={n.id === gewaehltId} role="button" tabindex="0" onclick={() => waehlen(n)}

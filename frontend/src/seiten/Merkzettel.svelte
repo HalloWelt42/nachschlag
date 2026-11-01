@@ -1,6 +1,7 @@
 <script lang="ts">
   // Merkzettel (Entwurf mockups/merkzettel.html): gemerkte Seiten mit Buch, Zeitpunkt und Lesestand; Filter nach
   // Lesestand, Suche im Merkzettel, Entfernen. Gilt auf allen Geräten des Kontos.
+  import Buchmarke from "../teile/Buchmarke.svelte";
   import { onMount } from "svelte";
   import { geraet, seitenFehler } from "appkern-oberflaeche";
   import { bibliothekLaden, buchName } from "../lib/bibliothek.svelte";
@@ -58,7 +59,7 @@
                     title={m.buch ? "Öffnen" : "Das Buch gibt es nicht mehr in der Bibliothek"}>
               {#if m.bild}<img src={m.bild} alt="" loading="lazy" />{:else}<span class="ohne-bild"><i class="fa-solid fa-bookmark"></i></span>{/if}
               <span><span class="t">{m.titel}{m.abschnitt ? ` › ${m.abschnitt}` : ""}</span>
-                <span class="u">{m.buch ? buchName(m.buch) : m.buch_name} · gemerkt {wann(m.angelegt)}</span></span>
+                <span class="u"><Buchmarke kennung={m.buch} ersatz={m.buch_name} symbol={false} /> · gemerkt {wann(m.angelegt)}</span></span>
               <span class="rechts">{art(m) === "angefangen" ? `${Math.round(m.anteil * 100)} %` : art(m)}</span>
             </button>
             <button class="rund" title="Vom Merkzettel nehmen" onclick={() => entfernen(m)}><i class="fa-solid fa-xmark"></i></button>
