@@ -2,3 +2,5 @@ appkern[web] @ https://github.com/HalloWelt42/appkern/archive/98510c3dca5c3dfff4
 uvicorn[standard]>=0.30
 pytest>=8
 pytest-asyncio>=0.24
+libzim>=3.5
+lxml>=5
