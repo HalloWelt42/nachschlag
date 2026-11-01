@@ -64,7 +64,8 @@ fehlenden Feldern (Schlagwörter, Stimmen, Autoren, Rubriken).
 17. **Ablage in der Kellerwolke sichtbar:** Die ZIM-Libs (/mnt/data/zim, NVMe) und die eigenen Indizes liegen auf der
     schnellen SSD und sind externe Quellen der Kellerwolke. ZIM-Libs ist eingehängt (01.11.2026, Konto admin, nur
     lesend) über das Werkzeug der Kellerwolke `tools/externe_quelle.py` (ohne Anmeldung, derselbe Dienst wie die
-    Verwaltung). Den Ordner der Indizes nennt Nachschlag in seinen Einstellungen (nie fest im Code).
+    Verwaltung). Den Ordner der Indizes nennt Nachschlag in seinen Einstellungen (nie fest im Code); auf dem Pi
+    /mnt/data/nachschlag/eigenindex, eingehängt als "Eigene Indizes (Nachschlag)" (01.11.2026, Konto admin, nur lesend).
 
 ## Reihenfolge des Baus
 
