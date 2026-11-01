@@ -315,3 +315,48 @@ async def test_fragenliste_als_karten_mit_blaettern(nachschlag):
     assert (a["darstellung"], a["titel"], a["weiter"], a["zurueck"]) == ("uebersicht", "Beliebteste Fragen", "questions_page=2", "")
     assert a["fragen"] == [{"pfad": "questions/84/clipboard", "titel": "How can I copy text to the clipboard?", "auszug": "Is there a way?",
                             "stimmen": 1520, "antworten": 2, "akzeptiert": True, "schlagwoerter": ["os-clipboard"], "gefragt": "03.02.2015"}]
+
+
+async def test_merkzettel_verlauf_und_vorlieben(nachschlag):
+    """Meins je Konto: merken (zweimal bleibt einer), Anteil aus dem Lesestand, Lesezeit zusammengezählt, Suche im
+    Verlauf, jüngstes zuerst; Vorlieben setzen und löschen; vergessen."""
+    c, _, _ = nachschlag
+    buch = "probe_de_all_2026-01"
+    for _ in range(2):
+        m = (await c.post("/api/v1/meins/merkzettel", json={"buch": buch, "pfad": "Rotfuchs", "titel": "Rotfuchs"})).json()
+    assert (m["buch_name"], m["buch"]) == ("probe_de_all", buch)
+    for anteil, sekunden in ((0.2, 30), (0.34, 40)):
+        r = await c.put("/api/v1/meins/verlauf/lesestand", json={"buch": buch, "pfad": "Rotfuchs", "titel": "Rotfuchs",
+                                                                  "abschnitt": "Lebensraum", "anteil": anteil, "sekunden": sekunden})
+        assert r.status_code == 204
+    await c.post("/api/v1/meins/verlauf/suche", json={"frage": "Füchse in Städten", "treffer": 38})
+    liste = (await c.get("/api/v1/meins/merkzettel")).json()
+    assert len(liste) == 1 and liste[0]["anteil"] == 0.34 and liste[0]["buch"] == buch
+    verlauf = (await c.get("/api/v1/meins/verlauf")).json()
+    assert [v["art"] for v in verlauf] == ["suche", "artikel"]
+    assert (verlauf[1]["sekunden"], verlauf[1]["abschnitt"], verlauf[1]["buch"]) == (70, "Lebensraum", buch)
+    assert (await c.put("/api/v1/meins/vorlieben/fassung:devdocs_en_php", json={"wert": "8.3"})).status_code == 204
+    assert (await c.get("/api/v1/meins/vorlieben")).json() == {"fassung:devdocs_en_php": "8.3"}
+    await c.put("/api/v1/meins/vorlieben/fassung:devdocs_en_php", json={"wert": ""})
+    assert (await c.get("/api/v1/meins/vorlieben")).json() == {}
+    assert (await c.delete(f"/api/v1/meins/merkzettel/{m['id']}")).status_code == 204
+    assert (await c.get("/api/v1/meins/merkzettel")).json() == []
+    assert (await c.delete(f"/api/v1/meins/merkzettel/{m['id']}")).status_code == 404
+
+
+async def test_meins_trennt_konten(tmp_path):
+    """Was ein Konto merkt, sieht kein anderes."""
+    from appkern.datenbank import Datenbank
+    from app.meins import Meins
+    from app.modell.meins import Merken
+    db = await Datenbank(tmp_path / "meins.sqlite").oeffnen()
+    try:
+        async def name(k): return k.rsplit("_", 1)[0]
+        async def kennung(n): return n + "_2026-01"
+        meins = Meins(db, name, kennung)
+        await meins.starten()
+        await meins.merken("eins", Merken(buch="probe_2026-01", pfad="A", titel="A"))
+        assert len(await meins.merkzettel("eins")) == 1 and await meins.merkzettel("zwei") == []
+        assert not await meins.vergessen("zwei", (await meins.merkzettel("eins"))[0].id)
+    finally:
+        await db.schliessen()

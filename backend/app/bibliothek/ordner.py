@@ -201,6 +201,18 @@ class Bibliothek:
         except (KeyError, BuchFehlt):
             return None
 
+    async def name_von(self, kennung: str) -> str:
+        """Name eines Buchs ohne Datum (stabil über neue Fassungen); fehlt das Buch, die Kennung ohne Datum."""
+        try:
+            return (await self.buch(kennung)).name
+        except BuchFehlt:
+            return kennung.rsplit("_", 1)[0]
+
+    async def kennung_von(self, name: str) -> str:
+        """Kennung der jüngsten Datei zu einem Namen (nach einer neuen Fassung die neue); keine: leer."""
+        passende = [b for b in (await self.stand()).buecher if b.name == name]
+        return max(passende, key=lambda b: (b.stand, b.kennung)).kennung if passende else ""
+
     def gibt_es(self, kennung: str, pfad: str) -> bool:
         """Steht ein Pfad (echter Pfad im Buch, ohne Anker) darin, auch als Weiterleitung? Für das Prüfen von Verweisen,
         ohne Inhalt zu lesen."""
