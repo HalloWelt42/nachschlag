@@ -344,11 +344,33 @@ async def test_merkzettel_verlauf_und_vorlieben(nachschlag):
     assert (await c.delete(f"/api/v1/meins/merkzettel/{m['id']}")).status_code == 404
 
 
+async def test_notizen_an_stelle_und_artikel(nachschlag):
+    """Notizen je Konto: an einer Stelle (Zitat mit Text davor) und am ganzen Artikel; je Artikel abfragbar, Ändern
+    schiebt nach vorn, Löschen; unbekannte Notizen geben 404."""
+    c, _, _ = nachschlag
+    buch = "probe_de_all_2026-01"
+    stelle = (await c.post("/api/v1/meins/notizen", json={
+        "buch": buch, "pfad": "Rotfuchs", "titel": "Rotfuchs", "abschnitt": "Merkmale",
+        "zitat": " Birkfuchs mit gelb-roter Oberseite ", "davor": "Farbvariante ist der ", "text": ""})).json()
+    assert (stelle["buch_name"], stelle["buch"], stelle["zitat"], stelle["text"]) == ("probe_de_all", buch, "Birkfuchs mit gelb-roter Oberseite", "")
+    artikel = (await c.post("/api/v1/meins/notizen", json={"buch": buch, "pfad": "Rotfuchs", "titel": "Rotfuchs", "text": "Wildpark"})).json()
+    await c.post("/api/v1/meins/notizen", json={"buch": buch, "pfad": "Arrhenius", "titel": "Arrhenius", "text": "anderer Artikel"})
+    nur = (await c.get("/api/v1/meins/notizen", params={"buch": buch, "pfad": "Rotfuchs"})).json()
+    assert [n["id"] for n in nur] == [artikel["id"], stelle["id"]]
+    geaendert = (await c.patch(f"/api/v1/meins/notizen/{stelle['id']}", json={"text": "häufigste Farbe"})).json()
+    assert geaendert["text"] == "häufigste Farbe" and geaendert["geaendert"] > geaendert["angelegt"]
+    alle = (await c.get("/api/v1/meins/notizen")).json()
+    assert len(alle) == 3 and alle[0]["id"] == stelle["id"]
+    assert (await c.delete(f"/api/v1/meins/notizen/{artikel['id']}")).status_code == 204
+    assert (await c.delete(f"/api/v1/meins/notizen/{artikel['id']}")).status_code == 404
+    assert (await c.patch(f"/api/v1/meins/notizen/{artikel['id']}", json={"text": "x"})).status_code == 404
+
+
 async def test_meins_trennt_konten(tmp_path):
     """Was ein Konto merkt, sieht kein anderes."""
     from appkern.datenbank import Datenbank
     from app.meins import Meins
-    from app.modell.meins import Merken
+    from app.modell.meins import Merken, NotizAenderung, NotizNeu
     db = await Datenbank(tmp_path / "meins.sqlite").oeffnen()
     try:
         async def name(k): return k.rsplit("_", 1)[0]
@@ -358,5 +380,8 @@ async def test_meins_trennt_konten(tmp_path):
         await meins.merken("eins", Merken(buch="probe_2026-01", pfad="A", titel="A"))
         assert len(await meins.merkzettel("eins")) == 1 and await meins.merkzettel("zwei") == []
         assert not await meins.vergessen("zwei", (await meins.merkzettel("eins"))[0].id)
+        notiz = await meins.notieren("eins", NotizNeu(buch="probe_2026-01", pfad="A", titel="A", text="nur meins"))
+        assert await meins.notizen("zwei") == [] and not await meins.notiz_loeschen("zwei", notiz.id)
+        assert await meins.notiz_aendern("zwei", notiz.id, NotizAenderung(text="fremd")) is None
     finally:
         await db.schliessen()

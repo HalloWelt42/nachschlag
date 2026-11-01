@@ -1,4 +1,4 @@
-"""Was einem Konto gehört (Meins): Merkzettel, Verlauf mit Lesestand, Vorlieben (etwa die Fassung je Buch). Gilt auf
+"""Was einem Konto gehört (Meins): Merkzettel, Notizen, Verlauf mit Lesestand, Vorlieben (etwa die Fassung je Buch). Gilt auf
 allen Geräten des Kontos. Einträge zeigen auf ein Buch über seinen Namen ohne Datum (`buch_name`); so überstehen sie
 neue Fassungen des Buchs. `buch` ist die Kennung der Datei, die gerade zu diesem Namen gehört (leer, wenn es keine
 mehr gibt)."""
@@ -65,3 +65,35 @@ class Verlaufseintrag(BaseModel):
 
 class Vorliebe(BaseModel):
     wert: str = Field(max_length=200)
+
+
+class NotizNeu(BaseModel):
+    """Eingabe: eine Notiz am ganzen Artikel (ohne Zitat) oder an einer markierten Stelle (mit Zitat). Ohne Text ist
+    sie eine Markierung."""
+    buch: str = Field(description="Kennung des Buchs, in dem notiert wird")
+    pfad: str
+    titel: str = Field(max_length=500)
+    bild: str = ""
+    abschnitt: str = Field("", max_length=300, description="Abschnitt, in dem die Stelle steht")
+    zitat: str = Field("", max_length=4000, description="markierter Text; leer: Notiz am ganzen Artikel")
+    davor: str = Field("", max_length=200, description="Text unmittelbar vor dem Zitat, damit sich gleiche Stellen unterscheiden")
+    text: str = Field("", max_length=20000)
+
+
+class NotizAenderung(BaseModel):
+    text: str = Field(max_length=20000)
+
+
+class Notiz(BaseModel):
+    id: str
+    buch_name: str
+    buch: str = Field(description="Kennung des Buchs, das heute zum Namen gehört; leer, wenn es keins gibt")
+    pfad: str
+    titel: str
+    bild: str = ""
+    abschnitt: str = ""
+    zitat: str = ""
+    davor: str = ""
+    text: str = ""
+    angelegt: str
+    geaendert: str

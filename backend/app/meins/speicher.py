@@ -1,4 +1,4 @@
-"""Speicher für Meins in der Datenbank der App (je Konto): Merkzettel, Verlauf mit Lesestand, Vorlieben. Bücher stehen
+"""Speicher für Meins in der Datenbank der App (je Konto): Merkzettel, Notizen, Verlauf mit Lesestand, Vorlieben. Bücher stehen
 hier mit ihrem Namen ohne Datum; welche Datei heute dazu gehört, sagt die Bibliothek."""
 
 from __future__ import annotations
@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 from appkern.app.begleiter import Begleiter
 from appkern.datenbank import Datenbank
 
-from ..modell.meins import Lesestand, Merkeintrag, Merken, Suchmeldung, Verlaufseintrag
+from ..modell.meins import Lesestand, Merkeintrag, Merken, Notiz, NotizAenderung, NotizNeu, Suchmeldung, Verlaufseintrag
 
 STUFEN = ["""
 CREATE TABLE merkzettel (
@@ -24,6 +24,13 @@ CREATE TABLE verlauf (
 CREATE UNIQUE INDEX verlauf_einmal ON verlauf (konto, art, buch_name, pfad, frage);
 CREATE INDEX verlauf_zuletzt ON verlauf (konto, zuletzt DESC);
 CREATE TABLE vorlieben (konto TEXT NOT NULL, schluessel TEXT NOT NULL, wert TEXT NOT NULL, PRIMARY KEY (konto, schluessel));
+""", """
+CREATE TABLE notizen (
+  id TEXT PRIMARY KEY, konto TEXT NOT NULL, buch_name TEXT NOT NULL, pfad TEXT NOT NULL, titel TEXT NOT NULL,
+  bild TEXT NOT NULL DEFAULT '', abschnitt TEXT NOT NULL DEFAULT '', zitat TEXT NOT NULL DEFAULT '', davor TEXT NOT NULL DEFAULT '',
+  text TEXT NOT NULL DEFAULT '', angelegt TEXT NOT NULL, geaendert TEXT NOT NULL);
+CREATE INDEX notizen_artikel ON notizen (konto, buch_name, pfad);
+CREATE INDEX notizen_neu ON notizen (konto, geaendert DESC);
 """]
 
 #: Wie viele Einträge der Verlauf je Konto höchstens behält (älteste fallen beim Schreiben weg)
@@ -65,6 +72,43 @@ class Meins(Begleiter):
 
     async def vergessen(self, konto: str, kennung: str) -> bool:
         return await self._db.ausfuehren("DELETE FROM merkzettel WHERE konto=? AND id=?", (konto, kennung)) > 0
+
+    # --- Notizen ---------------------------------------------------------------------------------------------------
+    async def notizen(self, konto: str, buch: str = "", pfad: str = "") -> list[Notiz]:
+        """Alle Notizen des Kontos, zuletzt geänderte zuerst; mit Buch und Pfad nur die eines Artikels."""
+        bedingung, werte = "konto=?", [konto]
+        if buch:
+            bedingung += " AND buch_name=? AND pfad=?"
+            werte += [await self._name_von(buch), pfad]
+        zeilen = await self._db.zeilen(f"SELECT * FROM notizen WHERE {bedingung} ORDER BY geaendert DESC", werte)
+        kennungen = {n: await self._kennung_von(n) for n in {z["buch_name"] for z in zeilen}}
+        return [self._notiz(z, kennungen[z["buch_name"]]) for z in zeilen]
+
+    async def notieren(self, konto: str, eingabe: NotizNeu) -> Notiz:
+        jetzt, neu = _jetzt(), str(uuid.uuid4())
+        await self._db.ausfuehren(
+            "INSERT INTO notizen (id, konto, buch_name, pfad, titel, bild, abschnitt, zitat, davor, text, angelegt, geaendert) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            (neu, konto, await self._name_von(eingabe.buch), eingabe.pfad, eingabe.titel, eingabe.bild, eingabe.abschnitt,
+             eingabe.zitat.strip(), eingabe.davor, eingabe.text, jetzt, jetzt))
+        return await self._notiz_holen(konto, neu)  # type: ignore[return-value]
+
+    async def notiz_aendern(self, konto: str, kennung: str, aenderung: NotizAenderung) -> Notiz | None:
+        if not await self._db.ausfuehren("UPDATE notizen SET text=?, geaendert=? WHERE konto=? AND id=?",
+                                         (aenderung.text, _jetzt(), konto, kennung)):
+            return None
+        return await self._notiz_holen(konto, kennung)
+
+    async def notiz_loeschen(self, konto: str, kennung: str) -> bool:
+        return await self._db.ausfuehren("DELETE FROM notizen WHERE konto=? AND id=?", (konto, kennung)) > 0
+
+    async def _notiz_holen(self, konto: str, kennung: str) -> Notiz | None:
+        z = await self._db.zeile("SELECT * FROM notizen WHERE konto=? AND id=?", (konto, kennung))
+        return self._notiz(z, await self._kennung_von(z["buch_name"])) if z else None
+
+    @staticmethod
+    def _notiz(z: dict, buch: str) -> Notiz:
+        return Notiz(**{k: z[k] for k in Notiz.model_fields if k in z}, buch=buch)
 
     # --- Verlauf --------------------------------------------------------------------------------------------------
     async def lesestand(self, konto: str, stand: Lesestand) -> None:

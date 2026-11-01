@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Query, Response
 from appkern.anmeldung import Konto
 from appkern.app import Geruest
 
-from ..modell.meins import Lesestand, Merkeintrag, Merken, Suchmeldung, Verlaufseintrag, Vorliebe
+from ..modell.meins import Lesestand, Merkeintrag, Merken, Notiz, NotizAenderung, NotizNeu, Suchmeldung, Verlaufseintrag, Vorliebe
 from .speicher import Meins
 
 
@@ -28,6 +28,29 @@ def router(geruest: Geruest, meins: Meins) -> APIRouter:
     async def vergessen(kennung: str, konto: Konto = geruest.mensch) -> Response:
         if not await meins.vergessen(konto.id, kennung):
             raise HTTPException(status_code=404, detail="Diesen Eintrag gibt es im Merkzettel nicht")
+        return Response(status_code=204)
+
+    @r.get("/notizen", response_model=list[Notiz])
+    async def notizen(buch: str = "", pfad: str = "", konto: Konto = geruest.mensch) -> list[Notiz]:
+        """Notizen und Markierungen, zuletzt geänderte zuerst; mit `buch` und `pfad` nur die eines Artikels."""
+        return await meins.notizen(konto.id, buch, pfad)
+
+    @r.post("/notizen", response_model=Notiz)
+    async def notieren(eingabe: NotizNeu, konto: Konto = geruest.mensch) -> Notiz:
+        """Notiz am ganzen Artikel (ohne Zitat) oder an einer Stelle (mit Zitat); ohne Text eine Markierung."""
+        return await meins.notieren(konto.id, eingabe)
+
+    @r.patch("/notizen/{kennung}", response_model=Notiz)
+    async def notiz_aendern(kennung: str, aenderung: NotizAenderung, konto: Konto = geruest.mensch) -> Notiz:
+        notiz = await meins.notiz_aendern(konto.id, kennung, aenderung)
+        if not notiz:
+            raise HTTPException(status_code=404, detail="Diese Notiz gibt es nicht")
+        return notiz
+
+    @r.delete("/notizen/{kennung}", status_code=204)
+    async def notiz_loeschen(kennung: str, konto: Konto = geruest.mensch) -> Response:
+        if not await meins.notiz_loeschen(konto.id, kennung):
+            raise HTTPException(status_code=404, detail="Diese Notiz gibt es nicht")
         return Response(status_code=204)
 
     @r.get("/verlauf", response_model=list[Verlaufseintrag])
