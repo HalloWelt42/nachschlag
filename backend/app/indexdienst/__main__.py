@@ -34,6 +34,7 @@ def _wert(name: str) -> str:
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    logging.getLogger("httpx").setLevel(logging.WARNING)      # sonst stünde jedes Stück der Übertragung im Protokoll
     buecher = Path(_wert("NACHSCHLAG_INDEX_BUECHER")).expanduser()
     ziel = Path(_wert("NACHSCHLAG_INDEX_ZIEL")).expanduser()
     freigabe = os.environ.get("NACHSCHLAG_INDEX_FREIGABE", "")
