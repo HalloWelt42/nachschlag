@@ -1,13 +1,18 @@
 <script lang="ts">
   // Startseite, Variante A (Entwurf mockups/start-a.html): Suche in der Mitte, darunter Stöbern mit einem Zufallsfund
-  // je Buch mit Lesedesign und die Bibliothek mit ihren Büchern und Fähigkeiten.
+  // je Buch mit Lesedesign und die Bibliothek mit ihren Büchern und Fähigkeiten. Variante B (start-b.html, WIKI-7) wie
+  // ein Magazin: groß der Artikel für heute aus den eigenen Themen, daneben Weiterlesen und Merkzettel, darunter das
+  // Thema als Reihe; die Suche steht dann nur im Kopf. Welche, wählt das Gerät.
   import { onMount } from "svelte";
   import { seitenFehler } from "appkern-oberflaeche";
   import Suchfeld from "../teile/Suchfeld.svelte";
   import Kachel from "../teile/Kachel.svelte";
   import Sprachmarke from "../teile/Sprachmarke.svelte";
   import { bibliothek, bibliothekLaden, datum, zahl } from "../lib/bibliothek.svelte";
-  import { artikelHolen, zufallHolen } from "../lib/schnittstelle";
+  import { artikelHolen, heuteHolen, zufallHolen, type Heute } from "../lib/schnittstelle";
+  import { STARTANSICHTEN, startansicht, startansichtMerken } from "../lib/ansicht.svelte";
+  import { themaHolen } from "../lib/themen.svelte";
+  import { Auswahl } from "appkern-oberflaeche";
   import type { Art, Buch } from "../lib/typen";
   import { lesen } from "../lib/ziele";
   import { gehe } from "appkern-oberflaeche";
@@ -24,6 +29,24 @@
                                        webseite: "fa-globe", sonstiges: "fa-box-archive" };
 
   let funde = $state<Record<string, Fund | null>>({});
+  const REIHE = 6;                       // Artikel des Themas unter dem Artikel für heute
+  const magazin = $derived(startansicht.wert === "b");
+  let heute = $state.raw<Heute | null>(null);
+  let heuteGeladen = $state(false);
+  let themaReihe = $state.raw<{ titel: string; eintraege: { buch: string; pfad: string; titel: string; bild: string; anteil: number }[] } | null>(null);
+  $effect(() => {
+    if (!magazin) return;
+    let aktuell = true;
+    heuteHolen().then(async (h) => {
+      if (!aktuell) return;
+      heute = h;
+      heuteGeladen = true;
+      if (!h) return;
+      const t = await themaHolen(h.thema_id);
+      if (aktuell) themaReihe = { titel: t.titel, eintraege: t.eintraege.filter((e) => e.buch && e.pfad !== h.pfad).slice(0, REIHE) };
+    }).catch(() => aktuell && (heuteGeladen = true));
+    return () => { aktuell = false; };
+  });
   let fehler = $state("");
 
   const artikelGesamt = $derived(bibliothek.buecher.reduce((s, b) => s + b.artikel, 0));
@@ -51,20 +74,55 @@
 
 <div class="inhalt-stufe" data-schrift="klein">
 <div class="rollfeld" style="padding: 0">
-  <div class="start-innen">
-    <div class="suchmitte">
-      <h1>Was möchtest du nachschlagen?</h1>
-      <Suchfeld gross />
-      {#if bibliothek.buecher.length}
-        <div class="unter">Index über <span class="zahl">{zahl(artikelGesamt)}</span> Artikel in {bibliothek.buecher.length}
-          {bibliothek.buecher.length === 1 ? "Quelle" : "Quellen"}</div>
-      {/if}
+  <div class="start-innen" class:magazin>
+    <div class="start-wahl">
+      <Auswahl wert={startansicht.wert} symbol="fa-table-cells-large" titel="Startseite, bleibt auf diesem Gerät eingestellt"
+               optionen={STARTANSICHTEN} onwahl={startansichtMerken} />
     </div>
+    {#if magazin}
+      <section class="heute">
+        {#if heute}
+          <button class="heute-karte" onclick={() => heute && lesen(heute.buch, heute.pfad)}>
+            {#if heute.bild}<img src={heute.bild} alt="" />{/if}
+            <span class="heute-text">
+              <span class="etikett"><i class="fa-solid fa-sun"></i>Für heute</span>
+              <span class="t">{heute.titel}</span>
+              {#if heute.einleitung}<span class="auszug">{heute.einleitung}</span>{/if}
+              <span class="grund"><i class="fa-solid fa-layer-group"></i>{heute.grund}</span>
+            </span>
+          </button>
+        {:else if heuteGeladen}
+          <p class="leer-hinweis">Der Artikel für heute kommt aus deinen Themen: lege auf der Seite Themen eines an und sammle Artikel darin.</p>
+        {/if}
+      </section>
+    {:else}
+      <div class="suchmitte">
+        <h1>Was möchtest du nachschlagen?</h1>
+        <Suchfeld gross />
+        {#if bibliothek.buecher.length}
+          <div class="unter">Index über <span class="zahl">{zahl(artikelGesamt)}</span> Artikel in {bibliothek.buecher.length}
+            {bibliothek.buecher.length === 1 ? "Quelle" : "Quellen"}</div>
+        {/if}
+      </div>
+    {/if}
 
     {#if weiterlesen.length}
-      <section>
+      <section class="weiterlesen">
         <div class="abschnitt-kopf"><h2><i class="fa-solid fa-book-open-reader"></i>Weiterlesen</h2>
           <button class="alle" onclick={() => gehe("verlauf")}>Verlauf</button></div>
+        {#if magazin}
+          <div class="liste">
+            {#each weiterlesen as e (e.id)}
+              <div class="liste-zeile">
+                <button class="liste-ziel" onclick={() => lesen(e.buch, e.pfad)}>
+                  {#if e.bild}<img src={e.bild} alt="" loading="lazy" />{:else}<span class="ohne-bild"><i class="fa-solid fa-book-open"></i></span>{/if}
+                  <span><span class="t">{e.titel}</span><span class="u">{e.abschnitt ? `bei ${e.abschnitt}` : "am Anfang"}</span></span>
+                  <span class="rechts">{Math.round(e.anteil * 100)} %</span>
+                </button>
+              </div>
+            {/each}
+          </div>
+        {:else}
         <div class="reihe">
           {#each weiterlesen as e (e.id)}
             <Kachel bild={e.bild} titel={e.titel} untertitel={e.abschnitt ? `bei ${e.abschnitt}` : ""} ziel={() => lesen(e.buch, e.pfad)}>
@@ -74,11 +132,12 @@
             </Kachel>
           {/each}
         </div>
+        {/if}
       </section>
     {/if}
 
     {#if meins.merkzettel.length}
-      <section>
+      <section class="merkzettel">
         <div class="abschnitt-kopf"><h2><i class="fa-solid fa-bookmark"></i>Merkzettel</h2><span class="neben">{meins.merkzettel.length}</span>
           <button class="alle" onclick={() => gehe("merkzettel")}>Alle</button></div>
         <div class="liste">
@@ -95,8 +154,21 @@
       </section>
     {/if}
 
+    {#if magazin && themaReihe?.eintraege.length}
+      <section class="thema-reihe">
+        <div class="abschnitt-kopf"><h2><i class="fa-solid fa-layer-group"></i>Aus deinem Thema {themaReihe.titel}</h2>
+          <button class="alle" onclick={() => heute && gehe(`themen/${heute.thema_id}`)}>Zum Thema</button></div>
+        <div class="reihe">
+          {#each themaReihe.eintraege as e (e.pfad)}
+            <Kachel bild={e.bild} titel={e.titel} untertitel={e.anteil > 0 ? `${Math.round(e.anteil * 100)} % gelesen` : "noch nicht gelesen"}
+                    ziel={() => lesen(e.buch, e.pfad)} />
+          {/each}
+        </div>
+      </section>
+    {/if}
+
     {#if mitLesedesign.length}
-      <section>
+      <section class="stoebern-abschnitt">
         <div class="abschnitt-kopf"><h2><i class="fa-solid fa-shuffle"></i>Stöbern</h2><button class="alle" onclick={() => gehe("stoebern")}>Mehr stöbern</button></div>
         <div class="stoebern">
           {#each mitLesedesign as b (b.kennung)}

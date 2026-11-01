@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from datetime import date
 from typing import TypeVar
 
 from fastapi import APIRouter, HTTPException, Query, Response
@@ -19,6 +20,7 @@ from ..bibliothek import Bibliothek, BuchFehlt, EintragFehlt
 from ..meins import Meins
 from ..suche import Suche
 from ..zitieren import Form
+from .heute import Heute, artikel_fuer_heute
 from .literatur import Literaturliste, literaturliste
 from .speicher import Themen
 
@@ -54,6 +56,12 @@ def router(geruest: Geruest, themen: Themen, suche: Suche, bibliothek: Bibliothe
     @r.post("", response_model=Thema)
     async def anlegen(neu: ThemaNeu, konto: Konto = geruest.mensch) -> Thema:
         return await themen.anlegen(konto.id, neu)
+
+    @r.get("/heute", response_model=Heute | None)
+    async def heute(konto: Konto = geruest.mensch) -> Heute | None:
+        """Artikel für heute (Startseite B): aus den eigenen Themen, noch nicht zu Ende gelesen, mit Grund; jeden Tag ein
+        anderer. Ohne Thema mit offenen Artikeln null."""
+        return await artikel_fuer_heute(themen, konto.id, leser, date.today())
 
     @r.get("/zuordnung", response_model=list[Zuordnung])
     async def zuordnung(konto: Konto = geruest.mensch) -> list[Zuordnung]:

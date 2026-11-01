@@ -26,3 +26,30 @@ export function ansichtMerken(wert: string): void {
     // ohne Speicher gilt die Wahl nur jetzt
   }
 }
+
+// Startseite je Gerät (WIKI-7, Entwürfe start-a und start-b): A mit der Suche in der Mitte, B wie ein Magazin mit dem
+// Artikel für heute aus den eigenen Themen (die Suche steht dann nur im Kopf)
+export type Startansicht = "a" | "b";
+export const STARTANSICHTEN: { wert: Startansicht; titel: string }[] = [
+  { wert: "a", titel: "Suche zuerst" }, { wert: "b", titel: "Magazin" }];
+const START_SCHLUESSEL = "nachschlag.startansicht";
+
+function gemerkterStart(): Startansicht {
+  try {
+    return localStorage.getItem(START_SCHLUESSEL) === "b" ? "b" : "a";
+  } catch {
+    return "a";
+  }
+}
+
+export const startansicht = $state({ wert: gemerkterStart() });
+
+export function startansichtMerken(wert: string): void {
+  if (!STARTANSICHTEN.some((a) => a.wert === wert)) return;
+  startansicht.wert = wert as Startansicht;
+  try {
+    localStorage.setItem(START_SCHLUESSEL, wert);
+  } catch {
+    // ohne Speicher gilt die Wahl nur jetzt
+  }
+}

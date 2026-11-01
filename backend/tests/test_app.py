@@ -622,3 +622,14 @@ async def test_zitate_einer_frage_nennen_autor_und_datum(nachschlag):
     assert z["apa"].startswith("thameera. (2015, 3. Februar).") and "[Forumsbeitrag]" in z["apa"]
     assert "author = {{thameera}}" in z["bibtex"]
     assert (await c.get("/api/v1/zitate/probeqa_en_all_2026-10/gibt-es-nicht")).status_code == 404
+
+
+async def test_artikel_fuer_heute_aus_den_eigenen_themen(nachschlag):
+    """Startseite B (WIKI-7): ohne Thema nichts; mit Thema ein offener Artikel mit Grund, am selben Tag derselbe."""
+    c, _, _ = nachschlag
+    assert (await c.get("/api/v1/meins/themen/heute")).json() is None
+    t = (await c.post("/api/v1/meins/themen", json={"titel": "Füchse"})).json()
+    await c.post(f"/api/v1/meins/themen/{t['id']}/eintraege", json={"buch": "probe_de_all_2026-01", "pfad": "Rotfuchs", "titel": "Rotfuchs"})
+    h = (await c.get("/api/v1/meins/themen/heute")).json()
+    assert (h["pfad"], h["thema"]) == ("Rotfuchs", "Füchse") and h["grund"] == 'Aus deinem Thema "Füchse", noch nicht gelesen'
+    assert (await c.get("/api/v1/meins/themen/heute")).json() == h

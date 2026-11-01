@@ -97,3 +97,8 @@ export interface Zitate {
 
 export const zitateHolen = (buch: string, pfad: string, signal?: AbortSignal) =>
   hole<Zitate>(`/zitate/${encodeURIComponent(buch)}/${pfadTeil(pfad)}`, { signal });
+
+// --- Artikel für heute (WIKI-7, Startseite B): aus den eigenen Themen, mit Grund; ohne Thema null ---
+export interface Heute { buch: string; pfad: string; titel: string; bild: string; einleitung: string; thema_id: string; thema: string; grund: string }
+
+export const heuteHolen = () => hole<Heute | null>("/meins/themen/heute");

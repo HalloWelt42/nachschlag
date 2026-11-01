@@ -4,196 +4,232 @@
       "name": "start",
       "pfad": "/start",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "lesen",
       "pfad": "/lesen",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "suche",
       "pfad": "/suche?frage=Treibhaus",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "auftraege",
       "pfad": "/auftraege",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "protokoll",
       "pfad": "/protokoll",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "einstellungen",
       "pfad": "/einstellungen",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "artikel",
       "pfad": "/lesen/wikipedia_de_all_maxi_2026-01/Rotfuchs",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "uebersicht",
       "pfad": "/lesen/wikipedia_de_climate-change_nopic_2026-07/index",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "doku",
       "pfad": "/lesen/devdocs_en_php_2026-08/function.array-map",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "doku-rubriken",
       "pfad": "/lesen/devdocs_en_php_2026-08/index",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "spiegel",
       "pfad": "/lesen/php.net_en_all_2024-08/www.php.net/manual/en/function.array-map.php",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "frage",
       "pfad": "/lesen/vi.stackexchange.com_en_all_2026-10/questions/84/how-can-i-copy-text-to-the-system-clipboard-from-vim",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "fragenliste",
       "pfad": "/lesen/vi.stackexchange.com_en_all_2026-10/questions",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "merkzettel",
       "pfad": "/merkzettel",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "notizen",
       "pfad": "/notizen",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "verlauf",
       "pfad": "/verlauf",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "themen",
       "pfad": "/themen",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "stoebern",
       "pfad": "/stoebern",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "medien",
       "pfad": "/medien?frage=Fuchs",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "suche-im-buch",
       "pfad": "/suche?frage=array&buch=devdocs_en_php_2026-08",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "register",
       "pfad": "/register",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "register-autoren",
       "pfad": "/register/autoren",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "register-schlagwort",
       "pfad": "/register/schlagwoerter/cursor-movement",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "register-autor",
       "pfad": "/register/autoren/vi.stackexchange.com_en_all_2026-10/23502",
       "speicher": {
-        "nachschlag.leseansicht": "a"
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "artikel-blatt",
       "pfad": "/lesen/wikipedia_de_all_maxi_2026-01/Rotfuchs",
       "speicher": {
-        "nachschlag.leseansicht": "c"
+        "nachschlag.leseansicht": "c",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "frage-blatt",
       "pfad": "/lesen/vi.stackexchange.com_en_all_2026-10/questions/84/how-can-i-copy-text-to-the-system-clipboard-from-vim",
       "speicher": {
-        "nachschlag.leseansicht": "c"
+        "nachschlag.leseansicht": "c",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "artikel-wissen",
       "pfad": "/lesen/wikipedia_de_all_maxi_2026-01/Rotfuchs",
       "speicher": {
-        "nachschlag.leseansicht": "b"
+        "nachschlag.leseansicht": "b",
+        "nachschlag.startansicht": "a"
       }
     },
     {
       "name": "doku-wissen",
       "pfad": "/lesen/devdocs_en_php_2026-08/function.array-map",
       "speicher": {
-        "nachschlag.leseansicht": "b"
+        "nachschlag.leseansicht": "b",
+        "nachschlag.startansicht": "a"
+      }
+    },
+    {
+      "name": "start-magazin",
+      "pfad": "/start",
+      "speicher": {
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "b"
       }
     }
   ]
