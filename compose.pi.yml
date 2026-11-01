@@ -25,6 +25,8 @@ services:
       # Sicherungen der Datenbank nach der Regel des Appkerns: wöchentlich von der App, vor dem Neustart vom Ausrollen
       - ./sicherungen:/app/sicherungen
       - ./zertifikate:/zertifikate:ro
+      # die Bücher (ZIM-Dateien); Nachschlag liest nur. Welcher Ordner, steht in der .env (BUECHER_ORDNER)
+      - ${BUECHER_ORDNER:-./buecher}:/buecher:ro
       # Ortszeit des Pi (sonst UTC)
       - /etc/localtime:/etc/localtime:ro
 
