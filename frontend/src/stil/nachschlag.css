@@ -986,7 +986,15 @@ button.kachel:disabled { opacity: .6; cursor: default; }
   display: flex; align-items: center; gap: 4px; padding: 6px; border-radius: 28px; background: var(--flaeche);
   box-shadow: var(--schatten-schwebend), 0 0 0 1px var(--rand); max-width: calc(100vw - 2 * var(--a3)); }
 .schwebeleiste .knopf, .schwebeleiste .rund { border-radius: 21px; }
-.schwebeleiste .lesegroesse-tafel { top: auto; bottom: calc(100% + 10px); }
+/* die Tafel richtet sich an der ganzen Leiste aus (mittig darüber), nicht am Knopf: so ragt sie nie aus dem Bild */
+.schwebeleiste .lesegroesse { position: static; }
+.schwebeleiste .lesegroesse-tafel { top: auto; right: auto; left: 50%; transform: translateX(-50%); bottom: calc(100% + 10px);
+  width: max-content; max-width: calc(100vw - 2 * var(--a3)); }
+/* in der Leiste nur die Größe dieser Quelle (Nutzer: "zu groß"); Vorgabe aller Quellen bleibt in der Ansicht mit Schale */
+.schwebeleiste .lesegroesse-tafel .groesse-zeile + .groesse-zeile, .schwebeleiste .lesegroesse-tafel .groesse-fuss { display: none; }
+.schwebeleiste .trenner { width: 1px; align-self: stretch; margin: 6px 2px; background: var(--rand); }
+.artikel-kopf .pfad a { color: inherit; text-decoration: none; }
+.artikel-kopf .pfad a:hover { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
 .inhalt-tafel { position: fixed; z-index: 36; top: calc(64px + var(--rahmen-sicher-oben)); left: var(--a4); width: min(360px, calc(100vw - 2 * var(--a4)));
   max-height: calc(100dvh - 200px); overflow-y: auto; padding: var(--a3); border-radius: var(--r3); background: var(--flaeche);
   box-shadow: var(--schatten-schwebend), 0 0 0 1px var(--rand); }

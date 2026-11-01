@@ -70,6 +70,10 @@
   const aufDeutsch = $derived(!!artikel && !!quelle && artikel !== quelle);
   // Sprache des gezeigten Texts (lang): Silbentrennung, Rechtschreibung und die Stimme beim Vorlesen
   const textSprache = $derived(aufDeutsch ? "de" : buch ? htmlSprache(buch.sprache) : "");
+  // Ziel der Rubrik im Pfad: ihre eigene Seite, sonst die Startseite des Buchs, gefiltert auf die Rubrik
+  const rubrikZiel = $derived(!artikel?.rubrik || !buch ? ""
+    : artikel.rubrik_pfad ? lesenZiel(artikel.buch, artikel.rubrik_pfad)
+    : `${lesenZiel(artikel.buch, buch.startseite)}?filter=${encodeURIComponent(artikel.rubrik)}`);
   const uebersetzbar = $derived(!!ue && ue.zustand !== "nicht_noetig" && ue.zustand !== "nicht_moeglich");
   // Ansicht C (WIKI-7): nur das Blatt, über der Schale; Werkzeuge schwebend, Inhalt als Tafel auf Abruf
   const nurBlatt = $derived(leseansicht.wert === "c" && artikel?.darstellung === "lesedesign" && !zeigeOriginal);
@@ -118,7 +122,7 @@
     blatt = null;
     textwahl = null;
     bilder = null;
-    filterText = "";
+    filterText = zusatz.get("filter") ?? "";      // aus dem Pfad: die Startseite gefiltert auf eine Rubrik
     void bibliothekLaden();
     ue = null;
     try {
@@ -663,9 +667,17 @@
   <div class="laden">Lädt ...</div>
 {:else}
   <div class="artikel-kopf">
-    <div class="pfad"><i class="fa-solid fa-book"></i><b><Buchmarke kennung={artikel.buch} symbol={false} /></b><i class="fa-solid fa-chevron-right"></i>
-      {#if artikel.rubrik}<span>{artikel.rubrik}</span><i class="fa-solid fa-chevron-right"></i>{/if}
-      <span>{artikel.titel}</span></div>
+    <!-- der Pfad ist anklickbar (WIKI-49): Quelle zur Startseite, Rubrik zu ihrer Seite (oder gefiltert auf der Startseite),
+         der Titel nach oben -->
+    <nav class="pfad" aria-label="Pfad"><i class="fa-solid fa-book"></i>
+      <a href={buch ? "/" + lesenZiel(artikel.buch, buch.startseite) : undefined}
+         onclick={(e) => { if (!buch) return; e.preventDefault(); lesen(artikel!.buch, buch.startseite); }}><b><Buchmarke kennung={artikel.buch} symbol={false} /></b></a>
+      <i class="fa-solid fa-chevron-right"></i>
+      {#if artikel.rubrik}
+        <a href={rubrikZiel ? "/" + rubrikZiel : undefined} onclick={(e) => { if (!rubrikZiel) return; e.preventDefault(); gehe(rubrikZiel); }}>{artikel.rubrik}</a>
+        <i class="fa-solid fa-chevron-right"></i>
+      {/if}
+      <a href="#oben" onclick={(e) => { e.preventDefault(); roller().scrollTo({ top: 0, behavior: "smooth" }); }}>{artikel.titel}</a></nav>
     <h1 class:code-titel={artikel.titelart === "code"}>{artikel.titel}</h1>
     <div class="werkzeuge">
       <button class="knopf" class:an={!!eintrag} title={eintrag ? "Vom Merkzettel nehmen" : "Auf den Merkzettel"} onclick={merkenUmschalten}>
@@ -953,6 +965,9 @@
             <i class="fa-solid fa-language"></i></button>
         {/if}
         {#if buch}<Lesegroesse buchName={buch.name} buchTitel={buch.titel} />{/if}
+        <span class="trenner"></span>
+        <button class="knopf still" title="Zurück zur Ansicht mit Schale" onclick={() => ansichtMerken("a")}>
+          <i class="fa-solid fa-table-columns"></i><span class="wort">Schale</span></button>
       </div>
     {/if}
   {/if}

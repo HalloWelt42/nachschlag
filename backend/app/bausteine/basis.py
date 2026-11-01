@@ -41,6 +41,7 @@ class Aufbereitet:
     kacheln: list[Kachel] = field(default_factory=list)
     gruppen: list[Gruppe] = field(default_factory=list)
     rubrik: str = ""
+    rubrik_pfad: str = ""                         # Seite der Rubrik, wenn das Buch eine hat (Pfad im Artikelkopf)
     nachbarn: list[Nachbar] = field(default_factory=list)
     titelart: str = "text"
     fragen: list[Fragekarte] = field(default_factory=list)

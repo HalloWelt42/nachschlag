@@ -53,7 +53,7 @@ class Artikelleser:
                        html=fertig.html, einleitung=fertig.einleitung, abschnitte=fertig.abschnitte,
                        steckbrief=fertig.steckbrief, bild=fertig.bild, verweise=fertig.verweise, online=fertig.online,
                        original=self._wege.original(buch, eintrag.pfad), kacheln=fertig.kacheln,
-                       gruppen=fertig.gruppen, rubrik=fertig.rubrik, nachbarn=fertig.nachbarn, titelart=fertig.titelart,
+                       gruppen=fertig.gruppen, rubrik=fertig.rubrik, rubrik_pfad=fertig.rubrik_pfad, nachbarn=fertig.nachbarn, titelart=fertig.titelart,
                        fragen=fertig.fragen, zurueck=fertig.zurueck, weiter=fertig.weiter, belege=fertig.belege,
                        quelle_url=online_adresse(b, eintrag.pfad), **_verfasser(fertig))
 

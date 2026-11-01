@@ -221,11 +221,12 @@ SPIEGEL_WEG = (".//*[contains(@class,'page-tools')] | .//*[@id='usernotes'] | ./
 NULLBREITE = chr(0x200B)                 # php.net bricht lange Namen mit Leerzeichen der Breite null
 
 
-def _spiegel_umgebung(doc, seite, pfad: str) -> tuple[str, list[Nachbar], int]:
-    """Rubrik (letzte Brotkrume), Nachbarn (Seitenleiste) und Zahl der Nutzernotizen; danach fällt alles weg, was
-    nicht zum Handbuch gehört."""
+def _spiegel_umgebung(doc, seite, pfad: str) -> tuple[str, str, list[Nachbar], int]:
+    """Rubrik (letzte Brotkrume) mit ihrer Seite, Nachbarn (Seitenleiste) und Zahl der Nutzernotizen; danach fällt
+    alles weg, was nicht zum Handbuch gehört."""
     krumen = doc.xpath("//*[@id='breadcrumbs']//ul/li/a")
     rubrik = h.text_von(krumen[-1]) if krumen else ""
+    rubrik_pfad = h.ziel_im_buch(pfad, krumen[-1].get("href") or "") if krumen else ""
     umgebung = [Nachbar(pfad=h.ziel_im_buch(pfad, a.get("href") or ""), titel=h.text_von(a).replace(NULLBREITE, ""))
                 for a in doc.xpath("//aside[contains(@class,'layout-menu')]//ul[contains(@class,'child-menu-list')]//a")
                 if a.get("href")]
@@ -233,7 +234,7 @@ def _spiegel_umgebung(doc, seite, pfad: str) -> tuple[str, list[Nachbar], int]:
     for el in seite.xpath(SPIEGEL_WEG):
         if el.getparent() is not None:
             el.drop_tree()
-    return rubrik, umgebung, notizen
+    return rubrik, rubrik_pfad, umgebung, notizen
 
 
 def _spiegel_inhaltsverzeichnis(seite, pfad: str) -> list[Gruppe]:
@@ -303,6 +304,7 @@ class Dokumentation:
             nr = gliederung.rubrik_von.get(eintrag.pfad)
             rubrik_titel = gliederung.rubriken[nr].titel if nr is not None else ""
             umgebung = gliederung.rubriken[nr].eintraege if nr is not None else []
+            rubrik_pfad = ""                                        # devdocs: die Rubrik hat keine eigene Seite
         else:                                                       # Spiegel von php.net: Gliederung aus der Seite
             seite = next(iter(doc.xpath("//*[@id='layout-content']")), None)
             if seite is None:
@@ -310,7 +312,7 @@ class Dokumentation:
             rubriken = _spiegel_inhaltsverzeichnis(seite, eintrag.pfad)
             if rubriken:                                            # Inhaltsverzeichnis des Handbuchs (Startseite)
                 return Aufbereitet(titel=buch.titel, gruppen=rubriken, darstellung="uebersicht")
-            rubrik_titel, umgebung, notizen = _spiegel_umgebung(doc, seite, eintrag.pfad)
+            rubrik_titel, rubrik_pfad, umgebung, notizen = _spiegel_umgebung(doc, seite, eintrag.pfad)
 
         kopf = next(iter(seite.xpath(".//h1|.//h2")), None)
         titel = h.text_von(kopf) if kopf is not None else eintrag.titel
@@ -390,7 +392,7 @@ class Dokumentation:
 
         steckbrief = self._steckbrief(buch, titel, signatur, fassungen, rubrik_titel, code_titel, notizen)
         return Aufbereitet(titel=titel, html=html, einleitung=einleitung, abschnitte=abschnitte, steckbrief=steckbrief,
-                           bild=bild, verweise=verweise, online=online, rubrik=rubrik_titel,
+                           bild=bild, verweise=verweise, online=online, rubrik=rubrik_titel, rubrik_pfad=rubrik_pfad,
                            nachbarn=_fenster(umgebung, eintrag.pfad), titelart="code" if code_titel else "text")
 
     @staticmethod

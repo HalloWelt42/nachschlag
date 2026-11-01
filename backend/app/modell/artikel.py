@@ -114,6 +114,7 @@ class Artikel(BaseModel):
     kacheln: list[Kachel] = Field(default_factory=list, description="Einträge der Übersicht (nur Darstellung uebersicht)")
     gruppen: list[Gruppe] = Field(default_factory=list, description="Rubriken der Übersicht eines Handbuchs (nur Darstellung uebersicht)")
     rubrik: str = Field("", description="Rubrik der Seite im Buch (Dokumentation), für den Pfad")
+    rubrik_pfad: str = Field("", description="Seite der Rubrik, wenn das Buch eine hat; sonst filtert die Startseite nach ihr")
     nachbarn: list[Nachbar] = Field(default_factory=list, description="die Seiten derselben Rubrik")
     titelart: Literal["text", "code"] = Field("text", description="code: der Titel ist ein Name aus dem Code (Funktion, Klasse)")
     fragen: list[Fragekarte] = Field(default_factory=list, description="Fragen einer Fragenliste (nur Darstellung uebersicht)")

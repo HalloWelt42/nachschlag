@@ -99,6 +99,7 @@ export interface Artikel {
   kacheln: Kachel[];
   gruppen: Gruppe[];
   rubrik: string;
+  rubrik_pfad: string;              // Seite der Rubrik; leer: die Startseite des Buchs filtert nach ihr
   nachbarn: Nachbar[];
   titelart: "text" | "code";
   fragen: Fragekarte[];
