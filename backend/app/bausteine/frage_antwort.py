@@ -103,8 +103,11 @@ def _kommentare(beitrag):
 
 
 def _beitrag(quelle, art: str, akzeptiert: bool = False):
-    """Ein Beitrag (Frage oder Antwort) als qa-beitrag: Stimmen links, Text, Fuß mit Wer und Wann, Kommentare."""
-    stimmen = _deutsche_zahl(quelle.get("data-score") or "0")
+    """Ein Beitrag (Frage oder Antwort) als qa-beitrag: Stimmen links, Text, Fuß mit Wer und Wann, Kommentare. Gibt die
+    Stimmen als Zahl zurück (zum Sortieren und für den Steckbrief); geschrieben werden sie mit Tausenderpunkt."""
+    roh = (quelle.get("data-score") or "0").strip()
+    zahl = int(roh) if roh.lstrip("-").isdigit() else 0
+    stimmen = _deutsche_zahl(roh)
     kasten = lhtml.Element("div")
     kasten.set("class", "qa-beitrag")
     links = SubElement(kasten, "div")
@@ -141,7 +144,7 @@ def _beitrag(quelle, art: str, akzeptiert: bool = False):
     kommentare = _kommentare(quelle)
     if kommentare is not None:
         rechts.append(kommentare)
-    return kasten, int(stimmen) if stimmen.lstrip("-").isdigit() else 0, (sig[1] if sig else "")
+    return kasten, zahl, (sig[1] if sig else "")
 
 
 class FrageAntwort:
@@ -189,7 +192,8 @@ class FrageAntwort:
             antwort.set("class", "antwort akzeptiert" if akzeptiert else "antwort")
             antwort.set("id", f"antwort-{kennung}")
             antwort.append(kasten)
-            abschnitte.append(Abschnitt(anker=f"antwort-{kennung}", titel=f"{stimmen} · {wer or 'unbekannt'}", ebene=3))
+            abschnitte.append(Abschnitt(anker=f"antwort-{kennung}", titel=f"{_deutsche_zahl(str(stimmen))} · {wer or 'unbekannt'}",
+                                        ebene=3))
 
         verweise, online = h.verweise_umschreiben(wurzel, buch.kennung, eintrag.pfad, wege)
         bild = h.bilder_umschreiben(wurzel, buch.kennung, eintrag.pfad, wege)
@@ -243,7 +247,7 @@ class FrageAntwort:
         werte = SubElement(wurzel, "dl")
         werte.set("class", "steckbrief-werte")
         akzeptiert = any(a[6] for a in antworten)
-        zeilen = [("Stimmen", str(stimmen)),
+        zeilen = [("Stimmen", _deutsche_zahl(str(stimmen))),
                   ("Antworten", f"{len(antworten)}" + (", eine akzeptiert" if akzeptiert else "")),
                   ("Gefragt", " von ".join(x for x in signaturen.get("gefragt", ("", ""))) if "gefragt" in signaturen else ""),
                   ("Bearbeitet", signaturen["bearbeitet"][0] if "bearbeitet" in signaturen else "")]

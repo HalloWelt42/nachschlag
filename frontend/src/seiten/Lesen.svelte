@@ -617,7 +617,7 @@
             bind:this={rahmen} onload={rahmenGeladen}></iframe>
   {:else}
     <div class="rollfeld" style="padding: 0" bind:this={rollfeld}>
-      <div class="lesen" class:ohne-inhalt={!inhalt.length && !artikel.nachbarn.length} style:zoom={zoom}>
+      <div class="lesen" class:ohne-inhalt={!inhalt.length && !artikel.nachbarn.length} data-art={buch?.art} style:zoom={zoom}>
         {#if inhalt.length || artikel.nachbarn.length}
           <nav class="inhalt" aria-label="Inhalt">
             <div class="inhalt-titel">Inhalt</div>

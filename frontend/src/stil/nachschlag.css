@@ -90,6 +90,15 @@
 .lesen { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: var(--a6); padding: var(--a4) var(--a5) 0; max-width: 1680px; }
 .lesen .inhalt { position: sticky; top: var(--a4); align-self: start; max-height: calc(100vh - 260px); overflow-y: auto; }
 .lesen.ohne-inhalt { grid-template-columns: minmax(0, 1fr); }
+/* Frage und Antwort und Handbücher in voller Breite (WIKI-38, Nutzer 01.11.2026: "hier sollte volle breite genutzt
+   werden, vor allem wegen den code und der aufteilung"): Code und Steckbrief brauchen den Platz; Enzyklopädien bleiben
+   bei der Lesebreite */
+.lesen:is([data-art="frage_antwort"], [data-art="dokumentation"]) { max-width: none; }
+.lesen:is([data-art="frage_antwort"], [data-art="dokumentation"]) .artikel { max-width: none; container-type: inline-size; }
+/* ist der Artikel schmal, stünde der Steckbrief neben einer engen Spalte aus Text und Code: dann als Block darüber */
+@container (max-width: 900px) {
+  .lesen:is([data-art="frage_antwort"], [data-art="dokumentation"]) .steckbrief { float: none; width: auto; margin: 0 0 var(--a4); }
+}
 .artikel { font-size: var(--lesen); line-height: var(--lese-zeile); color: var(--text); min-width: 0; max-width: var(--lese-breite); }
 /* überlange Wörter (Befehle, Pfade, Adressen) brechen um, statt die Spalte zu sprengen */
 .artikel-text { overflow-wrap: anywhere; }

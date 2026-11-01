@@ -457,6 +457,26 @@ def test_stimmen_mit_tausenderpunkt():
     assert (_deutsche_zahl("27527"), _deutsche_zahl("-3"), _deutsche_zahl("1234567"), _deutsche_zahl("x")) == ("27.527", "-3", "1.234.567", "x")
 
 
+def test_stimmen_zaehlen_als_zahl_trotz_tausenderpunkt():
+    """Steckbrief und Reihenfolge rechnen mit der Zahl; geschrieben wird mit Punkt (WIKI-38: Steckbrief zeigte 0)."""
+    from lxml import html as lhtml
+    from app.bausteine.frage_antwort import _beitrag
+    kasten, stimmen, _ = _beitrag(lhtml.fromstring('<div data-score="27527"><div class="js-post-body"><p>x</p></div></div>'), "gefragt")
+    assert stimmen == 27527 and kasten.xpath("string(.//span[@class='zahl'])") == "27.527"
+    assert _beitrag(lhtml.fromstring('<div data-score="-3"></div>'), "beantwortet")[1] == -3
+
+
+def test_verschachtelter_code_einmal_entmaskiert():
+    """Stack Overflow: eingerückter Code als Block im Block, dort doppelt maskiert; der äußere Block bleibt, wie er ist."""
+    from lxml import html as lhtml
+    from app.bausteine.code import code_text
+    pre = lhtml.fromstring("<pre><code>#include &lt;ctime&gt;\n<pre><code>if (c &amp;lt; n) cout &amp;lt;&amp;lt; &amp;quot;x&amp;quot;;</code></pre>"
+                           "</code></pre>")
+    assert code_text(pre) == '#include <ctime>\nif (c < n) cout << "x";'
+    absichtlich = lhtml.fromstring("<pre><code>s.replace('&lt;', '&amp;lt;')</code></pre>")
+    assert code_text(absichtlich) == "s.replace('<', '&lt;')"
+
+
 def test_formeln_als_mathml_ohne_ersatzbild():
     """Formeln der Quelle (verstecktes MathML und schwarzes Ersatzbild) werden zu sichtbarem MathML ohne Bild und ohne
     TeX-Quelle; der Text danach bleibt; abgesetzte Formeln stehen in einem eigenen Kasten."""

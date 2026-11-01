@@ -4,6 +4,7 @@ c-kom, c-tag); die Farben setzt das Lesedesign. Eine Sprache, die hier keine Reg
 
 from __future__ import annotations
 
+import html
 import re
 
 from lxml import html as lhtml
@@ -32,9 +33,18 @@ KLASSE = {"tag": "c-tag", "kom": "c-kom", "str": "c-str", "var": "c-var", "num":
 
 def code_text(el) -> str:
     """Der Quelltext eines Code-Elements; Zeilen, die als <br> gesetzt sind (php.net färbt so), werden echte Umbrüche,
-    geschützte Leerzeichen gewöhnliche."""
+    geschützte Leerzeichen gewöhnliche. Ein Codeblock in einem Codeblock (Stack Overflow setzt eingerückten Code in
+    manchen Beiträgen so, WIKI-38) ist in der Quelle doppelt maskiert (&amp;lt;): nur dessen Text wird einmal
+    zurückgewandelt. HTML verschachtelt sonst nie Blöcke, Code, der absichtlich &lt; zeigt, bleibt darum unberührt."""
     for br in el.iter("br"):
         br.tail = "\n" + (br.tail or "")
+    for innen in el.iter("pre"):
+        if innen is el:
+            continue
+        for k in innen.iter():
+            k.text = html.unescape(k.text) if k.text else k.text
+            if k is not innen and k.tail:
+                k.tail = html.unescape(k.tail)
     return el.text_content().replace("\xa0", " ")
 
 
