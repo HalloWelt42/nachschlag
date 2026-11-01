@@ -207,6 +207,7 @@ class Enzyklopaedie:
         inhalt = next(iter(doc.xpath("//*[@id='mw-content-text']")), None)
         if inhalt is None:
             inhalt = next(iter(doc.xpath("//body")), doc)
+        h.formeln_setzen(inhalt)         # vor dem Entfernen des Versteckten: das MathML der Formeln steht dort
         h.stile_uebersetzen(inhalt)      # vor allem anderen: Verstecktes darf nicht in Steckbrief oder Einleitung
         for el in list(inhalt.iter()):
             if not isinstance(el.tag, str) or el.getparent() is None:

@@ -452,6 +452,28 @@ async def test_medien_im_artikel_und_suche(nachschlag):
     assert (await c.get(f"/api/v1/medien/artikel/{buch}/GibtEsNicht")).status_code == 404
 
 
+def test_formeln_als_mathml_ohne_ersatzbild():
+    """Formeln der Quelle (verstecktes MathML und schwarzes Ersatzbild) werden zu sichtbarem MathML ohne Bild und ohne
+    TeX-Quelle; der Text danach bleibt; abgesetzte Formeln stehen in einem eigenen Kasten."""
+    from lxml import html as lhtml
+    from app.bausteine import html as h
+    quelle = (
+        '<div><p>Es gilt <span class="mwe-math-element mwe-math-element-inline"><span class="mwe-math-mathml-inline" '
+        'style="display: none;"><math xmlns="http://www.w3.org/1998/Math/MathML" alttext="x+4"><semantics><mrow><mi>x</mi>'
+        '<mo stretchy="false">+</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">x+4</annotation></semantics>'
+        '</math></span><img class="mwe-math-fallback-image-inline" src="formel.svg" alt="x+4"></span> und weiter.</p>'
+        '<span class="mwe-math-element mwe-math-element-block"><span style="display: none;"><math display="block">'
+        '<mi>E</mi></math></span><img src="block.svg"></span> danach</div>')
+    wurzel = lhtml.fragment_fromstring(quelle)
+    h.formeln_setzen(wurzel)
+    h.stile_uebersetzen(wurzel)
+    h.saeubern(wurzel)
+    text = h.als_html(wurzel)
+    assert "<img" not in text and "annotation" not in text and "x+4</annotation" not in text
+    assert '<math alttext="x+4"><semantics><mrow><mi>x</mi><mo stretchy="false">+</mo><mn>4</mn></mrow></semantics></math> und weiter.' in text
+    assert '<div class="formel"><math display="block"><mi>E</mi></math></div> danach' in text
+
+
 async def test_meins_trennt_konten(tmp_path):
     """Was ein Konto merkt, sieht kein anderes."""
     from appkern.datenbank import Datenbank

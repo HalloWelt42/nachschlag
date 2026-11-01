@@ -29,7 +29,17 @@ EIGENE_KLASSEN = {"wl", "ort", "hinweis", "steckbrief", "steckbrief-kopf", "stec
                   "ausgabe-titel", "ausgabe", "siehe", "c-kw", "c-tag", "c-fn", "c-var", "c-str", "c-num", "c-kom",
                   # Frage und Antwort (Entwurf frage-antwort.html)
                   "qa-beitrag", "qa-stimmen", "zahl", "was", "akz-marke", "antwort", "akzeptiert", "antworten-kopf",
-                  "beitrag-fuss", "schlagwoerter", "kommentare", "kommentar-liste", "codeblock", "verwandt"}
+                  "beitrag-fuss", "schlagwoerter", "kommentare", "kommentar-liste", "codeblock", "verwandt",
+                  # Formeln: abgesetzte Formel mit eigenem Rollfeld
+                  "formel"}
+#: MathML: die Elemente und Angaben, die eine Formel zum Setzen braucht (der Browser setzt sie in der Textfarbe)
+MATHML = {"math", "semantics", "mrow", "mi", "mn", "mo", "ms", "mtext", "mspace", "mfrac", "msqrt", "mroot", "msub", "msup",
+          "msubsup", "munder", "mover", "munderover", "mmultiscripts", "mprescripts", "none", "mtable", "mtr", "mtd", "mstyle",
+          "mpadded", "mphantom", "menclose", "merror", "mfenced"}
+MATHML_ATTRIBUTE = {"display", "mathvariant", "displaystyle", "scriptlevel", "stretchy", "fence", "separator", "lspace", "rspace",
+                    "largeop", "movablelimits", "accent", "accentunder", "symmetric", "minsize", "maxsize", "linethickness",
+                    "columnalign", "rowalign", "columnspacing", "rowspacing", "columnlines", "rowlines", "notation", "width",
+                    "height", "depth", "voffset", "mathsize", "open", "close", "separators", "alttext"}
 
 VERSTECKT = re.compile(r"display\s*:\s*none", re.I)
 LINIE = {"linie-unten": re.compile(r"border-bottom\s*:\s*[^;]*\d", re.I),
@@ -169,6 +179,28 @@ def ueberschriften(wurzel) -> list[Abschnitt]:
     return abschnitte
 
 
+def formeln_setzen(wurzel) -> None:
+    """Formeln der Quelle (MediaWiki: MathML, versteckt, dazu ein schwarzes Ersatzbild) werden zu sichtbarem MathML:
+    der Browser setzt es in der Textfarbe (hell und dunkel), mit der Schriftgröße, auswählbar. Das Ersatzbild fällt
+    weg; die TeX-Quelle (annotation) auch. Abgesetzte Formeln stehen in einem eigenen Kasten, der seitlich rollen darf.
+    Vor stile_uebersetzen rufen, das Verstecktes entfernt."""
+    for huelle in list(wurzel.xpath('.//*[contains(concat(" ", normalize-space(@class), " "), " mwe-math-element ")]')):
+        formel = next(huelle.iter("math"), None)
+        if formel is None or huelle.getparent() is None:
+            continue
+        for quelle in list(formel.iter("annotation", "annotation-xml")):
+            quelle.drop_tree()
+        abgesetzt = formel.get("display") == "block" or "mwe-math-element-block" in (huelle.get("class") or "")
+        formel.tail = huelle.tail
+        if abgesetzt:
+            kasten = lhtml.Element("div", {"class": "formel"})
+            kasten.append(formel)
+            kasten.tail, formel.tail = formel.tail, None
+            huelle.getparent().replace(huelle, kasten)
+        else:
+            huelle.getparent().replace(huelle, formel)
+
+
 def stile_uebersetzen(wurzel) -> None:
     """Was die Quelle nur über Stilangaben ausdrückt und beim Säubern verloren ginge, vorher in Bedeutung übersetzen:
     Verstecktes (display: none, etwa Wartungsvermerke von Vorlagen) fällt weg; Linien an Tabellenzellen (so zeichnen
@@ -196,8 +228,9 @@ def saeubern(wurzel) -> None:
     for el in wurzel.iter():
         if not isinstance(el.tag, str):
             continue
+        erlaubt = ERLAUBTE_ATTRIBUTE | MATHML_ATTRIBUTE if el.tag in MATHML else ERLAUBTE_ATTRIBUTE
         for name in list(el.attrib):
-            if name not in ERLAUBTE_ATTRIBUTE:
+            if name not in erlaubt:
                 del el.attrib[name]
         if "class" in el.attrib:
             eigene = [k for k in el.get("class", "").split() if k in EIGENE_KLASSEN]
