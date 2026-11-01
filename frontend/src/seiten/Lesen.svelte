@@ -25,6 +25,7 @@
   import { groesseFuer } from "../lib/lesegroesse.svelte";
   import Kachel from "../teile/Kachel.svelte";
   import Fragekarte from "../teile/Fragekarte.svelte";
+  import Codeansicht from "../teile/Codeansicht.svelte";
   import Leuchtkasten from "../teile/Leuchtkasten.svelte";
   import { medienImArtikel, type Medium } from "../lib/medien";
   import { themenLaden } from "../lib/themen.svelte";
@@ -99,8 +100,9 @@
       woerter = text?.innerText.split(/\s+/).length ?? 0;
       if (text) {
         // Sprache des Codes aus den Schlagwörtern (Frage und Antwort); sonst erkennt sie sich am Inhalt
-        codeEinfaerben(text, spracheAus([...text.querySelectorAll(".schlagwoerter span")].map((e) => e.textContent ?? "")));
+        codeEinfaerben(text, spracheAus([...text.querySelectorAll(".schlagwoerter :is(span, a)")].map((e) => e.textContent ?? "")));
         kopierknoepfe(text);
+        if (geraet.mobil) codeGrossKnoepfe(text);
         symboleAnbringen(text);
       }
       await Promise.all([bibliothekLaden(), meinsLaden(), themenLaden()]);   // Buch (sein Name), Meins und Themen des Kontos
@@ -241,6 +243,29 @@
       const kopf = kasten.querySelector<HTMLElement>(".bkopf");
       if (kopf) kopf.append(knopf);
       else kasten.prepend(knopf);
+    }
+  }
+
+  /** Am Telefon bekommt jeder Codeblock "Code groß" (WIKI-30): die Codeansicht über den ganzen Schirm, ohne Umbruch. Der
+   *  Knopf steht in einem Rahmen um den Block, damit Text und Stellen des Codes unberührt bleiben. */
+  let codeGross = $state.raw<{ html: string; text: string; sprache: string } | null>(null);
+  function codeGrossKnoepfe(wurzel: HTMLElement) {
+    for (const pre of wurzel.querySelectorAll<HTMLElement>("pre:not(.ausgabe)")) {
+      if (pre.parentElement?.classList.contains("code-rahmen") || !pre.textContent?.trim()) continue;
+      const rahmen = document.createElement("div");
+      rahmen.className = "code-rahmen";
+      pre.replaceWith(rahmen);
+      rahmen.append(pre);
+      const knopf = document.createElement("button");
+      knopf.className = "knopf still code-gross";
+      knopf.title = "Code groß, ohne Umbruch";
+      knopf.innerHTML = '<i class="fa-solid fa-up-right-and-down-left-from-center"></i><span class="wort">Groß</span>';
+      knopf.addEventListener("click", () => {
+        const code = pre.querySelector("code") ?? pre;
+        const sprache = pre.dataset.gefaerbt && pre.dataset.gefaerbt !== "schlicht" ? pre.dataset.gefaerbt : "";
+        codeGross = { html: code.innerHTML, text: code.textContent ?? "", sprache };
+      });
+      rahmen.append(knopf);
     }
   }
 
@@ -692,6 +717,9 @@
 {/if}
 {#if bilder && artikel}
   <Leuchtkasten medien={bilder.medien} start={bilder.start} titel={`in ${artikel.titel}`} onzu={() => (bilder = null)} />
+{/if}
+{#if codeGross}
+  <Codeansicht html={codeGross.html} text={codeGross.text} sprache={codeGross.sprache} onzu={() => (codeGross = null)} />
 {/if}
 {#if blatt}
   <NotizBlatt notiz={blatt.notiz} entwurf={blatt.entwurf} schreiben={blatt.schreiben} onzu={() => (blatt = null)} />

@@ -347,6 +347,20 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 @keyframes sprechen { 50% { opacity: .65; } }
 .sprech-stand { font-size: var(--marke); color: var(--gefahr); }
 .notiz-feldkopf { display: flex; align-items: center; justify-content: space-between; gap: var(--a2); }
+/* Codeansicht (WIKI-30): Knopf am Codeblock (nur Telefon) und Ansicht über den ganzen Schirm */
+.code-rahmen { position: relative; }
+.code-gross { position: absolute; top: 4px; right: 4px; padding: 4px 8px; font-size: var(--marke); background: color-mix(in srgb, var(--ed-grund) 85%, transparent); }
+.codeansicht { position: fixed; inset: 0; z-index: 70; display: flex; flex-direction: column; background: var(--ed-grund); color: var(--ed-text);
+               padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); }
+.codeansicht-kopf { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2); padding: var(--a2) var(--a3); background: var(--leiste);
+                    color: var(--text); box-shadow: 0 1px 0 var(--rand); }
+.codeansicht-kopf .was { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: var(--a2); }
+.codeansicht-kopf .neben { font-size: var(--marke); color: var(--text-3); }
+.codeansicht-rumpf { flex: 1; min-height: 0; overflow: auto; display: grid; grid-template-columns: max-content max-content; align-content: start;
+                     font-family: var(--schrift-editor); font-variant-ligatures: none; line-height: 1.55; padding-bottom: env(safe-area-inset-bottom); }
+.codeansicht-rumpf pre { margin: 0; padding: 12px 14px; white-space: pre; font: inherit; }
+.codeansicht-nummern { position: sticky; left: 0; text-align: right; color: var(--ed-kom); background: var(--ed-grund); user-select: none;
+                       box-shadow: 1px 0 0 color-mix(in srgb, var(--ed-kom) 30%, transparent); }
 .meintest { border: 0; padding: 0; background: none; font: inherit; font-weight: 600; color: var(--verweis); cursor: pointer; text-decoration: underline; }
 .uebersetzung-aendern { flex: 1; display: flex; flex-wrap: wrap; gap: var(--a2); align-items: center; }
 /* Ausnahme: mindestens 16px, sonst vergrößert iOS die Seite beim Tippen */
@@ -398,14 +412,14 @@ button.kachel:disabled { opacity: .6; cursor: default; }
                                  box-shadow: inset 0 0 0 1px var(--rand); overflow-wrap: anywhere; }
 .artikel-text a > code { color: inherit; }
 /* Codeblöcke (WIKI-33): Klassen von highlight.js auf die Editorfarben, wie die Beispiele der Handbücher */
-.artikel-text pre :is(.hljs-keyword, .hljs-literal, .hljs-type, .hljs-selector-tag, .hljs-doctag) { color: var(--ed-kw); font-weight: 600; }
-.artikel-text pre :is(.hljs-string, .hljs-regexp, .hljs-addition, .hljs-symbol) { color: var(--ed-str); }
-.artikel-text pre :is(.hljs-number, .hljs-bullet) { color: var(--ed-zahl); }
-.artikel-text pre :is(.hljs-comment, .hljs-quote) { color: var(--ed-kom); font-style: italic; }
-.artikel-text pre :is(.hljs-title, .hljs-section, .hljs-built_in, .hljs-selector-id, .hljs-selector-class) { color: var(--ed-fn); }
-.artikel-text pre :is(.hljs-variable, .hljs-attr, .hljs-attribute, .hljs-params, .hljs-property, .hljs-template-variable, .hljs-name) { color: var(--ed-feld); }
-.artikel-text pre :is(.hljs-meta, .hljs-tag) { color: var(--ed-kom); }
-.artikel-text pre .hljs-deletion { color: var(--gefahr); }
+:is(.artikel-text pre, .codeansicht-code) :is(.hljs-keyword, .hljs-literal, .hljs-type, .hljs-selector-tag, .hljs-doctag) { color: var(--ed-kw); font-weight: 600; }
+:is(.artikel-text pre, .codeansicht-code) :is(.hljs-string, .hljs-regexp, .hljs-addition, .hljs-symbol) { color: var(--ed-str); }
+:is(.artikel-text pre, .codeansicht-code) :is(.hljs-number, .hljs-bullet) { color: var(--ed-zahl); }
+:is(.artikel-text pre, .codeansicht-code) :is(.hljs-comment, .hljs-quote) { color: var(--ed-kom); font-style: italic; }
+:is(.artikel-text pre, .codeansicht-code) :is(.hljs-title, .hljs-section, .hljs-built_in, .hljs-selector-id, .hljs-selector-class) { color: var(--ed-fn); }
+:is(.artikel-text pre, .codeansicht-code) :is(.hljs-variable, .hljs-attr, .hljs-attribute, .hljs-params, .hljs-property, .hljs-template-variable, .hljs-name) { color: var(--ed-feld); }
+:is(.artikel-text pre, .codeansicht-code) :is(.hljs-meta, .hljs-tag) { color: var(--ed-kom); }
+:is(.artikel-text pre, .codeansicht-code) .hljs-deletion { color: var(--gefahr); }
 .artikel-text p.einleitung { font-size: calc(var(--lesen) + 1px); color: var(--nebentext); }
 .signatur { position: relative; margin: 0 0 1em; padding: var(--a3) var(--a4); background: var(--ed-grund); color: var(--ed-text);
             box-shadow: var(--schatten), inset 3px 0 0 var(--violett); border-radius: 0; font-family: var(--schrift-editor);
