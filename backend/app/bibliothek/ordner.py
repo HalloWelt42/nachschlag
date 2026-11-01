@@ -24,6 +24,8 @@ logger = logging.getLogger("nachschlag.bibliothek")
 #: Erzeuger und die Grundstruktur ihrer Bücher; erkannt am Anfang der Angabe Scraper
 ERZEUGER: tuple[tuple[str, Art], ...] = (("mwoffliner", "enzyklopaedie"), ("devdocs", "dokumentation"),
                                         ("sotoki", "frage_antwort"), ("warc2zim", "webseite"), ("zimit", "webseite"))
+#: Spiegel von Seiten (warc2zim, zimit), deren Inhalt eine bekannte Art ist: die Quelle (Metadatum Source) entscheidet
+QUELLEN: tuple[tuple[str, Art], ...] = (("php.net/manual", "dokumentation"),)
 #: Arten mit eigenem Lesedesign (wächst mit den Bausteinen)
 MIT_LESEDESIGN: set[Art] = {"enzyklopaedie", "dokumentation"}
 UMLEITUNG_HTML = re.compile(rb"""<meta[^>]+http-equiv=["']refresh["'][^>]+URL=['"]?\.?/?([^'">]+)""", re.I)
@@ -60,7 +62,12 @@ def _angabe(a: Archive, schluessel: str) -> str:
         return ""
 
 
-def art_aus(erzeuger: str) -> Art:
+def art_aus(erzeuger: str, quelle: str = "") -> Art:
+    """Art eines Buchs nach seinem Erzeuger; bei Spiegeln von Seiten nach der Quelle, wenn sie bekannt ist."""
+    q = quelle.lower()
+    gespiegelt = next((art for name, art in QUELLEN if name in q), None)
+    if gespiegelt:
+        return gespiegelt
     e = erzeuger.lower()
     return next((art for name, art in ERZEUGER if name in e), "sonstiges")
 
@@ -77,7 +84,7 @@ def seiten_aus(a: Archive) -> int:
 
 def buch_aus(kennung: str, a: Archive, groesse: int) -> Buch:
     erzeuger = _angabe(a, "Scraper")
-    art = art_aus(erzeuger)
+    art = art_aus(erzeuger, _angabe(a, "Source"))
     start = ""
     if a.has_main_entry:
         try:

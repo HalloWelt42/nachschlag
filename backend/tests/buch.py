@@ -174,3 +174,37 @@ def bauen_doku(ordner: Path, name: str = "probedoku_en_php_2026-08") -> Path:
         c.add_item(_Seite("function.array-filter", "array_filter", ARRAY_FILTER))
         c.add_item(_Seite("navbar.json", "", GLIEDERUNG, "application/json", vorne=False))
     return datei
+
+
+# ----- Probebuch Spiegel von php.net (warc2zim): dasselbe Handbuch in der Seite von php.net ------------------------------
+
+SPIEGEL_SEITE = """<html><head><title>PHP: array_map - Manual</title><script src="/_zim_static/wombat.js"></script></head><body>
+<div id="breadcrumbs"><ul><li><a href="index.php">PHP Manual</a></li><li><a href="book.array.php">Arrays</a></li>
+<li><a href="ref.array.php">Array Functions</a></li></ul></div>
+<section id="layout-content"><div class="page-tools"><form><select onchange="x()"><option>English</option></select></form></div>
+<div id="function.array-map" class="refentry"><div class="refnamediv"><h1 class="refname">array_map</h1>
+<p class="verinfo">(PHP 4 &gt;= 4.0.6, PHP 8)</p><p class="refpurpose"><span class="dc-title">Applies the callback</span></p></div>
+<div class="refsect1 examples"><h3 class="title">Examples</h3><div class="example" id="example-5040">
+<p><strong>Example #1 array_map() example</strong></p><div class="example-contents"><div class="phpcode"><code><span style="color: #000000">
+<span style="color: #0000BB">&lt;?php<br /></span><span style="color: #0000BB">$b&nbsp;</span>=&nbsp;<span style="color: #0000BB">array_map</span>(<span style="color: #DD0000">'cube'</span>);<br /><span style="color: #0000BB">?&gt;</span>
+</span></code></div></div></div></div></div>
+<section id="usernotes"><h3 class="title">User Contributed Notes <span class="count">2 notes</span></h3>
+<div id="allnotes"><div class="note" id="1"><div class="text">first</div></div><div class="note" id="2"><div class="text">second</div></div></div></section>
+</section><aside class="layout-menu"><ul class="parent-menu-list"><li><a href="ref.array.php">Array Functions</a>
+<ul class="child-menu-list"><li><a href="function.array-keys.php" title="array_keys">array_&#8203;keys</a></li>
+<li class="current"><a href="function.array-map.php" title="array_map">array_&#8203;map</a></li></ul></li></ul></aside></body></html>"""
+
+
+def bauen_spiegel(ordner: Path, name: str = "probespiegel_en_all_2024-08") -> Path:
+    ordner.mkdir(parents=True, exist_ok=True)
+    datei = ordner / f"{name}.zim"
+    with Creator(str(datei)).config_indexing(True, "eng") as c:
+        c.set_mainpath("www.php.net/manual/en/function.array-map.php")
+        for schluessel, wert in (("Name", name.rsplit("_", 1)[0]), ("Title", "PHP Manual Probe"), ("Language", "eng"),
+                                 ("Description", "Spiegel für die Tests"), ("Date", "2024-08-13"),
+                                 ("Scraper", "warc2zim 2.1.0,zimit 2.1.0"), ("Source", "https://www.php.net/manual"),
+                                 ("Creator", "Tests"), ("Publisher", "Tests")):
+            c.add_metadata(schluessel, wert)
+        c.add_item(_Seite("www.php.net/manual/en/function.array-map.php", "array_map", SPIEGEL_SEITE))
+        c.add_item(_Seite("www.php.net/manual/en/function.array-keys.php", "array_keys", "<html><body><p>keys</p></body></html>"))
+    return datei

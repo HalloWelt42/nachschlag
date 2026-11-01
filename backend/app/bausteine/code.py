@@ -30,6 +30,14 @@ PHP = re.compile(r"""
 KLASSE = {"tag": "c-tag", "kom": "c-kom", "str": "c-str", "var": "c-var", "num": "c-num"}
 
 
+def code_text(el) -> str:
+    """Der Quelltext eines Code-Elements; Zeilen, die als <br> gesetzt sind (php.net färbt so), werden echte Umbrüche,
+    geschützte Leerzeichen gewöhnliche."""
+    for br in el.iter("br"):
+        br.tail = "\n" + (br.tail or "")
+    return el.text_content().replace("\xa0", " ")
+
+
 def einfaerben(code: str, sprache: str):
     """Ein `<pre>` mit dem eingefärbten Code (Text maskiert über den Elementbaum, nie als Zeichenkette gebaut)."""
     pre = lhtml.Element("pre")

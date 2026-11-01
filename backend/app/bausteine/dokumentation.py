@@ -1,5 +1,7 @@
-"""Baustein Dokumentation (Erzeuger devdocs2zim): Handbücher wie das von PHP, neu gesetzt im Grunddesign der
-Artikelansicht (Entwurf doku-php.html). Die Quelle bringt das Handbuch als DocBook-HTML in `div._page`; jede Seite
+"""Baustein Dokumentation: Handbücher wie das von PHP, neu gesetzt im Grunddesign der Artikelansicht (Entwurf
+doku-php.html). Zwei Verpackungen desselben DocBook-HTML: devdocs2zim (`div._page`, Gliederung in `navbar.json`) und
+der Spiegel von php.net (warc2zim/zimit, `#layout-content`, Nachbarn in `.layout-menu`, Rubrik in den Brotkrumen,
+Nutzernotizen in `#usernotes`). Jede Seite
 einer Funktion hat feste Teile (`div.refsect1.description`, `.parameters`, `.returnvalues`, `.changelog`, `.examples`,
 `.seealso`), dazu Signatur (`pre.methodsynopsis`), Fassungen (`p.verinfo`) und Zweck (`p.refpurpose`). Die Gliederung
 des Buchs steht in `navbar.json` (Rubriken mit ihren Einträgen): daraus Rubrik und Nachbarn einer Seite und die
@@ -22,7 +24,7 @@ from ..modell.artikel import Gruppe, Nachbar, Steckbrief
 from ..modell.buch import Buch
 from . import html as h
 from .basis import Aufbereitet, Wege
-from .code import einfaerben
+from .code import code_text, einfaerben
 
 GLIEDERUNG = "navbar.json"
 #: Nachbarn einer Seite in ihrer Rubrik: so viele davor und danach (Entwurf zeigt die Umgebung, nicht die ganze Rubrik)
@@ -112,6 +114,15 @@ def _ersetzen(alt, neu) -> None:
     alt.getparent().replace(alt, neu)
 
 
+#: Teile eines Beispiels in Reihenfolge: Code (pre oder php.net-gefärbt in div.phpcode), Ausgabe (pre), Sätze dazwischen
+BLOECKE = (".//pre[not(ancestor::*[contains(@class,'phpcode')])] | .//div[contains(@class,'phpcode')] | "
+           ".//p[not(ancestor::pre) and not(ancestor::*[contains(@class,'phpcode')])]")
+
+
+def _ist_php(el) -> bool:
+    return "phpcode" in (el.get("class") or "") or el.get("data-language") == "php"
+
+
 def _beispiel(div) -> None:
     """Beispiel der Quelle (div.example) als Kasten: Kopf, eingefärbter Code, Ausgabe mit eigenem Titel."""
     kasten = lhtml.Element("div")
@@ -122,18 +133,18 @@ def _beispiel(div) -> None:
         kopf.set("class", "bkopf")
         kopf.text = re.sub(r"^Example\s*#(\d+)\s*", r"Beispiel \1: ", h.text_von(titel))
         titel.getparent().remove(titel)
-    bloecke = [el for el in div.iter("pre", "p") if el.tag == "pre" or not el.xpath("ancestor::pre")]
+    bloecke = div.xpath(BLOECKE)
     for i, el in enumerate(bloecke):
         if el.tag == "p":
-            folgt_ausgabe = i + 1 < len(bloecke) and bloecke[i + 1].tag == "pre" and "phpcode" not in (bloecke[i + 1].get("class") or "")
+            folgt_ausgabe = i + 1 < len(bloecke) and not _ist_php(bloecke[i + 1])
             if folgt_ausgabe and VOR_AUSGABE.search(h.text_von(el)):
                 continue
             absatz = SubElement(kasten, "p")
             absatz.set("class", "bnotiz")
             h.verschieben(el, absatz)
             continue
-        code = el.text_content()
-        if "phpcode" in (el.get("class") or "") or el.get("data-language") == "php":
+        code = code_text(el).strip("\n")
+        if _ist_php(el):
             kasten.append(einfaerben(code, "php"))
         else:
             titel_a = SubElement(kasten, "div")
@@ -147,20 +158,20 @@ def _beispiel(div) -> None:
 
 def _code_bloecke(inhalt) -> None:
     """Code außerhalb von Beispielen (Sprachreferenz): eingefärbt im Kasten ohne Kopf."""
-    for pre in list(inhalt.iter("pre")):
+    for pre in list(inhalt.xpath(".//pre[not(ancestor::*[contains(@class,'phpcode')])] | .//div[contains(@class,'phpcode')]")):
         if pre.getparent() is None:
             continue
         if any(a.get("class") == "beispiel" for a in pre.iterancestors()):
             continue
-        sprache = "php" if ("phpcode" in (pre.get("class") or "") or pre.get("data-language") == "php") else ""
+        code = code_text(pre).strip("\n")
         kasten = lhtml.Element("div")
         kasten.set("class", "beispiel")
-        if sprache:
-            kasten.append(einfaerben(pre.text_content(), sprache))
+        if _ist_php(pre):
+            kasten.append(einfaerben(code, "php"))
         else:
             aus = SubElement(kasten, "pre")
             aus.set("class", "ausgabe")
-            aus.text = pre.text_content()
+            aus.text = code
         halter = pre
         while halter.getparent() is not None and halter.getparent().tag == "div" and len(halter.getparent()) == 1 \
                 and not (halter.getparent().text or "").strip() and halter.getparent() is not inhalt:
@@ -204,16 +215,48 @@ def _parameter(div, typen: dict[str, str]) -> None:
                 dt[-1].text = typen[name]
 
 
+#: Teile der Seite von php.net, die nicht zum Handbuch gehören (Sprachwahl, Melden, Notizen der Nutzer)
+SPIEGEL_WEG = (".//*[contains(@class,'page-tools')] | .//*[@id='usernotes'] | .//*[contains(@class,'edit-bug')] | "
+               ".//*[contains(@class,'contribute')] | .//form")
+NULLBREITE = chr(0x200B)                 # php.net bricht lange Namen mit Leerzeichen der Breite null
+
+
+def _spiegel_umgebung(doc, seite, pfad: str) -> tuple[str, list[Nachbar], int]:
+    """Rubrik (letzte Brotkrume), Nachbarn (Seitenleiste) und Zahl der Nutzernotizen; danach fällt alles weg, was
+    nicht zum Handbuch gehört."""
+    krumen = doc.xpath("//*[@id='breadcrumbs']//ul/li/a")
+    rubrik = h.text_von(krumen[-1]) if krumen else ""
+    umgebung = [Nachbar(pfad=h.ziel_im_buch(pfad, a.get("href") or ""), titel=h.text_von(a).replace(NULLBREITE, ""))
+                for a in doc.xpath("//aside[contains(@class,'layout-menu')]//ul[contains(@class,'child-menu-list')]//a")
+                if a.get("href")]
+    notizen = len(seite.xpath(".//*[@id='usernotes']//div[contains(@class,'note') and @id]"))
+    for el in seite.xpath(SPIEGEL_WEG):
+        if el.getparent() is not None:
+            el.drop_tree()
+    return rubrik, umgebung, notizen
+
+
+def _fenster(eintraege: list[Nachbar], pfad: str) -> list[Nachbar]:
+    """Die Umgebung einer Seite in ihrer Rubrik: NACHBARN_UM Seiten davor und danach."""
+    if not eintraege:
+        return []
+    i = next((n for n, e in enumerate(eintraege) if e.pfad == pfad), 0)
+    von = max(0, min(i - NACHBARN_UM, len(eintraege) - 2 * NACHBARN_UM - 1))
+    return eintraege[von:von + 2 * NACHBARN_UM + 1]
+
+
 class Dokumentation:
     kennung = "dokumentation"
-    arten = frozenset({"dokumentation"})
+    arten = frozenset({"dokumentation"})        # auch Spiegel von Handbüchern (Art nach ihrer Quelle, Bibliothek)
     darstellung = "lesedesign"
 
     def __init__(self) -> None:
         self._gliederungen: dict[tuple[str, str], Gliederung] = {}
 
     def passt(self, eintrag: Eintrag) -> bool:
-        return eintrag.mime.startswith("text/html") and b'class="_page' in eintrag.inhalt
+        if not eintrag.mime.startswith("text/html"):
+            return False
+        return b'class="_page' in eintrag.inhalt or (b'id="layout-content"' in eintrag.inhalt and b"layout-menu" in eintrag.inhalt)
 
     def _gliederung(self, buch: Buch, wege: Wege) -> Gliederung:
         schluessel = (buch.kennung, buch.stand)
@@ -222,16 +265,24 @@ class Dokumentation:
         return self._gliederungen[schluessel]
 
     def aufbereiten(self, buch: Buch, eintrag: Eintrag, wege: Wege) -> Aufbereitet:
-        gliederung = self._gliederung(buch, wege)
         doc = lhtml.fromstring(eintrag.inhalt.decode("utf-8", "replace"))
         seite = next(iter(doc.xpath("//div[contains(@class,'_page')]")), None)
-        if seite is None:
-            return Aufbereitet(titel=eintrag.titel)
-        for el in seite.xpath(".//div[contains(@class,'_attribution')]"):
-            el.drop_tree()
-        if eintrag.pfad == "index" or not seite.xpath(".//p|.//pre|.//table"):
-            # Startseite des Buchs (in der Quelle leer): Übersicht der Rubriken
-            return Aufbereitet(titel=buch.titel, gruppen=gliederung.rubriken, darstellung="uebersicht")
+        notizen = 0
+        if seite is not None:                                       # devdocs: Gliederung aus navbar.json
+            gliederung = self._gliederung(buch, wege)
+            for el in seite.xpath(".//div[contains(@class,'_attribution')]"):
+                el.drop_tree()
+            if eintrag.pfad == "index" or not seite.xpath(".//p|.//pre|.//table"):
+                # Startseite des Buchs (in der Quelle leer): Übersicht der Rubriken
+                return Aufbereitet(titel=buch.titel, gruppen=gliederung.rubriken, darstellung="uebersicht")
+            nr = gliederung.rubrik_von.get(eintrag.pfad)
+            rubrik_titel = gliederung.rubriken[nr].titel if nr is not None else ""
+            umgebung = gliederung.rubriken[nr].eintraege if nr is not None else []
+        else:                                                       # Spiegel von php.net: Gliederung aus der Seite
+            seite = next(iter(doc.xpath("//*[@id='layout-content']")), None)
+            if seite is None:
+                return Aufbereitet(titel=eintrag.titel)
+            rubrik_titel, umgebung, notizen = _spiegel_umgebung(doc, seite, eintrag.pfad)
 
         kopf = next(iter(seite.xpath(".//h1|.//h2")), None)
         titel = h.text_von(kopf) if kopf is not None else eintrag.titel
@@ -309,20 +360,14 @@ class Dokumentation:
         if zweck:
             html = f'<p class="einleitung">{h.maskieren(zweck)}</p>' + html
 
-        nr = gliederung.rubrik_von.get(eintrag.pfad)
-        rubrik = gliederung.rubriken[nr] if nr is not None else None
-        steckbrief = self._steckbrief(buch, titel, signatur, fassungen, rubrik.titel if rubrik else "", code_titel)
-        nachbarn: list[Nachbar] = []
-        if rubrik:
-            i = next((n for n, e in enumerate(rubrik.eintraege) if e.pfad == eintrag.pfad), 0)
-            von = max(0, min(i - NACHBARN_UM, len(rubrik.eintraege) - 2 * NACHBARN_UM - 1))
-            nachbarn = rubrik.eintraege[von:von + 2 * NACHBARN_UM + 1]
+        steckbrief = self._steckbrief(buch, titel, signatur, fassungen, rubrik_titel, code_titel, notizen)
         return Aufbereitet(titel=titel, html=html, einleitung=einleitung, abschnitte=abschnitte, steckbrief=steckbrief,
-                           bild=bild, verweise=verweise, online=online, rubrik=rubrik.titel if rubrik else "",
-                           nachbarn=nachbarn, titelart="code" if code_titel else "text")
+                           bild=bild, verweise=verweise, online=online, rubrik=rubrik_titel,
+                           nachbarn=_fenster(umgebung, eintrag.pfad), titelart="code" if code_titel else "text")
 
     @staticmethod
-    def _steckbrief(buch: Buch, titel: str, signatur: str, fassungen: list[str], rubrik: str, code_titel: bool):
+    def _steckbrief(buch: Buch, titel: str, signatur: str, fassungen: list[str], rubrik: str, code_titel: bool,
+                    notizen: int = 0):
         """Steckbrief einer Seite (Entwurf): Signatur, verfügbare Fassungen, Quelle. Ohne Signatur und Fassungen keiner."""
         if not signatur and not fassungen:
             return None
@@ -342,7 +387,8 @@ class Dokumentation:
         wurzel[-1].text = "Quelle"
         werte = SubElement(wurzel, "dl")
         werte.set("class", "steckbrief-werte")
-        for name, wert in (("Buch", f"{buch.titel}, Stand {h.datum(buch.stand)}"), ("Rubrik", rubrik)):
+        for name, wert in (("Buch", f"{buch.titel}, Stand {h.datum(buch.stand)}"), ("Rubrik", rubrik),
+                           ("Notizen", f"{notizen} der Nutzer" if notizen else "")):
             if wert:
                 SubElement(werte, "dt").text = name
                 SubElement(werte, "dd").text = wert

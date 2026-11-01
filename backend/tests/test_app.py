@@ -51,6 +51,7 @@ def buecher(tmp_path_factory) -> Path:
     ordner = tmp_path_factory.mktemp("buecher")
     probebuch.bauen(ordner)
     probebuch.bauen_doku(ordner)
+    probebuch.bauen_spiegel(ordner)
     return ordner
 
 
@@ -76,7 +77,7 @@ async def nachschlag(tmp_path: Path, buecher: Path):
 async def test_buecher(nachschlag):
     c, _, _ = nachschlag
     stand = (await c.get("/api/v1/buecher")).json()
-    assert stand["fehler"] == [] and len(stand["buecher"]) == 2
+    assert stand["fehler"] == [] and len(stand["buecher"]) == 3
     b = next(b for b in stand["buecher"] if b["kennung"] == "probe_de_all_2026-01")
     assert b["kennung"] == "probe_de_all_2026-01" and b["art"] == "enzyklopaedie" and b["startseite"] == "index"
     assert b["faehigkeiten"] == {"titelindex": True, "volltext": True, "bilder": True, "lesedesign": True}
@@ -248,3 +249,20 @@ async def test_startseite_einer_dokumentation_als_rubriken(nachschlag):
     a = (await c.get(f"/api/v1/artikel/{DOKU}/index")).json()
     assert a["darstellung"] == "uebersicht" and a["gruppen"][0]["titel"] == "Array"
     assert [e["titel"] for e in a["gruppen"][0]["eintraege"]] == ["array_filter", "array_map"]
+
+
+async def test_spiegel_von_php_net_wie_die_dokumentation(nachschlag):
+    """Der Spiegel von php.net (warc2zim) wird wie das Handbuch gesetzt: Code aus dem von php.net gefärbten HTML
+    (Zeilen als <br>) neu eingefärbt, Rubrik aus den Brotkrumen, Nachbarn aus der Seitenleiste, Notizen gezählt; die
+    Seite von php.net selbst (Sprachwahl, Skripte, Notizen) fällt weg."""
+    c, _, _ = nachschlag
+    a = (await c.get("/api/v1/artikel/probespiegel_en_all_2024-08/www.php.net/manual/en/function.array-map.php")).json()
+    assert (a["baustein"], a["titel"], a["titelart"], a["rubrik"]) == ("dokumentation", "array_map", "code", "Array Functions")
+    assert [n["titel"] for n in a["nachbarn"]] == ["array_keys", "array_map"]
+    buch = (await c.get("/api/v1/buecher/probespiegel_en_all_2024-08")).json()
+    assert buch["art"] == "dokumentation" and buch["faehigkeiten"]["lesedesign"]   # Art nach der Quelle des Spiegels
+    assert [n["pfad"] for n in a["nachbarn"]][1] == "www.php.net/manual/en/function.array-map.php"
+    html = a["html"]
+    assert '<pre><span class="c-tag">&lt;?php</span>\n<span class="c-var">$b</span> = <span class="c-fn">array_map</span>(<span class="c-str">\'cube\'</span>);\n<span class="c-tag">?&gt;</span></pre>' in html
+    assert "<script" not in html and "select" not in html and "first" not in html
+    assert "<dt>Notizen</dt><dd>2 der Nutzer</dd>" in a["steckbrief"]["html"]
