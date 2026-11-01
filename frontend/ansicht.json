@@ -23,6 +23,34 @@
     {
       "name": "einstellungen",
       "pfad": "/einstellungen"
+    },
+    {
+      "name": "artikel",
+      "pfad": "/lesen/wikipedia_de_all_maxi_2026-01/Rotfuchs"
+    },
+    {
+      "name": "uebersicht",
+      "pfad": "/lesen/wikipedia_de_climate-change_nopic_2026-07/index"
+    },
+    {
+      "name": "doku",
+      "pfad": "/lesen/devdocs_en_php_2026-08/function.array-map"
+    },
+    {
+      "name": "doku-rubriken",
+      "pfad": "/lesen/devdocs_en_php_2026-08/index"
+    },
+    {
+      "name": "spiegel",
+      "pfad": "/lesen/php.net_en_all_2024-08/www.php.net/manual/en/function.array-map.php"
+    },
+    {
+      "name": "frage",
+      "pfad": "/lesen/vi.stackexchange.com_en_all_2026-10/questions/84/how-can-i-copy-text-to-the-system-clipboard-from-vim"
+    },
+    {
+      "name": "fragenliste",
+      "pfad": "/lesen/vi.stackexchange.com_en_all_2026-10/questions"
     }
   ]
 }

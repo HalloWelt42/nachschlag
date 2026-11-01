@@ -92,6 +92,8 @@
 .lesen .inhalt { position: sticky; top: var(--a4); align-self: start; max-height: calc(100vh - 260px); overflow-y: auto; }
 .lesen.ohne-inhalt { grid-template-columns: minmax(0, 1fr); }
 .artikel { font-size: var(--lesen); line-height: var(--lese-zeile); color: var(--text); min-width: 0; max-width: var(--lese-breite); }
+/* überlange Wörter (Befehle, Pfade, Adressen) brechen um, statt die Spalte zu sprengen */
+.artikel-text { overflow-wrap: anywhere; }
 .artikel-text p { margin: 0 0 1em; }
 .artikel-text h2 { font-size: calc(var(--lesen) + 9px); font-weight: 600; line-height: 1.25; margin: 1.6em 0 .5em; padding-bottom: .25em;
               border-bottom: 1px solid var(--rand); clear: both; }
@@ -413,6 +415,8 @@
 }
 @media (max-width: 700px) {
   .artikel-text figure, .artikel-text table.rechts { float: none; margin: 0 auto 1em; }
+  /* Diagramme (Stammbaum) sind breiter als ein Telefon: eigenes Rollfeld, nie die Seite */
+  .artikel-text table.rechts { display: block; max-width: 100%; overflow-x: auto; }
   .fundband { flex-wrap: wrap; margin-inline: var(--a3); }
   .fundband .knopf { margin-left: 0; }
   .kopf .suchanker .buchwahl, .kopf .suchanker kbd { display: none; }
@@ -423,6 +427,9 @@
   .rubriken { columns: 1; }
   .artikel-text .parameterliste { grid-template-columns: minmax(0, 1fr); }
   .qa-beitrag { grid-template-columns: 40px minmax(0, 1fr); gap: var(--a2); }
+  .qa-stimmen .was { display: none; }
+  /* Code am Telefon umbrechen statt seitlich zu wischen (Nutzer: keine seitliche Rollerei) */
+  .beispiel pre, .artikel-text pre.codeblock, .signatur { white-space: pre-wrap; overflow-wrap: anywhere; }
   .start-innen { padding-inline: 0; }          /* den Seitenrand am Telefon gibt die Schale, nur einmal */
   .treffer .marken { margin-left: 0; }
 }
