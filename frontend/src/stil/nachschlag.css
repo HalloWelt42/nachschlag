@@ -101,7 +101,7 @@
 .artikel-text h3 { font-size: calc(var(--lesen) + 2px); font-weight: 600; margin: 1.3em 0 .4em; }
 .artikel-text h4 { font-size: var(--lesen); font-weight: 600; margin: 1.2em 0 .3em; }
 .artikel-text h2, .artikel-text h3, .artikel-text h4 { scroll-margin-top: var(--a4); }
-.artikel a.wl { color: var(--himmel); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--himmel) 30%, transparent); }
+.artikel a.wl { color: var(--verweis); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--verweis) 30%, transparent); }
 .artikel a.wl:hover { border-bottom-color: currentColor; }
 .artikel-text ul, .artikel-text ol { margin: 0 0 1em; padding-left: 1.4em; }
 .artikel-text dl { margin: 0 0 1em; }
@@ -116,7 +116,7 @@
 .artikel-text figure { width: max-content; max-width: min(100%, 300px); background: var(--flaeche); border-radius: var(--r3); padding: 6px; box-shadow: var(--schatten);
                        float: right; clear: right; margin: .3em 0 1em 1.4em; }
 .artikel-text figure img { display: block; max-width: 100%; height: auto; border-radius: var(--r1); }
-.artikel-text figcaption { font-size: var(--klein); line-height: 1.4; color: var(--text-2); padding: 6px 4px 2px; }
+.artikel-text figcaption { font-size: var(--klein); line-height: 1.4; color: var(--nebentext); padding: 6px 4px 2px; }
 
 /* Tabellen der Quelle: ruhig, rollen in sich statt die Seite zu verbreitern */
 .artikel-text table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; margin: 0 0 1em; font-size: var(--klein); line-height: 1.45; }
@@ -141,17 +141,17 @@
 .steckbrief { float: right; width: 360px; margin: .3em 0 var(--a4) var(--a5); background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten);
               font-size: var(--klein); line-height: 1.45; overflow: hidden; }
 .steckbrief-kopf { padding: var(--a2) var(--a3); font-size: var(--titel); font-weight: 600; background: color-mix(in srgb, var(--minze) 14%, transparent); }
-.steckbrief-unter { margin: 0; padding: 4px var(--a3) 0; color: var(--text-2); }
+.steckbrief-unter { margin: 0; padding: 4px var(--a3) 0; color: var(--nebentext); }
 .steckbrief-bild { margin: 0; padding: var(--a2) var(--a2) 0; }
 .steckbrief-bild img { display: block; width: 100%; max-width: 330px; height: auto; margin-inline: auto; border-radius: var(--r1); }
-.steckbrief-bild figcaption { text-align: center; font-size: var(--klein); line-height: 1.4; color: var(--text-2); padding: 6px 4px 2px; }
+.steckbrief-bild figcaption { text-align: center; font-size: var(--klein); line-height: 1.4; color: var(--nebentext); padding: 6px 4px 2px; }
 .steckbrief-gruppe { margin-top: var(--a3); padding: 4px var(--a3); font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; font-weight: 600;
                      color: var(--text-3); background: var(--flaeche-2); }
 .steckbrief-werte { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px var(--a3); margin: var(--a2) var(--a3) var(--a3); }
 .steckbrief-werte dt { color: var(--text-3); }
 .steckbrief-werte dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .steckbrief-name { margin: var(--a2) var(--a3) var(--a3); font-size: var(--gross); }
-.steckbrief-name span { font-size: var(--klein); color: var(--text-2); }
+.steckbrief-name span { font-size: var(--klein); color: var(--nebentext); }
 
 /* Formeln: MathML, vom Browser in der Textfarbe gesetzt; abgesetzte Formeln mit eigenem Rollfeld (nie die Seite) */
 .artikel-text math { font-size: 1.08em; }
@@ -162,7 +162,7 @@
                        inset 3px 0 0 var(--petrol); padding: 4px 6px 4px 10px; margin-left: -10px; border-radius: 0; }
 
 /* Über diesen Artikel: Quelle und Verweise nur auf Wunsch */
-.ueber { clear: both; margin: var(--a6) 0 var(--a5); font-size: var(--klein); color: var(--text-2); }
+.ueber { clear: both; margin: var(--a6) 0 var(--a5); font-size: var(--klein); color: var(--nebentext); }
 .ueber summary { display: inline-flex; align-items: center; gap: var(--a2); cursor: pointer; list-style: none; padding: 6px 12px; border-radius: var(--r2);
                  background: var(--flaeche-2); color: var(--text-2); }
 .ueber summary::-webkit-details-marker { display: none; }
@@ -172,7 +172,7 @@
             border-radius: var(--r3); background: var(--flaeche-2); line-height: 1.5; }
 .ueber dt { color: var(--text-3); }
 .ueber dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
-.ueber dd a { color: var(--himmel); }
+.ueber dd a { color: var(--verweis); }
 .ueber ul { margin: 0; padding-left: 1.2em; }
 
 /* Originalansicht: die Seite des Buchs unverändert, abgeschirmt */
@@ -342,9 +342,16 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .vorschau-leiste .abschnitte button:hover { background: var(--flaeche-2); color: var(--text); }
 .vorschau-leiste .abschnitte button.treff { background: color-mix(in srgb, var(--petrol) 10%, transparent); color: var(--text); }
 
+/* Verweise und Nebentext im Lesen (WIKI-36): im dunklen Modus näher an Weiß, sonst ist der Absatz schwer lesbar
+   (Nutzer 01.11.2026); gemischt aus den Farben des Appkerns, keine eigenen Werte */
+:root, [data-theme="hell"] { --verweis: var(--himmel); --nebentext: var(--text-2); }
+[data-theme="dunkel"] { --verweis: color-mix(in srgb, var(--himmel) 50%, var(--text));
+                        --nebentext: color-mix(in srgb, var(--text) 75%, var(--text-3)); }
+
 /* ===== Dokumentation (Baustein für Handbücher, Entwurf doku-php.html): im Grunddesign der Artikelansicht, nur die
    eigenen Teile. Code wie im Editor der Codeschmiede (Nutzer 01.11.2026: "gleiches Theme"), Farben aus deren
    editor.css, klassisches Schema hell und dunkel, JetBrains Mono, Schlüsselwörter fett ===== */
+
 /* Ausnahme: Farben des Editors der Codeschmiede, Nutzer verlangt dasselbe Theme wie dort */
 :root, [data-theme="hell"] {
   --ed-grund: #ffffff; --ed-text: #000000; --ed-kw: #000080; --ed-str: #008000; --ed-zahl: #0000ff; --ed-kom: #808080;
@@ -372,7 +379,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .artikel-text pre :is(.hljs-variable, .hljs-attr, .hljs-attribute, .hljs-params, .hljs-property, .hljs-template-variable, .hljs-name) { color: var(--ed-feld); }
 .artikel-text pre :is(.hljs-meta, .hljs-tag) { color: var(--ed-kom); }
 .artikel-text pre .hljs-deletion { color: var(--gefahr); }
-.artikel-text p.einleitung { font-size: calc(var(--lesen) + 1px); color: var(--text-2); }
+.artikel-text p.einleitung { font-size: calc(var(--lesen) + 1px); color: var(--nebentext); }
 .signatur { position: relative; margin: 0 0 1em; padding: var(--a3) var(--a4); background: var(--ed-grund); color: var(--ed-text);
             box-shadow: var(--schatten), inset 3px 0 0 var(--violett); border-radius: 0; font-family: var(--schrift-editor);
             font-variant-ligatures: none; font-size: calc(var(--lesen) - 2px); line-height: 1.6; overflow-x: auto; }
@@ -405,7 +412,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
                 font-variant-ligatures: none; overflow-x: auto; background: var(--ed-grund); color: var(--ed-text); }
 .beispiel pre.ausgabe { background: var(--ed-konsole); color: var(--ed-konsole-text); }
 .beispiel .ausgabe-titel { padding: 6px 14px; font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); background: var(--mulde); }
-.beispiel .bnotiz { margin: 0; padding: 8px 14px; font-size: var(--klein); color: var(--text-2); }
+.beispiel .bnotiz { margin: 0; padding: 8px 14px; font-size: var(--klein); color: var(--nebentext); }
 /* Fassungsfilter (Entwurf): eigene Fassung hervorgehoben, andere blass, Änderungen bis zur eigenen markiert */
 .versionen span.blass { opacity: .45; }
 .versionen span.deine { background: var(--violett); color: var(--auf-farbe); font-weight: 600; }
@@ -425,8 +432,8 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .c-kom { color: var(--ed-kom); }
 .siehe { display: flex; flex-direction: column; gap: 6px; }
 .siehe a { display: flex; flex-wrap: wrap; gap: 2px var(--a3); align-items: baseline; text-decoration: none; color: var(--text); }
-.siehe a code { color: var(--himmel); }
-.siehe a span { color: var(--text-2); font-size: var(--klein); }
+.siehe a code { color: var(--verweis); }
+.siehe a span { color: var(--nebentext); font-size: var(--klein); }
 .artikel-text .hinweis { margin: 0 0 1em; padding: var(--a3) var(--a4); background: color-mix(in srgb, var(--info) 10%, transparent);
                          box-shadow: inset 3px 0 0 var(--info); border-radius: 0; font-size: var(--klein); }
 .artikel-text .hinweis p:last-child { margin-bottom: 0; }
@@ -451,8 +458,8 @@ button.kachel:disabled { opacity: .6; cursor: default; }
              letter-spacing: .06em; margin-bottom: var(--a2); }
 .beitrag-fuss { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2) var(--a4); margin-top: var(--a2); padding-top: var(--a2);
                 box-shadow: inset 0 1px 0 var(--rand); font-size: var(--klein); color: var(--text-3); }
-.kommentare { margin-top: var(--a2); font-size: var(--klein); color: var(--text-2); }
-.kommentare summary { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); }
+.kommentare { margin-top: var(--a2); font-size: var(--klein); color: var(--nebentext); }
+.kommentare summary { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; color: var(--nebentext); }
 .kommentar-liste { margin: var(--a2) 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
 .kommentar-liste li { padding: 6px 10px; background: var(--flaeche-2); line-height: 1.5; }
 .kommentar-liste li b { font-family: var(--schrift-zahl); color: var(--text-3); margin-right: 6px; font-weight: 500; }
@@ -476,8 +483,8 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .fk-antworten.akzeptiert { padding: 1px 6px; background: var(--gut-weich); color: var(--gut); font-weight: 600; }
 .fk-antworten.akzeptiert b { color: var(--gut); }
 .fk-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.fk-text .t { font-weight: 600; font-size: var(--titel); color: var(--himmel); overflow-wrap: anywhere; }
-.fk-text .u { color: var(--text-2); font-size: var(--klein); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.fk-text .t { font-weight: 600; font-size: var(--titel); color: var(--verweis); overflow-wrap: anywhere; }
+.fk-text .u { color: var(--nebentext); font-size: var(--klein); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .fk-fuss { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2) var(--a4); }
 .fk-fuss .schlagwoerter { margin-top: 0; }
 .fk-wann { margin-left: auto; font-size: var(--marke); color: var(--text-3); }
@@ -491,7 +498,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
                 overflow-wrap: anywhere; }
 .rubrik-titel .zahl { flex: none; overflow-wrap: normal; margin-left: auto; font-family: var(--schrift-zahl); font-size: var(--marke); color: var(--text-3); font-weight: 400; }
 .rubrik .code-liste { list-style: none; margin: 0; padding: 0; max-height: 280px; overflow-y: auto; }
-.rubrik .code-liste a { display: block; padding: 2px 0; font-size: var(--klein); color: var(--himmel); text-decoration: none;
+.rubrik .code-liste a { display: block; padding: 2px 0; font-size: var(--klein); color: var(--verweis); text-decoration: none;
                         white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rubrik .code-liste a:hover { text-decoration: underline; }
 
