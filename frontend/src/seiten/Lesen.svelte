@@ -660,7 +660,9 @@
       {/if}
       {#if uebersetzbar && !zeigeOriginal}
         <button class="knopf" class:an={aufDeutsch || (deutsch.an && ue?.zustand === "laeuft")} onclick={deutschUmschalten}
-                title={aufDeutsch ? `Wieder auf ${buch ? spracheInWorten(buch.sprache) : "Original"}` : "Auf Deutsch übersetzen (gekennzeichnet; Code, Namen und Zahlen bleiben)"}>
+                title={aufDeutsch && ue?.uebersetzung
+                  ? `Von uns übersetzt aus dem ${ue.uebersetzung.aus}; Code, Namen und Zahlen unverändert${ue.uebersetzung.im_original ? `, ${ue.uebersetzung.im_original} ${ue.uebersetzung.im_original === 1 ? "Stelle" : "Stellen"} im Original` : ""}. Antippen: wieder ${buch ? spracheInWorten(buch.sprache) : "im Original"}`
+                  : "Auf Deutsch übersetzen (gekennzeichnet; Code, Namen und Zahlen bleiben)"}>
           <i class="fa-solid fa-language"></i><span class="wort">Deutsch</span></button>
       {/if}
       {#if artikel.belege.length || artikel.quelle_url}
@@ -693,14 +695,8 @@
     </div>
   {/if}
   {#if uebersetzbar && !zeigeOriginal && ue}
-    {#if aufDeutsch && ue.uebersetzung}
-      <div class="fundband uebersetzt">
-        <i class="fa-solid fa-language"></i>
-        <span><b>Von uns übersetzt</b> aus dem {ue.uebersetzung.aus} · Code, Namen und Zahlen unverändert{ue.uebersetzung.im_original
-          ? ` · ${ue.uebersetzung.im_original} ${ue.uebersetzung.im_original === 1 ? "Stelle" : "Stellen"} im Original` : ""}</span>
-        <button class="knopf still" onclick={deutschUmschalten}><i class="fa-solid fa-rotate-left"></i>{buch ? spracheInWorten(buch.sprache) : "Original"}</button>
-      </div>
-    {:else if ue.zustand === "laeuft" && deutsch.an}
+    <!-- übersetzt zeigt es der angeschaltete Knopf "Deutsch" (Nutzer: kein eigenes Band); Bänder nur für Arbeit und Fehler -->
+    {#if ue.zustand === "laeuft" && deutsch.an && !aufDeutsch}
       <div class="fundband uebersetzt">
         <i class="fa-solid fa-spinner fa-spin-pulse"></i>
         <span><b>Wird übersetzt</b>{ue.schritt ? `: ${ue.schritt}` : ""}{ue.anteil !== null ? ` (${Math.round(ue.anteil * 100)} %)` : ""}. Die Seite wechselt von selbst.</span>
