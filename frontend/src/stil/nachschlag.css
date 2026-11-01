@@ -335,7 +335,8 @@
 /* Startseite eines Handbuchs: Rubriken mit ihren Seiten */
 .rubriken { columns: 4 260px; column-gap: var(--a4); padding: var(--a4) var(--a5) var(--a6); max-width: 1680px; }
 .rubrik { break-inside: avoid; margin-bottom: var(--a4); background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten); padding: var(--a3) var(--a4); }
-.rubrik-titel { margin: 0 0 var(--a2); font-size: var(--titel); font-weight: 600; display: flex; align-items: baseline; gap: var(--a2); }
+.rubrik-titel { margin: 0 0 var(--a2); font-size: var(--titel); font-weight: 600; display: flex; align-items: baseline; gap: var(--a2); min-width: 0;
+                overflow-wrap: anywhere; }
 .rubrik-titel .zahl { margin-left: auto; font-family: var(--schrift-zahl); font-size: var(--marke); color: var(--text-3); font-weight: 400; }
 .rubrik .code-liste { list-style: none; margin: 0; padding: 0; max-height: 280px; overflow-y: auto; }
 .rubrik .code-liste a { display: block; padding: 2px 0; font-family: var(--schrift-editor); font-size: var(--klein); color: var(--himmel); text-decoration: none;
@@ -367,6 +368,7 @@
   .kopf .suchanker .buchwahl, .kopf .suchanker kbd { display: none; }
   .artikel-kopf { padding-inline: var(--a3); }
   .lesen, .uebersicht, .rubriken { padding-inline: var(--a3); }
+  .rubriken { columns: 1; }
   .artikel-text .parameterliste { grid-template-columns: minmax(0, 1fr); }
   .start-innen { padding-inline: 0; }          /* den Seitenrand am Telefon gibt die Schale, nur einmal */
   .treffer .marken { margin-left: 0; }
