@@ -182,7 +182,7 @@
 .leskarte .bildflaeche i { font-size: 28px; }
 .leskarte .bildflaeche img { width: 100%; height: 100%; object-fit: cover; }
 .leskarte .koerper { padding: var(--a3) var(--a4); display: flex; flex-direction: column; gap: 4px; }
-.leskarte .t { font-weight: 600; font-size: var(--gross); }
+.leskarte .t { font-weight: 600; font-size: var(--gross); overflow-wrap: anywhere; }
 
 /* ----- Startseite (Variante A) ----- */
 .start-innen { max-width: 1520px; margin: 0 auto; padding: var(--a5) var(--a5) var(--a7); display: flex; flex-direction: column; gap: var(--a6); }
@@ -200,8 +200,8 @@
 .etikett { font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; display: flex; align-items: center; gap: 6px; }
 .stoebern { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: var(--a4); }
 .kachel-zufall { background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten); padding: var(--a4); display: flex; flex-direction: column; gap: var(--a2); min-width: 0; }
-.kachel-zufall .t { font-weight: 600; font-size: var(--titel); display: block; }
-.kachel-zufall p { margin: 0; font-size: var(--klein); color: var(--text-2); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.kachel-zufall .t { font-weight: 600; font-size: var(--titel); display: block; overflow-wrap: anywhere; }
+.kachel-zufall p { margin: 0; font-size: var(--klein); color: var(--text-2); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .kachel-zufall .buchname { font-size: var(--marke); color: var(--text-3); }
 .buecher { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: var(--a4); }
 .buchkarte { background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten); padding: var(--a3) var(--a4); display: grid;
@@ -209,7 +209,7 @@
 .buchkarte:hover { box-shadow: var(--schatten), 0 0 0 2px var(--akzent-flaeche); }
 .buchkarte .sym { grid-row: span 2; width: 40px; height: 40px; border-radius: var(--r2); display: grid; place-items: center; background: var(--flaeche-2); color: var(--petrol); }
 .buchkarte .sym i { font-size: 18px; }
-.buchkarte .t { font-weight: 600; }
+.buchkarte .t { font-weight: 600; overflow-wrap: anywhere; }
 .buchkarte .u { font-size: var(--klein); color: var(--text-3); }
 .buchkarte .u .zahl { font-family: var(--schrift-zahl); }
 .buchkarte .faehig { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
