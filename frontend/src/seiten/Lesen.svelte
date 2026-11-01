@@ -8,6 +8,7 @@
   import { bezeichnung, bibliothek, bibliothekLaden, buch as buchVon, datum, hauptbuch, zahl } from "../lib/bibliothek.svelte";
   import { artikelHolen, artikelstandHolen, artikelUebersetzen, zufallHolen, type Artikelstand } from "../lib/schnittstelle";
   import { deutsch, deutschMerken, uebersetzt } from "../lib/deutsch.svelte";
+  import { ANSICHTEN, ansichtMerken, leseansicht } from "../lib/ansicht.svelte";
   import type { Artikel } from "../lib/typen";
   import { lesen, lesenZiel, suchen, verweisZiel } from "../lib/ziele";
   import { Auswahl } from "appkern-oberflaeche";
@@ -69,6 +70,9 @@
   // Sprache des gezeigten Texts (lang): Silbentrennung, Rechtschreibung und die Stimme beim Vorlesen
   const textSprache = $derived(aufDeutsch ? "de" : buch ? htmlSprache(buch.sprache) : "");
   const uebersetzbar = $derived(!!ue && ue.zustand !== "nicht_noetig" && ue.zustand !== "nicht_moeglich");
+  // Ansicht C (WIKI-7): nur das Blatt, über der Schale; Werkzeuge schwebend, Inhalt als Tafel auf Abruf
+  const nurBlatt = $derived(leseansicht.wert === "c" && artikel?.darstellung === "lesedesign" && !zeigeOriginal);
+  let inhaltTafel = $state(false);
   const restMinuten = $derived(Math.max(1, Math.round((woerter * (1 - anteil)) / WOERTER_JE_MINUTE)));
 
   // Lesegröße dieses Buchs auf diesem Gerät (WIKI-29) als Zoom des Lesebereichs, auch in der Originalseite
@@ -613,7 +617,7 @@
   });
 </script>
 
-<div class="inhalt-stufe" data-schrift="klein">
+<div class="inhalt-stufe" class:nur-blatt={nurBlatt} data-schrift="klein">
 {#if fehler && !artikel}
   <div class="seiten-kopf"><h1>Artikel</h1></div>
   <div class="rollfeld"><div class="karte"><div class="fehlertext">{fehler}</div></div></div>
@@ -656,6 +660,10 @@
           <Auswahl wert={meineFassung} symbol="fa-code-branch" titel="Meine Fassung, bleibt für diese Quelle eingestellt" onwahl={fassungWaehlen}
                    optionen={[{ wert: "", titel: "Alle Fassungen" },
                               ...fassungen.optionen.map((f) => ({ wert: f, titel: `Meine Fassung: ${fassungen!.produkt} ${f}` }))]} />
+        {/if}
+        {#if artikel.darstellung === "lesedesign" && !zeigeOriginal}
+          <Auswahl wert={leseansicht.wert} symbol="fa-table-columns" titel="Ansicht, bleibt auf diesem Gerät eingestellt"
+                   optionen={ANSICHTEN} onwahl={ansichtMerken} />
         {/if}
         {#if buch}<Lesegroesse buchName={buch.name} buchTitel={buch.titel} />{/if}
       </div>
@@ -783,6 +791,7 @@
             {/if}
           </nav>
         {/if}
+        {#if nurBlatt}<h1 class="blatt-titel" class:code-titel={artikel.titelart === "code"}>{artikel.titel}</h1>{/if}
         <article class="artikel" bind:this={artikelEl}>
           {#if artikel.steckbrief}
             <aside class="steckbrief">
@@ -824,6 +833,47 @@
         </article>
       </div>
     </div>
+    {#if nurBlatt}
+      <!-- Ansicht C: schmaler Kopf mit dem Lesestand als Linie, Werkzeuge schwebend unten, Inhalt als Tafel -->
+      <header class="ruhe-kopf">
+        <button class="rund" title="Zurück" onclick={() => history.back()}><i class="fa-solid fa-arrow-left"></i></button>
+        <span class="titel" class:code-titel={artikel.titelart === "code"}>{artikel.titel}</span>
+        <span class="buch"><Buchmarke kennung={artikel.buch} symbol={false} /></span>
+        {#if aufDeutsch}<span class="pille-uebersetzt" title="Von uns übersetzt; Code, Namen und Zahlen unverändert"><i class="fa-solid fa-language"></i>übersetzt</span>{/if}
+        <div class="rechts">
+          <button class="rund" title="Zurück zur Ansicht mit Schale" onclick={() => ansichtMerken("a")}><i class="fa-solid fa-table-columns"></i></button>
+        </div>
+        <span class="fortschritt" style:width="{Math.round(anteil * 100)}%"></span>
+      </header>
+      {#if inhaltTafel && inhalt.length}
+        <nav class="inhalt-tafel" aria-label="Inhalt">
+          <ol>
+            {#each inhalt as a, i (a.anker)}
+              <li class:unter={a.ebene > 2} class:aktiv={a.anker === aktivImInhalt}>
+                <a href="#{a.anker}" onclick={(e) => { e.preventDefault(); inhaltTafel = false; springen(a.anker); }}>
+                  {#if a.ebene === 2}<span class="nr">{nummern[i]}</span>{/if}{a.titel}</a>
+              </li>
+            {/each}
+          </ol>
+        </nav>
+      {/if}
+      <div class="schwebeleiste" role="toolbar" aria-label="Werkzeuge">
+        {#if inhalt.length}
+          <button class="knopf still" class:an={inhaltTafel} onclick={() => (inhaltTafel = !inhaltTafel)}><i class="fa-solid fa-list"></i><span class="wort">Inhalt</span></button>
+        {/if}
+        <VorleseKnopf kennung={vorleseKennung} beschriftung="Vorlesen" titel="Ab dem Abschnitt vorlesen, in dem du liest"
+                      daten={{ sprache: textSprache || "de" }} text={() => (text ? vorlesetext(text, aktiv) : "")} />
+        <button class="knopf still" class:an={!!eintrag} title={eintrag ? "Vom Merkzettel nehmen" : "Auf den Merkzettel"} onclick={merkenUmschalten}>
+          <i class="fa-{eintrag ? 'solid' : 'regular'} fa-bookmark"></i></button>
+        <button class="knopf still" title="Notiz zum ganzen Artikel; für eine Stelle den Text markieren" onclick={notizZumArtikel}>
+          <i class="fa-regular fa-note-sticky"></i></button>
+        {#if uebersetzbar}
+          <button class="knopf still" class:an={aufDeutsch} title={aufDeutsch ? "Wieder in der Sprache der Quelle" : "Auf Deutsch übersetzen"} onclick={deutschUmschalten}>
+            <i class="fa-solid fa-language"></i></button>
+        {/if}
+        {#if buch}<Lesegroesse buchName={buch.name} buchTitel={buch.titel} />{/if}
+      </div>
+    {/if}
   {/if}
 {/if}
 {#if bibliothek.meldung && !artikel}<div class="fehlertext">{bibliothek.meldung}</div>{/if}

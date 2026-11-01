@@ -962,3 +962,35 @@ button.kachel:disabled { opacity: .6; cursor: default; }
   .leuchtkasten .bild-b { padding: 0; grid-row: 1 / -1; }
   .leuchtkasten .bild-b img:not(.gross) { width: 100%; height: 100%; min-width: 0; object-fit: contain; border-radius: 0; }
 }
+
+/* Ansicht C (WIKI-7, Entwurf artikel-c.html): nur das Blatt. Das Rollfeld des Artikels legt sich über die Schale (über
+   ihren Ebenen, unter Notizblatt, Leuchtkasten und Codeansicht); Kopf und Werkzeugleiste schweben darüber. */
+.nur-blatt .rollfeld { position: fixed; inset: calc(56px + env(safe-area-inset-top)) 0 0; z-index: 35; background: var(--flaeche); }
+/* ein Seitenrand, am Blatt selbst; unten Platz für die schwebende Leiste */
+.nur-blatt .lesen { display: block; max-width: 46em; margin: 0 auto; padding: var(--a5) var(--a4) 120px; }
+@media (max-width: 700px) { .nur-blatt .lesen { padding-inline: var(--a3); } }
+.nur-blatt .lesen:is([data-art="frage_antwort"], [data-art="dokumentation"]) { max-width: 72em; }
+.nur-blatt .lesen .inhalt { display: none; }
+.blatt-titel { font-size: calc(var(--seitentitel) + 14px); line-height: 1.1; margin: 0 0 var(--a4); font-weight: 600; }
+.ruhe-kopf { position: fixed; top: 0; left: 0; right: 0; z-index: 36; display: flex; align-items: center; gap: var(--a3);
+  height: calc(56px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) var(--a4) 0; background: var(--flaeche);
+  box-shadow: 0 1px 0 var(--rand); }
+.ruhe-kopf .titel { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.ruhe-kopf .buch { font-size: var(--klein); color: var(--text-3); white-space: nowrap; }
+.ruhe-kopf .rechts { margin-left: auto; display: flex; gap: var(--a2); }
+.ruhe-kopf .fortschritt { position: absolute; left: 0; bottom: -1px; height: 3px; background: var(--akzent); transition: width .2s; }
+.pille-uebersetzt { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: var(--r1); white-space: nowrap;
+  font-size: var(--marke); color: var(--petrol); background: color-mix(in srgb, var(--petrol) 12%, transparent); }
+.schwebeleiste { position: fixed; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 36;
+  display: flex; align-items: center; gap: 4px; padding: 6px; border-radius: 28px; background: var(--flaeche);
+  box-shadow: var(--schatten-schwebend), 0 0 0 1px var(--rand); max-width: calc(100vw - 2 * var(--a3)); }
+.schwebeleiste .knopf, .schwebeleiste .rund { border-radius: 21px; }
+.schwebeleiste .lesegroesse-tafel { top: auto; bottom: calc(100% + 10px); }
+.inhalt-tafel { position: fixed; z-index: 36; top: calc(64px + env(safe-area-inset-top)); left: var(--a4); width: min(360px, calc(100vw - 2 * var(--a4)));
+  max-height: calc(100dvh - 200px); overflow-y: auto; padding: var(--a3); border-radius: var(--r3); background: var(--flaeche);
+  box-shadow: var(--schatten-schwebend), 0 0 0 1px var(--rand); }
+.inhalt-tafel ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.inhalt-tafel a { display: flex; gap: var(--a2); padding: 6px var(--a2); border-radius: var(--r2); color: var(--text-2); text-decoration: none; }
+.inhalt-tafel li.unter a { padding-left: calc(var(--a2) + 1.6em); }
+.inhalt-tafel li.aktiv a { background: var(--flaeche-2); color: var(--text); font-weight: 600; }
+.inhalt-tafel .nr { font-family: var(--schrift-zahl); color: var(--text-3); min-width: 1.2em; }
