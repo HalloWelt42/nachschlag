@@ -6,6 +6,7 @@ import asyncio
 from urllib.parse import quote
 
 from .bausteine import Wege, baustein_fuer
+from .bausteine.html import online_adresse
 from .bibliothek import Bibliothek
 from .modell.artikel import Artikel
 
@@ -41,7 +42,7 @@ class Artikelleser:
                        original=self._wege.original(buch, eintrag.pfad), kacheln=fertig.kacheln,
                        gruppen=fertig.gruppen, rubrik=fertig.rubrik, nachbarn=fertig.nachbarn, titelart=fertig.titelart,
                        fragen=fertig.fragen, zurueck=fertig.zurueck, weiter=fertig.weiter, belege=fertig.belege,
-                       quelle_url=fertig.quelle_url)
+                       quelle_url=online_adresse(b, eintrag.pfad))
 
     async def zufall(self, buch: str) -> str:
         """Pfad eines zufälligen Artikels (ohne Weiterleitungen)."""

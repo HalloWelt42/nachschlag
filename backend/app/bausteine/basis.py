@@ -49,7 +49,6 @@ class Aufbereitet:
     darstellung: Darstellung | None = None       # nur wenn die Seite anders gezeigt wird als sonst beim Baustein
     frage: FrageAngaben | None = None             # Metadaten einer Frage (Frage und Antwort): Index, Register, Treffer
     belege: list[Beleg] = field(default_factory=list)   # Einzelnachweise (Enzyklopädie), Marken im Text: span.beleg
-    quelle_url: str = ""                          # der Artikel im Netz
 
 
 class Baustein(Protocol):

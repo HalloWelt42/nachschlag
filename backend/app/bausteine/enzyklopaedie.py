@@ -8,8 +8,6 @@ Artikel relativ (`Rotfuchs`), Weiterleitungen auf Abschnitte als kleine Seite mi
 
 from __future__ import annotations
 
-from urllib.parse import quote
-
 from lxml import html as lhtml
 from lxml.etree import SubElement
 
@@ -72,14 +70,6 @@ def _belege_lesen(inhalt) -> list[Beleg]:
         marke.tail = sup.tail
         sup.getparent().replace(sup, marke)
     return belege
-
-
-def _online_adresse(buch: Buch, pfad: str) -> str:
-    """Der Artikel in der Wikipedia (Bücher von mwoffliner, Name wikipedia_<sprache>_...); sonst leer."""
-    teile = buch.name.split("_")
-    if not buch.erzeuger.startswith("mwoffliner") or len(teile) < 2 or teile[0] != "wikipedia":
-        return ""
-    return f"https://{teile[1]}.wikipedia.org/wiki/{quote(pfad)}"
 
 
 def _belege_entfernen(inhalt) -> list:
@@ -271,5 +261,4 @@ class Enzyklopaedie:
             steckbrief.html = h.gerade(steckbrief.html)
         rumpf = "".join(h.als_html(k) for k in inhalt)
         return Aufbereitet(titel=titel, html=rumpf, einleitung=" ".join(einleitung)[:1200], abschnitte=abschnitte,
-                           steckbrief=steckbrief, bild=bild, verweise=verweise, online=online, belege=belege,
-                           quelle_url=_online_adresse(buch, eintrag.pfad))
+                           steckbrief=steckbrief, bild=bild, verweise=verweise, online=online, belege=belege)

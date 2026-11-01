@@ -6,11 +6,12 @@ from __future__ import annotations
 import re
 import unicodedata
 from html import escape as html_maskieren
-from urllib.parse import unquote, urljoin
+from urllib.parse import quote, unquote, urljoin
 
 from lxml import html as lhtml
 
 from ..modell.artikel import Abschnitt, Verweiszahlen
+from ..modell.buch import Buch
 from .basis import Wege
 
 #: typografische Zeichen der Quelle, im Lesedesign gerade gesetzt (Nutzer: nur gerade Zeichen)
@@ -92,6 +93,22 @@ def ziel_im_buch(eintragspfad: str, href: str) -> str:
     """Pfad im Buch, auf den ein relativer Verweis einer Seite zeigt (ohne Anker)."""
     basis = "/" + eintragspfad
     return unquote(urljoin(basis, href.partition("#")[0]).lstrip("/"))
+
+
+def online_adresse(buch: Buch, pfad: str) -> str:
+    """Wo eine Seite der Quelle im Netz steht (Recherchemodus, WIKI-31), nach dem Werkzeug, das die Datei erzeugt hat:
+    Wikipedia (mwoffliner, Name wikipedia_<sprache>_...), devdocs (devdocs_<sprache>_<thema>), Spiegel von Webseiten
+    (warc2zim, der Pfad beginnt mit dem Rechner), Stack Exchange (sotoki, Name <seite>_...). Sonst leer."""
+    teile, erzeuger, weg = buch.name.split("_"), buch.erzeuger.lower(), quote(pfad, safe="/()_-,.:'!*~")
+    if erzeuger.startswith("mwoffliner") and len(teile) > 1 and teile[0] == "wikipedia":
+        return f"https://{teile[1]}.wikipedia.org/wiki/{weg}"
+    if erzeuger.startswith("devdocs2zim") and len(teile) > 2:
+        return f"https://devdocs.io/{teile[2]}/{weg}"
+    if erzeuger.startswith("warc2zim") and "." in pfad.split("/", 1)[0]:
+        return f"https://{weg}"
+    if erzeuger.startswith("sotoki") and "." in teile[0]:
+        return f"https://{teile[0]}/{weg}"
+    return ""
 
 
 def ist_online(href: str) -> bool:

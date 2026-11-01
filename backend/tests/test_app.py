@@ -574,3 +574,19 @@ async def test_belege_als_daten_und_in_notizen(nachschlag):
                                                       "quelle_url": "https://de.wikipedia.org/wiki/Rotfuchs"})).json()
     assert n["belege"][0]["url"] == "https://example.org/beleg" and n["quelle_url"].endswith("/Rotfuchs")
     assert (await c.get("/api/v1/meins/notizen")).json()[0]["belege"][0]["nummer"] == 1
+
+
+def test_online_adresse_je_bauart():
+    """Recherchemodus (WIKI-31): wo eine Seite im Netz steht, je Werkzeug der Quelle; unbekannt: leer."""
+    from app.bausteine.html import online_adresse
+    from app.modell.buch import Buch, Faehigkeiten
+
+    def buch(name: str, erzeuger: str) -> Buch:
+        return Buch(kennung=name, name=name, titel="x", art="sonstiges", eintraege=0, artikel=0, medien=0, groesse=0, erzeuger=erzeuger,
+                    faehigkeiten=Faehigkeiten(titelindex=False, volltext=False, bilder=False, lesedesign=False))
+
+    assert online_adresse(buch("wikipedia_de_all", "mwoffliner 1.17"), "Rotfuchs") == "https://de.wikipedia.org/wiki/Rotfuchs"
+    assert online_adresse(buch("devdocs_en_php", "devdocs2zim v0.2"), "function.array-map") == "https://devdocs.io/php/function.array-map"
+    assert online_adresse(buch("php.net_en_all", "warc2zim 2.1"), "www.php.net/manual/en/x.php") == "https://www.php.net/manual/en/x.php"
+    assert online_adresse(buch("vi.stackexchange.com_en_all", "sotoki v3"), "questions/84/x") == "https://vi.stackexchange.com/questions/84/x"
+    assert online_adresse(buch("probe_de_all", "mwoffliner 1.17"), "Rotfuchs") == ""
