@@ -649,6 +649,48 @@ button.leskarte { border: 0; padding: 0; font: inherit; text-align: left; cursor
 .vorschau-spalte b { font-size: var(--titel); overflow-wrap: anywhere; }
 .vorschau-spalte p { margin: 0; font-size: var(--klein); color: var(--text-2); line-height: 1.55; }
 
+/* ----- Medien (Entwurf medien.html): Bilder zu einer Frage im Mauerwerk, große Bildansicht ----- */
+.medien-seite { padding: var(--a4) var(--a5) var(--a6); display: flex; flex-direction: column; gap: var(--a3); }
+.medien-suche { flex: 1 1 260px; max-width: 520px; height: var(--knopf-hoehe); }
+.medien-suche input { width: 100%; min-width: 0; }
+.trefferzeile { font-size: var(--klein); color: var(--text-3); display: flex; gap: var(--a3); align-items: center; flex-wrap: wrap; }
+.trefferzeile.laedt { opacity: .6; }
+.trefferzeile .weg { color: var(--petrol); }
+.mediengitter { columns: 4 230px; column-gap: var(--a3); }
+.medium { display: block; width: 100%; break-inside: avoid; margin: 0 0 var(--a3); padding: 0; border: 0; background: var(--flaeche); border-radius: var(--r3);
+          box-shadow: var(--schatten); overflow: hidden; cursor: zoom-in; position: relative; color: var(--text); font: inherit; text-align: left; }
+.medium img { display: block; width: 100%; height: auto; background: var(--mulde); }
+.medium .unter { display: block; padding: var(--a2) var(--a3); font-size: var(--klein); line-height: 1.4; overflow-wrap: anywhere; }
+.medium .unter em { font-style: normal; background: var(--akzent-weich); border-radius: 2px; }
+.medium .herkunft-m { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: var(--marke); color: var(--text-3); }
+.medium .groesse { position: absolute; top: 8px; right: 8px; font-family: var(--schrift-zahl); font-size: var(--marke); padding: 2px 7px; border-radius: var(--r1);
+                   background: color-mix(in srgb, var(--text) 70%, transparent); color: var(--hg); }
+.artikel-text figure img, .steckbrief img { cursor: zoom-in; }
+/* Ausnahme: die große Bildansicht ist in beiden Modi dunkel, damit Bilder gleich wirken (wie im Entwurf); ihre Farben nur hier */
+.leuchtkasten { --lk-grund: rgb(6, 9, 14); --lk-leiste: #111a25; --lk-text: #e9eef5; --lk-hell: #fff; --lk-blass: #b4c2d3; --lk-schwach: #8296ab;
+                --lk-knopf: rgba(255, 255, 255, .12); --lk-knopf-still: rgba(255, 255, 255, .08); }
+.leuchtkasten { position: fixed; inset: 0; z-index: 60; background: var(--lk-grund); display: grid; grid-template-columns: minmax(0, 1fr) 380px; color: var(--lk-text); }
+.leuchtkasten .buehne-b { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0; min-width: 0; }
+.leuchtkasten .oben { display: flex; align-items: center; gap: var(--a3); padding: var(--a3) var(--a4); padding-top: max(var(--a3), env(safe-area-inset-top)); }
+.leuchtkasten .oben .rund, .leuchtkasten .pfeil { background: var(--lk-knopf); color: var(--lk-hell); border: 0; }
+.leuchtkasten .oben .zaehler { font-family: var(--schrift-zahl); font-size: var(--klein); color: var(--lk-blass); }
+.leuchtkasten .bild-b { display: grid; place-items: center; min-height: 0; padding: 0 var(--a6); position: relative; }
+.leuchtkasten .bild-b img { max-width: 100%; max-height: 100%; min-width: min(100%, 420px); object-fit: contain; border-radius: var(--r1); }
+.leuchtkasten .pfeil { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 24px; display: grid; place-items: center; cursor: pointer; }
+.leuchtkasten .pfeil.l { left: var(--a3); }
+.leuchtkasten .pfeil.r { right: var(--a3); }
+.leuchtkasten .streifen { display: flex; gap: 6px; padding: var(--a3) var(--a4); overflow-x: auto; scrollbar-width: none; }
+.leuchtkasten .streifen button { flex: none; padding: 0; border: 0; background: none; cursor: pointer; border-radius: var(--r1); }
+.leuchtkasten .streifen img { display: block; width: 72px; height: 52px; object-fit: cover; border-radius: var(--r1); opacity: .55; }
+.leuchtkasten .streifen .an img { opacity: 1; box-shadow: 0 0 0 2px var(--akzent-flaeche); }
+.leuchtkasten .angaben { background: var(--lk-leiste); padding: var(--a4); display: flex; flex-direction: column; gap: var(--a3); overflow-y: auto; font-size: var(--klein); min-width: 0; }
+.leuchtkasten .angaben b.titel { font-size: var(--titel); color: var(--lk-hell); overflow-wrap: anywhere; }
+.leuchtkasten .angaben dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px var(--a3); margin: 0; }
+.leuchtkasten .angaben dt { color: var(--lk-schwach); }
+.leuchtkasten .angaben dd { margin: 0; overflow-wrap: anywhere; }
+.leuchtkasten .angaben-knoepfe { display: flex; flex-wrap: wrap; gap: var(--a2); }
+.leuchtkasten .angaben .knopf { background: var(--lk-knopf-still); color: var(--lk-hell); }
+
 /* ===== Breiten: Inhaltsverzeichnis und Leisten weichen, nie seitlich rollen ===== */
 @media (max-width: 1360px) {
   .suchseite { grid-template-columns: 220px minmax(0, 1fr); }
@@ -701,6 +743,13 @@ button.leskarte { border: 0; padding: 0; font: inherit; text-align: left; cursor
   .notiz-eintrag { padding: var(--a3); }
   .notiz-gruppe .gruppenkopf .marke-buch { margin-left: 0; }
   .stoebern-seite { padding-inline: 0; }
+  .medien-seite { padding-inline: 0; }
+  .medien-suche { max-width: none; }
+  .mediengitter { columns: 2 150px; }
+  .leuchtkasten { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  .leuchtkasten .bild-b { padding: 0 var(--a3); }
+  .leuchtkasten .bild-b img { min-width: 0; }
+  .leuchtkasten .angaben { max-height: 40dvh; padding-bottom: max(var(--a4), env(safe-area-inset-bottom)); }
   .zufall-gross { grid-template-columns: minmax(0, 1fr); }
   .zufall-gross .koerper { padding: var(--a3) var(--a4) var(--a4); }
   .zufall-knoepfe { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }

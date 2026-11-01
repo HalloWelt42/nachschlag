@@ -71,6 +71,10 @@
     {
       "name": "stoebern",
       "pfad": "/stoebern"
+    },
+    {
+      "name": "medien",
+      "pfad": "/medien?frage=Fuchs"
     }
   ]
 }

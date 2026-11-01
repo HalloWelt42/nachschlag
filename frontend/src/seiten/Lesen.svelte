@@ -16,6 +16,8 @@
   import { geraet } from "appkern-oberflaeche";
   import NotizBlatt from "../teile/NotizBlatt.svelte";
   import ThemaWahl from "../teile/ThemaWahl.svelte";
+  import Leuchtkasten from "../teile/Leuchtkasten.svelte";
+  import { medienImArtikel, type Medium } from "../lib/medien";
   import { themenLaden } from "../lib/themen.svelte";
   import { anwenden as fassungAnwenden, bekannte as bekannteFassungen, fassungenAus, gemerkt as fassungGemerkt, merken as fassungMerken,
            type Fassungen } from "../lib/fassung";
@@ -94,6 +96,7 @@
     original = false;
     blatt = null;
     textwahl = null;
+    bilder = null;
     void bibliothekLaden();
     try {
       const neu = await artikelHolen(b, p, signal);
@@ -184,6 +187,12 @@
   /** Verweise im Text bleiben in der App; Orte und Online-Verweise gibt es im Text nicht (stehen in "Über"). Eine
    *  markierte Stelle öffnet ihre Notiz (in einem Verweis nur über ihr Zeichen). */
   function klick(e: MouseEvent) {
+    const img = (e.target as HTMLElement).closest("img");
+    if (img && !img.closest("a") && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+      void bildZeigen(img.getAttribute("src") ?? "");
+      return;
+    }
     const stelle = (e.target as HTMLElement).closest<HTMLElement>(".notiz-marke, mark.notiz");
     if (stelle && (stelle.classList.contains("notiz-marke") || !stelle.closest("a")) && !window.getSelection()?.toString()) {
       const n = meins.notizen.find((x) => x.id === stelle.dataset.notiz);
@@ -370,6 +379,19 @@
     const oben = roller ? roller.getBoundingClientRect().top : 0;
     const hoehe = roller ? roller.clientHeight : innerHeight;
     feld.scrollBy({ top: el.getBoundingClientRect().top - oben - hoehe * STELLE_OBEN_ANTEIL, behavior: wie });
+  }
+
+  // --- Große Bildansicht: alle Bilder des Artikels, beim angetippten beginnend ---
+  let bilder = $state.raw<{ medien: Medium[]; start: number } | null>(null);
+
+  async function bildZeigen(quelle: string) {
+    if (!artikel) return;
+    try {
+      const medien = await medienImArtikel(artikel.buch, artikel.pfad);
+      bilder = { medien, start: Math.max(0, medien.findIndex((m) => m.bild === quelle)) };
+    } catch (f) {
+      fehler = seitenFehler(f);
+    }
   }
 
   const ORIGINAL = "/api/v1/inhalt/original/";
@@ -609,6 +631,9 @@
     <button onclick={zitieren}><i class="fa-solid fa-quote-right"></i>Zitieren</button>
     <button onclick={() => { const z = textwahl!.stelle.zitat; textwahl = null; suchen(z.slice(0, 200)); }}><i class="fa-solid fa-magnifying-glass"></i>Suchen</button>
   </div>
+{/if}
+{#if bilder && artikel}
+  <Leuchtkasten medien={bilder.medien} start={bilder.start} titel={`in ${artikel.titel}`} onzu={() => (bilder = null)} />
 {/if}
 {#if blatt}
   <NotizBlatt notiz={blatt.notiz} entwurf={blatt.entwurf} onzu={() => (blatt = null)} />

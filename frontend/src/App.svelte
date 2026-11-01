@@ -3,6 +3,7 @@
   // Start, Stöbern, Merkzettel und Themen (Entwurf telefon-merkzettel.html), alles andere unter Mehr.
   import { Schale, type Bereich } from "appkern-oberflaeche";
   import Lesen from "./seiten/Lesen.svelte";
+  import Medien from "./seiten/Medien.svelte";
   import Merkzettel from "./seiten/Merkzettel.svelte";
   import Notizen from "./seiten/Notizen.svelte";
   import Themen from "./seiten/Themen.svelte";
@@ -19,6 +20,8 @@
     { schluessel: "lesen", titel: "Artikel", symbol: "fa-book-open", seite: Lesen, reiter: false, hinweis: "Der zuletzt geöffnete Artikel" },
     { schluessel: "stoebern", titel: "Stöbern", symbol: "fa-shuffle", seite: Stoebern, reiter: true,
       hinweis: "Zufallsfunde, Entdeckungspfad und Blättern wie im Buch" },
+    { schluessel: "medien", titel: "Medien", symbol: "fa-images", seite: Medien, reiter: false,
+      hinweis: "Bilder zu einem Begriff aus den Artikeln der Bücher, groß ansehen" },
     { schluessel: "suche", titel: "Suche", symbol: "fa-magnifying-glass", seite: Suche, reiter: false, hinweis: "Alle Treffer zu einer Frage" },
     { schluessel: "merkzettel", titel: "Merkzettel", symbol: "fa-bookmark", seite: Merkzettel, reiter: true,
       hinweis: "Gemerkte Seiten mit Lesestand, auf allen Geräten", zahl: () => meins.merkzettel.length },

@@ -437,6 +437,21 @@ async def test_stoebern_zufall_pfad_und_blaettern(nachschlag):
         assert (await c.get(f"/api/v1/stoebern/zufall/{buch}", params={"ungelesen": True})).json()["pfad"] != z["pfad"]
 
 
+async def test_medien_im_artikel_und_suche(nachschlag):
+    """Bilder eines Artikels mit Unterschrift und Abschnitt, jedes einmal; die Mediensuche sammelt Bilder der Artikel zur
+    Frage, passende Unterschriften zuerst."""
+    c, _, _ = nachschlag
+    buch = "probe_de_all_2026-01"
+    m = (await c.get(f"/api/v1/medien/artikel/{buch}/Rotfuchs")).json()
+    assert m and len({x["bild"] for x in m}) == len(m) and all(x["pfad"] == "Rotfuchs" and x["artikel"] == "Rotfuchs" for x in m)
+    assert m[0]["datei"] and m[0]["bild"].startswith("/api/v1/inhalt/medien/")
+    e = (await c.get("/api/v1/medien", params={"frage": "Fuchs", "buecher": buch})).json()
+    assert e["artikel"] >= 1 and e["medien"]
+    if e["passend"]:
+        assert "fuchs" in e["medien"][0]["unterschrift"].casefold()
+    assert (await c.get(f"/api/v1/medien/artikel/{buch}/GibtEsNicht")).status_code == 404
+
+
 async def test_meins_trennt_konten(tmp_path):
     """Was ein Konto merkt, sieht kein anderes."""
     from appkern.datenbank import Datenbank

@@ -18,6 +18,8 @@ from .bibliothek import Bibliothek
 from .einstellungen import AppEinstellungen
 from .meins import Meins
 from .meins.api import router as meins_router
+from .medien import Medien
+from .medien.api import router as medien_router
 from .stoebern import Stoebern
 from .stoebern.api import router as stoebern_router
 from .themen import Themen
@@ -62,6 +64,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     app.include_router(router(geruest, bibliothek, leser, suche))
     app.include_router(meins_router(geruest, meins))
     app.include_router(themen_router(geruest, themen, suche, bibliothek.name_von))
+    app.include_router(medien_router(geruest, Medien(leser, suche)))
     app.include_router(stoebern_router(geruest, Stoebern(bibliothek, leser, suche, meins.gelesen)))
     # unter /lesen trägt der Weg Pfade aus Büchern, oft mit Punkt (function.array-map.php): immer eine Seite
     geruest.oberflaeche_ausliefern(app, seiten=["lesen"])
