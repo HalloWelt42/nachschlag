@@ -82,7 +82,7 @@ async def test_buecher(nachschlag):
     b = next(b for b in stand["buecher"] if b["kennung"] == "probe_de_all_2026-01")
     assert b["kennung"] == "probe_de_all_2026-01" and b["art"] == "enzyklopaedie" and b["startseite"] == "index"
     assert b["faehigkeiten"] == {"titelindex": True, "volltext": True, "bilder": True, "lesedesign": True}
-    assert b["artikel"] == 8             # Seiten laut Zähler der Datei (index, sechs Artikel, eine Sprungseite), ohne Bilder
+    assert b["artikel"] == 9             # Seiten laut Zähler der Datei (index, sechs Artikel, zwei Sprungseiten), ohne Bilder
     assert (await c.get("/api/v1/buecher/gibt_es_nicht")).status_code == 404
 
 
@@ -194,6 +194,8 @@ async def test_suche_nur_im_index(nachschlag):
     assert s["nur_index"] and s["hinweis"] and not s["bedeutung_angebunden"]
     assert s["treffer"][0]["pfad"] == "Rotfuchs" and s["treffer"][0]["wege"] == ["index"]
     assert "<em>" in s["treffer"][0]["ausschnitt"]
+    assert [t["pfad"] for t in s["treffer"]].count("Rotfuchs") == 1           # Sprungseite Vulpes_vulpes zeigt aufs Ziel
+    assert "Vulpes_vulpes" not in [t["pfad"] for t in s["treffer"]]
 
 
 async def test_suche_mit_bedeutung(nachschlag):

@@ -39,14 +39,19 @@ class Suche:
         def suchen(b: Buch) -> tuple[list[Treffer], int]:
             a = self._bib.archiv(b.kennung)
             pfade, gesamt = index.volltext(a, frage, 0, anzahl)
-            treffer = []
+            treffer, gesehen = [], set()
             for platz, pfad in enumerate(pfade, 1):
                 try:
-                    e = a.get_entry_by_path(pfad)
+                    # Weiterleitungen und Sprungseiten (Vulpes_vulpes -> Rotfuchs) zeigen auf ihr Ziel; jedes Ziel einmal
+                    ziel, _, anker = (self._bib.weiterleitung(b.kennung, pfad) or pfad).partition("#")
+                    if ziel in gesehen:
+                        continue
+                    e = a.get_entry_by_path(ziel)
                     inhalt = bytes(e.get_item().content)
                 except (KeyError, RuntimeError):
                     continue
-                treffer.append(Treffer(buch=b.kennung, pfad=pfad, titel=e.title, ausschnitt=index.ausschnitt(inhalt, frage),
+                gesehen.add(ziel)
+                treffer.append(Treffer(buch=b.kennung, pfad=ziel, anker=anker, titel=e.title, ausschnitt=index.ausschnitt(inhalt, frage),
                                        wege=["index"], rang=_rang(platz)))
             return treffer, gesamt
 

@@ -115,6 +115,9 @@ def bauen(ordner: Path, name: str = "probe_de_all_2026-01", erzeuger: str = "mwo
         c.add_item(_Seite("Echte_Füchse", "Echte Füchse", artikel("Echte Füchse", "Die echten Füchse bilden eine Gattungsgruppe.")))
         c.add_item(_Seite("Kreuzfuchs", "Kreuzfuchs", artikel("Kreuzfuchs", "Der Kreuzfuchs ist eine Farbform des Rotfuchses.")))
         c.add_item(_Seite("Stadtfuchs", "Stadtfuchs", "<html><head><meta http-equiv=\"refresh\" content=\"0;URL='./Rotfuchs#Lebensraum'\" /></head></html>"))
+        # Sprungseite mit Text (wie Vulpes_vulpes in der Wikipedia): der Volltext findet sie, die Suche zeigt ihr Ziel
+        c.add_item(_Seite("Vulpes_vulpes", "Vulpes vulpes", "<html><head><meta http-equiv=\"refresh\" content=\"0;URL='./Rotfuchs'\" /></head>"
+                                                            "<body>Rotfuchs: Füchse leben auch in Städten.</body></html>"))
         c.add_item(_Seite("_assets_/a/fuchs.png", "", PNG, "image/png", vorne=False))
         # ein Name mit wörtlichem %2C (so heißen Bilder in der Quelle); im HTML steht er verschlüsselt als %252C
         c.add_item(_Seite("_assets_/a/Köln%2C_Ufer.png", "", PNG, "image/png", vorne=False))
