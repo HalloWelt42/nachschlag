@@ -45,6 +45,16 @@ fehlenden Feldern (Schlagwörter, Stimmen, Autoren, Rubriken).
     Sammlung bekommen (heute nur ein Buch); der eigene Index liefert dafür die Textabschnitte (Abschnitt, Text, Pfad),
     damit Vektoren später ohne neues Lesen der Bücher entstehen. Index und Register arbeiten immer ohne Vektoren; fehlt
     die Sammlung oder antwortet der Fundus nicht, sucht das Buch ohne sie und sagt das (Rückmeldung je Buch).
+15. **Fehlertoleranz (Mac ist ein Laptop mit WLAN):** Der Index-Dienst hält seinen Fortschritt in der Indexdatei fest
+    (Stand nach je einem Stapel Seiten) und macht nach Abbruch, Ruhezustand oder Netzwechsel dort weiter. Lesefehler
+    über die Freigabe: anhalten, Freigabe neu einhängen, mit wachsendem Abstand erneut versuchen; der Auftrag zeigt
+    'wartet auf Netz' statt eines Fehlers. Ein Index geht erst vollständig und mit geprüfter Prüfsumme an den Pi
+    (Übertragung in Teilen, fortsetzbar) und wird dort in einem Schritt ausgetauscht; bis dahin gilt der alte oder
+    der Index der Datei. Ist der Mac nicht erreichbar, steht der Auftrag auf dem Pi auf 'wartet auf den Mac' und läuft
+    von selbst weiter.
+16. **Freigabe:** Samba-Freigabe `buecher` auf dem Pi (/mnt/data/zim), nur lesend, ohne Passwort, nur aus dem
+    Heimnetz (eingerichtet 01.11.2026, vorher gesichert als /etc/samba/smb.conf.vor-buecher-freigabe); am Mac nur
+    lesend eingehängt. Gemessen: PHP Docs (7.560 Einträge, 34 MB HTML) in 0,5 s über die Freigabe gelesen.
 
 ## Reihenfolge des Baus
 
