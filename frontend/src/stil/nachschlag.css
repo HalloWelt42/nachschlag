@@ -253,6 +253,6 @@
   .kopf .suchanker .buchwahl, .kopf .suchanker kbd { display: none; }
   .artikel-kopf { padding-inline: var(--a3); }
   .lesen { padding-inline: var(--a3); }
-  .start-innen { padding-inline: var(--a3); }
+  .start-innen { padding-inline: 0; }          /* den Seitenrand am Telefon gibt die Schale, nur einmal */
   .treffer .marken { margin-left: 0; }
 }
