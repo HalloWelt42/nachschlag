@@ -1,8 +1,10 @@
 """Vorlesen über den Sprechdienst der Leitstelle (WIKI-43): der Text an Satzgrenzen geteilt (`appkern.saetze`), jeder
 Satz vom Sprechdienst gesprochen (Vorgabe klangwerk-sprechen, `POST /v1/audio/speech`, WAV) und als Zeile eines Stroms
 geliefert, sobald er da ist; so beginnt die Wiedergabe nach dem ersten Satz. Das Modell läuft im Klangwerk hinter der
-Leitstelle; Nachschlag wählt nur Dienst, Stimme (aus dem Katalog des Dienstes) und die Sprache des Texts. Alle Sätze
-einer Vorlesung sind bei der Leitstelle eine Arbeit (das Modell bleibt dafür stehen).
+Leitstelle; Nachschlag wählt nur Dienst, Stimme und die Sprache des Texts. Eine eigene Stimme (etwa die Hausstimme)
+spricht der Klondienst der Leitstelle (Vorgabe klangwerk-klonen, `POST /tts/clone`) mit ihrer Probe aus der Vertonung
+(stimmen.py); eine Stimme aus dem Katalog der Sprechdienst. Alle Sätze einer Vorlesung sind bei der Leitstelle eine
+Arbeit (das Modell bleibt dafür stehen).
 
 Der Strom ist NDJSON, wie ihn der Vorleser der Oberfläche liest: je Zeile `art` satz (mit `nr`, `text`, `dauer_ms` und
 dem Ton als Base64-WAV in `ton`), zuletzt ende, oder fehler, wenn es nach dem ersten Satz scheitert."""
@@ -20,6 +22,9 @@ from collections.abc import AsyncIterator, Callable
 from appkern.leitstelle import Leitstelle, LeitstellenFehler
 from appkern.leitstelle.arbeit import LAUFENDE_ARBEIT
 from appkern.saetze import hat_worte, saetze, stuecke
+from appkern.verbund import VerbundFehler
+
+from .stimmen import PRIVAT, NichtFreigegeben, Referenz, Stimmenquelle
 
 #: so lange gilt der geholte Katalog der Stimmen
 KATALOG_GILT_S = 600
@@ -37,6 +42,13 @@ class NichtBereit(Exception):
         self.meldung, self.status = meldung, status
 
 
+def modus(referenz: Referenz, sprache: str) -> str:
+    """Wie eine eigene Stimme spricht: mit Referenztext (icl) übernimmt das Modell Klang und Sprechweise der Probe;
+    spricht sie eine andere Sprache als ihre Probe, brächte das deren Akzent mit, dann nur der Stimmabdruck (wie die
+    App Vorlesen)."""
+    return "icl" if referenz.text.strip() and sprache == referenz.sprache else "abdruck"
+
+
 def dauer_ms(wav: bytes) -> int:
     """Länge einer WAV in Millisekunden; 0, wenn der Kopf nicht lesbar ist."""
     try:
@@ -52,9 +64,16 @@ def zeile(daten: dict) -> bytes:
 
 class Sprechdienst:
     def __init__(self, leitstelle: Callable[[], Leitstelle | None], dienst: Callable[[], str], stimme: Callable[[], str],
+                 klondienst: Callable[[], str] = lambda: "klangwerk-klonen", stimmen: Stimmenquelle | None = None,
                  uhr: Callable[[], float] = time.monotonic) -> None:
         self._ls, self._dienst, self._stimme, self._uhr = leitstelle, dienst, stimme, uhr
+        self._klondienst, self.stimmen = klondienst, stimmen
         self._katalog: tuple[float, str, list[str]] | None = None
+
+    def _eigene_id(self) -> str:
+        """Kennung der gewählten eigenen Stimme, leer bei einer Stimme aus dem Katalog."""
+        stimme = self._stimme()
+        return stimme.removeprefix(PRIVAT) if stimme.startswith(PRIVAT) else ""
 
     def _leitstelle(self) -> Leitstelle:
         ls = self._ls()
@@ -74,6 +93,8 @@ class Sprechdienst:
             raise NichtBereit(f"Leitstelle antwortet nicht: {f}") from f
         if self._dienst() not in namen:
             raise NichtBereit(f"Die Leitstelle gibt den Sprechdienst {self._dienst()} für Nachschlag nicht frei", 403)
+        if self._eigene_id() and self._klondienst() not in namen:
+            raise NichtBereit(f"Die Leitstelle gibt den Klondienst {self._klondienst()} für Nachschlag nicht frei", 403)
 
     async def katalog(self) -> list[str]:
         """Die Stimmen des Sprechdienstes (`GET /tts/voices`), eine Weile gemerkt."""
@@ -85,7 +106,9 @@ class Sprechdienst:
         self._katalog = (self._uhr(), dienst, stimmen)
         return stimmen
 
-    async def _sprechen(self, ls: Leitstelle, text: str, sprache: str, arbeit: str) -> bytes:
+    async def _sprechen(self, ls: Leitstelle, text: str, sprache: str, arbeit: str, referenz: Referenz | None) -> bytes:
+        if referenz is not None:
+            return await self._klonen(ls, text, sprache, arbeit, referenz)
         marke = LAUFENDE_ARBEIT.set(arbeit)
         try:
             stimme = self._stimme()
@@ -97,10 +120,36 @@ class Sprechdienst:
             LAUFENDE_ARBEIT.reset(marke)
         return antwort.content
 
+    async def _klonen(self, ls: Leitstelle, text: str, sprache: str, arbeit: str, referenz: Referenz) -> bytes:
+        """Ein Stück Text mit einer eigenen Stimme als WAV; die Probe geht mit, die Datei liegt bei der Instanz, die
+        gesprochen hat."""
+        marke = LAUFENDE_ARBEIT.set(arbeit)
+        try:
+            dienst = ls.dienst(self._klondienst())
+            async with dienst.gebunden():
+                antwort = await dienst.json(
+                    "POST", "/tts/clone", titel="Vorlesen", prioritaet="hoch",
+                    data={"text": text, "ref_text": referenz.text, "language": SPRACHEN.get(sprache, "german"),
+                          "modus": modus(referenz, sprache)},
+                    files={"ref_audio": ("referenz.wav", referenz.ton, "audio/wav")})
+                return (await dienst.anfrage("GET", f"/tts/audio/{antwort['filename']}", titel="Vorlesen")).content
+        finally:
+            LAUFENDE_ARBEIT.reset(marke)
+
     async def zeilen(self, text: str, sprache: str) -> AsyncIterator[bytes]:
         """Die Zeilen des Stroms für `text`. Scheitert es vor dem ersten Satz: `NichtBereit`; danach eine Zeile
         `fehler`. Bricht der Leser ab, wird kein weiterer Satz bestellt."""
         ls = self._leitstelle()
+        referenz = None
+        if eigene := self._eigene_id():
+            if self.stimmen is None:
+                raise NichtBereit("Eigene Stimmen gibt es erst mit der Adresse der Vertonung (Einstellungen, Vorlesen)")
+            try:
+                referenz = await self.stimmen.referenz(eigene)
+            except NichtFreigegeben as f:
+                raise NichtBereit(f.meldung, 403) from f
+            except VerbundFehler as f:
+                raise NichtBereit(f"Die Vertonung mit den eigenen Stimmen antwortet nicht: {f.meldung}") from f
         arbeit = f"vorlesen-{uuid.uuid4().hex[:12]}"
         nr, gesamt = 0, 0
         try:
@@ -108,7 +157,7 @@ class Sprechdienst:
                 for stueck in stuecke(satz.text):
                     if not hat_worte(stueck):
                         continue
-                    wav = await self._sprechen(ls, stueck, sprache, arbeit)
+                    wav = await self._sprechen(ls, stueck, sprache, arbeit, referenz)
                     ms = dauer_ms(wav)
                     yield zeile({"art": "satz", "nr": nr, "text": stueck, "dauer_ms": ms,
                                  "ton": base64.b64encode(wav).decode("ascii")})

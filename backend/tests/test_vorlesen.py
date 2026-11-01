@@ -7,6 +7,7 @@ import base64
 import io
 import json
 import wave
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 
 import pytest
@@ -15,6 +16,7 @@ from appkern.leitstelle import NichtErreichbar
 
 from app.vorlesen import NichtBereit, Sprechdienst
 from app.vorlesen.sprechdienst import dauer_ms
+from app.vorlesen.stimmen import NichtFreigegeben, Referenz
 
 
 def wav(ms: int = 250) -> bytes:
@@ -48,7 +50,15 @@ class Dienst:
         return Antwort(wav())
 
     async def json(self, methode, weg, **optionen):
+        if weg == "/tts/clone":
+            self.ls.aufrufe.append((methode, weg, optionen))
+            return {"filename": "satz.wav"}
         return {"speakers": ["serena", "aiden"], "languages": ["german", "english"]}
+
+    @asynccontextmanager
+    async def gebunden(self):
+        self.ls.gebunden += 1
+        yield None
 
 
 class Leitstelle:
@@ -58,6 +68,7 @@ class Leitstelle:
         self.frei, self.fehler_ab = frei, fehler_ab
         self.aufrufe: list = []
         self.dienstname = ""
+        self.gebunden = 0
 
     async def dienste(self):
         return [Eintrag(k) for k in self.frei]
@@ -112,3 +123,39 @@ async def test_fehler_vor_dem_ersten_satz_ist_ein_grund_danach_eine_zeile():
     s = Sprechdienst(lambda: Leitstelle(fehler_ab=1), lambda: "klangwerk-sprechen", lambda: "")
     zeilen = await alle(s, "Eins. Zwei.")
     assert [z["art"] for z in zeilen] == ["satz", "fehler"] and "brach ab" in zeilen[1]["meldung"]
+
+
+class Stimmen:
+    """Nachgestellte Vertonung: gibt die Stimme "s1" frei, alle anderen nicht."""
+
+    async def referenz(self, stimme_id: str) -> Referenz:
+        if stimme_id != "s1":
+            raise NichtFreigegeben("Diese Stimme gibt die Vertonung für Nachschlag nicht frei")
+        return Referenz(id="s1", ton=wav(500), text="Probe der Hausstimme.", sprache="de")
+
+
+async def test_eigene_stimme_spricht_der_klondienst_mit_der_probe():
+    ls = Leitstelle(frei=("klangwerk-sprechen", "klangwerk-klonen"))
+    s = Sprechdienst(lambda: ls, lambda: "klangwerk-sprechen", lambda: "privat:s1", lambda: "klangwerk-klonen", Stimmen())
+    await s.pruefen()
+    zeilen = await alle(s, "Der Rotfuchs jagt.", "de")
+    assert [z["art"] for z in zeilen] == ["satz", "ende"]
+    clone, audio = ls.aufrufe[0], ls.aufrufe[1]
+    assert (clone[1], ls.dienstname, ls.gebunden) == ("/tts/clone", "klangwerk-klonen", 1)
+    assert clone[2]["data"] == {"text": "Der Rotfuchs jagt.", "ref_text": "Probe der Hausstimme.", "language": "german", "modus": "icl"}
+    assert clone[2]["files"]["ref_audio"][1] == wav(500)
+    assert audio[:2] == ("GET", "/tts/audio/satz.wav")
+    assert (await alle(s, "It hunts.", "en"))[0]["art"] == "satz"
+    assert ls.aufrufe[2][2]["data"]["modus"] == "abdruck"          # andere Sprache als die Probe: nur der Stimmabdruck
+
+
+async def test_eigene_stimme_ohne_freigabe_oder_klondienst_ein_grund():
+    ls = Leitstelle(frei=("klangwerk-sprechen",))
+    s = Sprechdienst(lambda: ls, lambda: "klangwerk-sprechen", lambda: "privat:s1", lambda: "klangwerk-klonen", Stimmen())
+    with pytest.raises(NichtBereit, match="Klondienst"):
+        await s.pruefen()
+    fremd = Sprechdienst(lambda: Leitstelle(frei=("klangwerk-sprechen", "klangwerk-klonen")), lambda: "klangwerk-sprechen",
+                         lambda: "privat:fremd", lambda: "klangwerk-klonen", Stimmen())
+    with pytest.raises(NichtBereit, match="nicht frei") as f:
+        await alle(fremd, "Satz.")
+    assert f.value.status == 403

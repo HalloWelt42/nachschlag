@@ -31,8 +31,17 @@ class AppEinstellungen(Grundeinstellungen):
                               description="Dienst der Leitstelle, der vorliest; das Modell läuft dort, nie in Nachschlag. "
                                           "Die Leitstelle muss ihn für Nachschlag freigeben. Leer: ohne Vorlesen.")
     vorlesestimme: str = Field("", title="Stimme", json_schema_extra=VORLESEN,
-                               description="Eine Stimme aus dem Katalog des Sprechdienstes. Leer: die Vorgabe des "
-                                           "Sprechdienstes.")
+                               description="Eine eigene Stimme, die die Vertonung Nachschlag freigibt (sie spricht der "
+                                           "Klondienst), oder eine Stimme aus dem Katalog des Sprechdienstes. Leer: die "
+                                           "Vorgabe des Sprechdienstes.")
+    klondienst: str = Field("klangwerk-klonen", title="Klondienst", json_schema_extra=VORLESEN,
+                            description="Dienst der Leitstelle, der mit einer eigenen Stimme spricht; er bekommt die Probe "
+                                        "der Stimme mit jedem Satz.")
+    vertonung_adresse: str = Field("", title="Eigene Stimmen (Vertonung)", json_schema_extra=VORLESEN,
+                                   description="Adresse der Vertonung: dort liegen die eigenen Stimmen und wer sie nutzen "
+                                               "darf (Vertonung, Einstellungen, Private Stimmen für). Nachschlag holt dort "
+                                               "nur die Probe; gesprochen wird über die Leitstelle. Leer: nur "
+                                               "Katalogstimmen.")
 
     # --- Suche ------------------------------------------------------------------------------------------------------
     suchmodell: str = Field("qwen/qwen3-next-80b", title="Modell für Übersetzung und Korrektur", json_schema_extra=SUCHE,

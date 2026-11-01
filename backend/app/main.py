@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from appkern.app import Geruest
 from appkern.einstellungen import Angebot, Option
 from appkern.leitstelle import LeitstellenFehler
+from appkern.verbund import VerbundFehler
 
 from .api import router
 from .artikel import Artikelleser
@@ -29,6 +30,7 @@ from .sprache.api import router as sprache_router
 from .uebersetzung import Artikeluebersetzer, Stellenuebersetzer, Uebersetzer
 from .uebersetzung.api import router as uebersetzung_router
 from .vorlesen import NichtBereit, Sprechdienst
+from .vorlesen.stimmen import PRIVAT, Stimmenquelle
 from .vorlesen.api import router as vorlesen_router
 from .register.api import router as register_router
 from .medien import Medien
@@ -61,7 +63,9 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     indexauftraege = Indexauftraege(eigen, bibliothek, geruest.auftraege, lambda: e().indexdienst_schluessel.get_secret_value(),
                                     lambda: ARTEN_JE_STUFE[e().eigene_indizes], lambda: e().eigenindex_hoechstens_gb)
 
-    sprechdienst = Sprechdienst(lambda: geruest.leitstelle, lambda: e().sprechdienst, lambda: e().vorlesestimme)
+    stimmenquelle = Stimmenquelle(geruest, lambda: e().vertonung_adresse)      # eigene Stimmen: nur die Probe
+    sprechdienst = Sprechdienst(lambda: geruest.leitstelle, lambda: e().sprechdienst, lambda: e().vorlesestimme,
+                                lambda: e().klondienst, stimmenquelle)
     meins = Meins(geruest.db, bibliothek.name_von, bibliothek.kennung_von)
     geruest.begleiter_anmelden(meins)
     themen = Themen(geruest.db, bibliothek.name_von, bibliothek.kennung_von)
@@ -83,21 +87,32 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     geruest.einstellungen.anbieten("bedeutung_buch", buecher)
     geruest.einstellungen.anbieten("hoerdienst", geruest.leitstelle_angebot("hoeren"))
     geruest.einstellungen.anbieten("sprechdienst", geruest.leitstelle_angebot("stimme"))
+    geruest.einstellungen.anbieten("klondienst", geruest.leitstelle_angebot("stimme_klonen"))
+    geruest.einstellungen.anbieten("vertonung_adresse", geruest.verbund.angebot("Vertonung", "vertonung", lambda: e().vertonung_adresse))
 
     async def stimmen() -> Angebot:
-        """Die Stimmen aus dem Katalog des Sprechdienstes, jedes Mal von dort; leer: seine Vorgabe."""
-        optionen = [Option(wert="", titel="Vorgabe des Sprechdienstes")]
+        """Die eigenen Stimmen, die die Vertonung freigibt, und der Katalog des Sprechdienstes, jedes Mal von dort;
+        leer: die Vorgabe des Sprechdienstes."""
+        optionen, stand = [Option(wert="", titel="Vorgabe des Sprechdienstes")], []
+        try:
+            eigene = await stimmenquelle.eigene()
+            optionen += [Option(wert=PRIVAT + s.id, titel=s.name, hinweis="eigene Stimme, für Nachschlag freigegeben") for s in eigene]
+            stand.append(f"{len(eigene)} eigene")
+        except VerbundFehler as f:
+            stand.append(f"Vertonung antwortet nicht: {f.meldung}")
         try:
             katalog = await sprechdienst.katalog()
+            optionen += [Option(wert=s, titel=s, hinweis="Katalog") for s in katalog]
+            stand.append(f"{len(katalog)} im Katalog")
         except (LeitstellenFehler, NichtBereit) as f:
-            return Angebot(optionen=optionen, eigener_wert=False, stand=f"Katalog nicht erreichbar: {f}")
-        return Angebot(optionen=optionen + [Option(wert=s, titel=s, hinweis="Katalog") for s in katalog], eigener_wert=False,
-                       stand=f"{len(katalog)} Stimmen")
+            stand.append(f"Katalog nicht erreichbar: {f}")
+        return Angebot(optionen=optionen, eigener_wert=False, stand=", ".join(stand))
 
     geruest.einstellungen.anbieten("vorlesestimme", stimmen)
     geruest.einstellungen.anbieten("suchmodell", geruest.leitstelle_angebot("text", leer="Kette der App"))
     geruest.einstellungen.anbieten("fundus_adresse", geruest.verbund.angebot("Fundus", "fundus", lambda: e().fundus_adresse))
     geruest.verbund.anmelden("Fundus", lambda: e().fundus_adresse)
+    geruest.verbund.anmelden("Vertonung", lambda: e().vertonung_adresse)   # nur Proben eigener Stimmen
 
     app = geruest.fastapi()
     app.state.geruest = geruest
