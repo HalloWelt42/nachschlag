@@ -10,12 +10,13 @@
   import type { Artikel } from "../lib/typen";
   import { lesen, lesenZiel, suchen, verweisZiel } from "../lib/ziele";
   import { Auswahl } from "appkern-oberflaeche";
-  import { kopieren } from "../lib/kopieren";
+  import { kopieren } from "appkern-oberflaeche";
+  import { RUECKMELDUNG_MS, zitatMitHerkunft } from "../lib/zitat";
   import { istCode } from "../lib/code";
   import { codeEinfaerben, spracheAus } from "../lib/einfaerben";
   import { htmlSprache } from "../lib/sprache";
-  import { gemerkt, lesestandMelden, meins, meinsLaden, merken, notieren, vergessen, vorliebeSetzen, wann, type Notiz,
-           type NotizNeu } from "../lib/meins.svelte";
+  import { gemerkt, lesestandMelden, meins, meinsLaden, merken, notieren, notizLoeschen, vergessen, vorliebeSetzen, wann,
+           type Notiz, type NotizNeu } from "../lib/meins.svelte";
   import { markieren, stelleAus, type Stelle } from "../lib/stellen";
   import { geraet } from "appkern-oberflaeche";
   import NotizBlatt from "../teile/NotizBlatt.svelte";
@@ -208,7 +209,7 @@
       const n = meins.notizen.find((x) => x.id === stelle.dataset.notiz);
       if (n) {
         e.preventDefault();
-        blatt = { notiz: n, entwurf: null };
+        notizZeigen(n);
         return;
       }
     }
@@ -316,8 +317,10 @@
   const LEISTE_ABSTAND_PX = 10;
   const STELLE_OBEN_ANTEIL = 0.2;
 
-  let blatt = $state<{ notiz: Notiz | null; entwurf: NotizNeu | null } | null>(null);
-  let textwahl = $state<{ stelle: Stelle; x: number; y: number; unten: boolean } | null>(null);
+  let blatt = $state<{ notiz: Notiz | null; entwurf: NotizNeu | null; schreiben?: boolean } | null>(null);
+  // `markiert`: Notizen, deren Markierung die Auswahl berührt (dann entfernt die Leiste, statt doppelt zu markieren)
+  let textwahl = $state<{ stelle: Stelle; markiert: Notiz[]; x: number; y: number; unten: boolean } | null>(null);
+  let kopiert = $state<"" | "ja" | "nein">("");
   let wahlLeiste = $state<HTMLElement>();
   let wahlWarten: ReturnType<typeof setTimeout> | undefined;
 
@@ -340,9 +343,12 @@
         textwahl = null;
         return;
       }
-      const r = wahl.getRangeAt(0).getBoundingClientRect();
+      const bereich = wahl.getRangeAt(0);
+      const r = bereich.getBoundingClientRect();
       const unten = geraet.mobil || r.top < 140;
-      textwahl = { stelle, x: r.left + r.width / 2, y: unten ? r.bottom + LEISTE_ABSTAND_PX : r.top - LEISTE_ABSTAND_PX, unten };
+      const ids = new Set([...text!.querySelectorAll<HTMLElement>("mark.notiz")].filter((m) => bereich.intersectsNode(m)).map((m) => m.dataset.notiz));
+      const markiert = artikelNotizen.filter((n) => ids.has(n.id));
+      textwahl = { stelle, markiert, x: r.left + r.width / 2, y: unten ? r.bottom + LEISTE_ABSTAND_PX : r.top - LEISTE_ABSTAND_PX, unten };
     }, TEXTWAHL_WARTEN_MS);
   }
 
@@ -353,24 +359,49 @@
     return Math.min(Math.max(textwahl.x - breite / 2, 8), innerWidth - breite - 8);
   });
 
+  function wahlBeenden() {
+    textwahl = null;
+    window.getSelection()?.removeAllRanges();
+  }
+
+  /** Markieren (und mit Blatt: gleich schreiben). Liegt die Stelle schon markiert vor, gilt die vorhandene Notiz: so
+   *  entstehen keine doppelten Markierungen, die nach dem Löschen der einen weiter zu sehen wären. */
   async function anStelle(mitBlatt: boolean) {
     if (!artikel || !textwahl) return;
     const { stelle } = textwahl;
-    textwahl = null;
-    window.getSelection()?.removeAllRanges();
+    wahlBeenden();
     try {
-      const n = await notieren({ buch: artikel.buch, pfad: artikel.pfad, titel: artikel.titel, bild: artikel.bild, ...stelle, text: "" });
-      if (mitBlatt) blatt = { notiz: n, entwurf: null };
+      const n = artikelNotizen.find((x) => x.zitat === stelle.zitat && x.davor === stelle.davor)
+        ?? await notieren({ buch: artikel.buch, pfad: artikel.pfad, titel: artikel.titel, bild: artikel.bild, ...stelle, text: "" });
+      if (mitBlatt) blatt = { notiz: n, entwurf: null, schreiben: true };
     } catch (f) {
       fehler = seitenFehler(f);
     }
   }
 
-  function zitieren() {
+  /** Markierungen in der Auswahl entfernen: ohne Text sofort, mit Text über das Blatt (dort mit Rückfrage). */
+  async function entfernen() {
+    if (!textwahl) return;
+    const { markiert } = textwahl;
+    wahlBeenden();
+    try {
+      for (const n of markiert.filter((x) => !x.text.trim())) await notizLoeschen(n.id);
+    } catch (f) {
+      fehler = seitenFehler(f);
+    }
+    const mitText = markiert.find((x) => x.text.trim());
+    if (mitText) notizZeigen(mitText);
+  }
+
+  /** Zitat mit Herkunft in die Zwischenablage; die Leiste sagt kurz, ob es geklappt hat, und geht dann zu. */
+  async function zitieren() {
     if (!artikel || !textwahl) return;
     const { zitat, abschnitt } = textwahl.stelle;
-    void kopieren(`"${zitat}" (${[artikel.titel, abschnitt, buch ? bezeichnung(buch) : ""].filter(Boolean).join(", ")})`);
-    textwahl = null;
+    kopiert = (await kopieren(zitatMitHerkunft(zitat, artikel.titel, abschnitt, buch ? bezeichnung(buch) : ""))) ? "ja" : "nein";
+    setTimeout(() => {
+      kopiert = "";
+      wahlBeenden();
+    }, RUECKMELDUNG_MS);
   }
 
   function notizZumArtikel() {
@@ -660,9 +691,14 @@
   <!-- die Auswahl bleibt beim Tippen auf die Leiste bestehen -->
   <div class="auswahl-leiste" class:unten={textwahl.unten} bind:this={wahlLeiste} role="toolbar" tabindex="-1" aria-label="Stelle"
        style="left: {wahlLinks}px; top: {textwahl.y}px" onpointerdown={(e) => e.preventDefault()} onmousedown={(e) => e.preventDefault()}>
-    <button onclick={() => anStelle(false)}><i class="fa-solid fa-highlighter"></i>Markieren</button>
+    {#if textwahl.markiert.length}
+      <button onclick={entfernen}><i class="fa-solid fa-eraser"></i>Entfernen</button>
+    {:else}
+      <button onclick={() => anStelle(false)}><i class="fa-solid fa-highlighter"></i>Markieren</button>
+    {/if}
     <button onclick={() => anStelle(true)}><i class="fa-solid fa-note-sticky"></i>Notiz</button>
-    <button onclick={zitieren}><i class="fa-solid fa-quote-right"></i>Zitieren</button>
+    <button class:kopiert-ok={kopiert === "ja"} onclick={zitieren} title="Zitat mit Artikel, Abschnitt und Buch in die Zwischenablage">
+      <i class="fa-solid {kopiert === 'ja' ? 'fa-check' : kopiert === 'nein' ? 'fa-triangle-exclamation' : 'fa-quote-right'}"></i>{kopiert === "ja" ? "Kopiert" : kopiert === "nein" ? "Geht nicht" : "Zitieren"}</button>
     <button onclick={() => { const z = textwahl!.stelle.zitat; textwahl = null; suchen(z.slice(0, 200)); }}><i class="fa-solid fa-magnifying-glass"></i>Suchen</button>
   </div>
 {/if}
@@ -670,5 +706,5 @@
   <Leuchtkasten medien={bilder.medien} start={bilder.start} titel={`in ${artikel.titel}`} onzu={() => (bilder = null)} />
 {/if}
 {#if blatt}
-  <NotizBlatt notiz={blatt.notiz} entwurf={blatt.entwurf} onzu={() => (blatt = null)} />
+  <NotizBlatt notiz={blatt.notiz} entwurf={blatt.entwurf} schreiben={blatt.schreiben} onzu={() => (blatt = null)} />
 {/if}

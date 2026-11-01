@@ -91,14 +91,24 @@ export async function notieren(neu: NotizNeu): Promise<Notiz> {
   return notiz;
 }
 
+// Notizen, deren Löschen läuft oder durch ist: ein Speichern, das erst danach antwortet, holt sie nicht in die Liste
+// zurück (sonst stünde die Markierung nach dem Löschen wieder da)
+const geloescht = new Set<string>();
+
 export async function notizAendern(id: string, text: string): Promise<Notiz> {
   const notiz = await hole<Notiz>("/meins/notizen/" + encodeURIComponent(id), { method: "PATCH", ...json({ text }) });
-  meins.notizen = [notiz, ...meins.notizen.filter((n) => n.id !== id)];
+  if (!geloescht.has(id)) meins.notizen = [notiz, ...meins.notizen.filter((n) => n.id !== id)];
   return notiz;
 }
 
 export async function notizLoeschen(id: string): Promise<void> {
-  await hole("/meins/notizen/" + encodeURIComponent(id), { method: "DELETE" });
+  geloescht.add(id);
+  try {
+    await hole("/meins/notizen/" + encodeURIComponent(id), { method: "DELETE" });
+  } catch (f) {
+    geloescht.delete(id);
+    throw f;
+  }
   meins.notizen = meins.notizen.filter((n) => n.id !== id);
 }
 

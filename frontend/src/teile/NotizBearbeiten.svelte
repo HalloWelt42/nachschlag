@@ -3,9 +3,9 @@
   // von selbst. Eine neue Notiz am ganzen Artikel kommt als `entwurf` und entsteht erst mit dem ersten Text; eine Notiz
   // an einer Stelle gibt es schon (als Markierung), sobald die Stelle markiert ist.
   import { onDestroy, untrack } from "svelte";
-  import { seitenFehler } from "appkern-oberflaeche";
+  import { kopieren, seitenFehler } from "appkern-oberflaeche";
   import { buchName } from "../lib/bibliothek.svelte";
-  import { kopieren } from "../lib/kopieren";
+  import { RUECKMELDUNG_MS, zitatMitHerkunft } from "../lib/zitat";
   import { notieren, notizAendern, notizLoeschen, type Notiz, type NotizNeu } from "../lib/meins.svelte";
 
   const SPEICHERN_NACH_MS = 700;
@@ -25,7 +25,10 @@
   let speichert = $state(false);
   let fehler = $state("");
   let loeschenFragen = $state(false);
+  let kopiert = $state<"" | "ja" | "nein">("");
   let warten: ReturnType<typeof setTimeout> | undefined;
+  let laufend: Promise<void> = Promise.resolve();      // das Speichern, das gerade unterwegs ist
+  let weg = false;                                       // gelöscht: nichts mehr speichern
   let feld = $state<HTMLTextAreaElement>();
   const feldId = $props.id();
 
@@ -64,10 +67,14 @@
 
   /** Ausstehendes sofort speichern (auch beim Schließen); ohne Änderung nichts. */
   export async function jetztSpeichern(): Promise<void> {
-    if (warten === undefined) return;
+    if (warten === undefined || weg) return laufend;
     clearTimeout(warten);
     warten = undefined;
-    const fuer = id, inhalt = text;
+    laufend = speichern(id, text);
+    return laufend;
+  }
+
+  async function speichern(fuer: string, inhalt: string): Promise<void> {
     speichert = true;
     try {
       if (fuer) await notizAendern(fuer, inhalt);
@@ -85,17 +92,21 @@
   async function loeschen() {
     clearTimeout(warten);
     warten = undefined;
+    weg = true;
     try {
+      await laufend;                    // erst das laufende Speichern, sonst käme die Notiz danach zurück
       if (id) await notizLoeschen(id);
       onweg?.();
     } catch (f) {
+      weg = false;
       fehler = seitenFehler(f);
     }
   }
 
-  function zitieren() {
+  async function zitieren() {
     const buch = notiz ? (notiz.buch ? buchName(notiz.buch) : notiz.buch_name) : entwurf ? buchName(entwurf.buch) : "";
-    void kopieren(`"${zitat}" (${[titel, abschnitt, buch].filter(Boolean).join(", ")})`);
+    kopiert = (await kopieren(zitatMitHerkunft(zitat, titel, abschnitt, buch))) ? "ja" : "nein";
+    setTimeout(() => (kopiert = ""), RUECKMELDUNG_MS);
   }
 
   export function fokus() {
@@ -125,7 +136,9 @@
   {:else}
     <div class="notiz-knoepfe">
       {#if zurStelle}<button class="knopf" onclick={zurStelle}><i class="fa-solid fa-arrow-up-right-from-square"></i>{zitat ? "Zur Stelle" : "Zum Artikel"}</button>{/if}
-      {#if zitat}<button class="knopf" onclick={zitieren}><i class="fa-solid fa-quote-right"></i>Zitieren</button>{/if}
+      {#if zitat}<button class="knopf" class:kopiert-ok={kopiert === "ja"} onclick={zitieren}
+                         title="Zitat mit Artikel, Abschnitt und Buch in die Zwischenablage">
+        <i class="fa-solid {kopiert === 'ja' ? 'fa-check' : kopiert === 'nein' ? 'fa-triangle-exclamation' : 'fa-quote-right'}"></i>{kopiert === "ja" ? "Kopiert" : kopiert === "nein" ? "Geht nicht" : "Zitieren"}</button>{/if}
       {#if id}<button class="knopf gefahr" onclick={() => (loeschenFragen = true)}><i class="fa-solid fa-trash"></i>Löschen</button>{/if}
     </div>
   {/if}
