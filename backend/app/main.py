@@ -31,7 +31,7 @@ from .suche.bedeutung import FundusBedeutung
 
 def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) -> FastAPI:
     """`transport` nur für Tests (Kellerwolke, Leitstelle und Fundus nachgestellt)."""
-    geruest = Geruest(name="Nachschlag", kennung="nachschlag", rolle="liest jedes Buch der Bibliothek", symbol="fa-book-open",
+    geruest = Geruest(name="Nachschlag", kennung="nachschlag", rolle="liest jedes Buch der Bibliothek", symbol="fa-book-open", symbolbild="/favicon.svg",
                       farbe="#08758b", fassung=FASSUNG, daten=daten, einstellungen=AppEinstellungen,
                       oberflaeche=WURZEL / "frontend" / "dist", transport=transport)
     e = lambda: geruest.einstellungen.stand  # noqa: E731

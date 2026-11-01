@@ -5,3 +5,6 @@ kennung = "nachschlag"
 repo = "https://github.com/HalloWelt42/nachschlag.git"
 # ton: die App nutzt den Tondienst (Tonarbeit auf dem Mac über die Leitstelle); geprüft wird, ob die Leitstelle ihn meldet
 ton = false
+# Symbole freigestellt, auch am Startbildschirm (Nutzer 01.11.2026: "es sollte freigestellt bleiben", bewusst
+# "Überall durchsichtig" gewählt, obwohl iOS durchsichtige Stellen selbst füllt)
+symbole = "durchsichtig"

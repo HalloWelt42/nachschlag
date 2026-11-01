@@ -2,7 +2,8 @@
 """Stellt das runde Motiv des Symbols frei (WIKI-3) und schreibt daraus frontend/public/symbol.svg, die einzige Quelle
 für tools/symbole.py. Das Motiv ist eine Kugel: ausgeschnitten wird genau ihr Kreis mit weicher Kante (Leuchtrand
 bleibt, Hintergrund, Lichtfäden außerhalb und die Spiegelfläche darunter fallen weg). Gesucht wird der Kreis, auf dem
-der Leuchtrand innen hell gegen den dunkleren Hintergrund steht.
+der Leuchtrand innen hell gegen den dunkleren Hintergrund steht. Das Symbol bleibt freigestellt, ohne Grund (Nutzer
+01.11.2026: "es sollte freigestellt bleiben", auch am Startbildschirm des iPhones).
     python3 tools/symbol_aus_globus.py gestaltung/globus-quelle.png
 Braucht Pillow und numpy, nur auf dem Rechner, der die Bilder erzeugt.
 """
@@ -20,7 +21,7 @@ from PIL import Image, ImageDraw
 WURZEL = Path(__file__).resolve().parent.parent
 ZIEL = WURZEL / "frontend" / "public" / "symbol.svg"
 EINGEBETTET = 512          # Kantenlänge des eingebetteten Motivs in Pixeln
-ANTEIL = 0.84              # Durchmesser der Kugel am Symbol
+ANTEIL = 0.96              # Durchmesser der Kugel am Symbol (ohne Grund füllt sie es fast ganz)
 UEBERABTASTUNG = 4         # glatte Kante
 
 
@@ -65,9 +66,7 @@ def svg_schreiben(motiv: Image.Image) -> None:
     groesse = 512 * ANTEIL
     rand = (512 - groesse) / 2
     ZIEL.write_text(
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">'
-        '<stop offset="0" stop-color="#08758b"/><stop offset="1" stop-color="#065464"/></linearGradient></defs>'
-        '<rect width="512" height="512" rx="112" fill="url(#g)"/>'
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">'
         f'<image x="{rand:.1f}" y="{rand:.1f}" width="{groesse:.1f}" height="{groesse:.1f}" href="data:image/png;base64,{daten}"/></svg>\n',
         encoding="utf-8")
     print(f"{ZIEL.relative_to(WURZEL)} geschrieben ({ZIEL.stat().st_size // 1024} KB)")
