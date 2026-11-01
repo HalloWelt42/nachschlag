@@ -12,6 +12,7 @@
   import Start from "./seiten/Start.svelte";
   import Stoebern from "./seiten/Stoebern.svelte";
   import Suche from "./seiten/Suche.svelte";
+  import Register from "./seiten/Register.svelte";
   import Suchfeld from "./teile/Suchfeld.svelte";
   import { meins } from "./lib/meins.svelte";
 
@@ -23,6 +24,8 @@
     { schluessel: "medien", titel: "Medien", symbol: "fa-images", seite: Medien, reiter: false,
       hinweis: "Bilder zu einem Begriff aus den Artikeln der Bücher, groß ansehen" },
     { schluessel: "suche", titel: "Suche", symbol: "fa-magnifying-glass", seite: Suche, reiter: false, hinweis: "Alle Treffer zu einer Frage" },
+    { schluessel: "register", titel: "Register", symbol: "fa-tags", seite: Register, reiter: false,
+      hinweis: "Schlagwörter und Autoren der Frage-Antwort-Bücher" },
     { schluessel: "merkzettel", titel: "Merkzettel", symbol: "fa-bookmark", seite: Merkzettel, reiter: true,
       hinweis: "Gemerkte Seiten mit Lesestand, auf allen Geräten", zahl: () => meins.merkzettel.length },
     { schluessel: "notizen", titel: "Notizen", symbol: "fa-note-sticky", seite: Notizen, reiter: false,

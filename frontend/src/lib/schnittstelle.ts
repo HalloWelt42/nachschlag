@@ -1,6 +1,7 @@
 // Alle Abrufe der Oberfläche an einer Stelle (über `hole` der Schale: Anmeldung, Fehler, gemeinsame Abrufe).
 import { hole } from "appkern-oberflaeche";
-import type { Artikel, Bibliotheksstand, Suchergebnis, Vorschlag } from "./typen";
+import type { Artikel, AutorenSeite, AutorSeite, Bibliotheksstand, FragenSeite, SchlagwortSeite, Sortierung, Suchergebnis,
+              Vorschlag } from "./typen";
 
 function pfadTeil(pfad: string): string {
   return pfad.split("/").map(encodeURIComponent).join("/");
@@ -28,3 +29,16 @@ export const sucheHolen = (frage: string, optionen: { buecher?: string[]; wege?:
                            signal?: AbortSignal) =>
   hole<Suchergebnis>(`/suche?${abfrage({ frage, buecher: optionen.buecher ?? [], wege: optionen.wege ?? "beide",
                                          anzahl: optionen.anzahl ?? 20 })}`, { signal });
+
+// --- Register (WIKI-39): ohne Buch über alle Frage-Antwort-Bücher, seitenweise ---
+export const schlagwoerterHolen = (buch: string, anfang: string, ab: number, anzahl = 60) =>
+  hole<SchlagwortSeite>(`/register/schlagwoerter?${abfrage({ buch, anfang, ab, anzahl })}`);
+
+export const fragenZumSchlagwort = (wort: string, buch: string, sortierung: Sortierung, ab: number, anzahl = 30) =>
+  hole<FragenSeite>(`/register/schlagwoerter/${encodeURIComponent(wort)}?${abfrage({ buch, sortierung, ab, anzahl })}`);
+
+export const autorenHolen = (buch: string, anfang: string, ab: number, anzahl = 60) =>
+  hole<AutorenSeite>(`/register/autoren?${abfrage({ buch, anfang, ab, anzahl })}`);
+
+export const autorHolen = (buch: string, schluessel: string, ab: number, anzahl = 30) =>
+  hole<AutorSeite>(`/register/autoren/${encodeURIComponent(buch)}/${encodeURIComponent(schluessel)}?${abfrage({ ab, anzahl })}`);

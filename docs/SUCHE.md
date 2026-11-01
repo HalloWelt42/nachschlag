@@ -37,9 +37,18 @@ fehlenden Feldern (Schlagwörter, Stimmen, Autoren, Rubriken).
 10. **Register:** eigener Bereich mit Reitern Schlagwörter und Autoren (später Rubriken), Wahl "alle Bücher" oder ein
     Buch. Schlagwörter und Autorennamen in Artikeln und Treffern führen dorthin. Je Autor eine Seite mit allen
     Beiträgen, Stimmen und Zeitraum.
+    **Umgesetzt (Schritt 3, WIKI-39):** Bereich Register mit Reitern Schlagwörter und Autoren, Wahl aller
+    Frage-Antwort-Bücher oder eines, Filter auf den Anfang; Seite je Schlagwort (Fragen nach Stimmen oder neueste) und
+    je Autor (Beiträge, Fragen, Antworten, akzeptiert, Stimmen, Zeitraum). Autoren sind über ihre Kontonummer im Buch
+    eindeutig. Gezählt wird beim Bau des Index (Tabellen register_*), die Seiten lesen nur.
 11. **Metadaten je Inhaltsart** im eigenen Index zum Filtern und Sortieren: Frage und Antwort (Stimmen, Antworten,
     akzeptiert, Datum, Schlagwörter, Autoren), Dokumentation (Rubrik, Fassungen, Art), Enzyklopädie (Kategorien,
     Koordinaten, Bild vorhanden).
+    **Umgesetzt für Frage und Antwort (WIKI-39):** je Frage Stimmen, Antworten, Haken, Datum, Schlagwörter und die
+    Beiträge mit Autor; nur Fragen kommen in den Index (keine Listen, Konten, Schlagwortseiten). Stimmen heben eine
+    Frage in der Rangfolge (logarithmisch), die Trefferkarte zeigt Stimmen, Antworten mit Haken und Schlagwörter.
+    Bücher über einer einstellbaren Größe (Vorgabe 5 GB) bekommen ihren Index nicht von selbst: Stack Overflow
+    (115 GB, 30 Mio. Seiten) braucht auf dem Mac viele Stunden und mehrere hundert GB.
 12. **Sichtbarkeit:** Jeder Aufbau läuft als Auftrag des Appkerns (Seite Aufträge, Fußleiste) mit Was, Fortschritt,
     bisheriger Dauer und Restzeit. Eine neue Fassung eines Buchs baut ihren Index neu; der alte gilt, bis der neue
     fertig ist.

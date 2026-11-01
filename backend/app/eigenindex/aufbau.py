@@ -56,10 +56,17 @@ BLOECKE = {"p", "div", "section", "li", "dt", "dd", "h1", "h2", "h3", "h4", "h5"
            "table", "ul", "ol", "dl", "figure", "figcaption", "blockquote"}
 
 
+#: Bedienung des Lesedesigns, kein Inhalt: Stimmenspalte, Haken, Wer und Wann, Überschrift der Antworten
+NICHT_TEXT = {"qa-stimmen", "akz-marke", "beitrag-fuss", "antworten-kopf"}
+
+
 def _text(html: str) -> str:
     if not html:
         return ""
     wurzel = lhtml.fragment_fromstring(html, create_parent="div")
+    for el in list(wurzel.iter()):
+        if NICHT_TEXT & set((el.get("class") or "").split()) and el.getparent() is not None:
+            el.drop_tree()
     for el in wurzel.iter():
         if el.tag in BLOECKE:
             el.tail = " " + (el.tail or "")

@@ -24,6 +24,7 @@
   import Lesegroesse from "../teile/Lesegroesse.svelte";
   import { groesseFuer } from "../lib/lesegroesse.svelte";
   import Kachel from "../teile/Kachel.svelte";
+  import Fragekarte from "../teile/Fragekarte.svelte";
   import Leuchtkasten from "../teile/Leuchtkasten.svelte";
   import { medienImArtikel, type Medium } from "../lib/medien";
   import { themenLaden } from "../lib/themen.svelte";
@@ -581,20 +582,7 @@
         <!-- Fragenliste (Frage und Antwort): Karten mit Stimmen und Antworten, Blättern über die Seiten der Quelle -->
         <div class="fragenliste">
           {#each gefiltert.fragen as f, fi (fi)}
-            <a class="fragekarte" href={"/" + lesenZiel(artikel.buch, f.pfad)} onclick={(e) => { e.preventDefault(); lesen(artikel!.buch, f.pfad); }}>
-              <span class="fk-zahlen">
-                <span class="fk-stimmen"><b>{zahl(f.stimmen)}</b>Stimmen</span>
-                <span class="fk-antworten" class:akzeptiert={f.akzeptiert}><b>{f.antworten}</b>{f.antworten === 1 ? "Antwort" : "Antworten"}</span>
-              </span>
-              <span class="fk-text">
-                <span class="t">{f.titel}</span>
-                {#if f.auszug}<span class="u">{f.auszug}</span>{/if}
-                <span class="fk-fuss">
-                  <span class="schlagwoerter">{#each f.schlagwoerter as s}<span>{s}</span>{/each}</span>
-                  {#if f.gefragt}<span class="fk-wann">gefragt {f.gefragt}</span>{/if}
-                </span>
-              </span>
-            </a>
+            <Fragekarte buch={artikel.buch} frage={f} />
           {/each}
           {#if artikel.zurueck || artikel.weiter}
             <div class="blaettern">

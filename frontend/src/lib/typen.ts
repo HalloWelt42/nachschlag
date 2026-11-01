@@ -106,6 +106,14 @@ export interface Artikel {
 
 export type Weg = "bedeutung" | "index";
 
+/** Zahlen einer Frage auf der Trefferkarte (Frage und Antwort, eigener Index). */
+export interface Fragezahlen {
+  stimmen: number;
+  antworten: number;
+  akzeptiert: boolean;
+  schlagwoerter: string[];
+}
+
 export interface Treffer {
   buch: string;
   pfad: string;
@@ -116,6 +124,7 @@ export interface Treffer {
   wege: Weg[];
   rang: number;
   bild: string;
+  frage?: Fragezahlen | null;
 }
 
 export interface Suchergebnis {
@@ -137,3 +146,17 @@ export interface Vorschlag {
   kurztext: string;
   bild: string;
 }
+
+// --- Register (WIKI-39): Schlagwörter und Autoren der Frage-Antwort-Bücher ---
+export interface SchlagwortEintrag { wort: string; fragen: number; stimmen: number; buecher: string[] }
+export interface SchlagwortSeite { eintraege: SchlagwortEintrag[]; gesamt: number; ohne_index: string[] }
+export interface RegisterFrage extends Fragekarte { buch: string }
+export interface FragenSeite { wort: string; eintraege: RegisterFrage[]; gesamt: number; ohne_index: string[] }
+export interface AutorEintrag {
+  buch: string; schluessel: string; autor: string; beitraege: number; fragen: number; antworten: number; akzeptiert: number;
+  stimmen: number; von: string; bis: string;
+}
+export interface AutorenSeite { eintraege: AutorEintrag[]; gesamt: number; ohne_index: string[] }
+export interface AutorBeitrag { pfad: string; titel: string; art: "frage" | "antwort"; stimmen: number; datum: string; akzeptiert: boolean }
+export interface AutorSeite { autor: AutorEintrag; beitraege: AutorBeitrag[]; gesamt: number }
+export type Sortierung = "stimmen" | "neueste";

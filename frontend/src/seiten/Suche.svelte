@@ -179,6 +179,14 @@
                     {#if t.wege.includes("index")}<span class="weg-marke index"><i class="fa-solid fa-magnifying-glass"></i>Index</span>{/if}
                   </span>
                 </span>
+                {#if t.frage}
+                  <!-- Frage und Antwort: Zahlen der Frage aus dem eigenen Index (Trefferkarte je Buchart) -->
+                  <span class="treffer-frage">
+                    <span><b>{zahl(t.frage.stimmen)}</b>Stimmen</span>
+                    <span class:akzeptiert={t.frage.akzeptiert}>{#if t.frage.akzeptiert}<i class="fa-solid fa-check"></i>{/if}<b>{t.frage.antworten}</b>{t.frage.antworten === 1 ? "Antwort" : "Antworten"}</span>
+                    {#each t.frage.schlagwoerter.slice(0, 5) as s (s)}<span class="tf-wort">{s}</span>{/each}
+                  </span>
+                {/if}
                 <!-- Ausschnitt vom Backend maskiert, nur die Fundwörter in <em> -->
                 <span class="ausschnitt">{@html t.ausschnitt}</span>
               </span>

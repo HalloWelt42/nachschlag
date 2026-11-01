@@ -79,6 +79,22 @@
     {
       "name": "suche-im-buch",
       "pfad": "/suche?frage=array&buch=devdocs_en_php_2026-08"
+    },
+    {
+      "name": "register",
+      "pfad": "/register"
+    },
+    {
+      "name": "register-autoren",
+      "pfad": "/register/autoren"
+    },
+    {
+      "name": "register-schlagwort",
+      "pfad": "/register/schlagwoerter/cursor-movement"
+    },
+    {
+      "name": "register-autor",
+      "pfad": "/register/autoren/vi.stackexchange.com_en_all_2026-10/23502"
     }
   ]
 }
