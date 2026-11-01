@@ -4,6 +4,7 @@ Rahmen mit dem Lesezugang der Sitzung (Cookie, gilt nur für diesen Pfad), weil 
 
 from __future__ import annotations
 
+import re
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query
@@ -17,6 +18,9 @@ from .modell.artikel import Artikel
 from .modell.buch import Bibliotheksstand, Buch
 from .modell.suche import Suchergebnis, Vorschlag
 from .suche import Suche
+
+#: Skripte einer Originalseite; sie dürften im abgeschirmten Rahmen ohnehin nicht laufen und kommen gar nicht erst mit
+SKRIPT = re.compile(rb"<script\b[^>]*>.*?</script\s*>|<script\b[^>]*/>", re.I | re.S)
 
 #: Inhalte eines Buchs ändern sich nie (neue Fassung = neue Datei, neue Kennung)
 DAUERHAFT = "private, max-age=604800, immutable"
@@ -90,8 +94,10 @@ def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche:
         except (BuchFehlt, EintragFehlt) as f:
             raise _fehlt(f)
         koepfe = {"Cache-Control": DAUERHAFT}
+        inhalt = e.inhalt
         if e.mime.startswith("text/html"):
+            inhalt = SKRIPT.sub(b"", inhalt)
             koepfe["Content-Security-Policy"] = "sandbox allow-same-origin allow-popups; script-src 'none'; frame-ancestors 'self'"
-        return Response(e.inhalt, media_type=e.mime, headers=koepfe)
+        return Response(inhalt, media_type=e.mime, headers=koepfe)
 
     return r

@@ -38,6 +38,10 @@ wird daher meistens als {AUF}der Fuchs{ZU} bezeichnet<sup class="reference"><a h
 <figure><img src="./_assets_/a/fuchs.png" width="250" height="160"><figcaption>Ein Fuchs</figcaption></figure>
 <div class="mw-heading mw-heading2"><h2 id="Lebensraum">Lebensraum</h2></div>
 <p>Stadtfüchse leben in Städten wie <a href="geo:52.5,13.4">Berlin</a> und suchen Futter in Gärten und Parks der Städte.</p>
+<table class="userboxes" style="float: right; width: 248px"><tbody><tr><td><table class="klade" style="border-collapse:collapse">
+<tr><td style="min-width:1em; border-bottom:2px solid;"> <i>Vulpes</i> </td><td rowspan="2"><p><a href="Kreuzfuchs">Kreuzfuchs</a></p></td></tr>
+<tr><td style="border-left:2px solid; border-bottom:2px solid;"></td></tr>
+<tr><td valign="top"><br><span style="display:none;">Vorlage:Klade/Wartung/3</span></td></tr></table></td></tr></tbody></table>
 <div class="mw-heading mw-heading2"><h2 id="Einzelnachweise">Einzelnachweise</h2></div>
 <ol class="references"><li id="cite-1"><a href="https://example.org/beleg">Beleg</a></li></ol>
 <div class="mw-heading mw-heading2"><h2 id="Weblinks">Weblinks</h2></div>

@@ -25,7 +25,8 @@ WEBLINKS = {"weblinks", "external links"}
 #: Bausteine der Quelle ohne Lesewert im eigenen Design
 WEG = ("mw-editsection", "reference", "mw-references-wrap", "navbox", "navbox-styles", "metadata", "noprint",
        "sisterproject", "catlinks", "mw-authority-control", "toc", "mw-jump-link", "printfooter", "ext-phonos",
-       "ext-phonos-PhonosButton", "mw-tmh-player")
+       "ext-phonos-PhonosButton", "mw-tmh-player",
+       "hatnote")                        # Hinweiszeilen wie "... leitet hierher weiter" gehören zur Quelle, nicht zum Text
 #: Medien, die nicht im Buch liegen (Ton und Film werden online abgespielt)
 WEG_TAGS = ("audio", "video", "source", "track")
 
@@ -73,14 +74,28 @@ def _belege_entfernen(inhalt) -> list:
     return weblinks
 
 
+def _zelleninhalt(zelle, ziel) -> None:
+    """Inhalt einer Zelle (Text und Elemente mit Auszeichnung) in `ziel` verschieben; Absätze lösen sich auf, ein
+    Umbruch am Ende fällt weg."""
+    if zelle.text:
+        ziel.text = (ziel.text or "") + zelle.text
+    for kind in list(zelle):
+        ziel.append(kind)
+    for absatz in list(ziel.iter("p", "div")):
+        if absatz is not ziel:
+            absatz.drop_tag()
+    while len(ziel) and ziel[-1].tag == "br" and not (ziel[-1].tail or "").strip():
+        ziel.remove(ziel[-1])
+
+
 def _steckbrief(inhalt, titel: str) -> Steckbrief | None:
-    """Infobox oder Taxobox neu gesetzt: Kopf, Bild, Gruppen und Werte. Als Elementbaum gebaut (Inhalt der Zellen
-    wandert mit, nie als Text zusammengesetzt) und gesäubert wie der Artikel: Attribute und Klassen der Quelle fallen
-    weg, Text kommt maskiert."""
+    """Infobox oder Taxobox neu gesetzt: Kopf, Unterzeile, Bild mit Unterschrift, Gruppen, Werte und Namen (Entwurf
+    teile/artikel.html). Als Elementbaum gebaut (Inhalt der Zellen wandert mit Auszeichnung und Verweisen, nie als Text
+    zusammengesetzt) und gesäubert wie der Artikel: Attribute und Klassen der Quelle fallen weg, Text kommt maskiert."""
     tabelle = next(iter(inhalt.xpath(".//table[contains(@class,'infobox') or contains(@class,'taxobox')]")), None)
     if tabelle is None:
         return None
-    kopf = titel
+    kopf: str | None = None
     wurzel = lhtml.Element("div")
     werte = None                         # die offene Liste von Namen und Werten (dl)
 
@@ -92,6 +107,12 @@ def _steckbrief(inhalt, titel: str) -> Steckbrief | None:
             el.text = text
         return el
 
+    def letztes(klasse: str):
+        return wurzel[-1] if len(wurzel) and wurzel[-1].get("class") == klasse else None
+
+    unterschrift = tabelle.find("caption")
+    if unterschrift is not None and h.text_von(unterschrift):
+        kopf = h.text_von(unterschrift)
     for tr in tabelle.iter("tr"):
         zellen = [z for z in tr if z.tag in ("th", "td")]
         if not zellen:
@@ -104,9 +125,14 @@ def _steckbrief(inhalt, titel: str) -> Steckbrief | None:
             for name in ("src", "alt", "width", "height"):
                 img.set(name, bild.get(name) or "")
             img.set("loading", "lazy")
-            unter = h.text_von(zellen[0])
-            if unter:
-                neu("figcaption", text=unter, in_=figur)
+            halter = bild
+            while halter.getparent() is not zellen[0]:
+                halter = halter.getparent()
+            zellen[0].remove(halter)     # das Bild selbst; der Rest der Zelle ist die Unterschrift
+            unter = neu("figcaption", in_=figur)
+            _zelleninhalt(zellen[0], unter)
+            if not h.text_von(unter):
+                figur.remove(unter)
             continue
         if len(zellen) == 1 and next(iter(zellen[0].iter("table")), None) is not None:
             continue                     # verschachtelte Tabelle: ihre Zeilen kommen einzeln
@@ -114,10 +140,15 @@ def _steckbrief(inhalt, titel: str) -> Steckbrief | None:
             text = h.text_von(zellen[0])
             if not text:
                 continue
-            if not len(wurzel) and kopf == titel:
+            if kopf is None:
                 kopf = text
-            elif werte is None and len(wurzel) and wurzel[-1].get("class") in ("steckbrief-gruppe", "steckbrief-name"):
-                neu("p", "steckbrief-name", text)          # Zeile unter einer Gruppe: Wert ohne Namen
+            elif not len(wurzel) or letztes("steckbrief-unter") is not None:
+                neu("p", "steckbrief-unter", text)          # Zeile direkt unter dem Kopf (etwa Zeitraum)
+            elif werte is None and (name := letztes("steckbrief-name")) is not None:
+                neu("br", in_=name)                         # weitere Zeile eines Namens (etwa Autor und Jahr)
+                _zelleninhalt(zellen[0], neu("span", in_=name))
+            elif werte is None and letztes("steckbrief-gruppe") is not None:
+                _zelleninhalt(zellen[0], neu("p", "steckbrief-name"))   # Zeile unter einer Gruppe: Wert ohne Namen
             else:
                 werte = None
                 neu("div", "steckbrief-gruppe", text)
@@ -126,15 +157,12 @@ def _steckbrief(inhalt, titel: str) -> Steckbrief | None:
         if werte is None:
             werte = neu("dl", "steckbrief-werte")
         neu("dt", text=h.text_von(name).rstrip(":"), in_=werte)
-        dd = neu("dd", in_=werte)
-        dd.text = wert.text
-        for kind in list(wert):
-            dd.append(kind)              # mitsamt Verweisen und Auszeichnung; der Rest der Zelle fällt mit der Tabelle
+        _zelleninhalt(wert, neu("dd", in_=werte))
     tabelle.drop_tree()
     if not len(wurzel):
         return None
     h.saeubern(wurzel)
-    return Steckbrief(titel=kopf, html="".join(h.als_html(k) for k in wurzel))
+    return Steckbrief(titel=kopf or titel, html="".join(h.als_html(k) for k in wurzel))
 
 
 class Enzyklopaedie:
@@ -153,6 +181,7 @@ class Enzyklopaedie:
         inhalt = next(iter(doc.xpath("//*[@id='mw-content-text']")), None)
         if inhalt is None:
             inhalt = next(iter(doc.xpath("//body")), doc)
+        h.stile_uebersetzen(inhalt)      # vor allem anderen: Verstecktes darf nicht in Steckbrief oder Einleitung
         for el in list(inhalt.iter()):
             if not isinstance(el.tag, str) or el.getparent() is None:
                 continue

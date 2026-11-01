@@ -6,7 +6,7 @@
   import { onMount } from "svelte";
   import { sucheHolen, vorschlaegeHolen } from "../lib/schnittstelle";
   import type { Treffer, Vorschlag } from "../lib/typen";
-  import { buch } from "../lib/bibliothek.svelte";
+  import { buchName } from "../lib/bibliothek.svelte";
   import { lesen, suchen } from "../lib/ziele";
 
   let { gross = false, taste = false, wert = "", platzhalter = "Begriff, Name oder eine Frage in eigenen Worten" }:
@@ -155,7 +155,7 @@
             <span>
               <span class="t">{#each teile(v.titel, frage) as t}{#if t.treffer}<em>{t.text}</em>{:else}{t.text}{/if}{/each}</span>
               <span class="u">{v.weiterleitung ? `führt zu ${v.weiterleitung.replace("#", ", Abschnitt ").replaceAll("_", " ")}`
-                : v.kurztext || buch(v.buch)?.titel || v.buch}</span>
+                : v.kurztext || buchName(v.buch)}</span>
             </span>
             <span class="art">{v.weiterleitung ? "Weiterleitung" : "Artikel"}</span>
           </div>

@@ -49,6 +49,19 @@ export function datum(stand: string): string {
 const SPRACHEN: Record<string, string> = { deu: "Deutsch", eng: "Englisch", fra: "Französisch", spa: "Spanisch", ita: "Italienisch",
                                            nld: "Niederländisch", por: "Portugiesisch", rus: "Russisch", mul: "mehrsprachig" };
 
+/** Wie ein Buch heißt: sein Titel; tragen mehrere Bücher denselben (etwa die Enzyklopädie auf Deutsch und Englisch),
+ *  mit der Sprache dahinter wie im Entwurf: "Wikipedia (Deutsch)". */
+export function bezeichnung(b: Buch): string {
+  const gleich = bibliothek.buecher.filter((x) => x.titel === b.titel).length > 1;
+  return gleich ? `${b.titel} (${sprache(b.sprache)})` : b.titel;
+}
+
+/** Bezeichnung zu einer Kennung; ein Buch, das es nicht (mehr) gibt, heißt wie seine Kennung. */
+export function buchName(kennung: string): string {
+  const b = buch(kennung);
+  return b ? bezeichnung(b) : kennung;
+}
+
 /** Sprache eines Buchs in Worten (das Buch nennt sie als Kürzel nach ISO 639-3, mehrere mit Komma). */
 export function sprache(kuerzel: string): string {
   return kuerzel.split(",").map((k) => SPRACHEN[k.trim()] ?? k.trim()).join(", ");

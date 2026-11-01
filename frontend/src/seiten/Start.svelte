@@ -4,7 +4,7 @@
   import { onMount } from "svelte";
   import { seitenFehler } from "appkern-oberflaeche";
   import Suchfeld from "../teile/Suchfeld.svelte";
-  import { bibliothek, bibliothekLaden, datum, sprache, zahl } from "../lib/bibliothek.svelte";
+  import { bezeichnung, bibliothek, bibliothekLaden, datum, sprache, zahl } from "../lib/bibliothek.svelte";
   import { artikelHolen, zufallHolen } from "../lib/schnittstelle";
   import type { Art, Buch } from "../lib/typen";
   import { lesen } from "../lib/ziele";
@@ -37,6 +37,7 @@
   });
 </script>
 
+<div class="inhalt-stufe" data-schrift="klein">
 <div class="rollfeld" style="padding: 0">
   <div class="start-innen">
     <div class="suchmitte">
@@ -58,14 +59,14 @@
               <span class="etikett"><i class="fa-solid fa-dice"></i>Zufallsfund</span>
               {#if f}
                 <span class="t">{f.titel}</span>
-                <span class="buchname">{b.titel}</span>
+                <span class="buchname">{bezeichnung(b)}</span>
                 <p>{f.einleitung}</p>
                 <div class="knopfreihe">
                   <button class="knopf" onclick={() => lesen(b.kennung, f.pfad)}><i class="fa-solid fa-book-open"></i>Lesen</button>
                   <button class="knopf still" onclick={() => zufallsfund(b)}><i class="fa-solid fa-rotate"></i>Neuer Zufall</button>
                 </div>
               {:else}
-                <span class="buchname">{b.titel}: sucht ...</span>
+                <span class="buchname">{bezeichnung(b)}: sucht ...</span>
               {/if}
             </div>
           {/each}
@@ -84,7 +85,7 @@
         {#each bibliothek.buecher as b (b.kennung)}
           <button class="buchkarte" title="Startseite des Buchs öffnen" onclick={() => lesen(b.kennung, b.startseite)}>
             <span class="sym"><i class="fa-solid {SYMBOL[b.art]}"></i></span>
-            <span class="t">{b.titel}</span>
+            <span class="t">{bezeichnung(b)}</span>
             <span class="u"><span class="zahl">{zahl(b.artikel)}</span> Artikel · Stand {datum(b.stand)}</span>
             <span class="faehig">
               {#if b.faehigkeiten.volltext}<span class="faehigkeit an"><i class="fa-solid fa-check"></i>Index</span>{/if}
@@ -99,4 +100,5 @@
     </section>
     {#if fehler}<div class="fehlertext">{fehler}</div>{/if}
   </div>
+</div>
 </div>

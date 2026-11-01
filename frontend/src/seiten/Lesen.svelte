@@ -4,7 +4,7 @@
   // Lesedesign zeigen ihre Seite unverändert (Originalansicht). Verweise im Text bleiben in der App.
   import { gehe, navigation, seitenFehler } from "appkern-oberflaeche";
   import { tick, untrack } from "svelte";
-  import { bibliothek, bibliothekLaden, buch as buchVon, datum, hauptbuch } from "../lib/bibliothek.svelte";
+  import { bezeichnung, bibliothek, bibliothekLaden, buch as buchVon, datum, hauptbuch } from "../lib/bibliothek.svelte";
   import { artikelHolen, zufallHolen } from "../lib/schnittstelle";
   import type { Artikel } from "../lib/typen";
   import { lesen, lesenZiel, suchen, verweisZiel } from "../lib/ziele";
@@ -172,13 +172,22 @@
     }
   }
 
-  const indexAktiv = $derived(artikel?.abschnitte.findIndex((a) => a.anker === aktiv) ?? -1);
+  // Inhalt wie im Entwurf: Abschnitte und ihre Unterabschnitte (tiefere Ebenen laufen über ihren Unterabschnitt mit)
+  const INHALT_BIS_EBENE = 3;
+  const inhalt = $derived((artikel?.abschnitte ?? []).filter((a) => a.ebene <= INHALT_BIS_EBENE));
+  const aktivImInhalt = $derived.by(() => {
+    const alle = artikel?.abschnitte ?? [];
+    for (let i = alle.findIndex((a) => a.anker === aktiv); i >= 0; i--) if (alle[i].ebene <= INHALT_BIS_EBENE) return alle[i].anker;
+    return "";
+  });
+  const indexAktiv = $derived(inhalt.findIndex((a) => a.anker === aktivImInhalt));
   const nummern = $derived.by(() => {
     let n = 0;
-    return (artikel?.abschnitte ?? []).map((a) => (a.ebene === 2 ? String(++n) : ""));
+    return inhalt.map((a) => (a.ebene === 2 ? String(++n) : ""));
   });
 </script>
 
+<div class="inhalt-stufe" data-schrift="klein">
 {#if fehler && !artikel}
   <div class="seiten-kopf"><h1>Artikel</h1></div>
   <div class="rollfeld"><div class="karte"><div class="fehlertext">{fehler}</div></div></div>
@@ -186,7 +195,7 @@
   <div class="laden">Lädt ...</div>
 {:else}
   <div class="artikel-kopf">
-    <div class="pfad"><i class="fa-solid fa-book"></i><b>{buch?.titel ?? artikel.buch}</b><i class="fa-solid fa-chevron-right"></i>
+    <div class="pfad"><i class="fa-solid fa-book"></i><b>{buch ? bezeichnung(buch) : artikel.buch}</b><i class="fa-solid fa-chevron-right"></i>
       <span>{artikel.titel}</span></div>
     <h1>{artikel.titel}</h1>
     <div class="werkzeuge">
@@ -219,13 +228,13 @@
             onload={rahmenGeladen}></iframe>
   {:else}
     <div class="rollfeld" style="padding: 0" bind:this={rollfeld} onscroll={mitlaufen}>
-      <div class="lesen" class:ohne-inhalt={!artikel.abschnitte.length}>
-        {#if artikel.abschnitte.length}
+      <div class="lesen" class:ohne-inhalt={!inhalt.length}>
+        {#if inhalt.length}
           <nav class="inhalt" aria-label="Inhalt">
             <div class="inhalt-titel">Inhalt</div>
             <ol>
-              {#each artikel.abschnitte as a, i (a.anker)}
-                <li class:unter={a.ebene > 2} class:aktiv={a.anker === aktiv} class:gelesen={indexAktiv > i}>
+              {#each inhalt as a, i (a.anker)}
+                <li class:unter={a.ebene > 2} class:aktiv={a.anker === aktivImInhalt} class:gelesen={indexAktiv > i}>
                   <a href="#{a.anker}" onclick={(e) => { e.preventDefault(); springen(a.anker); }}>
                     {#if a.ebene === 2}<span class="nr">{nummern[i]}</span>{/if}{a.titel}</a>
                 </li>
@@ -247,7 +256,7 @@
           <details class="ueber">
             <summary><i class="fa-solid fa-circle-info"></i>Über diesen Artikel<span>Quelle, Verweise</span></summary>
             <dl>
-              <dt>Quelle</dt><dd>{buch?.titel ?? artikel.buch}{buch ? `, Stand ${datum(buch.stand)}` : ""}</dd>
+              <dt>Quelle</dt><dd>{buch ? bezeichnung(buch) : artikel.buch}{buch ? `, Stand ${datum(buch.stand)}` : ""}</dd>
               {#if buch?.beschreibung}<dt>Buch</dt><dd>{buch.beschreibung}</dd>{/if}
               <dt>Verweise</dt><dd>{artikel.verweise.intern} im Buch{artikel.verweise.ohne_ziel ? `, ${artikel.verweise.ohne_ziel} ohne Ziel im Buch (nur Text)` : ""}{artikel.verweise.koordinaten ? `, ${artikel.verweise.koordinaten} Orte` : ""}</dd>
               {#if artikel.online.length}
@@ -263,3 +272,4 @@
   {/if}
 {/if}
 {#if bibliothek.meldung && !artikel}<div class="fehlertext">{bibliothek.meldung}</div>{/if}
+</div>

@@ -136,6 +136,16 @@ async def test_startseite_des_buchs_im_original(nachschlag):
     assert a["original"] == "/api/v1/inhalt/original/probe_de_all_2026-01/index"
 
 
+async def test_stammbaum_und_verstecktes(nachschlag):
+    """Was die Quelle nur per Stil sagt: Verstecktes fällt weg, Linien eines Stammbaums werden Klassen, der Kasten
+    schwebt rechts; Stilangaben selbst kommen nie mit."""
+    c, _, _ = nachschlag
+    html = (await c.get("/api/v1/artikel/probe_de_all_2026-01/Rotfuchs")).json()["html"]
+    assert "Wartung" not in html and "style=" not in html
+    assert '<table class="rechts">' in html and '<table class="klade">' in html
+    assert '<td class="linie-unten">' in html and '<td class="linie-unten linie-links">' in html
+
+
 async def test_weiterleitung_auf_abschnitt(nachschlag):
     c, _, _ = nachschlag
     a = (await c.get("/api/v1/artikel/probe_de_all_2026-01/Stadtfuchs")).json()
@@ -151,6 +161,7 @@ async def test_medien_und_original(nachschlag):
     r = await c.get("/api/v1/inhalt/original/probe_de_all_2026-01/Rotfuchs")
     csp = r.headers["content-security-policy"]
     assert r.status_code == 200 and "sandbox" in csp and "allow-scripts" not in csp and "script-src 'none'" in csp
+    assert "<script" not in r.text and "Rotfuchs" in r.text
 
 
 async def test_medien_mit_lesezugang_ohne_kopf(nachschlag):

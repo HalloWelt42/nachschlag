@@ -20,8 +20,14 @@ TOT = re.compile(r"\.invalid(/|$)", re.I)
 ERLAUBTE_ATTRIBUTE = {"href", "src", "alt", "title", "id", "width", "height", "colspan", "rowspan", "class", "lang", "dir",
                       "data-geo", "data-buch", "data-pfad", "loading", "decoding"}
 #: Klassen, die das Lesedesign kennt; alle Klassen der Quelle fallen weg
-EIGENE_KLASSEN = {"wl", "ort", "hinweis", "steckbrief", "steckbrief-kopf", "steckbrief-bild", "steckbrief-gruppe",
-                  "steckbrief-werte", "steckbrief-name"}
+EIGENE_KLASSEN = {"wl", "ort", "hinweis", "steckbrief", "steckbrief-kopf", "steckbrief-unter", "steckbrief-bild",
+                  "steckbrief-gruppe", "steckbrief-werte", "steckbrief-name", "klade", "linie-unten", "linie-links",
+                  "rechts"}
+
+VERSTECKT = re.compile(r"display\s*:\s*none", re.I)
+LINIE = {"linie-unten": re.compile(r"border-bottom\s*:\s*[^;]*\d", re.I),
+         "linie-links": re.compile(r"border-left\s*:\s*[^;]*\d", re.I)}
+SCHWEBT_RECHTS = re.compile(r"float\s*:\s*right", re.I)
 
 
 def gerade(text: str) -> str:
@@ -133,6 +139,24 @@ def ueberschriften(wurzel) -> list[Abschnitt]:
     return abschnitte
 
 
+def stile_uebersetzen(wurzel) -> None:
+    """Was die Quelle nur über Stilangaben ausdrückt und beim Säubern verloren ginge, vorher in Bedeutung übersetzen:
+    Verstecktes (display: none, etwa Wartungsvermerke von Vorlagen) fällt weg; Linien an Tabellenzellen (so zeichnen
+    Stammbäume ihre Äste) werden zu Klassen, die das Lesedesign nachzeichnet; rechts schwebende Kästen bleiben rechts."""
+    for el in list(wurzel.iter()):
+        if not isinstance(el.tag, str) or el.getparent() is None:
+            continue
+        stil = el.get("style") or ""
+        if VERSTECKT.search(stil):
+            el.drop_tree()
+            continue
+        zusatz = [k for k, muster in LINIE.items() if el.tag in ("td", "th") and muster.search(stil)]
+        if el.tag in ("table", "div") and SCHWEBT_RECHTS.search(stil):
+            zusatz.append("rechts")
+        if zusatz:
+            el.set("class", " ".join([*(el.get("class") or "").split(), *zusatz]))
+
+
 def saeubern(wurzel) -> None:
     """Nur erlaubte Attribute, keine Skripte, Stile oder Formulare; Text gerade gesetzt."""
     for el in list(wurzel.iter("script", "style", "link", "meta", "noscript", "form", "input", "button", "iframe")):
@@ -153,6 +177,27 @@ def saeubern(wurzel) -> None:
             el.text = gerade(el.text)
         if el.tail:
             el.tail = gerade(el.tail)
+    leere_entfernen(wurzel)
+
+
+#: Hüllen, die ohne Inhalt nichts zeigen (etwa ein Absatz oder Span, aus dem ein Ton-Knopf entfernt wurde)
+HUELLEN = ("p", "span", "b", "i", "em", "strong", "small", "sup", "sub", "div", "figcaption")
+#: Elemente, die auch ohne Text etwas zeigen
+SICHTBAR = ("img", "math", "br", "hr", "table")
+
+
+def leere_entfernen(wurzel) -> None:
+    """Leere Hüllen weg (ihr folgender Text bleibt), dann Umbrüche am Ende einer Hülle; von innen nach außen, damit
+    eine Hülle, die nur leere Hüllen trug, selbst leer wird."""
+    for el in reversed(list(wurzel.iter(*HUELLEN))):
+        if el is wurzel or el.getparent() is None:
+            continue
+        if not (el.text or "").strip() and not any(isinstance(k.tag, str) and (k.tag in SICHTBAR and k.tag != "br" or
+                                                                              k.tag not in SICHTBAR) for k in el):
+            el.drop_tag() if el.tail and el.tail.strip() else el.drop_tree()
+    for el in wurzel.iter(*HUELLEN):
+        while len(el) and el[-1].tag == "br" and not (el[-1].tail or "").strip():
+            el.remove(el[-1])
 
 
 def als_html(el) -> str:

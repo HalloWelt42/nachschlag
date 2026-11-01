@@ -5,7 +5,7 @@
   import { navigation, seitenFehler } from "appkern-oberflaeche";
   import { untrack } from "svelte";
   import Suchfeld from "../teile/Suchfeld.svelte";
-  import { bibliothek, bibliothekLaden, buch, zahl } from "../lib/bibliothek.svelte";
+  import { bezeichnung, bibliothek, bibliothekLaden, buchName, zahl } from "../lib/bibliothek.svelte";
   import { artikelHolen, sucheHolen } from "../lib/schnittstelle";
   import type { Artikel, Suchergebnis, Treffer } from "../lib/typen";
   import { lesen } from "../lib/ziele";
@@ -72,6 +72,7 @@
   }
 </script>
 
+<div class="inhalt-stufe" data-schrift="klein">
 <div class="suchkopf">
   {#key frage}<Suchfeld gross wert={frage} />{/key}
   {#if ergebnis}
@@ -97,7 +98,7 @@
       {#each durchsucht as b (b.kennung)}
         {@const an = !aus.includes(b.kennung)}
         <button class:an class:aus={!an} onclick={() => umschalten(b.kennung)} title={an ? "Dieses Buch nicht durchsuchen" : "Dieses Buch durchsuchen"}>
-          <i class="fa-{an ? 'solid fa-square-check' : 'regular fa-square'}"></i>{b.titel}
+          <i class="fa-{an ? 'solid fa-square-check' : 'regular fa-square'}"></i>{bezeichnung(b)}
           <span class="zahl">{jeBuch[b.kennung] ?? 0}</span></button>
       {/each}
     </div>
@@ -122,7 +123,7 @@
           <span>
             <span class="zeile1"><span class="t">{t.titel}</span>
               {#if t.abschnitt}<span class="treffer-abschnitt">› {t.abschnitt}</span>{/if}
-              <span class="buchname">{buch(t.buch)?.titel ?? t.buch}</span>
+              <span class="buchname">{buchName(t.buch)}</span>
               <span class="marken">
                 {#if t.wege.includes("bedeutung")}<span class="weg-marke bedeutung"><i class="fa-solid fa-wand-magic-sparkles"></i>Bedeutung</span>{/if}
                 {#if t.wege.includes("index")}<span class="weg-marke index"><i class="fa-solid fa-magnifying-glass"></i>Index</span>{/if}
@@ -158,4 +159,5 @@
       </div>
     {/if}
   </aside>
+</div>
 </div>
