@@ -559,3 +559,18 @@ async def test_spracheingabe_nur_wenn_bereit(nachschlag):
     assert stand["bereit"] is False and "Leitstelle" in stand["grund"]
     r = await c.post("/api/v1/sprache", files={"datei": ("stueck.wav", b"RIFF0000WAVE", "audio/wav")})
     assert r.status_code == 503
+
+
+async def test_belege_als_daten_und_in_notizen(nachschlag):
+    """Recherchemodus (WIKI-31): Einzelnachweise bleiben als Belege erhalten, im Text als unsichtbare Marke an ihrer
+    Stelle; eine Notiz speichert Belege und den Artikel im Netz."""
+    c, _, _ = nachschlag
+    a = (await c.get("/api/v1/artikel/probe_de_all_2026-01/Rotfuchs")).json()
+    assert a["belege"] == [{"nummer": 1, "text": "Beleg", "url": "https://example.org/beleg"}]
+    assert '<span class="beleg" data-beleg="1"></span>' in a["html"] and "[1]" not in a["html"]
+    assert a["quelle_url"] == ""                                     # kein Buch der Wikipedia: keine Online-Adresse
+    n = (await c.post("/api/v1/meins/notizen", json={"buch": "probe_de_all_2026-01", "pfad": "Rotfuchs", "titel": "Rotfuchs",
+                                                      "zitat": "der Fuchs", "belege": a["belege"],
+                                                      "quelle_url": "https://de.wikipedia.org/wiki/Rotfuchs"})).json()
+    assert n["belege"][0]["url"] == "https://example.org/beleg" and n["quelle_url"].endswith("/Rotfuchs")
+    assert (await c.get("/api/v1/meins/notizen")).json()[0]["belege"][0]["nummer"] == 1

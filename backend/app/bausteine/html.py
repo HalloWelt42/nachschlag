@@ -19,7 +19,7 @@ GERADE = str.maketrans({0x201E: '"', 0x201C: '"', 0x201D: '"', 0x201A: "'", 0x20
 #: sicher tote Ziele (Platzhalter von Archivierungsdiensten)
 TOT = re.compile(r"\.invalid(/|$)", re.I)
 ERLAUBTE_ATTRIBUTE = {"href", "src", "alt", "title", "id", "width", "height", "colspan", "rowspan", "class", "lang", "dir",
-                      "data-geo", "data-buch", "data-pfad", "loading", "decoding"}
+                      "data-geo", "data-buch", "data-pfad", "data-beleg", "loading", "decoding"}
 #: Klassen, die das Lesedesign kennt; alle Klassen der Quelle fallen weg
 EIGENE_KLASSEN = {"wl", "ort", "hinweis", "steckbrief", "steckbrief-kopf", "steckbrief-unter", "steckbrief-bild",
                   "steckbrief-gruppe", "steckbrief-werte", "steckbrief-name", "klade", "linie-unten", "linie-links",
@@ -29,7 +29,7 @@ EIGENE_KLASSEN = {"wl", "ort", "hinweis", "steckbrief", "steckbrief-kopf", "stec
                   "ausgabe-titel", "ausgabe", "siehe", "c-kw", "c-tag", "c-fn", "c-var", "c-str", "c-num", "c-kom",
                   # Frage und Antwort (Entwurf frage-antwort.html)
                   "qa-beitrag", "qa-stimmen", "zahl", "was", "akz-marke", "antwort", "akzeptiert", "antworten-kopf",
-                  "beitrag-fuss", "schlagwoerter", "register", "kommentare", "kommentar-liste", "codeblock", "verwandt",
+                  "beitrag-fuss", "schlagwoerter", "register", "beleg", "kommentare", "kommentar-liste", "codeblock", "verwandt",
                   # Formeln: abgesetzte Formel mit eigenem Rollfeld
                   "formel"}
 #: MathML: die Elemente und Angaben, die eine Formel zum Setzen braucht (der Browser setzt sie in der Textfarbe)
@@ -256,13 +256,15 @@ def saeubern(wurzel) -> None:
 HUELLEN = ("p", "span", "b", "i", "em", "strong", "small", "sup", "sub", "div", "figcaption")
 #: Elemente, die auch ohne Text etwas zeigen
 SICHTBAR = ("img", "math", "br", "hr", "table")
+#: Leere Marken, die eine Stelle tragen (Belege im Recherchemodus, WIKI-31): bleiben, obwohl ohne Text
+MARKEN = {"beleg"}
 
 
 def leere_entfernen(wurzel) -> None:
     """Leere Hüllen weg (ihr folgender Text bleibt), dann Umbrüche am Ende einer Hülle; von innen nach außen, damit
     eine Hülle, die nur leere Hüllen trug, selbst leer wird."""
     for el in reversed(list(wurzel.iter(*HUELLEN))):
-        if el is wurzel or el.getparent() is None:
+        if el is wurzel or el.getparent() is None or MARKEN & set((el.get("class") or "").split()):
             continue
         if not (el.text or "").strip() and not any(isinstance(k.tag, str) and (k.tag in SICHTBAR and k.tag != "br" or
                                                                               k.tag not in SICHTBAR) for k in el):

@@ -56,6 +56,13 @@ class Fragekarte(BaseModel):
     gefragt: str = ""
 
 
+class Beleg(BaseModel):
+    """Ein Einzelnachweis eines Artikels (WIKI-31, in der Oberfläche "Beleg"): Nummer wie in der Quelle, Text, Verweis."""
+    nummer: int
+    text: str
+    url: str = ""
+
+
 class Beitrag(BaseModel):
     """Ein Beitrag einer Frage-Antwort-Seite, wie ihn Register und Autorenseite brauchen (WIKI-39)."""
     art: Literal["frage", "antwort"]
@@ -99,6 +106,8 @@ class Artikel(BaseModel):
     bild: str = Field("", description="Adresse des ersten Bilds (Vorschau in Listen)")
     verweise: Verweiszahlen = Field(default_factory=Verweiszahlen)
     online: list[str] = Field(default_factory=list, description="Online-Verweise (Belege, Weblinks) für 'Über diesen Artikel'")
+    belege: list[Beleg] = Field(default_factory=list, description="Einzelnachweise; im Text stehen sie als span.beleg[data-beleg]")
+    quelle_url: str = Field("", description="Der Artikel im Netz (etwa in der Wikipedia), für Belege und Zitate")
     original: str = Field(description="Adresse der unveränderten Seite (Originalansicht)")
     kacheln: list[Kachel] = Field(default_factory=list, description="Einträge der Übersicht (nur Darstellung uebersicht)")
     gruppen: list[Gruppe] = Field(default_factory=list, description="Rubriken der Übersicht eines Handbuchs (nur Darstellung uebersicht)")

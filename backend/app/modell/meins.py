@@ -9,6 +9,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from .artikel import Beleg
+
 
 class Merken(BaseModel):
     """Eingabe: eine Seite (oder Stelle) merken."""
@@ -78,6 +80,8 @@ class NotizNeu(BaseModel):
     zitat: str = Field("", max_length=4000, description="markierter Text; leer: Notiz am ganzen Artikel")
     davor: str = Field("", max_length=200, description="Text unmittelbar vor dem Zitat, damit sich gleiche Stellen unterscheiden")
     text: str = Field("", max_length=20000)
+    belege: list[Beleg] = Field(default_factory=list, max_length=200, description="Recherchemodus: Belege der Stelle")
+    quelle_url: str = Field("", max_length=2000, description="Recherchemodus: der Artikel im Netz")
 
 
 class NotizAenderung(BaseModel):
@@ -95,5 +99,7 @@ class Notiz(BaseModel):
     zitat: str = ""
     davor: str = ""
     text: str = ""
+    belege: list[Beleg] = Field(default_factory=list)
+    quelle_url: str = ""
     angelegt: str
     geaendert: str

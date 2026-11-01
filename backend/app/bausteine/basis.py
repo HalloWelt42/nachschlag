@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from typing import Protocol
 
 from ..bibliothek import Eintrag
-from ..modell.artikel import (Abschnitt, Darstellung, FrageAngaben, Fragekarte, Gruppe, Kachel, Nachbar, Steckbrief,
+from ..modell.artikel import (Abschnitt, Beleg, Darstellung, FrageAngaben, Fragekarte, Gruppe, Kachel, Nachbar, Steckbrief,
                               Verweiszahlen)
 from ..modell.buch import Art, Buch
 
@@ -48,6 +48,8 @@ class Aufbereitet:
     weiter: str = ""
     darstellung: Darstellung | None = None       # nur wenn die Seite anders gezeigt wird als sonst beim Baustein
     frage: FrageAngaben | None = None             # Metadaten einer Frage (Frage und Antwort): Index, Register, Treffer
+    belege: list[Beleg] = field(default_factory=list)   # Einzelnachweise (Enzyklopädie), Marken im Text: span.beleg
+    quelle_url: str = ""                          # der Artikel im Netz
 
 
 class Baustein(Protocol):

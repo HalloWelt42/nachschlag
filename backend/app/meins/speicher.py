@@ -3,6 +3,7 @@ hier mit ihrem Namen ohne Datum; welche Datei heute dazu gehört, sagt die Bibli
 
 from __future__ import annotations
 
+import json
 import uuid
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
@@ -31,6 +32,10 @@ CREATE TABLE notizen (
   text TEXT NOT NULL DEFAULT '', angelegt TEXT NOT NULL, geaendert TEXT NOT NULL);
 CREATE INDEX notizen_artikel ON notizen (konto, buch_name, pfad);
 CREATE INDEX notizen_neu ON notizen (konto, geaendert DESC);
+""", """
+-- Recherchemodus (WIKI-31): Belege der Stelle (JSON) und der Artikel im Netz
+ALTER TABLE notizen ADD COLUMN belege TEXT NOT NULL DEFAULT '[]';
+ALTER TABLE notizen ADD COLUMN quelle_url TEXT NOT NULL DEFAULT '';
 """]
 
 #: Wie viele Einträge der Verlauf je Konto höchstens behält (älteste fallen beim Schreiben weg)
@@ -87,10 +92,11 @@ class Meins(Begleiter):
     async def notieren(self, konto: str, eingabe: NotizNeu) -> Notiz:
         jetzt, neu = _jetzt(), str(uuid.uuid4())
         await self._db.ausfuehren(
-            "INSERT INTO notizen (id, konto, buch_name, pfad, titel, bild, abschnitt, zitat, davor, text, angelegt, geaendert) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO notizen (id, konto, buch_name, pfad, titel, bild, abschnitt, zitat, davor, text, belege, quelle_url, "
+            "angelegt, geaendert) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (neu, konto, await self._name_von(eingabe.buch), eingabe.pfad, eingabe.titel, eingabe.bild, eingabe.abschnitt,
-             eingabe.zitat.strip(), eingabe.davor, eingabe.text, jetzt, jetzt))
+             eingabe.zitat.strip(), eingabe.davor, eingabe.text, json.dumps([b.model_dump() for b in eingabe.belege]),
+             eingabe.quelle_url, jetzt, jetzt))
         return await self._notiz_holen(konto, neu)  # type: ignore[return-value]
 
     async def notiz_aendern(self, konto: str, kennung: str, aenderung: NotizAenderung) -> Notiz | None:
@@ -108,7 +114,9 @@ class Meins(Begleiter):
 
     @staticmethod
     def _notiz(z: dict, buch: str) -> Notiz:
-        return Notiz(**{k: z[k] for k in Notiz.model_fields if k in z}, buch=buch)
+        werte = {k: z[k] for k in Notiz.model_fields if k in z}
+        werte["belege"] = json.loads(z.get("belege") or "[]")
+        return Notiz(**werte, buch=buch)
 
     # --- Verlauf --------------------------------------------------------------------------------------------------
     async def lesestand(self, konto: str, stand: Lesestand) -> None:

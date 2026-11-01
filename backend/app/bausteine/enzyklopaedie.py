@@ -8,11 +8,13 @@ Artikel relativ (`Rotfuchs`), Weiterleitungen auf Abschnitte als kleine Seite mi
 
 from __future__ import annotations
 
+from urllib.parse import quote
+
 from lxml import html as lhtml
 from lxml.etree import SubElement
 
 from ..bibliothek import Eintrag
-from ..modell.artikel import Steckbrief
+from ..modell.artikel import Beleg, Steckbrief
 from ..modell.buch import Buch
 from . import html as h
 from .basis import Aufbereitet, Wege
@@ -44,6 +46,40 @@ def _ueberschrift(el) -> tuple[str, int] | None:
         if inner is not None:
             return h.text_von(inner), int(inner.tag[1])
     return None
+
+
+def _belege_lesen(inhalt) -> list[Beleg]:
+    """Einzelnachweise als Daten (WIKI-31): je Eintrag der Liste Nummer, Text und erster Online-Verweis. Jede Fußnote im
+    Text wird zu einer leeren Marke span.beleg[data-beleg] (der Lesetext bleibt ruhig, die Stelle weiß ihre Belege)."""
+    belege: list[Beleg] = []
+    nummern: dict[str, int] = {}
+    for li in inhalt.xpath(".//ol[contains(concat(' ', normalize-space(@class), ' '), ' references ')]/li"):
+        for zurueck in li.xpath(".//*[contains(@class,'mw-cite-backlink')]"):
+            zurueck.drop_tree()
+        nummer = len(belege) + 1
+        url = next((a.get("href") for a in li.iter("a") if h.ist_online(a.get("href") or "")), "")
+        belege.append(Beleg(nummer=nummer, text=h.text_von(li)[:600], url=url or ""))
+        if li.get("id"):
+            nummern[li.get("id")] = nummer
+    for sup in list(inhalt.xpath(".//sup[contains(concat(' ', normalize-space(@class), ' '), ' reference ')]")):
+        a = next(sup.iter("a"), None)
+        nummer = nummern.get((a.get("href") or "").partition("#")[2]) if a is not None else None
+        if nummer is None or sup.getparent() is None:
+            continue
+        marke = lhtml.Element("span")
+        marke.set("class", "beleg")
+        marke.set("data-beleg", str(nummer))
+        marke.tail = sup.tail
+        sup.getparent().replace(sup, marke)
+    return belege
+
+
+def _online_adresse(buch: Buch, pfad: str) -> str:
+    """Der Artikel in der Wikipedia (Bücher von mwoffliner, Name wikipedia_<sprache>_...); sonst leer."""
+    teile = buch.name.split("_")
+    if not buch.erzeuger.startswith("mwoffliner") or len(teile) < 2 or teile[0] != "wikipedia":
+        return ""
+    return f"https://{teile[1]}.wikipedia.org/wiki/{quote(pfad)}"
 
 
 def _belege_entfernen(inhalt) -> list:
@@ -209,6 +245,7 @@ class Enzyklopaedie:
             inhalt = next(iter(doc.xpath("//body")), doc)
         h.formeln_setzen(inhalt)         # vor dem Entfernen des Versteckten: das MathML der Formeln steht dort
         h.stile_uebersetzen(inhalt)      # vor allem anderen: Verstecktes darf nicht in Steckbrief oder Einleitung
+        belege = _belege_lesen(inhalt)   # vor dem Entfernen der Fußnoten und Belegabschnitte
         for el in list(inhalt.iter()):
             if not isinstance(el.tag, str) or el.getparent() is None:
                 continue
@@ -234,4 +271,5 @@ class Enzyklopaedie:
             steckbrief.html = h.gerade(steckbrief.html)
         rumpf = "".join(h.als_html(k) for k in inhalt)
         return Aufbereitet(titel=titel, html=rumpf, einleitung=" ".join(einleitung)[:1200], abschnitte=abschnitte,
-                           steckbrief=steckbrief, bild=bild, verweise=verweise, online=online)
+                           steckbrief=steckbrief, bild=bild, verweise=verweise, online=online, belege=belege,
+                           quelle_url=_online_adresse(buch, eintrag.pfad))
