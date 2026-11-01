@@ -814,6 +814,9 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .leuchtkasten .oben .zaehler { font-family: var(--schrift-zahl); font-size: var(--klein); color: var(--lk-blass); }
 .leuchtkasten .bild-b { display: grid; place-items: center; min-height: 0; padding: 0 var(--a6); position: relative; }
 .leuchtkasten .bild-b img { max-width: 100%; max-height: 100%; min-width: min(100%, 420px); object-fit: contain; border-radius: var(--r1); }
+.leuchtkasten .bild-b img { touch-action: pan-y pinch-zoom; }
+.leuchtkasten .bild-b:has(img.gross) { place-items: start; overflow: auto; padding: 0; }
+.leuchtkasten .bild-b img.gross { max-width: none; max-height: none; min-width: 0; cursor: zoom-out; touch-action: auto; }
 .leuchtkasten .pfeil { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 24px; display: grid; place-items: center; cursor: pointer; }
 .leuchtkasten .pfeil.l { left: var(--a3); }
 .leuchtkasten .pfeil.r { right: var(--a3); }
@@ -941,4 +944,14 @@ button.kachel:disabled { opacity: .6; cursor: default; }
   .thema-kopf, .thema-bereiche, .thema-leer { padding-inline: 0; }
   .vorschlagsband { margin-inline: 0; }
   .thema-kopf .werkzeuge .rechts { margin-left: 0; }
+}
+
+/* Telefon quer (WIKI-27): nur das Bild über den ganzen Schirm, blättern per Wischen; Angaben, Streifen und Pfeile ruhen */
+@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+  .leuchtkasten { grid-template-columns: minmax(0, 1fr); }
+  .leuchtkasten .angaben, .leuchtkasten .streifen, .leuchtkasten .pfeil { display: none; }
+  .leuchtkasten .buehne-b { grid-template-rows: auto minmax(0, 1fr); }
+  .leuchtkasten .oben { position: absolute; z-index: 1; padding-left: max(var(--a3), env(safe-area-inset-left)); }
+  .leuchtkasten .bild-b { padding: 0; grid-row: 1 / -1; }
+  .leuchtkasten .bild-b img:not(.gross) { width: 100%; height: 100%; min-width: 0; object-fit: contain; border-radius: 0; }
 }
