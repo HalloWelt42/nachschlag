@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Entwurf Ausprobieren (WIKI-48)</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="schrift/jetbrains-mono/schrift.css" />
+    <link rel="stylesheet" href="stil.css" />
+
+    <style>
+      /* Entwurf WIKI-48: Ebene über dem Artikel, Farben und Schriften aus stil.css (Editor wie Codeschmiede) */
+      .beispiel .bkopf .knopf.ausprobieren { color: var(--petrol); font-weight: 600; }
+      .probe-schleier { position: fixed; inset: 0; z-index: 50; background: color-mix(in srgb, #000 38%, transparent); }
+      .probe { position: fixed; z-index: 51; inset: 56px 40px 40px 40px; display: grid; grid-template-rows: auto minmax(0, 1fr);
+               background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten-schwebend), 0 0 0 1px var(--rand); overflow: hidden; }
+      .probe-kopf { display: flex; align-items: center; gap: var(--a3); padding: 10px 14px; background: var(--flaeche-2); }
+      .probe-kopf > i { color: var(--petrol); font-size: 18px; }
+      .probe-titel { display: flex; flex-direction: column; line-height: 1.2; }
+      .probe-titel span { font-size: var(--klein); color: var(--text-3); }
+      .probe-sprache { gap: 6px; } .probe-sprache .fa-chevron-down { font-size: 10px; color: var(--text-3); }
+      .probe-lage { display: inline-flex; align-items: center; gap: 6px; font-size: var(--klein); color: var(--text-2); }
+      .probe-lage .punkt { width: 8px; height: 8px; border-radius: 50%; background: var(--gut); }
+      .probe-kopf .rechts { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+      .probe-kopf kbd { margin-left: 8px; font-family: var(--schrift-zahl); font-size: 11px; opacity: .75; }
+      .probe-flaeche { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); min-height: 0; }
+      .probe-editor { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0; background: var(--ed-grund); }
+      .probe-reiter { display: flex; align-items: center; gap: var(--a3); padding: 6px 12px; font-size: var(--klein); color: var(--ed-nr); background: var(--ed-rand); }
+      .probe-reiter .aktiv { color: var(--ed-text); display: inline-flex; gap: 6px; align-items: center; }
+      .probe-reiter .geaendert { margin-left: auto; color: var(--warn); }
+      .probe-editor .ed { margin: 0; padding: 10px 0; overflow: auto; font-family: var(--schrift-editor); font-variant-ligatures: none; font-size: 15px; line-height: 1.65; color: var(--ed-text); }
+      .probe-editor .z { display: block; padding-right: 16px; }
+      .probe-editor .nr { display: inline-block; width: 3.4em; padding-right: 1em; text-align: right; color: var(--ed-nr); user-select: none; position: relative; }
+      .probe-editor .z.jetzt { background: color-mix(in srgb, var(--petrol) 22%, transparent); }
+      .probe-editor .z.halt .nr::before { content: ""; position: absolute; left: 6px; top: 50%; width: 10px; height: 10px; margin-top: -5px; border-radius: 50%; background: var(--gefahr); }
+      .probe-hinweis { padding: 8px 12px; font-size: var(--klein); color: var(--ed-nr); background: var(--ed-rand); display: flex; gap: 8px; align-items: center; }
+      .probe-hinweis i { color: var(--gefahr); }
+      .probe-rechts { display: flex; flex-direction: column; gap: var(--a2); padding: var(--a3) var(--a4); overflow-y: auto; }
+      .probe-reiterleiste { display: flex; gap: 4px; }
+      .probe-reiterleiste button { border: 0; background: transparent; font: inherit; padding: 6px 12px; border-radius: var(--r2); color: var(--text-2); cursor: pointer; }
+      .probe-reiterleiste button.aktiv { background: var(--flaeche-2); color: var(--text); font-weight: 600; }
+      .dbg-steuer { display: flex; align-items: center; gap: 6px; }
+      .dbg-zahl { margin-left: auto; font-size: var(--klein); color: var(--text-2); font-family: var(--schrift-zahl); }
+      .dbg-zeitleiste { position: relative; height: 8px; border-radius: 4px; background: var(--flaeche-2); }
+      .dbg-zeitleiste span { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: var(--petrol); }
+      .dbg-zeitleiste i { position: absolute; top: -3px; width: 3px; height: 14px; margin-left: -1px; background: var(--gefahr); border-radius: 2px; }
+      .probe-rechts h4 { margin: var(--a3) 0 0; font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; }
+      .dbg-stapel { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; font-size: var(--klein); }
+      .dbg-stapel li { display: flex; justify-content: space-between; gap: var(--a2); padding: 5px 8px; border-radius: var(--r2); }
+      .dbg-stapel li.aktiv { background: color-mix(in srgb, var(--petrol) 14%, transparent); }
+      .dbg-stapel span { color: var(--text-3); font-family: var(--schrift-zahl); }
+      .dbg-werte { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 12px; margin: 0; font-family: var(--schrift-editor); font-size: 14px; }
+      .dbg-werte dt { color: var(--violett); } .dbg-werte dd { margin: 0; overflow-wrap: anywhere; }
+      .dbg-werte .typ { font-family: var(--schrift-zahl); font-size: 11px; color: var(--text-3); margin-right: 8px; }
+      .dbg-werte dd.leer { color: var(--text-3); font-family: inherit; font-style: italic; }
+      .dbg-ausgabe { margin: 0; padding: 8px 10px; border-radius: var(--r2); background: var(--ed-grund); color: var(--ed-text); font-family: var(--schrift-editor); font-size: 13px; }
+      .probe-fuss { margin-top: auto; padding-top: var(--a3); font-size: var(--klein); color: var(--text-3); display: flex; gap: 8px; }
+    </style>
+  </head>
+  <!-- Entwurf WIKI-48 "Ausprobieren" (nur am Rechner): Jedes Beispiel bekommt neben "Kopieren" den Knopf "Ausprobieren".
+       Er öffnet eine Ebene über dem Artikel: links der Editor (Haltepunkte im Rand, die gezeigte Zeile hervorgehoben),
+       rechts Ausgabe und Debugger. Gerechnet wird in der Sandbox der Codeschmiede (Docker, ohne Netz, nur lesend, Grenzen
+       für Zeit und Speicher), als eigener Dienst; Nachschlag schickt nur Code und Sprache. Der Debugger ist der der
+       Codeschmiede: der Lauf wird aufgezeichnet, darum geht jeder Schritt vor und zurück (Zeitleiste, Aufrufstapel,
+       Variablen, Ausgabe bis zum Schritt). Sprachen, die die Sandbox kann: Python und JavaScript heute, PHP als neues
+       Abbild. Die Fassung kommt aus "Meine Fassung" (PHP 8.3). Eigene Änderungen am Beispiel kann man als "Dein
+       Beispiel" behalten. Am Telefon gibt es den Knopf nicht. -->
+  <body class="va">
+    <div class="fenster-voll">
+      <div data-teil="kopf"></div>
+      <div></div>
+      <div class="geruest">
+        <nav class="leiste-schmal">
+          <button title="Start"><i class="fa-solid fa-house"></i></button>
+          <button class="aktiv" title="Lesen"><i class="fa-solid fa-book-open"></i></button>
+          <button title="Merkzettel"><i class="fa-solid fa-bookmark"></i></button>
+          <button title="Notizen"><i class="fa-solid fa-note-sticky"></i></button>
+          <button title="Themen"><i class="fa-solid fa-layer-group"></i></button>
+          <button class="unten" title="Einstellungen"><i class="fa-solid fa-sliders"></i></button>
+        </nav>
+        <div data-teil="nav:artikel"></div>
+
+        <section class="artikelseite">
+          <div class="artikel-kopf">
+            <div class="pfad"><i class="fa-solid fa-book"></i><b>PHP Docs</b><i class="fa-solid fa-chevron-right"></i>Arrays<i class="fa-solid fa-chevron-right"></i>array_map</div>
+            <h1 class="code-titel">array_map</h1>
+            <div class="werkzeuge">
+              <button class="knopf" title="Merken"><i class="fa-solid fa-bookmark"></i><span class="wort">Merken</span></button>
+              <button class="knopf" title="Notiz zur Seite"><i class="fa-solid fa-note-sticky"></i><span class="wort">Notiz</span></button>
+              <button class="knopf" title="Vorlesen ab hier (Code wird übersprungen)"><i class="fa-solid fa-volume-high"></i><span class="wort">Vorlesen</span></button>
+              <button class="knopf" title="Zu einem Thema legen"><i class="fa-solid fa-layer-group"></i><span class="wort">Thema</span></button>
+              <span class="trenner"></span>
+              <button class="knopf still" title="Verwandte Funktionen"><i class="fa-solid fa-diagram-project"></i><span class="wort">Ähnlich</span></button>
+              <div class="rechts">
+                <span class="fassungswahl" title="Bleibt für dieses Buch eingestellt, bis du es änderst"><i class="fa-solid fa-code-branch"></i>Meine Fassung: <b>PHP 8.3</b><i class="fa-solid fa-chevron-down"></i></span>
+                <span class="segment"><span>Original</span><span class="aktiv">Deutsch</span></span>
+                <button class="rund" title="Lesegröße"><i class="fa-solid fa-text-height"></i></button>
+              </div>
+            </div>
+          </div>
+          <div class="fundband fassung"><i class="fa-solid fa-code-branch"></i><span>Gefiltert auf <b>PHP 8.3</b>: Funktionen, die es dort nicht gibt, sind ausgeblendet; Änderungen und Beispiele für ältere Fassungen sind blass.</span><button class="knopf still"><i class="fa-solid fa-sliders"></i>Fassung ändern</button></div>
+          <div class="fundband uebersetzt"><i class="fa-solid fa-language"></i><span><b>Von uns übersetzt</b> aus dem Englischen · Code, Namen und Signaturen unverändert</span><button class="knopf still"><i class="fa-solid fa-table-columns"></i>Nebeneinander</button></div>
+          <div class="rollfeld">
+            <div class="lesen">
+              <nav class="inhalt">
+                <div class="inhalt-titel">Inhalt</div>
+                <ol>
+                  <li><a href="#"><span class="nr">1</span>Beschreibung</a></li>
+                  <li><a href="#"><span class="nr">2</span>Parameter</a></li>
+                  <li><a href="#"><span class="nr">3</span>Rückgabewerte</a></li>
+                  <li><a href="#"><span class="nr">4</span>Änderungen</a></li>
+                  <li class="aktiv"><a href="#"><span class="nr">5</span>Beispiele</a></li>
+                  <li class="unter"><a href="#">1: array_map()</a></li>
+                  <li class="unter"><a href="#">2: mit einer Lambda-Funktion</a></li>
+                  <li><a href="#"><span class="nr">6</span>Siehe auch</a></li>
+                </ol>
+                <div class="lesestand"><span style="width: 45%"></span></div>
+                <div class="lesestand-text">45 % gelesen</div>
+                <div class="inhalt-titel" style="margin-top: var(--a5)">Nachbarn in Arrays</div>
+                <ol class="code-liste">
+                  <li><a href="#">array_keys</a></li>
+                  <li class="aktiv"><a href="#">array_map</a></li>
+                  <li><a href="#">array_merge</a></li>
+                  <li><a href="#">array_reduce</a></li>
+                </ol>
+              </nav>
+              <article class="artikel">
+                <aside class="steckbrief">
+                  <div class="steckbrief-kopf code-titel">array_map</div>
+                  <div class="steckbrief-gruppe">Signatur</div>
+                  <div class="signatur" style="margin: var(--a2) var(--a3) 0; font-size: 13px; box-shadow: none">
+<span class="name">array_map</span>(<span class="typ">?callable</span> <span class="var">$callback</span>, <span class="typ">array</span> <span class="var">$array</span>, <span class="typ">array</span> ...<span class="var">$arrays</span>): <span class="typ">array</span></div>
+                  <div class="steckbrief-gruppe">Verfügbar</div>
+                  <div class="versionen" style="margin: var(--a2) var(--a3) 0"><span class="blass">PHP 4 ≥ 4.0.6</span><span class="blass">PHP 5</span><span class="blass">PHP 7</span><span class="deine">PHP 8 · deine</span></div>
+                  <div class="steckbrief-gruppe">Quelle</div>
+                  <dl class="steckbrief-werte">
+                    <dt>Buch</dt><dd>PHP Docs, 18.08.2026</dd>
+                    <dt>auch in</dt><dd><a class="wl" href="#">Spiegel von php.net</a> (2024)</dd>
+                    <dt>Notizen</dt><dd><a class="wl" href="#">8 der Nutzer</a></dd>
+                    <dt>Fragen</dt><dd>Stack Overflow lädt noch</dd>
+                  </dl>
+                  <div style="height: var(--a3)"></div>
+                </aside>
+                <section class="einleitung"><p>Wendet den Callback auf die Elemente der übergebenen Arrays an.</p></section>
+<h2 id="beschreibung">Beschreibung</h2>
+              <div class="signatur"><span class="name">array_map</span>(<span class="typ">?callable</span> <span class="var">$callback</span>, <span class="typ">array</span> <span class="var">$array</span>, <span class="typ">array</span> ...<span class="var">$arrays</span>): <span class="typ">array</span>
+                <button class="knopf still" title="Signatur kopieren"><i class="fa-regular fa-copy"></i></button></div>
+              <p style="margin-top: var(--a3)"><code>array_map()</code> gibt ein Array zurück, das die Ergebnisse enthält, wenn der Callback auf den jeweiligen Wert von <code>array</code> (und von <code>arrays</code>, falls weitere Arrays übergeben werden) als Argument angewendet wird. Die Zahl der Parameter, die der Callback annimmt, sollte der Zahl der an <code>array_map()</code> übergebenen Arrays entsprechen.</p>
+
+              <h2>Parameter</h2>
+              <dl class="parameter">
+                <dt>$callback<span class="typ">?callable</span></dt><dd>Ein Callable, das für jedes Element jedes Arrays ausgeführt wird. Mit <code>null</code> als Callback entsteht eine Zip-Operation über mehrere Arrays (siehe Beispiel 4).</dd>
+                <dt>$array<span class="typ">array</span></dt><dd>Ein Array, das durch die Callback-Funktion läuft.</dd>
+                <dt>...$arrays<span class="typ">array</span></dt><dd>Weitere Arrays als variable Liste, die ebenfalls durch die Callback-Funktion laufen.</dd>
+              </dl>
+
+              <h2>Rückgabewerte</h2>
+              <p>Gibt ein Array mit den Ergebnissen des Callbacks zurück. Die Schlüssel von <code>array</code> bleiben genau dann erhalten, wenn genau ein Array übergeben wird; bei mehreren Arrays hat das Ergebnis fortlaufende ganzzahlige Schlüssel.</p>
+
+              <h2>Änderungen</h2>
+              <table class="aenderungen"><thead><tr><th>Fassung</th><th>Beschreibung</th></tr></thead>
+                <tbody><tr class="gilt"><td>8.0.0 <span class="gilt-marke">gilt für 8.3</span></td><td>Erwartet <code>callback</code> einen Parameter per Referenz, gibt diese Funktion jetzt eine <code>E_WARNING</code> aus.</td></tr></tbody></table>
+
+              <h2>Beispiele</h2>
+              <div class="beispiel">
+                <div class="bkopf"><i class="fa-solid fa-code"></i>Beispiel 1: array_map()<span class="rechts"><button class="knopf ausprobieren"><i class="fa-solid fa-play"></i>Ausprobieren</button><button class="knopf"><i class="fa-regular fa-copy"></i>Kopieren</button><button class="knopf" title="Umschreiben (deine Fassung, das Original bleibt abrufbar)"><i class="fa-solid fa-pen"></i>Bearbeiten</button><button class="knopf" title="Ausblenden (jederzeit zurückholbar)"><i class="fa-solid fa-eye-slash"></i></button></span></div>
+<pre><span class="c-tag">&lt;?php</span>
+<span class="c-kw">function</span> <span class="c-fn">cube</span>(<span class="c-var">$n</span>)
+{
+    <span class="c-kw">return</span> (<span class="c-var">$n</span> * <span class="c-var">$n</span> * <span class="c-var">$n</span>);
+}
+
+<span class="c-var">$a</span> = [<span class="c-num">1</span>, <span class="c-num">2</span>, <span class="c-num">3</span>, <span class="c-num">4</span>, <span class="c-num">5</span>];
+<span class="c-var">$b</span> = <span class="c-fn">array_map</span>(<span class="c-str">'cube'</span>, <span class="c-var">$a</span>);
+<span class="c-fn">print_r</span>(<span class="c-var">$b</span>);
+<span class="c-tag">?&gt;</span></pre>
+                <div class="ausgabe-titel">Ausgabe</div>
+<pre class="ausgabe">Array
+(
+    [0] =&gt; 1
+    [1] =&gt; 8
+    [2] =&gt; 27
+    [3] =&gt; 64
+    [4] =&gt; 125
+)</pre>
+              </div>
+              <div class="beispiel">
+                <div class="bkopf"><i class="fa-solid fa-code"></i>Beispiel 2: array_map() mit einer Lambda-Funktion<span class="rechts"><button class="knopf ausprobieren"><i class="fa-solid fa-play"></i>Ausprobieren</button><button class="knopf"><i class="fa-regular fa-copy"></i>Kopieren</button><button class="knopf" title="Umschreiben (deine Fassung, das Original bleibt abrufbar)"><i class="fa-solid fa-pen"></i>Bearbeiten</button><button class="knopf" title="Ausblenden (jederzeit zurückholbar)"><i class="fa-solid fa-eye-slash"></i></button></span></div>
+<pre><span class="c-tag">&lt;?php</span>
+<span class="c-var">$func</span> = <span class="c-kw">function</span>(<span class="c-kw">int</span> <span class="c-var">$value</span>): <span class="c-kw">int</span> {
+    <span class="c-kw">return</span> <span class="c-var">$value</span> * <span class="c-num">2</span>;
+};
+
+<span class="c-fn">print_r</span>(<span class="c-fn">array_map</span>(<span class="c-var">$func</span>, <span class="c-fn">range</span>(<span class="c-num">1</span>, <span class="c-num">5</span>)));
+
+<span class="c-kom">// Or as of PHP 7.4.0:</span>
+
+<span class="c-fn">print_r</span>(<span class="c-fn">array_map</span>(<span class="c-kw">fn</span>(<span class="c-var">$value</span>): <span class="c-kw">int</span> =&gt; <span class="c-var">$value</span> * <span class="c-num">2</span>, <span class="c-fn">range</span>(<span class="c-num">1</span>, <span class="c-num">5</span>)));
+<span class="c-tag">?&gt;</span></pre>
+              </div>
+              <div class="beispiel eigen">
+                <div class="bkopf"><i class="fa-solid fa-user-pen"></i>Dein Beispiel: Schlüssel und Werte zugleich<span class="eigen-marke">von dir · 01.11.2026</span><span class="rechts"><button class="knopf ausprobieren"><i class="fa-solid fa-play"></i>Ausprobieren</button><button class="knopf"><i class="fa-regular fa-copy"></i>Kopieren</button><button class="knopf"><i class="fa-solid fa-pen"></i>Bearbeiten</button><button class="knopf" title="Löschen"><i class="fa-solid fa-trash"></i></button></span></div>
+<pre><span class="c-var">$preise</span> = [<span class="c-str">'Brot'</span> =&gt; <span class="c-num">3.2</span>, <span class="c-str">'Milch'</span> =&gt; <span class="c-num">1.1</span>];
+
+<span class="c-var">$zeilen</span> = <span class="c-fn">array_map</span>(
+    <span class="c-kw">fn</span>(<span class="c-kw">string</span> <span class="c-var">$name</span>, <span class="c-kw">float</span> <span class="c-var">$preis</span>): <span class="c-kw">string</span> =&gt; <span class="c-str">"</span><span class="c-var">$name</span><span class="c-str">: </span><span class="c-var">$preis</span><span class="c-str"> Euro"</span>,
+    <span class="c-fn">array_keys</span>(<span class="c-var">$preise</span>),
+    <span class="c-fn">array_values</span>(<span class="c-var">$preise</span>)
+);</pre>
+              </div>
+              <div class="ausgeblendet"><i class="fa-solid fa-eye-slash"></i>1 Beispiel ausgeblendet (Beispiel 6: mit Schlüsseln als Zeichenketten)<button class="knopf still">Zeigen</button></div>
+              <div class="beispiel-neu"><button class="knopf"><i class="fa-solid fa-plus"></i>Eigenes Beispiel anfügen</button><span>Editor wie in der Codeschmiede; deine Beispiele, Fassungen und Ausblendungen gehören dir und überstehen neue Fassungen des Buchs.</span></div>
+              <p class="gekuerzt"><i class="fa-solid fa-scissors"></i>Im Entwurf gekürzt: Beispiele 3 bis 7 (mehrere Arrays, Zip, Schlüssel als Zeichenketten, assoziative Arrays) folgen hier.</p>
+
+              <h2>Siehe auch</h2>
+              <div class="siehe">
+                <a href="#"><code>array_filter()</code><span>Filtert Elemente eines Arrays mit einer Callback-Funktion</span></a>
+                <a href="#"><code>array_reduce()</code><span>Reduziert das Array schrittweise auf einen einzigen Wert</span></a>
+                <a href="#"><code>array_walk()</code><span>Wendet eine eigene Funktion auf jedes Element eines Arrays an</span></a>
+              </div>
+
+              
+<details class="ueber">
+                <summary><i class="fa-solid fa-circle-info"></i>Über diese Seite<span>Quelle, Lizenz</span></summary>
+                <dl><dt>Quelle</dt><dd>PHP Docs (devdocs_en_php, 18.08.2026)</dd><dt>Lizenz</dt><dd>CC BY 3.0, The PHP Documentation Group</dd><dt>Übersetzung</dt><dd>von uns, über die Leitstelle, 01.11.2026</dd></dl>
+              </details>
+              </article>
+            </div>
+          </div>
+        </section>
+      </div>
+      <!-- Die Ebene "Ausprobieren" über dem Artikel (Esc oder Schließen kehrt zurück, die Stelle im Artikel bleibt) -->
+      <div class="probe-schleier"></div>
+      <section class="probe" aria-label="Ausprobieren">
+        <header class="probe-kopf">
+          <i class="fa-solid fa-flask"></i>
+          <div class="probe-titel"><b>Ausprobieren</b><span>Beispiel 1: array_map() · PHP Docs</span></div>
+          <span class="chip probe-sprache"><i class="fa-brands fa-php"></i>PHP 8.3<i class="fa-solid fa-chevron-down"></i></span>
+          <span class="probe-lage"><span class="punkt"></span>Sandbox bereit · ohne Netz · 5 s · 64 MB</span>
+          <div class="rechts">
+            <button class="knopf primaer"><i class="fa-solid fa-play"></i>Ausführen<kbd>Strg Enter</kbd></button>
+            <button class="knopf an"><i class="fa-solid fa-bug"></i>Debuggen</button>
+            <button class="knopf still" title="Wieder das Beispiel aus dem Artikel"><i class="fa-solid fa-rotate-left"></i>Zurücksetzen</button>
+            <button class="knopf still" title="Als dein Beispiel unter dem Artikel behalten"><i class="fa-solid fa-user-pen"></i>Behalten</button>
+            <button class="rund" title="Schließen (Esc)"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </header>
+        <div class="probe-flaeche">
+          <div class="probe-editor">
+            <div class="probe-reiter"><span class="aktiv"><i class="fa-brands fa-php"></i>beispiel.php</span><span class="geaendert">geändert</span></div>
+<pre class="ed"><span class="z"><span class="nr">1</span><span class="c-tag">&lt;?php</span></span>
+<span class="z"><span class="nr">2</span><span class="c-kw">function</span> <span class="c-fn">cube</span>(<span class="c-var">$n</span>)</span>
+<span class="z"><span class="nr">3</span>{</span>
+<span class="z jetzt halt"><span class="nr">4</span>    <span class="c-kw">return</span> (<span class="c-var">$n</span> * <span class="c-var">$n</span> * <span class="c-var">$n</span>);</span>
+<span class="z"><span class="nr">5</span>}</span>
+<span class="z"><span class="nr">6</span></span>
+<span class="z"><span class="nr">7</span><span class="c-var">$a</span> = [<span class="c-num">1</span>, <span class="c-num">2</span>, <span class="c-num">3</span>, <span class="c-num">4</span>, <span class="c-num">5</span>, <span class="c-num">10</span>];</span>
+<span class="z"><span class="nr">8</span><span class="c-var">$b</span> = <span class="c-fn">array_map</span>(<span class="c-str">'cube'</span>, <span class="c-var">$a</span>);</span>
+<span class="z"><span class="nr">9</span><span class="c-fn">print_r</span>(<span class="c-var">$b</span>);</span></pre>
+            <div class="probe-hinweis"><i class="fa-solid fa-circle-dot"></i>Haltepunkt: in den Rand neben die Zeilennummer tippen · Zeile 4 ist die, an der der Lauf gerade steht</div>
+          </div>
+          <aside class="probe-rechts">
+            <div class="probe-reiterleiste"><button>Ausgabe</button><button class="aktiv">Debugger</button></div>
+            <div class="dbg-steuer">
+              <button class="rund" title="Zum Anfang"><i class="fa-solid fa-backward-fast"></i></button>
+              <button class="rund" title="Schritt zurück"><i class="fa-solid fa-backward-step"></i></button>
+              <button class="rund" title="Schritt vor"><i class="fa-solid fa-forward-step"></i></button>
+              <button class="rund" title="Bis zum nächsten Haltepunkt"><i class="fa-solid fa-forward"></i></button>
+              <button class="rund" title="Zum Ende"><i class="fa-solid fa-forward-fast"></i></button>
+              <span class="dbg-zahl">Schritt <b>14</b> von 38</span>
+            </div>
+            <div class="dbg-zeitleiste"><span style="width: 37%"></span><i style="left: 21%"></i><i style="left: 37%"></i><i style="left: 53%"></i></div>
+            <h4>Aufrufstapel</h4>
+            <ol class="dbg-stapel"><li class="aktiv"><code>cube($n = 3)</code><span>Zeile 4</span></li><li><code>array_map('cube', $a)</code><span>Zeile 8</span></li><li><code>{main}</code><span>beispiel.php</span></li></ol>
+            <h4>Variablen</h4>
+            <dl class="dbg-werte"><dt>$n</dt><dd><span class="typ">int</span>3</dd><dt>$a</dt><dd><span class="typ">array(6)</span>[1, 2, 3, 4, 5, 10]</dd><dt>$b</dt><dd class="leer">noch nicht gesetzt</dd></dl>
+            <h4>Ausgabe bis hier</h4>
+            <pre class="dbg-ausgabe">(noch keine)</pre>
+            <div class="probe-fuss"><i class="fa-solid fa-circle-info"></i>Der Lauf ist aufgezeichnet: jeder Schritt geht vor und zurück. Ändert sich der Code, gilt die Aufzeichnung als veraltet.</div>
+          </aside>
+        </div>
+      </section>
+      <div data-teil="fuss"></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>
