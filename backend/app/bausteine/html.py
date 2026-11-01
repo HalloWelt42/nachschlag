@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from html import escape as html_maskieren
 from urllib.parse import unquote, urljoin
 
 from lxml import html as lhtml
@@ -22,13 +23,38 @@ ERLAUBTE_ATTRIBUTE = {"href", "src", "alt", "title", "id", "width", "height", "c
 #: Klassen, die das Lesedesign kennt; alle Klassen der Quelle fallen weg
 EIGENE_KLASSEN = {"wl", "ort", "hinweis", "steckbrief", "steckbrief-kopf", "steckbrief-unter", "steckbrief-bild",
                   "steckbrief-gruppe", "steckbrief-werte", "steckbrief-name", "klade", "linie-unten", "linie-links",
-                  "rechts"}
+                  "rechts", "einleitung",
+                  # Dokumentation (Entwurf doku-php.html): Signatur, Parameter, Änderungen, Beispiele, Siehe auch, Code
+                  "signatur", "name", "typ", "var", "versionen", "parameterliste", "aenderungen", "beispiel", "bkopf", "bnotiz",
+                  "ausgabe-titel", "ausgabe", "siehe", "c-kw", "c-tag", "c-fn", "c-var", "c-str", "c-num", "c-kom"}
 
 VERSTECKT = re.compile(r"display\s*:\s*none", re.I)
 LINIE = {"linie-unten": re.compile(r"border-bottom\s*:\s*[^;]*\d", re.I),
          "linie-links": re.compile(r"border-left\s*:\s*[^;]*\d", re.I)}
 SCHWEBT_RECHTS = re.compile(r"float\s*:\s*right", re.I)
 KURSIV = re.compile(r"font-style\s*:\s*italic", re.I)
+
+
+def maskieren(text: str) -> str:
+    """Text für HTML (spitze Klammern, Kaufmannsund, Anführungszeichen)."""
+    return html_maskieren(text, quote=True)
+
+
+def verschieben(quelle, ziel) -> None:
+    """Inhalt eines Elements (Text und Kinder) ans Ende eines anderen hängen."""
+    if quelle.text:
+        if len(ziel):
+            ziel[-1].tail = (ziel[-1].tail or "") + quelle.text
+        else:
+            ziel.text = (ziel.text or "") + quelle.text
+    for kind in list(quelle):
+        ziel.append(kind)
+
+
+def datum(stand: str) -> str:
+    """Datum der Quelle (2026-08-18) wie im Deutschen (18.08.2026)."""
+    m = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})", stand.strip())
+    return f"{m.group(3)}.{m.group(2)}.{m.group(1)}" if m else stand
 
 
 def gerade(text: str) -> str:

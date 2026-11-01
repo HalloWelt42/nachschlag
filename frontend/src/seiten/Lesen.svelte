@@ -83,6 +83,7 @@
       navigation.titel = neu.titel;
       await tick();
       woerter = text?.innerText.split(/\s+/).length ?? 0;
+      if (text) kopierknoepfe(text);
       zurStelle();
     } catch (f) {
       if (!signal.aborted) fehler = seitenFehler(f);
@@ -147,6 +148,42 @@
     gehe(ziel.ziel);
   }
 
+  /** Kopieren an Code und Signaturen (Entwurf: Knopf im Kopf des Beispiels, oben rechts an der Signatur). Der Text
+   *  des Artikels kommt fertig vom Baustein; die Knöpfe sind Bedienung und gehören darum hierher. */
+  function kopierknoepfe(wurzel: HTMLElement) {
+    for (const kasten of wurzel.querySelectorAll<HTMLElement>(".beispiel, .signatur")) {
+      const code = kasten.classList.contains("signatur") ? kasten : kasten.querySelector<HTMLElement>("pre:not(.ausgabe)");
+      if (!code || kasten.querySelector(".kopieren")) continue;
+      const inhalt = code.innerText;          // vor dem Knopf festhalten, sonst käme seine Beschriftung mit
+      const knopf = document.createElement("button");
+      knopf.className = "knopf still kopieren";
+      knopf.title = "Kopieren";
+      knopf.innerHTML = '<i class="fa-regular fa-copy"></i><span class="wort">Kopieren</span>';
+      knopf.addEventListener("click", async () => {
+        await kopieren(inhalt);
+        knopf.querySelector("i")!.className = "fa-solid fa-check";
+        setTimeout(() => (knopf.querySelector("i")!.className = "fa-regular fa-copy"), 1500);
+      });
+      const kopf = kasten.querySelector<HTMLElement>(".bkopf");
+      if (kopf) kopf.append(knopf);
+      else kasten.prepend(knopf);
+    }
+  }
+
+  /** In die Zwischenablage; ohne sicheren Zusammenhang (http im Heimnetz) über ein Textfeld im Klick. */
+  async function kopieren(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const feld = document.createElement("textarea");
+      feld.value = text;
+      document.body.append(feld);
+      feld.select();
+      document.execCommand("copy");
+      feld.remove();
+    }
+  }
+
   const ORIGINAL = "/api/v1/inhalt/original/";
 
   /** Verweise in der Originalseite führen in die App: eine Seite desselben Buchs öffnet im Lesen (mit eigenem
@@ -198,8 +235,9 @@
 {:else}
   <div class="artikel-kopf">
     <div class="pfad"><i class="fa-solid fa-book"></i><b>{buch ? bezeichnung(buch) : artikel.buch}</b><i class="fa-solid fa-chevron-right"></i>
+      {#if artikel.rubrik}<span>{artikel.rubrik}</span><i class="fa-solid fa-chevron-right"></i>{/if}
       <span>{artikel.titel}</span></div>
-    <h1>{artikel.titel}</h1>
+    <h1 class:code-titel={artikel.titelart === "code"}>{artikel.titel}</h1>
     <div class="werkzeuge">
       {#if artikel.darstellung !== "original"}
         <button class="knopf" class:an={original} title="Die Seite so, wie sie im Buch steht" onclick={() => (original = !original)}>
@@ -227,8 +265,23 @@
   {#if artikel.darstellung === "uebersicht" && !original}
     <!-- Übersicht (etwa Startseite eines Buchs): Kacheln als Karten wie im Entwurf start-a.html -->
     <div class="rollfeld" style="padding: 0">
+      {#if artikel.gruppen.length}
+        <!-- Handbuch: die Rubriken der Gliederung mit ihren Seiten -->
+        <div class="rubriken">
+          {#each artikel.gruppen as g, gi (gi)}
+            <section class="rubrik">
+              <h2 class="rubrik-titel">{g.titel}<span class="zahl">{g.eintraege.length}</span></h2>
+              <ol class="code-liste">
+                {#each g.eintraege as e, ei (ei)}
+                  <li><a href={"/" + lesenZiel(artikel.buch, e.pfad)} onclick={(k) => { k.preventDefault(); lesen(artikel!.buch, e.pfad); }}>{e.titel}</a></li>
+                {/each}
+              </ol>
+            </section>
+          {/each}
+        </div>
+      {/if}
       <div class="uebersicht">
-        {#each artikel.kacheln as k (k.pfad)}
+        {#each artikel.kacheln as k, ki (ki)}
           <a class="leskarte" href={"/" + lesenZiel(artikel.buch, k.pfad)} onclick={(e) => { e.preventDefault(); lesen(artikel!.buch, k.pfad); }}>
             <span class="bildflaeche">
               {#if k.bild}<img src={k.bild} alt="" loading="lazy" />{:else}<i class="fa-solid fa-file-lines"></i>{/if}
@@ -244,8 +297,8 @@
             onload={rahmenGeladen}></iframe>
   {:else}
     <div class="rollfeld" style="padding: 0" bind:this={rollfeld} onscroll={mitlaufen}>
-      <div class="lesen" class:ohne-inhalt={!inhalt.length}>
-        {#if inhalt.length}
+      <div class="lesen" class:ohne-inhalt={!inhalt.length && !artikel.nachbarn.length}>
+        {#if inhalt.length || artikel.nachbarn.length}
           <nav class="inhalt" aria-label="Inhalt">
             <div class="inhalt-titel">Inhalt</div>
             <ol>
@@ -258,12 +311,22 @@
             </ol>
             <div class="lesestand"><span style="width: {Math.round(anteil * 100)}%"></span></div>
             <div class="lesestand-text">{Math.round(anteil * 100)} % gelesen · noch {restMinuten} Min</div>
+            {#if artikel.nachbarn.length}
+              <!-- Nachbarn in der Rubrik (Dokumentation): die Seite selbst hervorgehoben -->
+              <div class="inhalt-titel nachbarn-titel">Nachbarn in {artikel.rubrik}</div>
+              <ol class="code-liste">
+                {#each artikel.nachbarn as n, ni (ni)}
+                  <li class:aktiv={n.pfad === artikel.pfad}><a href={"/" + lesenZiel(artikel.buch, n.pfad)}
+                      onclick={(e) => { e.preventDefault(); lesen(artikel!.buch, n.pfad); }}>{n.titel}</a></li>
+                {/each}
+              </ol>
+            {/if}
           </nav>
         {/if}
         <article class="artikel">
           {#if artikel.steckbrief}
             <aside class="steckbrief">
-              <div class="steckbrief-kopf">{artikel.steckbrief.titel}</div>
+              <div class="steckbrief-kopf" class:code-titel={artikel.steckbrief.code}>{artikel.steckbrief.titel}</div>
               <!-- vom Baustein gesäubert: nur erlaubte Elemente und Attribute, Verweise auf Wege der App -->
               <div role="presentation" onclick={klick} onkeydown={() => {}}>{@html artikel.steckbrief.html}</div>
             </aside>

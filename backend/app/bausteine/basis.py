@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from typing import Protocol
 
 from ..bibliothek import Eintrag
-from ..modell.artikel import Abschnitt, Darstellung, Kachel, Steckbrief, Verweiszahlen
+from ..modell.artikel import Abschnitt, Darstellung, Gruppe, Kachel, Nachbar, Steckbrief, Verweiszahlen
 from ..modell.buch import Art, Buch
 
 
@@ -22,6 +22,7 @@ class Wege:
     medien: Callable[[str, str], str]            # (buch, pfad) -> Adresse des Mediums
     original: Callable[[str, str], str]          # (buch, pfad) -> Adresse der unveränderten Seite
     gibt_es: Callable[[str, str], bool]          # (buch, pfad) -> steht der Pfad im Buch?
+    datei: Callable[[str, str], bytes | None] = lambda buch, pfad: None   # (buch, pfad) -> Inhalt einer Nebendatei (etwa die Gliederung)
 
 
 @dataclass
@@ -35,6 +36,11 @@ class Aufbereitet:
     verweise: Verweiszahlen = field(default_factory=Verweiszahlen)
     online: list[str] = field(default_factory=list)
     kacheln: list[Kachel] = field(default_factory=list)
+    gruppen: list[Gruppe] = field(default_factory=list)
+    rubrik: str = ""
+    nachbarn: list[Nachbar] = field(default_factory=list)
+    titelart: str = "text"
+    darstellung: Darstellung | None = None       # nur wenn die Seite anders gezeigt wird als sonst beim Baustein
 
 
 class Baustein(Protocol):

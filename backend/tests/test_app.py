@@ -50,6 +50,7 @@ def kellerwolke(request: httpx.Request) -> httpx.Response:
 def buecher(tmp_path_factory) -> Path:
     ordner = tmp_path_factory.mktemp("buecher")
     probebuch.bauen(ordner)
+    probebuch.bauen_doku(ordner)
     return ordner
 
 
@@ -75,8 +76,8 @@ async def nachschlag(tmp_path: Path, buecher: Path):
 async def test_buecher(nachschlag):
     c, _, _ = nachschlag
     stand = (await c.get("/api/v1/buecher")).json()
-    assert stand["fehler"] == [] and len(stand["buecher"]) == 1
-    b = stand["buecher"][0]
+    assert stand["fehler"] == [] and len(stand["buecher"]) == 2
+    b = next(b for b in stand["buecher"] if b["kennung"] == "probe_de_all_2026-01")
     assert b["kennung"] == "probe_de_all_2026-01" and b["art"] == "enzyklopaedie" and b["startseite"] == "index"
     assert b["faehigkeiten"] == {"titelindex": True, "volltext": True, "bilder": True, "lesedesign": True}
     assert b["artikel"] == 8             # Seiten laut Zähler der Datei (index, sechs Artikel, eine Sprungseite), ohne Bilder
@@ -212,3 +213,38 @@ async def test_suche_wartet_nicht_auf_langsame_bedeutung(nachschlag):
     fundus.schlaeft = 2
     s = (await c.get("/api/v1/suche", params={"frage": "Städte"})).json()
     assert s["nur_index"] and s["treffer"] and s["zeiten"]["bedeutung_ms"] is None and s["bedeutung_angebunden"]
+
+
+DOKU = "probedoku_en_php_2026-08"
+
+
+async def test_dokumentation_nach_entwurf(nachschlag):
+    """Handbuch (devdocs2zim) neu gesetzt: Teile mit eigenen Namen, Signatur, Parameter mit Typ, Änderungen, Beispiel
+    mit eingefärbtem Code und Ausgabe, Siehe auch; Rubrik und Nachbarn aus der Gliederung; Steckbrief mit Fassungen."""
+    c, _, _ = nachschlag
+    a = (await c.get(f"/api/v1/artikel/{DOKU}/function.array-map")).json()
+    assert (a["darstellung"], a["baustein"], a["titel"], a["titelart"]) == ("lesedesign", "dokumentation", "array_map", "code")
+    assert [(s["titel"], s["ebene"]) for s in a["abschnitte"]] == [
+        ("Beschreibung", 2), ("Parameter", 2), ("Änderungen", 2), ("Beispiele", 2), ("Beispiel 1: array_map() example", 3),
+        ("Siehe auch", 2)]
+    assert a["rubrik"] == "Array" and [n["pfad"] for n in a["nachbarn"]] == ["function.array-filter", "function.array-map"]
+    html = a["html"]
+    assert html.startswith('<p class="einleitung">Applies the callback to the elements</p>')
+    assert '<span class="name">array_map</span>(<span class="typ">?callable</span> <span class="var">$callback</span>' in html
+    assert '<dt>$callback<span class="typ">?callable</span></dt>' in html and 'class="parameterliste"' in html
+    assert '<table class="aenderungen">' in html
+    assert re.search(r'<h3 class="bkopf" id="[^"]+">Beispiel 1: array_map\(\) example</h3>', html)
+    assert '<span class="c-fn">array_map</span>(<span class="c-str">\'cube\'</span>' in html
+    assert '<div class="ausgabe-titel">Ausgabe</div><pre class="ausgabe">Array' in html and "will output" not in html
+    assert f'<a href="/lesen/{DOKU}/function.array-filter" class="wl"><code>array_filter()</code><span>Filters elements of an array</span></a>' in html
+    assert "attribution" not in html and "php.net" not in html
+    s = a["steckbrief"]
+    assert s["titel"] == "array_map" and s["code"]
+    assert '<div class="versionen"><span>PHP 4 &gt;= 4.0.6</span><span>PHP 5</span>' in s["html"] and "18.08.2026" in s["html"]
+
+
+async def test_startseite_einer_dokumentation_als_rubriken(nachschlag):
+    c, _, _ = nachschlag
+    a = (await c.get(f"/api/v1/artikel/{DOKU}/index")).json()
+    assert a["darstellung"] == "uebersicht" and a["gruppen"][0]["titel"] == "Array"
+    assert [e["titel"] for e in a["gruppen"][0]["eintraege"]] == ["array_filter", "array_map"]

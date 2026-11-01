@@ -5,11 +5,12 @@ from __future__ import annotations
 from ..bibliothek import Eintrag
 from ..modell.buch import Buch
 from .basis import Aufbereitet, Baustein, Wege
+from .dokumentation import Dokumentation
 from .enzyklopaedie import Enzyklopaedie
 from .original import Originalansicht
 from .uebersicht import Uebersicht
 
-BAUSTEINE: tuple[Baustein, ...] = (Uebersicht(), Enzyklopaedie())
+BAUSTEINE: tuple[Baustein, ...] = (Uebersicht(), Enzyklopaedie(), Dokumentation())
 RUECKFALL: Baustein = Originalansicht()
 
 

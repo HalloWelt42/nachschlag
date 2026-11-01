@@ -17,6 +17,7 @@ class Steckbrief(BaseModel):
     """Infobox oder Taxobox der Quelle, neu gesetzt (eigenes Lesedesign); `html` ist bereits gesäubert."""
     titel: str
     html: str
+    code: bool = Field(False, description="der Titel ist ein Name aus dem Code (in Schrift des Editors)")
 
 
 class Verweiszahlen(BaseModel):
@@ -29,6 +30,18 @@ class Verweiszahlen(BaseModel):
 #: Wie eine Seite gezeigt wird: Lesedesign (Text mit Inhalt und Steckbrief), Übersicht (Kacheln mit Bild, etwa die
 #: Startseite eines Buchs) oder die Seite unverändert
 Darstellung = Literal["lesedesign", "uebersicht", "original"]
+
+
+class Nachbar(BaseModel):
+    """Eine Seite in einer Liste (Nachbarn in der Rubrik, Einträge einer Rubrik)."""
+    pfad: str
+    titel: str
+
+
+class Gruppe(BaseModel):
+    """Eine Rubrik eines Buchs mit ihren Seiten (Gliederung einer Dokumentation)."""
+    titel: str
+    eintraege: list[Nachbar]
 
 
 class Kachel(BaseModel):
@@ -55,3 +68,7 @@ class Artikel(BaseModel):
     online: list[str] = Field(default_factory=list, description="Online-Verweise (Belege, Weblinks) für 'Über diesen Artikel'")
     original: str = Field(description="Adresse der unveränderten Seite (Originalansicht)")
     kacheln: list[Kachel] = Field(default_factory=list, description="Einträge der Übersicht (nur Darstellung uebersicht)")
+    gruppen: list[Gruppe] = Field(default_factory=list, description="Rubriken der Übersicht eines Handbuchs (nur Darstellung uebersicht)")
+    rubrik: str = Field("", description="Rubrik der Seite im Buch (Dokumentation), für den Pfad")
+    nachbarn: list[Nachbar] = Field(default_factory=list, description="die Seiten derselben Rubrik")
+    titelart: Literal["text", "code"] = Field("text", description="code: der Titel ist ein Name aus dem Code (Funktion, Klasse)")

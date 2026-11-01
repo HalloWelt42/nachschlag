@@ -41,6 +41,7 @@ export interface Abschnitt {
 export interface Steckbrief {
   titel: string;
   html: string;
+  code: boolean;
 }
 
 export interface Verweiszahlen {
@@ -48,6 +49,16 @@ export interface Verweiszahlen {
   ohne_ziel: number;
   koordinaten: number;
   online: number;
+}
+
+export interface Nachbar {
+  pfad: string;
+  titel: string;
+}
+
+export interface Gruppe {
+  titel: string;
+  eintraege: Nachbar[];
 }
 
 export interface Kachel {
@@ -73,6 +84,10 @@ export interface Artikel {
   online: string[];
   original: string;
   kacheln: Kachel[];
+  gruppen: Gruppe[];
+  rubrik: string;
+  nachbarn: Nachbar[];
+  titelart: "text" | "code";
 }
 
 export type Weg = "bedeutung" | "index";

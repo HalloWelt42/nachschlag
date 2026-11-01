@@ -119,3 +119,58 @@ def bauen(ordner: Path, name: str = "probe_de_all_2026-01", erzeuger: str = "mwo
         # ein Name mit wörtlichem %2C (so heißen Bilder in der Quelle); im HTML steht er verschlüsselt als %252C
         c.add_item(_Seite("_assets_/a/Köln%2C_Ufer.png", "", PNG, "image/png", vorne=False))
     return datei
+
+
+# ----- Probebuch Dokumentation (Aufbau devdocs2zim, Handbuch von PHP) ---------------------------------------------------
+
+def _doku_seite(titel: str, rumpf: str) -> str:
+    return (f'<html class="_theme-default"><head><meta charset="utf-8"><title>{titel}</title>'
+            '<link rel="stylesheet" href="application.css"></head><body><div class="_app">'
+            '<devdocs-navbar current="x" listing-src="navbar.json"></devdocs-navbar><div class="_container"><main class="_content">'
+            f'<div class="_page _php">{rumpf}<div class="_attribution"><p class="_attribution-p">&copy; PHP Documentation Group'
+            '<br><a href="https://www.php.net/manual/en/" class="_attribution-link">php.net</a></p></div></div>'
+            '</main></div></div><script src="assets/index.js"></script></body></html>')
+
+
+ARRAY_MAP = _doku_seite("array_map", """<div id="function.array-map" class="refentry"> <div class="refnamediv">
+<h1 class="refname">array_map</h1> <p class="verinfo">(PHP 4 &gt;= 4.0.6, PHP 5, PHP 7, PHP 8)</p>
+<p class="refpurpose"><span class="refname">array_map</span> - <span class="dc-title">Applies the callback to the elements</span></p></div>
+<div class="refsect1 description" id="d"><h3 class="title">Description</h3>
+<pre class="methodsynopsis dc-description" data-language="php">array_map(?callable $callback, array $array, array ...$arrays): array</pre>
+<p class="para">Returns an <span class="type"><a href="language.types.array" class="type array">array</a></span>.</p></div>
+<div class="refsect1 parameters" id="p"><h3 class="title">Parameters</h3><dl><dt><code class="parameter">callback</code></dt>
+<dd><p class="para">A callable.</p></dd><dt><code class="parameter">arrays</code></dt><dd><p class="para">More arrays.</p></dd></dl></div>
+<div class="refsect1 changelog" id="c"><h3 class="title">Changelog</h3><table class="doctable informaltable"><thead><tr><th>Version</th>
+<th>Description</th></tr></thead><tbody class="tbody"><tr><td>8.0.0</td><td>Emits a warning.</td></tr></tbody></table></div>
+<div class="refsect1 examples" id="e"><h3 class="title">Examples</h3><div class="example" id="example-1">
+<p><strong>Example #1 <span class="function"><strong>array_map()</strong></span> example</strong></p>
+<div class="example-contents"><pre class="annotation-interactive phpcode" data-language="php">&lt;?php
+$b = array_map('cube', [1, 2]);
+?&gt;</pre></div><div class="example-contents"><p>The above example will output:</p></div>
+<div class="example-contents screen"><div class="annotation-interactive examplescode"><pre class="examplescode">Array
+(
+)</pre></div></div></div></div>
+<div class="refsect1 seealso" id="s"><h3 class="title">See Also</h3><ul class="simplelist"><li><span class="function">
+<a href="function.array-filter" class="function">array_filter()</a> - Filters elements of an array</span></li></ul></div></div>""")
+
+ARRAY_FILTER = _doku_seite("array_filter", '<div class="refentry"><h1 class="refname">array_filter</h1>'
+                                           '<p class="para">Filters elements of an array using a callback function.</p></div>')
+
+GLIEDERUNG = ('{"name": "PHP", "landingHref": "index", "children": [{"name": "Array", "children": ['
+              '{"name": "array_filter", "href": "function.array-filter"}, {"name": "array_map", "href": "function.array-map"}]}]}')
+
+
+def bauen_doku(ordner: Path, name: str = "probedoku_en_php_2026-08") -> Path:
+    ordner.mkdir(parents=True, exist_ok=True)
+    datei = ordner / f"{name}.zim"
+    with Creator(str(datei)).config_indexing(True, "eng") as c:
+        c.set_mainpath("index")
+        for schluessel, wert in (("Name", name.rsplit("_", 1)[0]), ("Title", "PHP Probe"), ("Language", "eng"),
+                                 ("Description", "Handbuch für die Tests"), ("Date", "2026-08-18"),
+                                 ("Scraper", "devdocs2zim v0.2.1"), ("Creator", "Tests"), ("Publisher", "Tests")):
+            c.add_metadata(schluessel, wert)
+        c.add_item(_Seite("index", "PHP Probe", _doku_seite("PHP", "<h1>PHP: Hypertext Preprocessor</h1>")))
+        c.add_item(_Seite("function.array-map", "array_map", ARRAY_MAP))
+        c.add_item(_Seite("function.array-filter", "array_filter", ARRAY_FILTER))
+        c.add_item(_Seite("navbar.json", "", GLIEDERUNG, "application/json", vorne=False))
+    return datei

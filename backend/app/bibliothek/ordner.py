@@ -25,7 +25,7 @@ logger = logging.getLogger("nachschlag.bibliothek")
 ERZEUGER: tuple[tuple[str, Art], ...] = (("mwoffliner", "enzyklopaedie"), ("devdocs", "dokumentation"),
                                         ("sotoki", "frage_antwort"), ("warc2zim", "webseite"), ("zimit", "webseite"))
 #: Arten mit eigenem Lesedesign (wächst mit den Bausteinen)
-MIT_LESEDESIGN: set[Art] = {"enzyklopaedie"}
+MIT_LESEDESIGN: set[Art] = {"enzyklopaedie", "dokumentation"}
 UMLEITUNG_HTML = re.compile(rb"""<meta[^>]+http-equiv=["']refresh["'][^>]+URL=['"]?\.?/?([^'">]+)""", re.I)
 
 
@@ -184,6 +184,15 @@ class Bibliothek:
         if ziel.pfad == pfad and not ziel.anker:
             return ""
         return ziel.pfad + (f"#{ziel.anker}" if ziel.anker else "")
+
+    def datei(self, kennung: str, pfad: str) -> bytes | None:
+        """Inhalt einer Datei im Buch (etwa die Gliederung einer Dokumentation), ohne Weiterleitungen aufzulösen; fehlt
+        sie, nichts. Blockiert (aus einem Thread rufen)."""
+        try:
+            e = self.archiv(kennung).get_entry_by_path(pfad)
+            return bytes((e.get_redirect_entry() if e.is_redirect else e).get_item().content)
+        except (KeyError, BuchFehlt):
+            return None
 
     def gibt_es(self, kennung: str, pfad: str) -> bool:
         """Steht ein Pfad (echter Pfad im Buch, ohne Anker) darin, auch als Weiterleitung? Für das Prüfen von Verweisen,

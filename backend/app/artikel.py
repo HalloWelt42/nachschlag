@@ -19,7 +19,7 @@ def wege(bibliothek: Bibliothek) -> Wege:
     return Wege(artikel=lambda buch, pfad: f"/lesen/{quote(buch)}/{_pfad(pfad)}",
                 medien=lambda buch, pfad: f"/api/v1/inhalt/medien/{quote(buch)}/{_pfad(pfad)}",
                 original=lambda buch, pfad: f"/api/v1/inhalt/original/{quote(buch)}/{_pfad(pfad)}",
-                gibt_es=bibliothek.gibt_es)
+                gibt_es=bibliothek.gibt_es, datei=bibliothek.datei)
 
 
 class Artikelleser:
@@ -33,10 +33,11 @@ class Artikelleser:
         baustein = baustein_fuer(b, eintrag)
         fertig = await asyncio.to_thread(baustein.aufbereiten, b, eintrag, self._wege)
         return Artikel(buch=buch, pfad=eintrag.pfad, angefragt=pfad, anker=eintrag.anker, titel=fertig.titel,
-                       darstellung=baustein.darstellung, baustein=baustein.kennung,
+                       darstellung=fertig.darstellung or baustein.darstellung, baustein=baustein.kennung,
                        html=fertig.html, einleitung=fertig.einleitung, abschnitte=fertig.abschnitte,
                        steckbrief=fertig.steckbrief, bild=fertig.bild, verweise=fertig.verweise, online=fertig.online,
-                       original=self._wege.original(buch, eintrag.pfad), kacheln=fertig.kacheln)
+                       original=self._wege.original(buch, eintrag.pfad), kacheln=fertig.kacheln,
+                       gruppen=fertig.gruppen, rubrik=fertig.rubrik, nachbarn=fertig.nachbarn, titelart=fertig.titelart)
 
     async def zufall(self, buch: str) -> str:
         """Pfad eines zufälligen Artikels (ohne Weiterleitungen)."""
