@@ -83,7 +83,10 @@
       navigation.titel = neu.titel;
       await tick();
       woerter = text?.innerText.split(/\s+/).length ?? 0;
-      if (text) kopierknoepfe(text);
+      if (text) {
+        kopierknoepfe(text);
+        symboleAnbringen(text);
+      }
       zurStelle();
     } catch (f) {
       if (!signal.aborted) fehler = seitenFehler(f);
@@ -167,6 +170,17 @@
       const kopf = kasten.querySelector<HTMLElement>(".bkopf");
       if (kopf) kopf.append(knopf);
       else kasten.prepend(knopf);
+    }
+  }
+
+  /** Symbole aus dem Entwurf an Teilen, die der Baustein liefert (Haken an der akzeptierten Antwort). Die Bausteine
+   *  liefern nur Inhalt und Klassen; Symbole gehören zur Oberfläche. */
+  function symboleAnbringen(wurzel: HTMLElement) {
+    for (const marke of wurzel.querySelectorAll<HTMLElement>(".akz-marke")) {
+      if (!marke.querySelector("i")) marke.insertAdjacentHTML("afterbegin", '<i class="fa-solid fa-circle-check"></i>');
+    }
+    for (const stimmen of wurzel.querySelectorAll<HTMLElement>(".antwort.akzeptiert .qa-stimmen")) {
+      if (!stimmen.querySelector(".haken")) stimmen.insertAdjacentHTML("beforeend", '<span class="haken" title="akzeptierte Antwort"><i class="fa-solid fa-check"></i></span>');
     }
   }
 

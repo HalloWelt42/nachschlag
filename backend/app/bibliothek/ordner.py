@@ -27,7 +27,7 @@ ERZEUGER: tuple[tuple[str, Art], ...] = (("mwoffliner", "enzyklopaedie"), ("devd
 #: Spiegel von Seiten (warc2zim, zimit), deren Inhalt eine bekannte Art ist: die Quelle (Metadatum Source) entscheidet
 QUELLEN: tuple[tuple[str, Art], ...] = (("php.net/manual", "dokumentation"),)
 #: Arten mit eigenem Lesedesign (wächst mit den Bausteinen)
-MIT_LESEDESIGN: set[Art] = {"enzyklopaedie", "dokumentation"}
+MIT_LESEDESIGN: set[Art] = {"enzyklopaedie", "dokumentation", "frage_antwort"}
 UMLEITUNG_HTML = re.compile(rb"""<meta[^>]+http-equiv=["']refresh["'][^>]+URL=['"]?\.?/?([^'">]+)""", re.I)
 
 

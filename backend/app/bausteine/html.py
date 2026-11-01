@@ -26,7 +26,10 @@ EIGENE_KLASSEN = {"wl", "ort", "hinweis", "steckbrief", "steckbrief-kopf", "stec
                   "rechts", "einleitung",
                   # Dokumentation (Entwurf doku-php.html): Signatur, Parameter, Änderungen, Beispiele, Siehe auch, Code
                   "signatur", "name", "typ", "var", "versionen", "parameterliste", "aenderungen", "beispiel", "bkopf", "bnotiz",
-                  "ausgabe-titel", "ausgabe", "siehe", "c-kw", "c-tag", "c-fn", "c-var", "c-str", "c-num", "c-kom"}
+                  "ausgabe-titel", "ausgabe", "siehe", "c-kw", "c-tag", "c-fn", "c-var", "c-str", "c-num", "c-kom",
+                  # Frage und Antwort (Entwurf frage-antwort.html)
+                  "qa-beitrag", "qa-stimmen", "zahl", "was", "akz-marke", "antwort", "akzeptiert", "antworten-kopf",
+                  "beitrag-fuss", "schlagwoerter", "kommentare", "kommentar-liste", "codeblock", "verwandt"}
 
 VERSTECKT = re.compile(r"display\s*:\s*none", re.I)
 LINIE = {"linie-unten": re.compile(r"border-bottom\s*:\s*[^;]*\d", re.I),

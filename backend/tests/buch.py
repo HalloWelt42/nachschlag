@@ -215,3 +215,42 @@ def bauen_spiegel(ordner: Path, name: str = "probespiegel_en_all_2024-08") -> Pa
         c.add_item(_Seite("www.php.net/manual/en/function.array-keys.php", "array_keys", "<html><body><p>keys</p></body></html>"))
         c.add_item(_Seite("www.php.net/manual/en/index.php", "PHP Manual", SPIEGEL_INHALT))
     return datei
+
+
+# ----- Probebuch Frage und Antwort (sotoki) ------------------------------------------------------------------------------
+
+def _qa_beitrag(art: str, kennung: str, punkte: str, text: str, wer: str, wann: str, kommentare: str = "") -> str:
+    klasse = {"frage": 'id="question" class="question" data-questionid="84"',
+              "antwort": f'id="answer-{kennung}" class="answer" data-answerid="{kennung}"',
+              "akzeptiert": f'id="answer-{kennung}" class="answer accepted-answer" data-answerid="{kennung}"'}[art]
+    return (f'<div {klasse} data-score="{punkte}"><div class="post-layout"><div class="votecell"><div class="js-vote-count">{punkte}</div></div>'
+            f'<div class="postcell"><div class="s-prose js-post-body">{text}</div>'
+            + ('<div class="post-taglist"><a href="../../questions/tagged/os-clipboard" class="post-tag">os-clipboard</a></div>'
+               if art == "frage" else "")
+            + f'<div class="post-signature"><div class="s-user-card"><time class="s-user-card--time" datetime="{wann}">{wann}</time>'
+            f'<div class="s-user-card--info"><a href="../../users/1/x" class="s-user-card--link">{wer}</a></div></div></div></div>'
+            f'<div class="comments"><ul class="comments-list">{kommentare}</ul></div></div></div>')
+
+
+FRAGE = ('<html><head><title>Clipboard</title></head><body><div id="question-header"><h1><a href="../../questions/84/clipboard"'
+         ' class="question-hyperlink">How can I copy text to the clipboard?</a></h1></div>'
+         + _qa_beitrag("frage", "84", "520", "<p>Is there a way to copy a block of text?</p>", "thameera", "asked Feb 03 '15 at 18:16",
+                       '<li class="comment js-comment" data-comment-score="15"><span class="comment-copy">Asked on SO.</span>'
+                       ' - <a class="comment-user" href="../../users/2/b">bsmith89</a></li>')
+         + _qa_beitrag("antwort", "97", "53", "<pre><code>set clipboard=unnamedplus\n</code></pre>", "Quincy Bowers", "answered Feb 03 '15 at 19:00")
+         + _qa_beitrag("akzeptiert", "96", "40", "<p>Use the <code>+</code> register.</p>", "Martin Tournoij", "answered Feb 03 '15 at 18:30")
+         + '<div id="sidebar"><a href="../../questions/332/registers" class="question-hyperlink">Define registers</a></div></body></html>')
+
+
+def bauen_qa(ordner: Path, name: str = "probeqa_en_all_2026-10") -> Path:
+    ordner.mkdir(parents=True, exist_ok=True)
+    datei = ordner / f"{name}.zim"
+    with Creator(str(datei)).config_indexing(True, "eng") as c:
+        c.set_mainpath("questions/84/clipboard")
+        for schluessel, wert in (("Name", name.rsplit("_", 1)[0]), ("Title", "Vi Probe"), ("Language", "eng"),
+                                 ("Description", "Fragen für die Tests"), ("Date", "2026-10-01"), ("Scraper", "sotoki 2.2.0"),
+                                 ("Creator", "Tests"), ("Publisher", "Tests")):
+            c.add_metadata(schluessel, wert)
+        c.add_item(_Seite("questions/84/clipboard", "How can I copy text to the clipboard?", FRAGE))
+        c.add_item(_Seite("questions/332/registers", "Define registers", "<html><body><p>registers</p></body></html>"))
+    return datei

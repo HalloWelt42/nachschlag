@@ -7,10 +7,11 @@ from ..modell.buch import Buch
 from .basis import Aufbereitet, Baustein, Wege
 from .dokumentation import Dokumentation
 from .enzyklopaedie import Enzyklopaedie
+from .frage_antwort import FrageAntwort
 from .original import Originalansicht
 from .uebersicht import Uebersicht
 
-BAUSTEINE: tuple[Baustein, ...] = (Uebersicht(), Enzyklopaedie(), Dokumentation())
+BAUSTEINE: tuple[Baustein, ...] = (Uebersicht(), Enzyklopaedie(), Dokumentation(), FrageAntwort())
 RUECKFALL: Baustein = Originalansicht()
 
 

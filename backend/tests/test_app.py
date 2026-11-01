@@ -52,6 +52,7 @@ def buecher(tmp_path_factory) -> Path:
     probebuch.bauen(ordner)
     probebuch.bauen_doku(ordner)
     probebuch.bauen_spiegel(ordner)
+    probebuch.bauen_qa(ordner)
     return ordner
 
 
@@ -77,7 +78,7 @@ async def nachschlag(tmp_path: Path, buecher: Path):
 async def test_buecher(nachschlag):
     c, _, _ = nachschlag
     stand = (await c.get("/api/v1/buecher")).json()
-    assert stand["fehler"] == [] and len(stand["buecher"]) == 3
+    assert stand["fehler"] == [] and len(stand["buecher"]) == 4
     b = next(b for b in stand["buecher"] if b["kennung"] == "probe_de_all_2026-01")
     assert b["kennung"] == "probe_de_all_2026-01" and b["art"] == "enzyklopaedie" and b["startseite"] == "index"
     assert b["faehigkeiten"] == {"titelindex": True, "volltext": True, "bilder": True, "lesedesign": True}
@@ -285,3 +286,24 @@ async def test_seitenpfade_mit_punkt_bleiben_seiten(nachschlag):
         r = await c.get(weg)
         assert r.status_code == 200 and "Nicht gefunden" not in r.text, weg
     assert (await c.get("/sonst/datei.php")).status_code == 404          # außerhalb von /lesen gilt die Dateiregel
+
+
+async def test_frage_und_antwort_nach_entwurf(nachschlag):
+    """sotoki neu gesetzt: Frage mit Stimmen, Schlagwörtern und zugeklappten Kommentaren, die akzeptierte Antwort
+    zuerst (vor einer mit mehr Stimmen), Wer und Wann auf Deutsch, Code als Block; Steckbrief und Inhalt dazu."""
+    c, _, _ = nachschlag
+    a = (await c.get("/api/v1/artikel/probeqa_en_all_2026-10/questions/84/clipboard")).json()
+    assert (a["baustein"], a["titel"], a["rubrik"]) == ("frage_antwort", "How can I copy text to the clipboard?", "Fragen")
+    assert [s["titel"] for s in a["abschnitte"]] == ["Frage", "2 Antworten", "40 · Martin Tournoij", "53 · Quincy Bowers"]
+    html = a["html"]
+    assert '<div class="qa-stimmen"><span class="zahl">520</span><span class="was">Stimmen</span></div>' in html
+    assert '<div class="schlagwoerter"><span>os-clipboard</span></div>' in html
+    assert '<span>gefragt 03.02.2015 von thameera</span>' in html
+    assert '<details class="kommentare"><summary>1 Kommentar</summary><ul class="kommentar-liste"><li><b>+15</b>Asked on SO.' in html
+    assert html.index('id="antwort-96"') < html.index('id="antwort-97"')       # akzeptiert vor mehr Stimmen
+    assert '<div class="antwort akzeptiert" id="antwort-96">' in html and '<span class="akz-marke">Akzeptierte Antwort</span>' in html
+    assert '<pre class="codeblock">set clipboard=unnamedplus\n</pre>' in html
+    s = a["steckbrief"]
+    assert s["titel"] == "Frage 84"
+    assert "<dt>Antworten</dt><dd>2, eine akzeptiert</dd>" in s["html"] and "<dt>Gefragt</dt><dd>03.02.2015 von thameera</dd>" in s["html"]
+    assert 'href="/lesen/probeqa_en_all_2026-10/questions/332/registers"' in s["html"]

@@ -333,6 +333,36 @@
 .code-liste a.code { font-family: var(--schrift-editor); font-variant-ligatures: none; }
 .inhalt .code-liste li.aktiv > a { background: var(--flaeche); color: var(--text); font-weight: 600; box-shadow: inset 3px 0 0 var(--akzent-flaeche); border-radius: 0; }
 
+/* ===== Frage und Antwort (Baustein für sotoki, Entwurf frage-antwort.html) ===== */
+.artikel-text pre.codeblock { margin: 0 0 1em; padding: 12px 14px; font-family: var(--schrift-editor); font-variant-ligatures: none;
+                              font-size: calc(var(--klein) - 1px); line-height: 1.55; overflow-x: auto; background: var(--ed-grund); color: var(--ed-text);
+                              box-shadow: var(--schatten); border-radius: var(--r2); }
+.qa-beitrag { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: var(--a3); }
+.qa-stimmen { display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 4px; }
+.qa-stimmen .zahl { font-family: var(--schrift-zahl); font-size: calc(var(--titel) + 2px); font-weight: 600; }
+.qa-stimmen .was { font-size: var(--marke); color: var(--text-3); }
+.qa-stimmen .haken { width: 34px; height: 34px; display: grid; place-items: center; background: var(--gut); color: var(--auf-farbe); }
+.qa-stimmen .haken i { font-size: 16px; }
+.antwort { padding: var(--a3) var(--a4) var(--a2); margin: 0 0 var(--a4); background: var(--flaeche); box-shadow: var(--schatten); border-radius: var(--r3); scroll-margin-top: var(--a4); }
+.antwort.akzeptiert { box-shadow: var(--schatten), inset 3px 0 0 var(--gut); border-radius: 0; }
+.akz-marke { display: inline-flex; align-items: center; gap: 6px; font-size: var(--marke); font-weight: 600; color: var(--gut); text-transform: uppercase;
+             letter-spacing: .06em; margin-bottom: var(--a2); }
+.beitrag-fuss { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2) var(--a4); margin-top: var(--a2); padding-top: var(--a2);
+                box-shadow: inset 0 1px 0 var(--rand); font-size: var(--klein); color: var(--text-3); }
+.kommentare { margin-top: var(--a2); font-size: var(--klein); color: var(--text-2); }
+.kommentare summary { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); }
+.kommentar-liste { margin: var(--a2) 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.kommentar-liste li { padding: 6px 10px; background: var(--flaeche-2); line-height: 1.5; }
+.kommentar-liste li b { font-family: var(--schrift-zahl); color: var(--text-3); margin-right: 6px; font-weight: 500; }
+.kommentar-liste li i { color: var(--text-3); margin-left: 6px; }
+.antworten-kopf { display: flex; align-items: center; flex-wrap: wrap; gap: var(--a3); margin: 1.4em 0 .7em; clear: both; }
+.artikel-text .antworten-kopf h2 { margin: 0; border: 0; padding: 0; }
+.schlagwoerter { display: flex; flex-wrap: wrap; gap: 4px; margin-top: var(--a2); }
+.schlagwoerter span { font-family: var(--schrift-editor); font-size: var(--marke); padding: 2px 8px; background: color-mix(in srgb, var(--info) 11%, transparent); color: var(--info); }
+.steckbrief .schlagwoerter { margin: var(--a2) var(--a3) 0; }
+.steckbrief .verwandt { margin: var(--a2) var(--a3) var(--a3); padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+#frage { scroll-margin-top: var(--a4); }
+
 /* Startseite eines Handbuchs: Rubriken mit ihren Seiten */
 .rubriken { columns: 4 260px; column-gap: var(--a4); padding: var(--a4) var(--a5) var(--a6); max-width: 1680px; }
 .rubrik { break-inside: avoid; margin-bottom: var(--a4); background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten); padding: var(--a3) var(--a4); }
@@ -371,6 +401,7 @@
   .lesen, .uebersicht, .rubriken { padding-inline: var(--a3); }
   .rubriken { columns: 1; }
   .artikel-text .parameterliste { grid-template-columns: minmax(0, 1fr); }
+  .qa-beitrag { grid-template-columns: 40px minmax(0, 1fr); gap: var(--a2); }
   .start-innen { padding-inline: 0; }          /* den Seitenrand am Telefon gibt die Schale, nur einmal */
   .treffer .marken { margin-left: 0; }
 }
