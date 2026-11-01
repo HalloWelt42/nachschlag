@@ -10,6 +10,7 @@
   import { kontextBuch } from "../lib/suchkontext";
   import { lesen, suchen } from "../lib/ziele";
   import Buchmarke from "./Buchmarke.svelte";
+  import Sprechknopf from "./Sprechknopf.svelte";
 
   let { gross = false, taste = false, wert = "", platzhalter = "Begriff, Name oder eine Frage in eigenen Worten" }:
     { gross?: boolean; taste?: boolean; wert?: string; platzhalter?: string } = $props();
@@ -159,6 +160,8 @@
     {:else}
       <span class="buchwahl" title="Gesucht wird in allen Quellen"><i class="fa-solid fa-book"></i>Alle Quellen</span>
     {/if}
+    <!-- Spracheingabe (WIKI-42): der Text steht im Feld, wächst beim Sprechen; am Ende läuft die Suche, er bleibt änderbar -->
+    <Sprechknopf titel="Frage sprechen" live={(t) => (frage = t)} fertig={(t) => { frage = t; alleTreffer(); }} />
     {#if taste}<kbd title="Taste / setzt die Schreibmarke ins Suchfeld">/</kbd>{/if}
   </label>
   {#if offen && frage.trim()}

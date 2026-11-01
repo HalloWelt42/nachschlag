@@ -36,6 +36,10 @@ fehlenden Feldern (Schlagwörter, Stimmen, Autoren, Rubriken).
 8. **Spracheingabe:** Mikrofon am Suchfeld, verschriftet über die Leitstelle. Tippen startet, Tippen oder Stille
    beendet; der Text steht im Feld, die Suche läuft sofort los und er bleibt änderbar. Derselbe Baustein auch für
    Notizen.
+   **Umgesetzt (Schritt 6, WIKI-42):** Baustein Sprechknopf (Suchfeld und Notizen) mit der Aufnahme des Appkerns:
+   Live-Mitschrift an Sprechpausen über den Hördienst der Leitstelle (Einstellung, Vorgabe klangwerk-hoeren), Ende per
+   Tippen oder drei Sekunden Stille. Das Mikrofon erscheint nur, wenn die Leitstelle den Hördienst für Nachschlag
+   freigibt (GET /api/v1/sprache).
 9. **Suchkorrektur:** normal "Meintest du: ..." zum Antippen; bei null Treffern sucht Nachschlag gleich mit der
    Korrektur und sagt das deutlich. Zuerst über die Titel der Bücher, das lokale Modell nur, wenn die nichts hergeben.
    **Umgesetzt (Schritt 5, WIKI-41):** Vorschlag aus dem Wortschatz der eigenen Indizes: ein Wort der Frage weicht

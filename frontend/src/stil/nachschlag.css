@@ -340,6 +340,13 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .treffer .buchname { font-size: var(--marke); color: var(--text-3); }
 .treffer .marken { margin-left: auto; display: flex; gap: 4px; }
 .fundband.uebersetzt span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.sprechknopf { flex: none; display: inline-grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 50%;
+               background: transparent; color: var(--text-3); cursor: pointer; }
+.sprechknopf:hover { background: var(--flaeche-2); color: var(--text); }
+.sprechknopf.hoert { background: var(--gefahr); color: var(--auf-farbe); animation: sprechen 1.2s ease-in-out infinite; }
+@keyframes sprechen { 50% { opacity: .65; } }
+.sprech-stand { font-size: var(--marke); color: var(--gefahr); }
+.notiz-feldkopf { display: flex; align-items: center; justify-content: space-between; gap: var(--a2); }
 .meintest { border: 0; padding: 0; background: none; font: inherit; font-weight: 600; color: var(--verweis); cursor: pointer; text-decoration: underline; }
 .uebersetzung-aendern { flex: 1; display: flex; flex-wrap: wrap; gap: var(--a2); align-items: center; }
 /* Ausnahme: mindestens 16px, sonst vergrößert iOS die Seite beim Tippen */

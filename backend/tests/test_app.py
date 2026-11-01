@@ -550,3 +550,12 @@ async def test_meins_trennt_konten(tmp_path):
         assert await themen.eintragen("zwei", t.id, EintragNeu(buch="probe_2026-01", pfad="A", titel="A")) is None
     finally:
         await db.schliessen()
+
+
+async def test_spracheingabe_nur_wenn_bereit(nachschlag):
+    """Spracheingabe (WIKI-42): ohne Leitstelle sagt der Stand, warum nicht; ein Stück Ton wird dann abgelehnt."""
+    c, _, _ = nachschlag
+    stand = (await c.get("/api/v1/sprache")).json()
+    assert stand["bereit"] is False and "Leitstelle" in stand["grund"]
+    r = await c.post("/api/v1/sprache", files={"datei": ("stueck.wav", b"RIFF0000WAVE", "audio/wav")})
+    assert r.status_code == 503

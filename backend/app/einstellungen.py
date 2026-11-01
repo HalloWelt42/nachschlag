@@ -30,6 +30,9 @@ class AppEinstellungen(Grundeinstellungen):
                             description="Übersetzt eine Frage für englische Quellen ins Englische (Fachbegriffe und Code "
                                         "bleiben) und korrigiert Tippfehler, wenn der Wortschatz der Quellen nichts hergibt. "
                                         "Leer: die Kette der App in der Leitstelle.")
+    hoerdienst: str = Field("klangwerk-hoeren", title="Hördienst für die Spracheingabe", json_schema_extra=SUCHE,
+                            description="Dienst der Leitstelle, der gesprochene Fragen und Notizen verschriftet. Das "
+                                        "Mikrofon erscheint nur, wenn die Leitstelle ihn für Nachschlag freigibt.")
     eigene_indizes: Literal["keine", "handbuecher", "handbuecher_fragen", "alle"] = Field(
         "handbuecher_fragen", title="Quellen mit eigenem Index", json_schema_extra={**SUCHE, "beschriftungen": EIGENE_INDIZES},
         description="Ein eigener Index findet Namen aus dem Code (array_map), Rubriken und Einleitungen und sucht in Quellen "

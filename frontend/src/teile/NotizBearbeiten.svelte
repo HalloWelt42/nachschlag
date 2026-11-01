@@ -6,6 +6,7 @@
   import { kopieren, seitenFehler } from "appkern-oberflaeche";
   import { buchName } from "../lib/bibliothek.svelte";
   import { RUECKMELDUNG_MS, zitatMitHerkunft } from "../lib/zitat";
+  import Sprechknopf from "./Sprechknopf.svelte";
   import { notieren, notizAendern, notizLoeschen, type Notiz, type NotizNeu } from "../lib/meins.svelte";
 
   const SPEICHERN_NACH_MS = 700;
@@ -120,7 +121,9 @@
     <span><b>{titel}</b>{abschnitt ? ` · ${abschnitt}` : ""}</span>
     {#if zitat}<span class="zitat">"{zitat}"</span>{:else}<span class="zitat">am ganzen Artikel</span>{/if}
   </div>
-  <label class="feld-titel" for={feldId}>Notiz</label>
+  <div class="notiz-feldkopf"><label class="feld-titel" for={feldId}>Notiz</label>
+    <!-- Spracheingabe (WIKI-42): das Gesagte kommt hinten an den Text und wird gespeichert -->
+    <Sprechknopf titel="Notiz sprechen" fertig={(t) => { text = text.trim() ? `${text.trimEnd()} ${t}` : t; tippen(); }} /></div>
   <textarea id={feldId} class="schreibfeld" bind:this={feld} bind:value={text} oninput={tippen}
             placeholder={zitat ? "Ohne Text bleibt die Stelle markiert" : "Was du dir zum Artikel merken willst"}></textarea>
   <div class="gespeichert" class:fehlt={!!fehler}>
