@@ -8,8 +8,12 @@ from urllib.parse import quote
 from .bausteine import Wege, baustein_fuer
 from .bausteine.basis import Aufbereitet
 from .bausteine.html import online_adresse
-from .bibliothek import Bibliothek
+from .bibliothek import Bibliothek, EintragFehlt
 from .modell.artikel import Artikel
+
+
+#: so oft zieht der Zufall neu, wenn er eine Sprungseite ohne Ziel in der Quelle trifft
+ZUFALL_ZUEGE = 12
 
 
 def _pfad(pfad: str) -> str:
@@ -54,6 +58,14 @@ class Artikelleser:
                        quelle_url=online_adresse(b, eintrag.pfad), **_verfasser(fertig))
 
     async def zufall(self, buch: str) -> str:
-        """Pfad eines zufälligen Artikels (ohne Weiterleitungen)."""
+        """Pfad eines zufälligen Artikels, der sich lesen lässt. Weiterleitungen sind aufgelöst; eine Sprungseite, deren
+        Ziel in dieser Quelle fehlt (Auszüge wie climate-change verweisen auf Artikel, die nicht dabei sind), wird
+        übergangen und neu gezogen. Findet sich nach einigen Zügen nichts, `EintragFehlt`."""
         a = self._bib.archiv(buch)
-        return await asyncio.to_thread(lambda: a.get_random_entry().path)
+        for _ in range(ZUFALL_ZUEGE):
+            pfad = await asyncio.to_thread(lambda: a.get_random_entry().path)
+            try:
+                return (await self._bib.eintrag(buch, pfad)).pfad
+            except EintragFehlt:
+                continue
+        raise EintragFehlt(f"In {buch} fand sich in {ZUFALL_ZUEGE} Zügen kein lesbarer Artikel")

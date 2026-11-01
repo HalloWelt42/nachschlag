@@ -59,7 +59,7 @@ def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche:
     async def zufall(buch: str) -> dict[str, str]:
         try:
             return {"buch": buch, "pfad": await leser.zufall(buch)}
-        except BuchFehlt as f:
+        except (BuchFehlt, EintragFehlt) as f:
             raise _fehlt(f)
 
     @r.get("/vorschlaege", response_model=list[Vorschlag], dependencies=pflicht)
