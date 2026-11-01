@@ -358,8 +358,20 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 /* Ausnahme: Schrift des Editors der Codeschmiede (JetBrains Mono, gebündelt), Nutzer verlangt dasselbe Theme */
 :root { --schrift-editor: "JetBrains Mono", var(--schrift-code); }
 .code-titel { font-family: var(--schrift-editor); font-variant-ligatures: none; }
-.artikel-text code { font-family: var(--schrift-editor); font-variant-ligatures: none; font-size: .86em; padding: 1px 5px; border-radius: var(--r1);
-                     background: var(--flaeche-2); }
+.artikel-text code { font-family: var(--schrift-editor); font-variant-ligatures: none; font-size: .86em; }
+/* Inline-Code (WIKI-33): Schrift und Farbstimmung des Editors als kleine Marke im Text, hell und dunkel */
+.artikel-text :not(pre) > code { padding: 1px 5px; border-radius: var(--r1); background: var(--ed-konsole); color: var(--ed-feld);
+                                 box-shadow: inset 0 0 0 1px var(--rand); overflow-wrap: anywhere; }
+.artikel-text a > code { color: inherit; }
+/* Codeblöcke (WIKI-33): Klassen von highlight.js auf die Editorfarben, wie die Beispiele der Handbücher */
+.artikel-text pre :is(.hljs-keyword, .hljs-literal, .hljs-type, .hljs-selector-tag, .hljs-doctag) { color: var(--ed-kw); font-weight: 600; }
+.artikel-text pre :is(.hljs-string, .hljs-regexp, .hljs-addition, .hljs-symbol) { color: var(--ed-str); }
+.artikel-text pre :is(.hljs-number, .hljs-bullet) { color: var(--ed-zahl); }
+.artikel-text pre :is(.hljs-comment, .hljs-quote) { color: var(--ed-kom); font-style: italic; }
+.artikel-text pre :is(.hljs-title, .hljs-section, .hljs-built_in, .hljs-selector-id, .hljs-selector-class) { color: var(--ed-fn); }
+.artikel-text pre :is(.hljs-variable, .hljs-attr, .hljs-attribute, .hljs-params, .hljs-property, .hljs-template-variable, .hljs-name) { color: var(--ed-feld); }
+.artikel-text pre :is(.hljs-meta, .hljs-tag) { color: var(--ed-kom); }
+.artikel-text pre .hljs-deletion { color: var(--gefahr); }
 .artikel-text p.einleitung { font-size: calc(var(--lesen) + 1px); color: var(--text-2); }
 .signatur { position: relative; margin: 0 0 1em; padding: var(--a3) var(--a4); background: var(--ed-grund); color: var(--ed-text);
             box-shadow: var(--schatten), inset 3px 0 0 var(--violett); border-radius: 0; font-family: var(--schrift-editor);

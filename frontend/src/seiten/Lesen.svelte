@@ -12,6 +12,7 @@
   import { Auswahl } from "appkern-oberflaeche";
   import { kopieren } from "../lib/kopieren";
   import { istCode } from "../lib/code";
+  import { codeEinfaerben, spracheAus } from "../lib/einfaerben";
   import { htmlSprache } from "../lib/sprache";
   import { gemerkt, lesestandMelden, meins, meinsLaden, merken, notieren, vergessen, vorliebeSetzen, wann, type Notiz,
            type NotizNeu } from "../lib/meins.svelte";
@@ -95,6 +96,8 @@
       await tick();
       woerter = text?.innerText.split(/\s+/).length ?? 0;
       if (text) {
+        // Sprache des Codes aus den Schlagwörtern (Frage und Antwort); sonst erkennt sie sich am Inhalt
+        codeEinfaerben(text, spracheAus([...text.querySelectorAll(".schlagwoerter span")].map((e) => e.textContent ?? "")));
         kopierknoepfe(text);
         symboleAnbringen(text);
       }
