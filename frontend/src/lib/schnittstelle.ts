@@ -102,3 +102,12 @@ export const zitateHolen = (buch: string, pfad: string, signal?: AbortSignal) =>
 export interface Heute { buch: string; pfad: string; titel: string; bild: string; einleitung: string; thema_id: string; thema: string; grund: string }
 
 export const heuteHolen = () => hole<Heute | null>("/meins/themen/heute");
+
+// --- Markierte Stelle übersetzen (WIKI-47): ins Deutsche, in deutschem Text ins Englische ---
+export interface Stellenuebersetzung { ziel: "de" | "en"; text: string; modell: string; grund: string }
+
+export const stellenstandHolen = () => hole<{ bereit: boolean; grund: string }>("/uebersetzung/stelle");
+
+export const stelleUebersetzen = (text: string, ziel: "de" | "en") =>
+  hole<Stellenuebersetzung>("/uebersetzung/stelle", { method: "POST", headers: { "Content-Type": "application/json" },
+                                                     body: JSON.stringify({ text, ziel }) });

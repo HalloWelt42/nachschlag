@@ -26,7 +26,7 @@ from .register import Register
 from .korrektur import Korrektor
 from .korrektur.api import router as korrektur_router
 from .sprache.api import router as sprache_router
-from .uebersetzung import Artikeluebersetzer, Uebersetzer
+from .uebersetzung import Artikeluebersetzer, Stellenuebersetzer, Uebersetzer
 from .uebersetzung.api import router as uebersetzung_router
 from .vorlesen import NichtBereit, Sprechdienst
 from .vorlesen.api import router as vorlesen_router
@@ -110,7 +110,8 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     app.include_router(medien_router(geruest, Medien(leser, suche)))
     app.include_router(stoebern_router(geruest, Stoebern(bibliothek, leser, suche, meins.gelesen)))
     app.include_router(register_router(geruest, Register(bibliothek, eigen)))
-    app.include_router(uebersetzung_router(geruest, uebersetzer, artikeluebersetzer))
+    app.include_router(uebersetzung_router(geruest, uebersetzer, artikeluebersetzer,
+                                           Stellenuebersetzer(lambda: geruest.leitstelle, lambda: e().suchmodell)))
     app.include_router(vorlesen_router(geruest, sprechdienst))     # Vorlesen über die Leitstelle (WIKI-43)
     app.include_router(sprache_router(geruest, lambda: e().hoerdienst))
     app.include_router(korrektur_router(geruest, Korrektor(eigen.alle, lambda: geruest.leitstelle, lambda: e().suchmodell)))

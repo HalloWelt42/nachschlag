@@ -2,5 +2,7 @@
 
 from .artikel import Artikeluebersetzer, Artikelstand, ArtikelUebersetzung
 from .dienst import Uebersetzer, Uebersetzung, UebersetzungFehlt
+from .stelle import Stellenuebersetzer
 
-__all__ = ["ArtikelUebersetzung", "Artikelstand", "Artikeluebersetzer", "Uebersetzer", "Uebersetzung", "UebersetzungFehlt"]
+__all__ = ["ArtikelUebersetzung", "Artikelstand", "Artikeluebersetzer", "Stellenuebersetzer", "Uebersetzer", "Uebersetzung",
+           "UebersetzungFehlt"]

@@ -6,7 +6,8 @@
   import { gehe, navigation, seitenFehler } from "appkern-oberflaeche";
   import { tick, untrack } from "svelte";
   import { bezeichnung, bibliothek, bibliothekLaden, buch as buchVon, datum, hauptbuch, zahl } from "../lib/bibliothek.svelte";
-  import { artikelHolen, artikelstandHolen, artikelUebersetzen, zufallHolen, type Artikelstand } from "../lib/schnittstelle";
+  import { artikelHolen, artikelstandHolen, artikelUebersetzen, stellenstandHolen, stelleUebersetzen, zufallHolen,
+           type Artikelstand } from "../lib/schnittstelle";
   import { deutsch, deutschMerken, uebersetzt } from "../lib/deutsch.svelte";
   import { ANSICHTEN, ansichtMerken, leseansicht } from "../lib/ansicht.svelte";
   import type { Artikel } from "../lib/typen";
@@ -527,6 +528,30 @@
     if (mitText) notizZeigen(mitText);
   }
 
+  // Markierte Stelle übersetzen (WIKI-47): ins Deutsche, in deutschem Text ins Englische; das Ergebnis steht in der Leiste,
+  // bis die Auswahl sich ändert. Den Knopf gibt es nur, wenn die Leitstelle da ist.
+  let stellenBereit = $state(false);
+  let wahlUebersetzung = $state<{ fuer: string; laeuft: boolean; text: string; grund: string } | null>(null);
+  let uebersetzungKopiert = $state<"" | "ja" | "nein">("");
+  $effect(() => {
+    stellenstandHolen().then((s) => (stellenBereit = s.bereit)).catch(() => (stellenBereit = false));
+  });
+  async function stelleUebersetzenKlick() {
+    if (!textwahl) return;
+    const fuer = textwahl.stelle.zitat;
+    wahlUebersetzung = { fuer, laeuft: true, text: "", grund: "" };
+    try {
+      const u = await stelleUebersetzen(fuer.slice(0, 4000), textSprache === "de" ? "en" : "de");
+      if (wahlUebersetzung?.fuer === fuer) wahlUebersetzung = { fuer, laeuft: false, text: u.text, grund: u.grund };
+    } catch (f) {
+      if (wahlUebersetzung?.fuer === fuer) wahlUebersetzung = { fuer, laeuft: false, text: "", grund: seitenFehler(f) };
+    }
+  }
+  async function uebersetzungKopieren() {
+    uebersetzungKopiert = wahlUebersetzung?.text && (await kopieren(wahlUebersetzung.text)) ? "ja" : "nein";
+    setTimeout(() => (uebersetzungKopiert = ""), RUECKMELDUNG_MS);
+  }
+
   /** Zitat mit Herkunft in die Zwischenablage; die Leiste sagt kurz, ob es geklappt hat, und geht dann zu. */
   async function zitieren() {
     if (!artikel || !textwahl) return;
@@ -948,6 +973,21 @@
     <button class:kopiert-ok={kopiert === "ja"} onclick={zitieren} title="Zitat mit Artikel, Abschnitt und Quelle in die Zwischenablage">
       <i class="fa-solid {kopiert === 'ja' ? 'fa-check' : kopiert === 'nein' ? 'fa-triangle-exclamation' : 'fa-quote-right'}"></i>{kopiert === "ja" ? "Kopiert" : kopiert === "nein" ? "Geht nicht" : "Zitieren"}</button>
     <button onclick={() => { const z = textwahl!.stelle.zitat; textwahl = null; suchen(z.slice(0, 200)); }}><i class="fa-solid fa-magnifying-glass"></i>Suchen</button>
+    {#if stellenBereit}
+      <button class:an={wahlUebersetzung?.fuer === textwahl.stelle.zitat} onclick={stelleUebersetzenKlick}
+              title={textSprache === "de" ? "Ins Englische übersetzen" : "Ins Deutsche übersetzen"}><i class="fa-solid fa-language"></i>Übersetzen</button>
+    {/if}
+    {#if wahlUebersetzung && wahlUebersetzung.fuer === textwahl.stelle.zitat}
+      <div class="wahl-uebersetzung" aria-live="polite">
+        {#if wahlUebersetzung.laeuft}<span class="laeuft"><i class="fa-solid fa-spinner fa-spin-pulse"></i>Übersetzt ...</span>
+        {:else if wahlUebersetzung.grund}<span class="grund">{wahlUebersetzung.grund}</span>
+        {:else}
+          <span class="text">{wahlUebersetzung.text}</span>
+          <button class="kopieren" class:kopiert-ok={uebersetzungKopiert === "ja"} onclick={uebersetzungKopieren}>
+            <i class="fa-{uebersetzungKopiert === 'ja' ? 'solid fa-check' : 'regular fa-copy'}"></i>{uebersetzungKopiert === "ja" ? "Kopiert" : "Kopieren"}</button>
+        {/if}
+      </div>
+    {/if}
   </div>
 {/if}
 {#if bilder && artikel}

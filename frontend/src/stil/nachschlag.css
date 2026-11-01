@@ -1051,3 +1051,12 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 [data-rahmen="app"] .nur-blatt > .fundband:not(.uebersetzt) { display: none; }
 [data-rahmen="app"] .schwebeleiste { bottom: calc(var(--rahmen-fuss) + var(--a3)); }
 [data-rahmen="app"] .inhalt-tafel { top: calc(var(--rahmen-kopf-unten) + var(--a2)); max-height: calc(100% - var(--rahmen-kopf-unten) - var(--rahmen-fuss) - 90px); }
+
+/* Übersetzung einer markierten Stelle (WIKI-47): in der Leiste unter den Knöpfen, bis die Auswahl sich ändert */
+.auswahl-leiste { flex-wrap: wrap; max-width: min(560px, calc(100vw - 2 * var(--a3))); }
+.auswahl-leiste button.an { background: color-mix(in srgb, var(--hg) 22%, transparent); }
+.wahl-uebersetzung { flex-basis: 100%; display: flex; align-items: flex-start; gap: var(--a2); margin-top: 4px; padding: 8px 10px;
+  border-radius: 10px; background: color-mix(in srgb, var(--hg) 12%, transparent); color: var(--hg); font-size: var(--klein); }
+.wahl-uebersetzung .text { flex: 1; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 40vh; overflow-y: auto; }
+.wahl-uebersetzung .laeuft, .wahl-uebersetzung .grund { display: inline-flex; align-items: center; gap: var(--a2); }
+.wahl-uebersetzung button.kopieren { flex: none; flex-direction: row; gap: 6px; }

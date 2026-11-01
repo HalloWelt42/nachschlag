@@ -12,6 +12,12 @@ from appkern.app import Geruest
 from ..bibliothek import BuchFehlt, EintragFehlt
 from .artikel import Artikeluebersetzer, Artikelstand
 from .dienst import Uebersetzer, Uebersetzung, UebersetzungFehlt
+from .stelle import HOECHSTENS, Stellenstand, Stellenuebersetzer, Stellenuebersetzung, Ziel
+
+
+class Stelle(BaseModel):
+    text: str = Field(min_length=1, max_length=HOECHSTENS)
+    ziel: Ziel = "de"
 
 
 class Korrektur(BaseModel):
@@ -19,7 +25,7 @@ class Korrektur(BaseModel):
     text: str = Field(min_length=1, max_length=500)
 
 
-def router(geruest: Geruest, uebersetzer: Uebersetzer, artikel: Artikeluebersetzer) -> APIRouter:
+def router(geruest: Geruest, uebersetzer: Uebersetzer, artikel: Artikeluebersetzer, stellen: Stellenuebersetzer) -> APIRouter:
     r = APIRouter(prefix="/api/v1/uebersetzung", tags=["uebersetzung"], dependencies=[geruest.pflicht])
 
     @r.get("", response_model=Uebersetzung)
@@ -33,6 +39,16 @@ def router(geruest: Geruest, uebersetzer: Uebersetzer, artikel: Artikeluebersetz
     @r.put("", response_model=Uebersetzung)
     async def korrigieren(eingabe: Korrektur) -> Uebersetzung:
         return await uebersetzer.korrigieren(eingabe.frage, eingabe.text)
+
+    @r.get("/stelle", response_model=Stellenstand)
+    async def stellenstand() -> Stellenstand:
+        """Ob markierte Stellen übersetzbar sind (die Leiste zeigt "Übersetzen" nur dann)."""
+        return stellen.stand()
+
+    @r.post("/stelle", response_model=Stellenuebersetzung)
+    async def stelle(eingabe: Stelle) -> Stellenuebersetzung:
+        """Eine markierte Stelle übersetzen (WIKI-47); geht es gerade nicht, steht der Grund in `grund`."""
+        return await stellen.uebersetzen(eingabe.text, eingabe.ziel)
 
     @r.get("/artikel/{buch}/{pfad:path}", response_model=Artikelstand)
     async def artikelstand(buch: str, pfad: str) -> Artikelstand:
