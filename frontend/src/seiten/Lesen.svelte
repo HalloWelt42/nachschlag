@@ -162,22 +162,39 @@
       el = h;
     }
     if (el) el.scrollIntoView({ block: "start" });
-    else rollfeld.scrollTop = 0;
+    else roller().scrollTop = 0;
     mitlaufen();
   }
 
+  /** Was beim Lesen tatsächlich rollt: am Rechner das Rollfeld des Artikels, am Telefon der Inhalt der Schale (dort
+   *  wächst das Rollfeld mit). Eine Stelle für Lesestand, Mitlauf und Sprünge. */
+  function roller(): HTMLElement {
+    let el: HTMLElement | null = rollfeld ?? null;
+    while (el && !(/(auto|scroll)/.test(getComputedStyle(el).overflowY) && el.scrollHeight > el.clientHeight)) el = el.parentElement;
+    return el ?? (document.scrollingElement as HTMLElement);
+  }
+
+  // Rollen hören, wo immer es geschieht (Scroll-Ereignisse steigen nicht auf; im Einfangen kommen sie an)
+  $effect(() => {
+    const hoeren = () => mitlaufen();
+    document.addEventListener("scroll", hoeren, { capture: true, passive: true });
+    return () => document.removeEventListener("scroll", hoeren, { capture: true });
+  });
+
   function mitlaufen() {
     if (!rollfeld || !text || !artikel) return;
-    // Lage der Überschriften im sichtbaren Rollfeld (offsetTop bezöge sich auf das nächste positionierte Element)
-    const oben = rollfeld.getBoundingClientRect().top + MITLAUF_ABSTAND_PX;
+    const r = roller();
+    const sichtbar = r === document.scrollingElement ? 0 : r.getBoundingClientRect().top;
+    // Lage der Überschriften im sichtbaren Bereich (offsetTop bezöge sich auf das nächste positionierte Element)
+    const oben = sichtbar + MITLAUF_ABSTAND_PX;
     let jetzt = "";
     for (const a of artikel.abschnitte) {
       const h = text.querySelector<HTMLElement>(`#${CSS.escape(a.anker)}`);
       if (h && h.getBoundingClientRect().top <= oben) jetzt = a.anker;
     }
     aktiv = jetzt;
-    const weit = rollfeld.scrollHeight - rollfeld.clientHeight;
-    anteil = weit > 0 ? Math.min(1, rollfeld.scrollTop / weit) : 1;
+    const weit = r.scrollHeight - r.clientHeight;
+    anteil = weit > 0 ? Math.min(1, r.scrollTop / weit) : 1;
   }
 
   function springen(ziel: string) {
@@ -373,12 +390,9 @@
 
   /** Eine Stelle ins obere Fünftel rollen: darunter steht das Blatt der Notiz und soll sie nicht verdecken. */
   function stelleZeigen(el: HTMLElement, wie: ScrollBehavior) {
-    let roller: HTMLElement | null = el.parentElement;        // am Rechner das Rollfeld, am Telefon die Seite
-    while (roller && !(/(auto|scroll)/.test(getComputedStyle(roller).overflowY) && roller.scrollHeight > roller.clientHeight)) roller = roller.parentElement;
-    const feld = roller ?? (document.scrollingElement as HTMLElement);
-    const oben = roller ? roller.getBoundingClientRect().top : 0;
-    const hoehe = roller ? roller.clientHeight : innerHeight;
-    feld.scrollBy({ top: el.getBoundingClientRect().top - oben - hoehe * STELLE_OBEN_ANTEIL, behavior: wie });
+    const r = roller();
+    const oben = r === document.scrollingElement ? 0 : r.getBoundingClientRect().top;
+    r.scrollBy({ top: el.getBoundingClientRect().top - oben - r.clientHeight * STELLE_OBEN_ANTEIL, behavior: wie });
   }
 
   // --- Große Bildansicht: alle Bilder des Artikels, beim angetippten beginnend ---
@@ -552,7 +566,7 @@
     <iframe class="original" src={artikel.original} title="Originalseite: {artikel.titel}" sandbox="allow-same-origin allow-popups"
             onload={rahmenGeladen}></iframe>
   {:else}
-    <div class="rollfeld" style="padding: 0" bind:this={rollfeld} onscroll={mitlaufen}>
+    <div class="rollfeld" style="padding: 0" bind:this={rollfeld}>
       <div class="lesen" class:ohne-inhalt={!inhalt.length && !artikel.nachbarn.length}>
         {#if inhalt.length || artikel.nachbarn.length}
           <nav class="inhalt" aria-label="Inhalt">

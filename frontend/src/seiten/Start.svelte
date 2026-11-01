@@ -65,11 +65,11 @@
           <button class="alle" onclick={() => gehe("verlauf")}>Verlauf</button></div>
         <div class="reihe">
           {#each weiterlesen as e (e.id)}
-            <button class="leskarte" onclick={() => lesen(e.buch, e.pfad)}>
+            <button class="leskarte" data-karte onclick={() => lesen(e.buch, e.pfad)}>
               <span class="bildflaeche">{#if e.bild}<img src={e.bild} alt="" loading="lazy" />{:else}<i class="fa-solid fa-file-lines"></i>{/if}</span>
               <span class="koerper"><span class="t">{e.titel}</span>
                 {#if e.abschnitt}<span class="u">bei {e.abschnitt}</span>{/if}
-                <span class="stand"><span class="spur"><span style="width: {Math.round(e.anteil * 100)}%"></span></span>{Math.round(e.anteil * 100)} %</span></span>
+                <span class="stand" data-fuss><span class="spur"><span style="width: {Math.round(e.anteil * 100)}%"></span></span>{Math.round(e.anteil * 100)} %</span></span>
             </button>
           {/each}
         </div>
@@ -100,13 +100,13 @@
         <div class="stoebern">
           {#each mitLesedesign as b (b.kennung)}
             {@const f = funde[b.kennung]}
-            <div class="kachel-zufall">
+            <div class="kachel-zufall" data-karte>
               <span class="etikett"><i class="fa-solid fa-dice"></i>Zufallsfund</span>
               {#if f}
                 <span class="t">{f.titel}</span>
                 <span class="buchname">{bezeichnung(b)}</span>
                 <p>{f.einleitung}</p>
-                <div class="knopfreihe">
+                <div class="knopfreihe" data-fuss>
                   <button class="knopf" onclick={() => lesen(b.kennung, f.pfad)}><i class="fa-solid fa-book-open"></i>Lesen</button>
                   <button class="knopf still" onclick={() => zufallsfund(b)}><i class="fa-solid fa-rotate"></i>Neuer Zufall</button>
                 </div>

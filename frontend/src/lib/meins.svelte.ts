@@ -102,17 +102,23 @@ export async function notizLoeschen(id: string): Promise<void> {
   meins.notizen = meins.notizen.filter((n) => n.id !== id);
 }
 
-export const verlaufHolen = (anzahl = 50, ab = 0, art = "") =>
-  hole<Verlaufseintrag[]>(`/meins/verlauf?${new URLSearchParams({ anzahl: String(anzahl), ab: String(ab), art })}`);
+// Die letzte Meldung des Lesestands: wer den Verlauf liest, wartet sie ab (sonst zeigte die Startseite direkt nach
+// dem Verlassen eines Artikels noch den alten Stand)
+let meldung: Promise<void> = Promise.resolve();
+
+export async function verlaufHolen(anzahl = 50, ab = 0, art = ""): Promise<Verlaufseintrag[]> {
+  await meldung;
+  return hole<Verlaufseintrag[]>(`/meins/verlauf?${new URLSearchParams({ anzahl: String(anzahl), ab: String(ab), art })}`);
+}
 
 /** Lesestand melden (die Artikelseite ruft das gedrosselt beim Lesen und beim Verlassen). Fehler stören das Lesen nie. */
-export async function lesestandMelden(stand: { buch: string; pfad: string; titel: string; bild: string; abschnitt: string;
-                                               anteil: number; sekunden: number }): Promise<void> {
-  try {
-    await hole("/meins/verlauf/lesestand", { method: "PUT", ...json(stand) });
-  } catch {
-    /* der nächste Stand kommt ohnehin */
-  }
+export function lesestandMelden(stand: { buch: string; pfad: string; titel: string; bild: string; abschnitt: string;
+                                         anteil: number; sekunden: number }): Promise<void> {
+  meldung = hole("/meins/verlauf/lesestand", { method: "PUT", ...json(stand) }).then(
+    () => undefined,
+    () => undefined,                                   // der nächste Stand kommt ohnehin
+  );
+  return meldung;
 }
 
 export async function gesuchtMelden(frage: string, treffer: number): Promise<void> {
