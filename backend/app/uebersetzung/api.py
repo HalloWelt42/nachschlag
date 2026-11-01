@@ -1,9 +1,10 @@
 """Schnittstelle der übersetzten Suche (WIKI-40): eine Frage übersetzen (gemerkt oder über die Leitstelle) und eine
-Übersetzung korrigieren. Ohne Leitstelle 503 mit dem Grund; die Suche läuft dann ohne Übersetzung."""
+Übersetzung korrigieren. Ohne Leitstelle ist das ein Zustand, kein Fehler: von "keine" mit dem Grund; die Suche läuft
+dann ohne Übersetzung."""
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 
 from appkern.app import Geruest
@@ -25,7 +26,7 @@ def router(geruest: Geruest, uebersetzer: Uebersetzer) -> APIRouter:
         try:
             return await uebersetzer.uebersetzen(frage)
         except UebersetzungFehlt as f:
-            raise HTTPException(503, str(f)) from f
+            return Uebersetzung(frage=frage, von="keine", grund=str(f))
 
     @r.put("", response_model=Uebersetzung)
     async def korrigieren(eingabe: Korrektur) -> Uebersetzung:

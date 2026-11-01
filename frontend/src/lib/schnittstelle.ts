@@ -31,13 +31,19 @@ export const sucheHolen = (frage: string, optionen: { buecher?: string[]; wege?:
                                          anzahl: optionen.anzahl ?? 20 })}`, { signal });
 
 // --- Übersetzte Suche (WIKI-40): Frage für englische Quellen, gemerkt; die Korrektur des Nutzers gilt ---
-export interface Uebersetzung { frage: string; ziel: string; text: string; von: "modell" | "nutzer" }
+export interface Uebersetzung { frage: string; ziel: string; text: string; von: "modell" | "nutzer" | "keine"; grund: string }
 
 export const uebersetzungHolen = (frage: string, signal?: AbortSignal) =>
   hole<Uebersetzung>(`/uebersetzung?${abfrage({ frage })}`, { signal });
 
 export const uebersetzungKorrigieren = (frage: string, text: string) =>
   hole<Uebersetzung>("/uebersetzung", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ frage, text }) });
+
+// --- Suchkorrektur (WIKI-41): zuerst aus dem Wortschatz der Quellen, mit `modell` (null Treffer) auch übers Modell ---
+export interface Korrektur { frage: string; vorschlag: string; quelle: "" | "wortschatz" | "modell" }
+
+export const korrekturHolen = (frage: string, buecher: string[], modell: boolean, signal?: AbortSignal) =>
+  hole<Korrektur>(`/korrektur?${abfrage({ frage, buecher, modell: modell ? "true" : "false" })}`, { signal });
 
 // --- Register (WIKI-39): ohne Buch über alle Frage-Antwort-Bücher, seitenweise ---
 export const schlagwoerterHolen = (buch: string, anfang: string, ab: number, anzahl = 60) =>

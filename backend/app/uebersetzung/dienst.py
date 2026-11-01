@@ -9,7 +9,7 @@ from collections.abc import Callable
 from datetime import datetime, timezone
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from appkern.app.begleiter import Begleiter
 from appkern.datenbank import Datenbank
@@ -41,8 +41,9 @@ FORM = antwortform("uebersetzung", {"type": "object", "properties": {"text": {"t
 class Uebersetzung(BaseModel):
     frage: str
     ziel: str = "en"
-    text: str
-    von: Literal["modell", "nutzer"]
+    text: str = ""
+    von: Literal["modell", "nutzer", "keine"] = Field(description="keine: gerade nicht übersetzbar, der Grund steht in grund")
+    grund: str = ""
 
 
 class UebersetzungFehlt(Exception):
