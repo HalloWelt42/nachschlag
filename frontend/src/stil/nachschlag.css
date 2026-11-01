@@ -302,7 +302,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .treffer .ohne-bild { width: 56px; height: 48px; border-radius: var(--r1); background: var(--flaeche-2); display: grid; place-items: center; color: var(--text-3); }
 .treffer .ohne-bild i { font-size: 20px; }
 .treffer .zeile1 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px var(--a2); }
-.treffer .t { font-weight: 600; font-size: var(--titel); }
+.treffer .t { font-weight: 600; font-size: var(--titel); overflow-wrap: anywhere; }
 .treffer .t.code { font-family: var(--schrift-editor); font-weight: 500; }
 /* Filter einer Übersicht (WIKI-17) */
 .uebersicht-filter { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2) var(--a3); padding: var(--a4) var(--a5) 0; }
@@ -311,7 +311,8 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .uebersicht-filter .filter-stand { font-size: var(--klein); color: var(--text-3); font-family: var(--schrift-zahl); }
 .uebersicht-leer { padding-inline: var(--a5); }
 /* Treffer nach Buch (WIKI-17): je Buch ein Block mit Kopf, Stand und "Alle aus diesem Buch" */
-.buchtreffer { display: flex; flex-direction: column; gap: var(--a2); }
+.buchtreffer { display: flex; flex-direction: column; gap: var(--a2); min-width: 0; }   /* schrumpft mit, ein langes Wort sprengt nichts */
+.buchtreffer > .treffer { min-width: 0; }
 .buchtreffer + .buchtreffer { margin-top: var(--a4); }
 .buchtreffer-kopf { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2) var(--a3); padding-bottom: var(--a1); box-shadow: 0 1px 0 var(--rand); }
 .buchtreffer-kopf .buchmarke { font-weight: 600; font-size: var(--titel); }
@@ -329,7 +330,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .treffer .treffer-abschnitt { font-size: var(--klein); color: var(--text-2); }
 .treffer .buchname { font-size: var(--marke); color: var(--text-3); }
 .treffer .marken { margin-left: auto; display: flex; gap: 4px; }
-.treffer .ausschnitt { margin-top: 4px; font-size: var(--klein); color: var(--text-2); line-height: 1.5; }
+.treffer .ausschnitt { display: block; margin-top: 4px; font-size: var(--klein); color: var(--text-2); line-height: 1.5; overflow-wrap: anywhere; }
 .leer-hinweis { color: var(--text-3); font-size: var(--klein); padding: var(--a4) 0; }
 .vorschau-leiste { background: var(--leiste); box-shadow: -1px 0 0 var(--rand); display: flex; flex-direction: column; min-height: 0; }
 .vorschau-leiste .rollfeld { padding: var(--a4); display: flex; flex-direction: column; gap: var(--a3); }
@@ -797,6 +798,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
   .notiz-eintrag { padding: var(--a3); }
   .notiz-gruppe .gruppenkopf .marke-buch { margin-left: 0; }
   .stoebern-seite { padding-inline: 0; }
+  .ergebnisse, .suchkopf { padding-inline: 0; }          /* den Seitenrand gibt die Schale, nur einmal */
   .medien-seite { padding-inline: 0; }
   .medien-suche { max-width: none; }
   .mediengitter { columns: 2 150px; }
