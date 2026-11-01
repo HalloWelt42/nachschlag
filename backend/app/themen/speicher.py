@@ -223,6 +223,6 @@ class Themen(Begleiter):
     async def zuordnung(self, konto: str) -> list[Zuordnung]:
         """Jeder Artikel in jedem Thema des Kontos (Artikelkopf und Notizen zeigen damit ihre Themen)."""
         zeilen = await self._db.zeilen(
-            "SELECT e.thema, t.titel, e.buch_name, e.pfad FROM themen_eintraege e JOIN themen t ON t.id=e.thema "
+            "SELECT e.thema, t.titel, e.id AS eintrag, e.buch_name, e.pfad FROM themen_eintraege e JOIN themen t ON t.id=e.thema "
             "WHERE t.konto=? ORDER BY t.angelegt", (konto,))
         return [Zuordnung(**z) for z in zeilen]

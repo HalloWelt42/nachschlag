@@ -7,6 +7,7 @@
   import { bibliothekLaden, buchName } from "../lib/bibliothek.svelte";
   import { meins, meinsLaden, wann, type Notiz } from "../lib/meins.svelte";
   import { lesen } from "../lib/ziele";
+  import { themen, themenLaden, themenVon } from "../lib/themen.svelte";
   import NotizBearbeiten from "../teile/NotizBearbeiten.svelte";
   import NotizBlatt from "../teile/NotizBlatt.svelte";
 
@@ -15,6 +16,7 @@
 
   let filter = $state<Filter>("alle");
   let suche = $state("");
+  let thema = $state("");                                     // Kennung; leer: alle
   let reihenfolge = $state<"neu" | "alt">("neu");
   let gewaehltId = $state("");
   let blattOffen = $state(false);
@@ -28,7 +30,8 @@
   const gruppen = $derived.by(() => {
     const wort = suche.trim().toLowerCase();
     const passend = meins.notizen
-      .filter((n) => (filter === "alle" || art(n) === filter) && (!wort || `${n.titel} ${n.zitat} ${n.text}`.toLowerCase().includes(wort)))
+      .filter((n) => (filter === "alle" || art(n) === filter) && (!wort || `${n.titel} ${n.zitat} ${n.text}`.toLowerCase().includes(wort))
+                     && (!thema || themenVon(n.buch_name, n.pfad).some((z) => z.thema === thema)))
       .sort((a, b) => (reihenfolge === "neu" ? b.angelegt.localeCompare(a.angelegt) : a.angelegt.localeCompare(b.angelegt)));
     const nachArtikel = new Map<string, Notiz[]>();
     for (const n of passend) {
@@ -48,6 +51,7 @@
 
   onMount(async () => {
     void bibliothekLaden();             // Namen der Bücher statt Kennungen
+    void themenLaden(true);
     await meinsLaden(true);
     if (!gewaehltId && !geraet.mobil) gewaehltId = gruppen[0]?.erste.id ?? "";
   });
@@ -66,6 +70,10 @@
           </div>
           <label class="suchfeld meins-suche"><i class="fa-solid fa-magnifying-glass"></i>
             <input type="search" placeholder="In Notizen und Zitaten suchen" bind:value={suche} aria-label="In Notizen und Zitaten suchen" /></label>
+          {#if themen.liste.length}
+            <Auswahl bind:wert={thema} symbol="fa-layer-group" titel="Nur Notizen an Artikeln dieses Themas"
+                     optionen={[{ wert: "", titel: "Thema: alle" }, ...themen.liste.map((t) => ({ wert: t.id, titel: `Thema: ${t.titel}` }))]} />
+          {/if}
           <Auswahl bind:wert={reihenfolge} symbol="fa-arrow-down-wide-short" titel="Reihenfolge"
                    optionen={[{ wert: "neu", titel: "Neueste zuerst" }, { wert: "alt", titel: "Älteste zuerst" }]} />
         </div>
@@ -90,6 +98,7 @@
                   {#if n.zitat}<span><i class="fa-solid fa-paragraph"></i>{n.abschnitt || "Einleitung"}</span>
                   {:else}<span><i class="fa-solid fa-file-lines"></i>am ganzen Artikel</span>{/if}
                   <span class="zahl">{wann(n.angelegt)}</span>
+                  {#each themenVon(n.buch_name, n.pfad) as z (z.thema)}<span class="etikettchen">{z.titel}</span>{/each}
                 </div>
                 <div class="notiz-aktionen">
                   <button class="rund" title={n.zitat ? "Zur Stelle" : "Zum Artikel"} disabled={!n.buch}

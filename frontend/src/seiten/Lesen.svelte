@@ -15,6 +15,8 @@
   import { markieren, stelleAus, type Stelle } from "../lib/stellen";
   import { geraet } from "appkern-oberflaeche";
   import NotizBlatt from "../teile/NotizBlatt.svelte";
+  import ThemaWahl from "../teile/ThemaWahl.svelte";
+  import { themenLaden } from "../lib/themen.svelte";
   import { anwenden as fassungAnwenden, bekannte as bekannteFassungen, fassungenAus, gemerkt as fassungGemerkt, merken as fassungMerken,
            type Fassungen } from "../lib/fassung";
 
@@ -103,7 +105,7 @@
         kopierknoepfe(text);
         symboleAnbringen(text);
       }
-      await Promise.all([bibliothekLaden(), meinsLaden()]);   // Buch (sein Name) und Vorlieben des Kontos
+      await Promise.all([bibliothekLaden(), meinsLaden(), themenLaden()]);   // Buch (sein Name), Meins und Themen des Kontos
       const aufDerSeite = artikelEl ? fassungenAus(artikelEl) : null;
       meineFassung = aufDerSeite && buch ? (meins.vorlieben[`fassung:${buch.name}`] ?? fassungGemerkt(buch.name)) : "";
       fassungen = aufDerSeite && buch
@@ -429,6 +431,7 @@
         <i class="fa-{eintrag ? 'solid' : 'regular'} fa-bookmark"></i><span class="wort">{eintrag ? "Gemerkt" : "Merken"}</span></button>
       <button class="knopf" title="Notiz zum ganzen Artikel; für eine Stelle den Text markieren" onclick={notizZumArtikel}>
         <i class="fa-regular fa-note-sticky"></i><span class="wort">Notiz</span>{#if artikelNotizen.length}<span class="zahl">{artikelNotizen.length}</span>{/if}</button>
+      {#if buch}<ThemaWahl artikel={{ buch: artikel.buch, pfad: artikel.pfad, titel: artikel.titel, bild: artikel.bild }} buchName={buch.name} />{/if}
       {#if artikel.darstellung !== "original"}
         <button class="knopf" class:an={original} title="Die Seite so, wie sie im Buch steht" onclick={() => (original = !original)}>
           <i class="fa-solid fa-file-code"></i><span class="wort">Original</span></button>

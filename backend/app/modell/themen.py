@@ -90,6 +90,7 @@ class Zuordnung(BaseModel):
     """Ein Artikel in einem Thema (für Artikelkopf und Notizen: in welchen Themen steht er)."""
     thema: str
     titel: str
+    eintrag: str = Field(description="Kennung des Eintrags im Thema (zum Herausnehmen)")
     buch_name: str
     pfad: str
 

@@ -503,6 +503,100 @@ button.leskarte { border: 0; padding: 0; font: inherit; text-align: left; cursor
 .notiz-eintrag .notiz-aktionen .rund { background: transparent; color: var(--text-3); }
 .notiz-eintrag .notiz-aktionen .rund:hover { color: var(--text); background: var(--flaeche-2); }
 
+/* ----- Themen (Entwurf themen.html): Liste links, Thema rechts mit Angeboten, Bereichen und Karten ----- */
+.themen-seite { flex: 1; min-height: 0; display: grid; grid-template-columns: 300px minmax(0, 1fr); }
+.themenliste { background: var(--leiste); box-shadow: 1px 0 0 var(--rand); display: flex; flex-direction: column; min-height: 0; }
+.themen-kopfzeile { display: flex; align-items: center; gap: var(--a2); padding: var(--a3) var(--a4) var(--a2); }
+.themen-kopfzeile h1 { margin: 0; font-size: var(--seitentitel); font-weight: 600; flex: 1; }
+.themen-kopfzeile .knopf { margin-left: auto; }
+.themenliste .rollfeld { padding: 0 var(--a2) var(--a3); display: flex; flex-direction: column; gap: 2px; }
+.thema-neu { padding: var(--a2); }
+.thema-eintrag { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: var(--a3); align-items: center; padding: var(--a2); border: 0; border-radius: var(--r2);
+                 background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.thema-eintrag:hover { background: var(--flaeche-2); }
+.thema-eintrag.aktiv { background: var(--flaeche); box-shadow: var(--schatten), inset 3px 0 0 var(--akzent-flaeche); border-radius: 0; }
+.thema-eintrag .mini { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 21px 21px; gap: 2px; width: 56px; }
+.thema-eintrag .mini img, .thema-eintrag .mini span { width: 100%; height: 100%; object-fit: cover; border-radius: 2px; background: var(--mulde); }
+.thema-eintrag .t { font-weight: 600; display: block; overflow-wrap: anywhere; }
+.thema-eintrag .u { font-size: var(--klein); color: var(--text-3); display: block; }
+.thema-eintrag .u .zahl { font-family: var(--schrift-zahl); }
+.thema-flaeche { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.thema-leer { padding: var(--a4) var(--a5); }
+.thema-kopf { padding: var(--a4) var(--a5) var(--a3); box-shadow: 0 1px 0 var(--rand); }
+.thema-kopf h2 { margin: 0; font-size: calc(var(--seitentitel) + 4px); font-weight: 600; display: flex; align-items: center; gap: var(--a2); overflow-wrap: anywhere; }
+.thema-kopf h2 .stift { width: 30px; height: 30px; font-size: var(--marke); color: var(--text-3); }
+.thema-kopf p { margin: 4px 0 0; color: var(--text-2); max-width: 760px; }
+.thema-kopf .regel { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2); margin-top: var(--a3); font-size: var(--klein); }
+.thema-kopf .regel .chip { background: color-mix(in srgb, var(--petrol) 12%, transparent); color: var(--text); cursor: default; }
+.thema-kopf .regel .chip i { color: var(--petrol); }
+.thema-kopf .regel .chip.aus { background: var(--flaeche-2); color: var(--text-2); }
+.thema-kopf .regel .chip.aus i { color: var(--text-3); }
+.thema-kopf .regel .neben { color: var(--text-3); }
+.thema-kopf .werkzeuge { margin-top: var(--a3); display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2); }
+.thema-kopf .werkzeuge .rechts { margin-left: auto; }
+.thema-formular { display: grid; gap: var(--a3); max-width: 760px; }
+.thema-formular label, .thema-formular > div { display: flex; flex-direction: column; gap: 4px; }
+.thema-formular .feld-titel, .thema-wahl .feld-titel { font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; }
+.thema-formular .thema-knoepfe { flex-direction: row; flex-wrap: wrap; gap: var(--a2); }
+.thema-formular .thema-knoepfe .rechts { margin-left: auto; }
+.bereich-neu { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2); min-width: 0; }
+.bereich-neu .eingabe { flex: 1 1 200px; min-width: 0; }
+.vorschlagsband { margin: var(--a4) var(--a5) 0; padding: var(--a3) var(--a4); background: var(--flaeche); box-shadow: var(--schatten), inset 3px 0 0 var(--akzent-flaeche); border-radius: 0; }
+.vorschlagsband .zeile1 { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2) var(--a3); margin-bottom: var(--a3); }
+.vorschlagsband .zeile1 > i { color: var(--akzent); }
+.vorschlagsband .zeile1 b { font-weight: 600; }
+.vorschlagsband .zeile1 .neben { color: var(--text-3); font-size: var(--klein); }
+.vorschlagsband .zeile1 .knopf { margin-left: auto; }
+.vorschlagsband .reihe { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: var(--a3); }
+.angebot-artikel { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: var(--a3); align-items: center; padding: var(--a2); border-radius: var(--r2); background: var(--flaeche-2); }
+.angebot-artikel img, .angebot-artikel .ohne-bild { width: 52px; height: 40px; object-fit: cover; border-radius: var(--r1); background: var(--mulde); display: grid; place-items: center; color: var(--text-3); }
+.angebot-ziel { min-width: 0; padding: 0; border: 0; background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.angebot-ziel .t { font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.angebot-ziel .u { font-size: var(--klein); color: var(--text-3); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.angebot-artikel .ja-nein { display: flex; gap: 4px; }
+.angebot-artikel .ja-nein .ja { background: var(--gut-weich); color: var(--gut); }
+.thema-bereiche { padding: var(--a4) var(--a5) var(--a6); display: flex; flex-direction: column; gap: var(--a5); }
+.thema-bereiche > section.ziel { outline: 2px dashed var(--akzent-flaeche); outline-offset: 6px; }
+.bereich-kopf { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2); margin-bottom: var(--a2); }
+.bereich-kopf .griff { color: var(--text-3); cursor: grab; padding: 4px; }
+.bereich-kopf .ohne { color: var(--text-3); }
+.bereich-kopf h3 { margin: 0; font-size: var(--titel); font-weight: 600; overflow-wrap: anywhere; }
+.bereich-kopf .zahl { font-family: var(--schrift-zahl); font-size: var(--marke); color: var(--text-3); }
+.bereich-kopf .rechts { margin-left: auto; display: flex; gap: 4px; }
+.bereich-kopf .rechts .rund { background: transparent; color: var(--text-3); }
+.bereich-kopf .rechts .rund:hover { color: var(--text); background: var(--flaeche-2); }
+.thema-karten { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: var(--a3); }
+.artikelkarte { position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: var(--a3); align-items: center; padding: var(--a2) var(--a5) var(--a2) var(--a2);
+                border: 0; border-radius: var(--r3); background: var(--flaeche); box-shadow: var(--schatten); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.artikelkarte:hover:not(:disabled) { box-shadow: var(--schatten), 0 0 0 1px var(--rand-stark); }
+.artikelkarte:disabled { opacity: .6; cursor: default; }
+.artikelkarte img, .artikelkarte .ohne-bild { width: 64px; height: 50px; object-fit: cover; border-radius: var(--r1); background: var(--mulde); display: grid; place-items: center; color: var(--text-3); }
+.artikelkarte .t { font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.artikelkarte .u { font-size: var(--klein); color: var(--text-3); display: flex; gap: 6px; align-items: center; }
+.artikelkarte .griff { position: absolute; top: 8px; right: 10px; font-size: var(--marke); color: var(--text-3); opacity: .7; cursor: grab; }
+.artikelkarte .gelesen { color: var(--gut); }
+.artikelkarte .marke-notiz { color: var(--akzent); }
+.artikelkarte.zieht { opacity: .45; }
+.artikelkarte.davor { box-shadow: var(--schatten), 0 0 0 2px var(--akzent-flaeche); }
+.leer-bereich { display: flex; align-items: center; justify-content: center; gap: var(--a2); min-height: 66px; border-radius: var(--r3); box-shadow: inset 0 0 0 2px var(--rand);
+                color: var(--text-3); font-size: var(--klein); }
+.leer-bereich.ziel { box-shadow: inset 0 0 0 2px var(--akzent-flaeche); background: var(--akzent-weich); color: var(--akzent); }
+.thema-bereiche .liste .liste-zeile .auswahl { flex: none; }
+.etikettchen { font-size: var(--marke); padding: 1px 7px; border-radius: var(--r1); background: var(--flaeche-2); color: var(--text-2); }
+.thema-wahl { position: relative; }
+.thema-wahl .knopf .zahl { font-family: var(--schrift-zahl); font-size: var(--marke); color: var(--text-3); }
+.thema-wahl-liste { position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; width: min(320px, calc(100vw - 2 * var(--a3))); display: flex; flex-direction: column;
+                    padding: var(--a2); border-radius: var(--r3); background: var(--leiste); box-shadow: 0 12px 40px color-mix(in srgb, var(--schattenfarbe) 26%, transparent), 0 0 0 1px var(--rand); }
+.thema-wahl-liste > button { display: flex; align-items: center; gap: var(--a2); padding: 8px var(--a2); border: 0; border-radius: var(--r2); background: transparent; color: var(--text);
+                             font: inherit; text-align: left; cursor: pointer; }
+.thema-wahl-liste > button:hover { background: var(--flaeche-2); }
+.thema-wahl-liste > button span:first-of-type { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.thema-wahl-liste > button i { color: var(--text-3); }
+.thema-wahl-liste > button.an i { color: var(--akzent); }
+.thema-wahl-liste > button .zahl { font-family: var(--schrift-zahl); font-size: var(--marke); color: var(--text-3); }
+.thema-wahl-liste form { display: flex; gap: var(--a2); margin-top: var(--a2); padding-top: var(--a2); box-shadow: 0 -1px 0 var(--rand); }
+.thema-wahl-liste form .eingabe { flex: 1; min-width: 0; }
+
 /* ===== Breiten: Inhaltsverzeichnis und Leisten weichen, nie seitlich rollen ===== */
 @media (max-width: 1360px) {
   .suchseite { grid-template-columns: 220px minmax(0, 1fr); }
@@ -512,6 +606,7 @@ button.leskarte { border: 0; padding: 0; font: inherit; text-align: left; cursor
   .notizseite { grid-template-columns: minmax(0, 1fr); }      /* die Leiste fährt dann als Tafel herein (Appkern) */
 }
 @media (max-width: 1180px) {
+  .themen-seite { grid-template-columns: 240px minmax(0, 1fr); }
   .lesen { grid-template-columns: minmax(0, 1fr); }
   .lesen .inhalt { display: none; }
 }
@@ -552,4 +647,13 @@ button.leskarte { border: 0; padding: 0; font: inherit; text-align: left; cursor
   .notizblatt .blatt-griff { display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--rand-stark); margin: 0 auto; }
   .notiz-eintrag { padding: var(--a3); }
   .notiz-gruppe .gruppenkopf .marke-buch { margin-left: 0; }
+  /* Themen: erst die Liste, nach der Wahl das Thema allein (Zurück im Kopf) */
+  .themen-seite { grid-template-columns: minmax(0, 1fr); }
+  .themen-seite.mit-thema .themenliste, .themen-seite:not(.mit-thema) .thema-flaeche { display: none; }
+  .themenliste { box-shadow: none; background: transparent; }
+  .themen-kopfzeile { padding-inline: 0; }
+  .themenliste .rollfeld { padding-inline: 0; }
+  .thema-kopf, .thema-bereiche, .thema-leer { padding-inline: 0; }
+  .vorschlagsband { margin-inline: 0; }
+  .thema-kopf .werkzeuge .rechts { margin-left: 0; }
 }
