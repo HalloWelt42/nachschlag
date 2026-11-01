@@ -26,7 +26,7 @@ class AppEinstellungen(Grundeinstellungen):
                                             "Nachschlag liest nur.")
 
     # --- Suche ------------------------------------------------------------------------------------------------------
-    suchmodell: str = Field("", title="Modell für Übersetzung und Korrektur", json_schema_extra=SUCHE,
+    suchmodell: str = Field("qwen/qwen3-next-80b", title="Modell für Übersetzung und Korrektur", json_schema_extra=SUCHE,
                             description="Übersetzt eine Frage für englische Quellen ins Englische (Fachbegriffe und Code "
                                         "bleiben) und korrigiert Tippfehler, wenn der Wortschatz der Quellen nichts hergibt. "
                                         "Leer: die Kette der App in der Leitstelle.")
