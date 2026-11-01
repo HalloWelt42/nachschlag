@@ -14,7 +14,10 @@ from ..modell.themen import (
     Ablehnung, Angebot, Bereich, BereichAenderung, BereichNeu, EintragNeu, Thema, ThemaAenderung, Themeneintrag, Themenkopf,
     ThemaNeu, Verschieben, Zuordnung,
 )
+from ..bibliothek import Bibliothek
+from ..meins import Meins
 from ..suche import Suche
+from .literatur import Literaturliste, literaturliste
 from .speicher import Themen
 
 #: Wie viele Treffer der gespeicherten Suche geholt werden, um daraus neue Angebote zu ziehen
@@ -35,8 +38,10 @@ def _da(wert: T | None, was: str = "Dieses Thema gibt es nicht") -> T:
     return wert
 
 
-def router(geruest: Geruest, themen: Themen, suche: Suche, name_von: Callable[[str], Awaitable[str]]) -> APIRouter:
-    """`name_von`: Name eines Buchs zu seiner Kennung (Angebote mit Bekanntem vergleichen)."""
+def router(geruest: Geruest, themen: Themen, suche: Suche, bibliothek: Bibliothek, meins: Meins) -> APIRouter:
+    """`bibliothek`: Namen und Angaben der Quellen (Angebote mit Bekanntem vergleichen, Literaturliste); `meins`: die
+    Notizen mit ihren Belegen (Literaturliste)."""
+    name_von: Callable[[str], Awaitable[str]] = bibliothek.name_von
     r = APIRouter(prefix="/api/v1/meins/themen", tags=["themen"])
 
     @r.get("", response_model=list[Themenkopf])
@@ -57,6 +62,14 @@ def router(geruest: Geruest, themen: Themen, suche: Suche, name_von: Callable[[s
     async def zeigen(thema: str, konto: Konto = geruest.mensch) -> Thema:
         """Ein Thema mit Bereichen und Artikeln (mit Lesestand und Zahl der Notizen)."""
         return _da(await themen.thema(konto.id, thema))
+
+    @r.get("/{thema}/literatur", response_model=Literaturliste)
+    async def literatur(thema: str, konto: Konto = geruest.mensch) -> Literaturliste:
+        """Literaturliste des Themas als Markdown (WIKI-31): Artikel mit Quelle und Adresse im Netz, darunter die Belege,
+        die der Recherchemodus mit den Notizen gesammelt hat."""
+        t = _da(await themen.thema(konto.id, thema))
+        buecher = {b.kennung: b for b in (await bibliothek.stand()).buecher}
+        return Literaturliste(markdown=literaturliste(t, buecher, await meins.notizen(konto.id)))
 
     @r.patch("/{thema}", response_model=Thema)
     async def aendern(thema: str, aenderung: ThemaAenderung, konto: Konto = geruest.mensch) -> Thema:

@@ -83,7 +83,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     app.state.indexauftraege = indexauftraege
     app.include_router(router(geruest, bibliothek, leser, suche))
     app.include_router(meins_router(geruest, meins))
-    app.include_router(themen_router(geruest, themen, suche, bibliothek.name_von))
+    app.include_router(themen_router(geruest, themen, suche, bibliothek, meins))
     app.include_router(medien_router(geruest, Medien(leser, suche)))
     app.include_router(stoebern_router(geruest, Stoebern(bibliothek, leser, suche, meins.gelesen)))
     app.include_router(register_router(geruest, Register(bibliothek, eigen)))

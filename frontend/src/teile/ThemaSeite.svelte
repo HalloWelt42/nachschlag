@@ -3,7 +3,8 @@
   // Suche, Bereiche mit Artikeln als Karten oder Liste. Ziehen ordnet Artikel und Bereiche (am Rechner); in der Liste
   // wählt man den Bereich (überall, auch am Telefon).
   import Buchmarke from "./Buchmarke.svelte";
-  import { Auswahl, geraet, navigation, Rueckfrage, seitenFehler } from "appkern-oberflaeche";
+  import { Auswahl, geraet, hole, kopieren, navigation, Rueckfrage, seitenFehler } from "appkern-oberflaeche";
+  import { RUECKMELDUNG_MS } from "../lib/zitat";
   import { untrack } from "svelte";
   import { bezeichnung, bibliothek, bibliothekLaden, buchName } from "../lib/bibliothek.svelte";
   import {
@@ -14,6 +15,24 @@
   import Kachel from "./Kachel.svelte";
 
   let { id, ongeloescht }: { id: string; ongeloescht: () => void } = $props();
+
+  /** Literaturliste (WIKI-31): Artikel mit Quelle, Adresse im Netz und gesammelten Belegen als Markdown kopieren. Die
+   *  Liste liegt vorher bereit: die Zwischenablage gibt es nur direkt im Klick, ohne Warten dazwischen. */
+  let literatur = $state("");
+  let literaturKopiert = $state<"" | "ja" | "nein">("");
+  async function literaturLaden(thema: string) {
+    try {
+      literatur = (await hole<{ markdown: string }>(`/meins/themen/${encodeURIComponent(thema)}/literatur`)).markdown;
+    } catch {
+      literatur = "";
+    }
+  }
+  $effect(() => void literaturLaden(id));
+  async function literaturKopieren() {
+    literaturKopiert = literatur && (await kopieren(literatur)) ? "ja" : "nein";
+    setTimeout(() => (literaturKopiert = ""), RUECKMELDUNG_MS);
+    void literaturLaden(id);                     // für das nächste Mal mit den neuesten Notizen
+  }
 
   type Ansicht = "karten" | "liste";
   const OHNE = "";                                      // Kennung für "ohne Bereich"
@@ -232,6 +251,9 @@
       {:else}
         <button class="knopf" onclick={() => (neuerBereich = "")}><i class="fa-solid fa-folder-plus"></i><span class="wort">Bereich</span></button>
         {#if geraet.mobil && !bearbeiten}<button class="knopf" onclick={bearbeitenBeginnen}><i class="fa-solid fa-pen"></i><span class="wort">Bearbeiten</span></button>{/if}
+        <button class="knopf" class:kopiert-ok={literaturKopiert === "ja"} onclick={literaturKopieren}
+                title="Literaturliste (Markdown) mit Quellen, Adressen im Netz und den Belegen aus den Notizen kopieren">
+          <i class="fa-solid {literaturKopiert === 'ja' ? 'fa-check' : literaturKopiert === 'nein' ? 'fa-triangle-exclamation' : 'fa-list-ol'}"></i><span class="wort">{literaturKopiert === "ja" ? "Kopiert" : literaturKopiert === "nein" ? "Geht nicht" : "Literatur"}</span></button>
       {/if}
       <div class="rechts">
         <span class="segment">

@@ -590,3 +590,20 @@ def test_online_adresse_je_bauart():
     assert online_adresse(buch("php.net_en_all", "warc2zim 2.1"), "www.php.net/manual/en/x.php") == "https://www.php.net/manual/en/x.php"
     assert online_adresse(buch("vi.stackexchange.com_en_all", "sotoki v3"), "questions/84/x") == "https://vi.stackexchange.com/questions/84/x"
     assert online_adresse(buch("probe_de_all", "mwoffliner 1.17"), "Rotfuchs") == ""
+
+
+async def test_literaturliste_eines_themas(nachschlag):
+    """Literaturliste (WIKI-31): Artikel nach Bereichen mit Quelle und Stand, darunter die Belege aus den Notizen."""
+    c, _, _ = nachschlag
+    buch = "probe_de_all_2026-01"
+    t = (await c.post("/api/v1/meins/themen", json={"titel": "Füchse"})).json()
+    w = f"/api/v1/meins/themen/{t['id']}"
+    tiere = (await c.post(f"{w}/bereiche", json={"titel": "Tiere"})).json()
+    await c.post(f"{w}/eintraege", json={"buch": buch, "pfad": "Rotfuchs", "titel": "Rotfuchs", "bereich": tiere["id"]})
+    await c.post(f"{w}/eintraege", json={"buch": buch, "pfad": "Arrhenius", "titel": "Svante Arrhenius"})
+    await c.post("/api/v1/meins/notizen", json={"buch": buch, "pfad": "Rotfuchs", "titel": "Rotfuchs", "zitat": "Fuchs",
+                                               "belege": [{"nummer": 1, "text": "Beleg", "url": "https://example.org/beleg"}]})
+    text = (await c.get(f"{w}/literatur")).json()["markdown"]
+    assert text.startswith("# Literatur: Füchse") and "## Tiere" in text
+    assert "- Rotfuchs. In: " in text and "  - Beleg 1: Beleg https://example.org/beleg" in text
+    assert text.index("Svante Arrhenius") < text.index("## Tiere")         # ohne Bereich zuerst

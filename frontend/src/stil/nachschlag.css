@@ -562,7 +562,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
                          align-items: center; gap: 3px; padding: 5px 9px; border-radius: var(--r2); cursor: pointer; }
 .auswahl-leiste button:hover { background: color-mix(in srgb, var(--hg) 16%, transparent); }
 .auswahl-leiste button i { font-size: 17px; }
-.auswahl-leiste button.kopiert-ok i, .notiz-knoepfe .kopiert-ok i { color: var(--gut); }   /* Zitat ist kopiert */
+.auswahl-leiste button.kopiert-ok i, .notiz-knoepfe .kopiert-ok i, .knopf.kopiert-ok i { color: var(--gut); }   /* Zitat ist kopiert */
 .notizblatt { position: fixed; z-index: 40; right: var(--a5); bottom: calc(var(--fuss-hoehe) + var(--a4)); width: min(440px, calc(100vw - 2 * var(--a4)));
               max-height: calc(100dvh - var(--kopf-hoehe) - var(--fuss-hoehe) - 2 * var(--a4)); overflow-y: auto; display: flex; flex-direction: column; gap: var(--a3);
               padding: var(--a3) var(--a4) var(--a4); background: var(--leiste); border-radius: var(--r3);
