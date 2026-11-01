@@ -32,6 +32,7 @@ class Suchergebnis(BaseModel):
     beste_stelle: Treffer | None = Field(None, description="die Stelle, die die Frage am besten beantwortet (nur mit Bedeutung)")
     nur_index: bool = Field(description="die Bedeutungssuche antwortete nicht oder ist nicht angebunden")
     hinweis: str = Field("", description="warum nur der Index antwortete, in Worten")
+    bedeutung_angebunden: bool = Field(False, description="eine Bedeutungssuche ist eingerichtet (ohne ist nur Index der gewollte Betrieb)")
     zeiten: Zeiten
     index_gesamt: int = Field(0, description="geschätzte Zahl der Treffer im Index")
 

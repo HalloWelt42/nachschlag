@@ -105,6 +105,7 @@ class Suche:
                 beste = gemischt[schluessel].model_copy()
         liste = sorted(gemischt.values(), key=lambda t: t.rang, reverse=True)[:anzahl]
         return Suchergebnis(frage=frage, treffer=liste, beste_stelle=beste, nur_index=not stellen, hinweis=hinweis,
+                            bedeutung_angebunden=self._bedeutung.angebunden(),
                             zeiten=Zeiten(index_ms=index_ms, bedeutung_ms=bedeutung_ms), index_gesamt=gesamt)
 
     async def vorschlaege(self, anfang: str, buecher: list[str] | None = None, anzahl: int = 8) -> list[Vorschlag]:

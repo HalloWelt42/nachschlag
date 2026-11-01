@@ -1,6 +1,6 @@
 """Schnittstelle von Nachschlag unter /api/v1 (die Oberfläche nutzt nur diese Wege). Lesen von Büchern, Artikeln,
-Vorschlägen und Suche braucht die Anmeldung; Medien und Originalseiten laden Bilder und Rahmen mit dem Inhaltsschlüssel
-der Sitzung (Cookie), weil `<img>` und `<iframe>` keine Köpfe senden."""
+Vorschlägen und Suche braucht die Anmeldung; Medien und Originalseiten liegen unter /api/v1/inhalt und laden Bilder und
+Rahmen mit dem Lesezugang der Sitzung (Cookie, gilt nur für diesen Pfad), weil `<img>` und `<iframe>` keine Köpfe senden."""
 
 from __future__ import annotations
 
@@ -72,7 +72,7 @@ def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche:
         antwortete. Kein Fehler: auch dann kommt 200."""
         return await suche.suchen(frage, buecher, anzahl, wege)
 
-    @r.get("/medien/{buch}/{pfad:path}", dependencies=lesen)
+    @r.get("/inhalt/medien/{buch}/{pfad:path}", dependencies=lesen)
     async def medien(buch: str, pfad: str) -> Response:
         """Bilder und andere Medien aus dem Buch, unverändert."""
         try:
@@ -81,17 +81,17 @@ def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche:
             raise _fehlt(f)
         return Response(e.inhalt, media_type=e.mime, headers={"Cache-Control": DAUERHAFT})
 
-    @r.get("/original/{buch}/{pfad:path}", dependencies=lesen)
+    @r.get("/inhalt/original/{buch}/{pfad:path}", dependencies=lesen)
     async def original(buch: str, pfad: str) -> Response:
-        """Die Seite unverändert (Originalansicht), mit allen Dateien, die sie lädt; abgeschirmt, ohne Zugriff auf die
-        App."""
+        """Die Seite unverändert (Originalansicht), mit allen Dateien, die sie lädt. Abgeschirmt ohne Skripte: so behält
+        sie die Herkunft der App (Stile und Bilder laden mit dem Lesezugang), kann aber nichts in der App tun."""
         try:
             e = await bibliothek.eintrag(buch, pfad)
         except (BuchFehlt, EintragFehlt) as f:
             raise _fehlt(f)
         koepfe = {"Cache-Control": DAUERHAFT}
         if e.mime.startswith("text/html"):
-            koepfe["Content-Security-Policy"] = "sandbox allow-scripts allow-popups; frame-ancestors 'self'"
+            koepfe["Content-Security-Policy"] = "sandbox allow-same-origin allow-popups; script-src 'none'; frame-ancestors 'self'"
         return Response(e.inhalt, media_type=e.mime, headers=koepfe)
 
     return r

@@ -1,8 +1,28 @@
 {
   "seiten": [
-    { "name": "start", "pfad": "/start" },
-    { "name": "auftraege", "pfad": "/auftraege" },
-    { "name": "protokoll", "pfad": "/protokoll" },
-    { "name": "einstellungen", "pfad": "/einstellungen" }
+    {
+      "name": "start",
+      "pfad": "/start"
+    },
+    {
+      "name": "lesen",
+      "pfad": "/lesen"
+    },
+    {
+      "name": "suche",
+      "pfad": "/suche?frage=Treibhaus"
+    },
+    {
+      "name": "auftraege",
+      "pfad": "/auftraege"
+    },
+    {
+      "name": "protokoll",
+      "pfad": "/protokoll"
+    },
+    {
+      "name": "einstellungen",
+      "pfad": "/einstellungen"
+    }
   ]
 }

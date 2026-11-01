@@ -17,8 +17,8 @@ def _pfad(pfad: str) -> str:
 def wege(bibliothek: Bibliothek) -> Wege:
     """Die Adressen der App für Verweise und Medien, an einer Stelle."""
     return Wege(artikel=lambda buch, pfad: f"/lesen/{quote(buch)}/{_pfad(pfad)}",
-                medien=lambda buch, pfad: f"/api/v1/medien/{quote(buch)}/{_pfad(pfad)}",
-                original=lambda buch, pfad: f"/api/v1/original/{quote(buch)}/{_pfad(pfad)}",
+                medien=lambda buch, pfad: f"/api/v1/inhalt/medien/{quote(buch)}/{_pfad(pfad)}",
+                original=lambda buch, pfad: f"/api/v1/inhalt/original/{quote(buch)}/{_pfad(pfad)}",
                 gibt_es=bibliothek.gibt_es)
 
 

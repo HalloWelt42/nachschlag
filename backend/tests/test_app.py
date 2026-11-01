@@ -92,7 +92,7 @@ async def test_artikel_im_lesedesign(nachschlag):
     assert a["darstellung"] == "lesedesign" and a["baustein"] == "enzyklopaedie" and a["titel"] == "Rotfuchs"
     assert [s["titel"] for s in a["abschnitte"]] == ["Merkmale", "Lebensraum"]          # Belege und Weblinks weg
     assert a["steckbrief"]["titel"] == "Rotfuchs" and "Raubtiere" in a["steckbrief"]["html"]
-    assert a["bild"].startswith("/api/v1/medien/probe_de_all_2026-01/_assets_/a/fuchs.png")
+    assert a["bild"].startswith("/api/v1/inhalt/medien/probe_de_all_2026-01/_assets_/a/fuchs.png")
     html = a["html"]
     assert 'href="/lesen/probe_de_all_2026-01/Kreuzfuchs"' in html
     assert "Gibt_es_nicht" not in html and "dies" in html                              # Verweis ohne Ziel: Text
@@ -101,7 +101,16 @@ async def test_artikel_im_lesedesign(nachschlag):
     assert not TYPOGRAFISCH & set(html + a["einleitung"]), "Anführungszeichen gerade"
     assert "https://example.org/weblink" in a["online"] and not any(".invalid" in o for o in a["online"])
     assert a["verweise"]["ohne_ziel"] == 1 and a["verweise"]["koordinaten"] == 1
-    assert a["original"] == "/api/v1/original/probe_de_all_2026-01/Rotfuchs"
+    assert a["original"] == "/api/v1/inhalt/original/probe_de_all_2026-01/Rotfuchs"
+
+
+async def test_belege_auch_in_abschnitten(nachschlag):
+    """Heutige Seiten packen jeden Abschnitt in ein <section>: Belege fallen trotzdem weg, Weblinks bleiben online."""
+    c, _, _ = nachschlag
+    a = (await c.get("/api/v1/artikel/probe_de_all_2026-01/Svante_Arrhenius")).json()
+    assert [s["titel"] for s in a["abschnitte"]] == ["Leben"]
+    assert "Ein Buch" not in a["html"] and "Beleg" not in a["html"]
+    assert a["online"] == ["https://example.org/arrhenius"]
 
 
 async def test_weiterleitung_auf_abschnitt(nachschlag):
@@ -113,11 +122,24 @@ async def test_weiterleitung_auf_abschnitt(nachschlag):
 
 async def test_medien_und_original(nachschlag):
     c, _, _ = nachschlag
-    r = await c.get("/api/v1/medien/probe_de_all_2026-01/_assets_/a/fuchs.png")
+    r = await c.get("/api/v1/inhalt/medien/probe_de_all_2026-01/_assets_/a/fuchs.png")
     assert r.status_code == 200 and r.headers["content-type"] == "image/png" and r.content == probebuch.PNG
     assert "immutable" in r.headers["cache-control"]
-    r = await c.get("/api/v1/original/probe_de_all_2026-01/Rotfuchs")
-    assert r.status_code == 200 and "sandbox" in r.headers["content-security-policy"]
+    r = await c.get("/api/v1/inhalt/original/probe_de_all_2026-01/Rotfuchs")
+    csp = r.headers["content-security-policy"]
+    assert r.status_code == 200 and "sandbox" in csp and "allow-scripts" not in csp and "script-src 'none'" in csp
+
+
+async def test_medien_mit_lesezugang_ohne_kopf(nachschlag):
+    """Wie <img> und <iframe>: ohne Kopf, nur mit dem Cookie des Lesezugangs (gilt nur unter /api/v1/inhalt)."""
+    c, _, _ = nachschlag
+    assert (await c.post("/api/v1/anmeldung/zugang")).status_code == 204
+    token = c.headers.pop("X-Kellerwolke-Sitzung")
+    try:
+        assert (await c.get("/api/v1/inhalt/medien/probe_de_all_2026-01/_assets_/a/fuchs.png")).status_code == 200
+        assert (await c.get("/api/v1/buecher")).status_code == 401
+    finally:
+        c.headers["X-Kellerwolke-Sitzung"] = token
 
 
 async def test_vorschlaege_zeigen_weiterleitungen(nachschlag):
@@ -129,7 +151,7 @@ async def test_vorschlaege_zeigen_weiterleitungen(nachschlag):
 async def test_suche_nur_im_index(nachschlag):
     c, _, _ = nachschlag
     s = (await c.get("/api/v1/suche", params={"frage": "Städte"})).json()
-    assert s["nur_index"] and s["hinweis"]
+    assert s["nur_index"] and s["hinweis"] and not s["bedeutung_angebunden"]
     assert s["treffer"][0]["pfad"] == "Rotfuchs" and s["treffer"][0]["wege"] == ["index"]
     assert "<em>" in s["treffer"][0]["ausschnitt"]
 
@@ -152,4 +174,4 @@ async def test_suche_wartet_nicht_auf_langsame_bedeutung(nachschlag):
                                          "bedeutung_buch": "probe_de_all_2026-01", "bedeutung_warten_s": 0.2})
     fundus.schlaeft = 2
     s = (await c.get("/api/v1/suche", params={"frage": "Städte"})).json()
-    assert s["nur_index"] and s["treffer"] and s["zeiten"]["bedeutung_ms"] is None
+    assert s["nur_index"] and s["treffer"] and s["zeiten"]["bedeutung_ms"] is None and s["bedeutung_angebunden"]

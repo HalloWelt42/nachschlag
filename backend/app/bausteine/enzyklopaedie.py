@@ -45,27 +45,30 @@ def _ueberschrift(el) -> tuple[str, int] | None:
 
 
 def _belege_entfernen(inhalt) -> list:
-    """Belegabschnitte samt allem bis zur nächsten Überschrift derselben oder höheren Ebene; liefert die Abschnitte mit
-    Weblinks (ihre Verweise gehören zu 'Über diesen Artikel')."""
+    """Belegabschnitte aus dem Lesetext nehmen; liefert die Teile der Abschnitte mit Weblinks (ihre Verweise gehören
+    zu 'Über diesen Artikel'). Zwei Aufbauten der Quelle: jeder Abschnitt in einem eigenen <section> mit der
+    Überschrift vorn (heutige Seiten), oder Überschriften und Inhalt hintereinander in einem Behälter (dann gilt alles
+    bis zur nächsten Überschrift derselben oder höheren Ebene)."""
     weblinks: list = []
-    behaelter = inhalt.xpath(".//div[contains(@class,'mw-content-ltr')]") or [inhalt]
-    for wurzel in behaelter:
-        kinder = list(wurzel)
-        i = 0
-        while i < len(kinder):
-            u = _ueberschrift(kinder[i])
-            if u and u[0].lower() in BELEGE:
-                ebene = u[1]
-                j = i + 1
-                while j < len(kinder) and not ((v := _ueberschrift(kinder[j])) and v[1] <= ebene):
-                    j += 1
-                for k in kinder[i:j]:
-                    wurzel.remove(k)
-                if u[0].lower() in WEBLINKS:
-                    weblinks.extend(kinder[i + 1:j])
-                kinder = list(wurzel)
-                continue
-            i += 1
+    for kopf in list(inhalt.xpath(".//div[contains(@class,'mw-heading')] | .//h2 | .//h3 | .//h4")):
+        behaelter = kopf.getparent()
+        u = _ueberschrift(kopf)
+        if behaelter is None or not u or u[0].lower() not in BELEGE or "mw-heading" in _klassen(behaelter):
+            continue                     # eine Überschrift im Kopf eines Abschnitts zählt über den Kopf
+        if behaelter.tag == "section" and len(behaelter) and behaelter[0] is kopf and behaelter.getparent() is not None:
+            teile = list(behaelter)[1:]
+            behaelter.getparent().remove(behaelter)
+        else:
+            kinder = list(behaelter)
+            i = kinder.index(kopf)
+            j = i + 1
+            while j < len(kinder) and not ((v := _ueberschrift(kinder[j])) and v[1] <= u[1]):
+                j += 1
+            teile = kinder[i + 1:j]
+            for k in kinder[i:j]:
+                behaelter.remove(k)
+        if u[0].lower() in WEBLINKS:
+            weblinks.extend(teile)
     return weblinks
 
 

@@ -45,6 +45,16 @@ wird daher meistens als {AUF}der Fuchs{ZU} bezeichnet<sup class="reference"><a h
 """)
 
 
+#: Aufbau heutiger Seiten: jeder Abschnitt in einem eigenen <section>, die Überschrift vorn
+ARRHENIUS = seite("Svante Arrhenius", """
+<section><p>Svante Arrhenius war ein schwedischer Physiker und Chemiker.</p></section>
+<section><div class="mw-heading mw-heading2"><h2 id="Leben">Leben</h2></div><p>Er wurde 1859 geboren.</p></section>
+<section><div class="mw-heading mw-heading2"><h2 id="Literatur">Literatur</h2></div><ul><li>Ein Buch</li></ul></section>
+<section><div class="mw-heading mw-heading2"><h2 id="Weblinks">Weblinks</h2></div><ul><li><a href="https://example.org/arrhenius">Seite</a></li></ul></section>
+<section><div class="mw-heading mw-heading2"><h2 id="Einzelnachweise">Einzelnachweise</h2></div><ol class="references"><li>Beleg</li></ol></section>
+""")
+
+
 def artikel(titel: str, text: str) -> str:
     return seite(titel, f"<p>{text}</p>")
 
@@ -71,6 +81,7 @@ def bauen(ordner: Path, name: str = "probe_de_all_2026-01", erzeuger: str = "mwo
                                  ("Creator", "Tests"), ("Publisher", "Tests")):
             c.add_metadata(schluessel, wert)
         c.add_item(_Seite("Rotfuchs", "Rotfuchs", ROTFUCHS))
+        c.add_item(_Seite("Svante_Arrhenius", "Svante Arrhenius", ARRHENIUS))
         c.add_item(_Seite("Raubtiere", "Raubtiere", artikel("Raubtiere", "Raubtiere sind eine Ordnung der Säugetiere.")))
         c.add_item(_Seite("Echte_Füchse", "Echte Füchse", artikel("Echte Füchse", "Die echten Füchse bilden eine Gattungsgruppe.")))
         c.add_item(_Seite("Kreuzfuchs", "Kreuzfuchs", artikel("Kreuzfuchs", "Der Kreuzfuchs ist eine Farbform des Rotfuchses.")))
