@@ -7,10 +7,10 @@ from typing import Literal
 from pydantic import Field, SecretStr
 
 from appkern.app import Grundeinstellungen
-from appkern.vorlesen import VorlesenEinstellungen
 
 BIBLIOTHEK = {"gruppe": "Bibliothek"}
 SUCHE = {"gruppe": "Suche"}
+VORLESEN = {"gruppe": "Vorlesen"}
 
 #: Welche Bücher einen eigenen Index bekommen (WIKI-17): Stufen in der Reihenfolge des Baus, docs/SUCHE.md
 EIGENE_INDIZES = {"keine": "keine", "handbuecher": "Handbücher", "handbuecher_fragen": "Handbücher, Frage und Antwort",
@@ -20,17 +20,25 @@ ARTEN_JE_STUFE: dict[str, list[str]] = {
     "alle": ["dokumentation", "frage_antwort", "enzyklopaedie", "webseite", "sonstiges"]}
 
 
-class AppEinstellungen(Grundeinstellungen, VorlesenEinstellungen):
+class AppEinstellungen(Grundeinstellungen):
     # --- Bibliothek -------------------------------------------------------------------------------------------------
     buecher_ordner: str = Field("/buecher", title="Ordner der ZIM-Libs", json_schema_extra=BIBLIOTHEK,
                                 description="Jede ZIM-Datei in diesem Ordner ist eine Quelle; neue Dateien erscheinen von selbst. "
                                             "Nachschlag liest nur.")
 
+    # --- Vorlesen (WIKI-43): über den Sprechdienst der Leitstelle ------------------------------------------------------
+    sprechdienst: str = Field("klangwerk-sprechen", title="Sprechdienst", json_schema_extra=VORLESEN,
+                              description="Dienst der Leitstelle, der vorliest; das Modell läuft dort, nie in Nachschlag. "
+                                          "Die Leitstelle muss ihn für Nachschlag freigeben. Leer: ohne Vorlesen.")
+    vorlesestimme: str = Field("", title="Stimme", json_schema_extra=VORLESEN,
+                               description="Eine Stimme aus dem Katalog des Sprechdienstes. Leer: die Vorgabe des "
+                                           "Sprechdienstes.")
+
     # --- Suche ------------------------------------------------------------------------------------------------------
     suchmodell: str = Field("qwen/qwen3-next-80b", title="Modell für Übersetzung und Korrektur", json_schema_extra=SUCHE,
                             description="Übersetzt eine Frage für englische Quellen ins Englische (Fachbegriffe und Code "
-                                        "bleiben) und korrigiert Tippfehler, wenn der Wortschatz der Quellen nichts hergibt. "
-                                        "Leer: die Kette der App in der Leitstelle.")
+                                        "bleiben), Artikel aus anderen Sprachen ins Deutsche und korrigiert Tippfehler, wenn "
+                                        "der Wortschatz der Quellen nichts hergibt. Leer: die Kette der App in der Leitstelle.")
     hoerdienst: str = Field("klangwerk-hoeren", title="Hördienst für die Spracheingabe", json_schema_extra=SUCHE,
                             description="Dienst der Leitstelle, der gesprochene Fragen und Notizen verschriftet. Das "
                                         "Mikrofon erscheint nur, wenn die Leitstelle ihn für Nachschlag freigibt.")

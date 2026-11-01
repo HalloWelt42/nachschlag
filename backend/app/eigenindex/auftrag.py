@@ -123,7 +123,7 @@ class Indexauftraege(Begleiter):
         self._pruefung: asyncio.Task | None = None
         self._kontakt = 0.0                         # wann sich der Index-Dienst zuletzt gemeldet hat (monotonic)
         auftraege.anmelden(Art(name=ART, titel="Eigener Index", arbeit=self._arbeit, eingabe=IndexEingabe, phasen=PHASEN,
-                               fortsetzbar=True, nach_neustart="fortsetzen"))
+                               fortsetzbar=True, nach_neustart="fortsetzen", hoechstens=1))   # der Mac baut einen nach dem anderen
 
     def schluessel_passt(self, kopf: str) -> bool | None:
         """Ob der Kopf Authorization den Schlüssel des Index-Dienstes trägt; None, wenn keiner eingestellt ist."""

@@ -11,7 +11,7 @@ from fastapi import FastAPI
 
 from appkern.app import Geruest
 from appkern.einstellungen import Angebot, Option
-from appkern.vorlesen import Vorlesen
+from appkern.leitstelle import LeitstellenFehler
 
 from .api import router
 from .artikel import Artikelleser
@@ -26,8 +26,10 @@ from .register import Register
 from .korrektur import Korrektor
 from .korrektur.api import router as korrektur_router
 from .sprache.api import router as sprache_router
-from .uebersetzung import Uebersetzer
+from .uebersetzung import Artikeluebersetzer, Uebersetzer
 from .uebersetzung.api import router as uebersetzung_router
+from .vorlesen import NichtBereit, Sprechdienst
+from .vorlesen.api import router as vorlesen_router
 from .register.api import router as register_router
 from .medien import Medien
 from .medien.api import router as medien_router
@@ -44,7 +46,8 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     """`transport` nur für Tests (Kellerwolke, Leitstelle und Fundus nachgestellt)."""
     geruest = Geruest(name="Nachschlag", kennung="nachschlag", rolle="liest jede Quelle der Bibliothek", symbol="fa-book-open", symbolbild="/favicon.svg",
                       farbe="#08758b", fassung=FASSUNG, daten=daten, einstellungen=AppEinstellungen,
-                      oberflaeche=WURZEL / "frontend" / "dist", transport=transport)
+                      oberflaeche=WURZEL / "frontend" / "dist", transport=transport,
+                      gleichzeitig=2)                    # Indexbau und Übersetzungen nebeneinander, je Art höchstens einer
     e = lambda: geruest.einstellungen.stand  # noqa: E731
 
     bibliothek = Bibliothek(lambda: e().buecher_ordner)
@@ -57,7 +60,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     indexauftraege = Indexauftraege(eigen, bibliothek, geruest.auftraege, lambda: e().indexdienst_schluessel.get_secret_value(),
                                     lambda: ARTEN_JE_STUFE[e().eigene_indizes], lambda: e().eigenindex_hoechstens_gb)
 
-    vorlesen = Vorlesen(geruest)                         # Angebote für Vertonung und Stimme, Verbindung in der Fußleiste
+    sprechdienst = Sprechdienst(lambda: geruest.leitstelle, lambda: e().sprechdienst, lambda: e().vorlesestimme)
     meins = Meins(geruest.db, bibliothek.name_von, bibliothek.kennung_von)
     geruest.begleiter_anmelden(meins)
     themen = Themen(geruest.db, bibliothek.name_von, bibliothek.kennung_von)
@@ -65,6 +68,9 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     geruest.begleiter_anmelden(indexauftraege)
     uebersetzer = Uebersetzer(geruest.db, lambda: geruest.leitstelle, lambda: e().suchmodell)
     geruest.begleiter_anmelden(uebersetzer)
+    artikeluebersetzer = Artikeluebersetzer(geruest.db, geruest.auftraege, bibliothek, leser, lambda: geruest.leitstelle,
+                                            lambda: e().suchmodell)
+    geruest.begleiter_anmelden(artikeluebersetzer)
     geruest.verbindung_anmelden("Index-Dienst", indexauftraege.verbindung)
 
     # Was das System kennt, ist kein Textfeld: die Bücher der Bibliothek als Auswahl, der Fundus aus dem Verzeichnis
@@ -75,6 +81,19 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
 
     geruest.einstellungen.anbieten("bedeutung_buch", buecher)
     geruest.einstellungen.anbieten("hoerdienst", geruest.leitstelle_angebot("hoeren"))
+    geruest.einstellungen.anbieten("sprechdienst", geruest.leitstelle_angebot("stimme"))
+
+    async def stimmen() -> Angebot:
+        """Die Stimmen aus dem Katalog des Sprechdienstes, jedes Mal von dort; leer: seine Vorgabe."""
+        optionen = [Option(wert="", titel="Vorgabe des Sprechdienstes")]
+        try:
+            katalog = await sprechdienst.katalog()
+        except (LeitstellenFehler, NichtBereit) as f:
+            return Angebot(optionen=optionen, eigener_wert=False, stand=f"Katalog nicht erreichbar: {f}")
+        return Angebot(optionen=optionen + [Option(wert=s, titel=s, hinweis="Katalog") for s in katalog], eigener_wert=False,
+                       stand=f"{len(katalog)} Stimmen")
+
+    geruest.einstellungen.anbieten("vorlesestimme", stimmen)
     geruest.einstellungen.anbieten("suchmodell", geruest.leitstelle_angebot("text", leer="Kette der App"))
     geruest.einstellungen.anbieten("fundus_adresse", geruest.verbund.angebot("Fundus", "fundus", lambda: e().fundus_adresse))
     geruest.verbund.anmelden("Fundus", lambda: e().fundus_adresse)
@@ -89,8 +108,8 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     app.include_router(medien_router(geruest, Medien(leser, suche)))
     app.include_router(stoebern_router(geruest, Stoebern(bibliothek, leser, suche, meins.gelesen)))
     app.include_router(register_router(geruest, Register(bibliothek, eigen)))
-    app.include_router(uebersetzung_router(geruest, uebersetzer))
-    app.include_router(vorlesen.router())               # Vorlesen über die Vertonung (WIKI-8)
+    app.include_router(uebersetzung_router(geruest, uebersetzer, artikeluebersetzer))
+    app.include_router(vorlesen_router(geruest, sprechdienst))     # Vorlesen über die Leitstelle (WIKI-43)
     app.include_router(sprache_router(geruest, lambda: e().hoerdienst))
     app.include_router(korrektur_router(geruest, Korrektor(eigen.alle, lambda: geruest.leitstelle, lambda: e().suchmodell)))
     app.include_router(indexdienst_router(indexauftraege))           # nur mit dem Schlüssel des Index-Dienstes

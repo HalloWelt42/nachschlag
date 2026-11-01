@@ -6,7 +6,8 @@
   import { gehe, navigation, seitenFehler } from "appkern-oberflaeche";
   import { tick, untrack } from "svelte";
   import { bezeichnung, bibliothek, bibliothekLaden, buch as buchVon, datum, hauptbuch, zahl } from "../lib/bibliothek.svelte";
-  import { artikelHolen, zufallHolen } from "../lib/schnittstelle";
+  import { artikelHolen, artikelstandHolen, artikelUebersetzen, zufallHolen, type Artikelstand } from "../lib/schnittstelle";
+  import { deutsch, deutschMerken, uebersetzt } from "../lib/deutsch.svelte";
   import type { Artikel } from "../lib/typen";
   import { lesen, lesenZiel, suchen, verweisZiel } from "../lib/ziele";
   import { Auswahl } from "appkern-oberflaeche";
@@ -14,7 +15,7 @@
   import { RUECKMELDUNG_MS, zitatMitHerkunft } from "../lib/zitat";
   import { istCode } from "../lib/code";
   import { codeEinfaerben, spracheAus } from "../lib/einfaerben";
-  import { htmlSprache } from "../lib/sprache";
+  import { htmlSprache, spracheInWorten } from "../lib/sprache";
   import { gemerkt, lesestandMelden, meins, meinsLaden, merken, notieren, notizLoeschen, vergessen, vorliebeSetzen, wann,
            type Notiz, type NotizNeu } from "../lib/meins.svelte";
   import { markieren, stelleAus, type Stelle } from "../lib/stellen";
@@ -38,7 +39,9 @@
   const WOERTER_JE_MINUTE = 200;
   const MITLAUF_ABSTAND_PX = 90;          // eine Überschrift gilt als erreicht, sobald sie so nah am oberen Rand steht
 
-  let artikel = $state.raw<Artikel | null>(null);   // nur lesen, ohne Proxy
+  let artikel = $state.raw<Artikel | null>(null);   // was gezeigt wird (Original oder Übersetzung); nur lesen, ohne Proxy
+  let quelle = $state.raw<Artikel | null>(null);    // der Artikel, wie ihn die Quelle liefert
+  let ue = $state.raw<Artikelstand | null>(null);   // Stand der Übersetzung (WIKI-8)
   let fehler = $state("");
   let laedt = $state(false);
   let original = $state(false);
@@ -62,6 +65,10 @@
   const notizZiel = $derived(zusatz.get("notiz") ?? "");
   const buch = $derived(buchVon(buchKennung));
   const zeigeOriginal = $derived(!!artikel && (artikel.darstellung === "original" || original));
+  const aufDeutsch = $derived(!!artikel && !!quelle && artikel !== quelle);
+  // Sprache des gezeigten Texts (lang): Silbentrennung, Rechtschreibung und die Stimme beim Vorlesen
+  const textSprache = $derived(aufDeutsch ? "de" : buch ? htmlSprache(buch.sprache) : "");
+  const uebersetzbar = $derived(!!ue && ue.zustand !== "nicht_noetig" && ue.zustand !== "nicht_moeglich");
   const restMinuten = $derived(Math.max(1, Math.round((woerter * (1 - anteil)) / WOERTER_JE_MINUTE)));
 
   // Lesegröße dieses Buchs auf diesem Gerät (WIKI-29) als Zoom des Lesebereichs, auch in der Originalseite
@@ -95,29 +102,14 @@
     bilder = null;
     filterText = "";
     void bibliothekLaden();
+    ue = null;
     try {
-      const neu = await artikelHolen(b, p, signal);
-      artikel = neu;
-      navigation.titel = neu.titel;
-      await tick();
-      woerter = text?.innerText.split(/\s+/).length ?? 0;
-      if (text) {
-        // Sprache des Codes aus den Schlagwörtern (Frage und Antwort); sonst erkennt sie sich am Inhalt
-        codeEinfaerben(text, spracheAus([...text.querySelectorAll(".schlagwoerter :is(span, a)")].map((e) => e.textContent ?? "")));
-        kopierknoepfe(text);
-        if (geraet.mobil) codeGrossKnoepfe(text);
-        symboleAnbringen(text);
-      }
-      await Promise.all([bibliothekLaden(), meinsLaden(), themenLaden()]);   // Buch (sein Name), Meins und Themen des Kontos
-      const aufDerSeite = artikelEl ? fassungenAus(artikelEl) : null;
-      meineFassung = aufDerSeite && buch ? (meins.vorlieben[`fassung:${buch.name}`] ?? fassungGemerkt(buch.name)) : "";
-      fassungen = aufDerSeite && buch
-        ? { ...aufDerSeite, optionen: bekannteFassungen(buch.name, [...aufDerSeite.optionen, meineFassung]) }
-        : aufDerSeite;
-      if (artikelEl && fassungen) {
-        gibtEsInFassung = fassungAnwenden(artikelEl, meineFassung, fassungen.produkt);
-      }
-      await tick();                                            // Markierungen der Notizen stehen
+      // Artikel und Stand der Übersetzung zugleich: will dieses Gerät Deutsch und liegt sie ab, steht sie gleich da
+      const [neu, stand] = await Promise.all([artikelHolen(b, p, signal), artikelstandHolen(b, p, signal).catch(() => null)]);
+      quelle = neu;
+      ue = neu.darstellung !== "lesedesign" ? null
+        : neu.pfad === p ? stand : await artikelstandHolen(b, neu.pfad, signal).catch(() => null);   // Weiterleitung
+      await zeigen(ue?.zustand === "fertig" && ue.uebersetzung && deutsch.an ? uebersetzt(neu, ue.uebersetzung) : neu);
       zurStelle();
     } catch (f) {
       if (!signal.aborted) fehler = seitenFehler(f);
@@ -125,6 +117,85 @@
       if (!signal.aborted) laedt = false;
     }
   }
+
+  /** Einen Artikel zeigen (Original oder Übersetzung) und seinen Text aufbereiten: Code färben, Knöpfe, Symbole,
+   *  Fassungen; danach stehen auch die Markierungen der Notizen. */
+  async function zeigen(a: Artikel) {
+    artikel = a;
+    navigation.titel = a.titel;
+    await tick();
+    woerter = text?.innerText.split(/\s+/).length ?? 0;
+    if (text) {
+      // Sprache des Codes aus den Schlagwörtern (Frage und Antwort); sonst erkennt sie sich am Inhalt
+      codeEinfaerben(text, spracheAus([...text.querySelectorAll(".schlagwoerter :is(span, a)")].map((e) => e.textContent ?? "")));
+      kopierknoepfe(text);
+      if (geraet.mobil) codeGrossKnoepfe(text);
+      symboleAnbringen(text);
+    }
+    await Promise.all([bibliothekLaden(), meinsLaden(), themenLaden()]);   // Buch (sein Name), Meins und Themen des Kontos
+    const aufDerSeite = artikelEl ? fassungenAus(artikelEl) : null;
+    meineFassung = aufDerSeite && buch ? (meins.vorlieben[`fassung:${buch.name}`] ?? fassungGemerkt(buch.name)) : "";
+    fassungen = aufDerSeite && buch
+      ? { ...aufDerSeite, optionen: bekannteFassungen(buch.name, [...aufDerSeite.optionen, meineFassung]) }
+      : aufDerSeite;
+    if (artikelEl && fassungen) {
+      gibtEsInFassung = fassungAnwenden(artikelEl, meineFassung, fassungen.produkt);
+    }
+    await tick();                                              // Markierungen der Notizen stehen
+  }
+
+  // --- Übersetzen (WIKI-8): Artikel aus Quellen in anderer Sprache auf Deutsch, immer als Übersetzung gekennzeichnet ---
+  const NACHSEHEN_MS = 2000;
+
+  /** Zwischen Original und Übersetzung wechseln; die Stelle, an der man liest, bleibt (Anker sind dieselben). */
+  async function sprachwechsel(nachDeutsch: boolean) {
+    const a = quelle, u = ue?.uebersetzung;
+    if (!a || (nachDeutsch && !u)) return;
+    const stelle = aktiv;
+    await zeigen(nachDeutsch ? uebersetzt(a, u!) : a);
+    if (stelle) text?.querySelector<HTMLElement>(`#${CSS.escape(stelle)}`)?.scrollIntoView({ block: "start" });
+  }
+
+  async function deutschUmschalten() {
+    if (!quelle || !ue) return;
+    if (aufDeutsch) {
+      deutschMerken(false);
+      await sprachwechsel(false);
+      return;
+    }
+    deutschMerken(true);
+    if (ue.zustand === "fertig") await sprachwechsel(true);
+    else await anstossen();
+  }
+
+  async function anstossen() {
+    const a = quelle;
+    if (!a) return;
+    try {
+      const stand = await artikelUebersetzen(a.buch, a.pfad);
+      if (quelle === a) ue = stand;
+    } catch (f) {
+      if (quelle === a) ue = { zustand: "fehler", auftrag: "", anteil: null, schritt: "", grund: seitenFehler(f), uebersetzung: null };
+    }
+  }
+
+  // Solange übersetzt wird, nachsehen; fertig wechselt die Seite von selbst (nur wenn dieses Gerät Deutsch will)
+  $effect(() => {
+    if (ue?.zustand !== "laeuft") return;
+    const a = untrack(() => quelle);
+    if (!a) return;
+    const takt = setInterval(async () => {
+      try {
+        const stand = await artikelstandHolen(a.buch, a.pfad);
+        if (quelle !== a) return;
+        ue = stand;
+        if (stand.zustand === "fertig" && deutsch.an) await sprachwechsel(true);
+      } catch {
+        // beim nächsten Takt wieder
+      }
+    }, NACHSEHEN_MS);
+    return () => clearInterval(takt);
+  });
 
   // Ein anderer Anker im selben Artikel (Verweis auf einen Abschnitt, Inhaltsverzeichnis)
   $effect(() => {
@@ -568,7 +639,12 @@
         <i class="fa-solid fa-dice"></i><span class="wort">Zufall</span></button>
       {#if artikel.darstellung === "lesedesign"}
         <VorleseKnopf kennung={vorleseKennung} beschriftung="Vorlesen" titel="Ab dem Abschnitt vorlesen, in dem du liest"
-                      text={() => (text ? vorlesetext(text, aktiv) : "")} />
+                      daten={{ sprache: textSprache || "de" }} text={() => (text ? vorlesetext(text, aktiv) : "")} />
+      {/if}
+      {#if uebersetzbar && !zeigeOriginal}
+        <button class="knopf" class:an={aufDeutsch || (deutsch.an && ue?.zustand === "laeuft")} onclick={deutschUmschalten}
+                title={aufDeutsch ? `Wieder auf ${buch ? spracheInWorten(buch.sprache) : "Original"}` : "Auf Deutsch übersetzen (gekennzeichnet; Code, Namen und Zahlen bleiben)"}>
+          <i class="fa-solid fa-language"></i><span class="wort">Deutsch</span></button>
       {/if}
       {#if artikel.belege.length || artikel.quelle_url}
         <button class="knopf" class:an={recherche.an} onclick={rechercheUmschalten}
@@ -592,6 +668,27 @@
         {:else}<b>Diese Seite gibt es in {fassungen.produkt} {meineFassung} nicht.</b> Die Fassungen, in denen es sie gibt, nennt der Steckbrief.{/if}</span>
       <button class="knopf still" onclick={() => fassungWaehlen("")}><i class="fa-solid fa-xmark"></i>Filter aus</button>
     </div>
+  {/if}
+  {#if uebersetzbar && !zeigeOriginal && ue}
+    {#if aufDeutsch && ue.uebersetzung}
+      <div class="fundband uebersetzt">
+        <i class="fa-solid fa-language"></i>
+        <span><b>Von uns übersetzt</b> aus dem {ue.uebersetzung.aus} · Code, Namen und Zahlen unverändert{ue.uebersetzung.im_original
+          ? ` · ${ue.uebersetzung.im_original} ${ue.uebersetzung.im_original === 1 ? "Stelle" : "Stellen"} im Original` : ""}</span>
+        <button class="knopf still" onclick={deutschUmschalten}><i class="fa-solid fa-rotate-left"></i>{buch ? spracheInWorten(buch.sprache) : "Original"}</button>
+      </div>
+    {:else if ue.zustand === "laeuft" && deutsch.an}
+      <div class="fundband uebersetzt">
+        <i class="fa-solid fa-spinner fa-spin-pulse"></i>
+        <span><b>Wird übersetzt</b>{ue.schritt ? `: ${ue.schritt}` : ""}{ue.anteil !== null ? ` (${Math.round(ue.anteil * 100)} %)` : ""}. Die Seite wechselt von selbst.</span>
+      </div>
+    {:else if ue.zustand === "fehler" && deutsch.an}
+      <div class="fundband warn">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span><b>Übersetzung gescheitert:</b> {ue.grund}</span>
+        <button class="knopf still" onclick={anstossen}><i class="fa-solid fa-rotate-right"></i>Nochmal</button>
+      </div>
+    {/if}
   {/if}
   {#if frage}
     <div class="fundband">
@@ -694,7 +791,7 @@
               <div role="presentation" onclick={klick} onkeydown={() => {}}>{@html artikel.steckbrief.html}</div>
             </aside>
           {/if}
-          <div class="artikel-text" lang={buch ? htmlSprache(buch.sprache) || undefined : undefined} bind:this={text} role="presentation"
+          <div class="artikel-text" lang={textSprache || undefined} bind:this={text} role="presentation"
                onclick={klick} onkeydown={() => {}}>{@html artikel.html}</div>
           {#if artikelNotizen.length}
             <section class="deine-notizen">
@@ -719,6 +816,9 @@
                 <dd><ul>{#each artikel.online as o}<li><a href={o} target="_blank" rel="noopener noreferrer">{o}</a></li>{/each}</ul></dd>
               {/if}
               <dt>Aufbereitet</dt><dd>Baustein {artikel.baustein === "enzyklopaedie" ? "Enzyklopädie" : artikel.baustein}</dd>
+              {#if aufDeutsch && ue?.uebersetzung}
+                <dt>Übersetzung</dt><dd>von uns, über die Leitstelle{ue.uebersetzung.modell ? ` (${ue.uebersetzung.modell})` : ""}, {wann(ue.uebersetzung.wann)}</dd>
+              {/if}
             </dl>
           </details>
         </article>

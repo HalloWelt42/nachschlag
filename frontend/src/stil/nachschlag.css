@@ -340,6 +340,9 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .treffer .buchname { font-size: var(--marke); color: var(--text-3); }
 .treffer .marken { margin-left: auto; display: flex; gap: 4px; }
 .fundband.uebersetzt span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+/* Übersetzter Artikel (WIKI-8): was die Prüfung nicht bestand, steht im Original und trägt dessen Sprache */
+.artikel-text[lang="de"] [lang]:not([lang="de"])::before { content: attr(lang); margin-right: 6px; padding: 0 5px; border-radius: var(--r1);
+  font-family: var(--schrift-zahl); font-size: var(--marke); text-transform: uppercase; color: var(--text-3); background: var(--flaeche-2); }
 .sprechknopf { flex: none; display: inline-grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 50%;
                background: transparent; color: var(--text-3); cursor: pointer; }
 .sprechknopf:hover { background: var(--flaeche-2); color: var(--text); }

@@ -1,14 +1,16 @@
-"""Schnittstelle der übersetzten Suche (WIKI-40): eine Frage übersetzen (gemerkt oder über die Leitstelle) und eine
-Übersetzung korrigieren. Ohne Leitstelle ist das ein Zustand, kein Fehler: von "keine" mit dem Grund; die Suche läuft
-dann ohne Übersetzung."""
+"""Schnittstelle des Übersetzens. Suche (WIKI-40): eine Frage übersetzen (gemerkt oder über die Leitstelle) und eine
+Übersetzung korrigieren. Artikel (WIKI-8): Stand der Übersetzung eines Artikels und Anstoßen (ein Auftrag je Artikel).
+Ohne Leitstelle ist das ein Zustand, kein Fehler: mit dem Grund; Suche und Lesen laufen dann ohne Übersetzung."""
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from appkern.app import Geruest
 
+from ..bibliothek import BuchFehlt, EintragFehlt
+from .artikel import Artikeluebersetzer, Artikelstand
 from .dienst import Uebersetzer, Uebersetzung, UebersetzungFehlt
 
 
@@ -17,7 +19,7 @@ class Korrektur(BaseModel):
     text: str = Field(min_length=1, max_length=500)
 
 
-def router(geruest: Geruest, uebersetzer: Uebersetzer) -> APIRouter:
+def router(geruest: Geruest, uebersetzer: Uebersetzer, artikel: Artikeluebersetzer) -> APIRouter:
     r = APIRouter(prefix="/api/v1/uebersetzung", tags=["uebersetzung"], dependencies=[geruest.pflicht])
 
     @r.get("", response_model=Uebersetzung)
@@ -31,5 +33,22 @@ def router(geruest: Geruest, uebersetzer: Uebersetzer) -> APIRouter:
     @r.put("", response_model=Uebersetzung)
     async def korrigieren(eingabe: Korrektur) -> Uebersetzung:
         return await uebersetzer.korrigieren(eingabe.frage, eingabe.text)
+
+    @r.get("/artikel/{buch}/{pfad:path}", response_model=Artikelstand)
+    async def artikelstand(buch: str, pfad: str) -> Artikelstand:
+        """Abgelegt (mit der Übersetzung), in Arbeit, gescheitert oder fehlend; ohne Leitstelle nicht möglich, für Bücher
+        auf Deutsch nicht nötig."""
+        try:
+            return await artikel.stand(buch, pfad)
+        except BuchFehlt as f:
+            raise HTTPException(status_code=404, detail=str(f))
+
+    @r.post("/artikel/{buch}/{pfad:path}", response_model=Artikelstand)
+    async def artikel_uebersetzen(buch: str, pfad: str, wer: str = Depends(geruest.wer)) -> Artikelstand:
+        """Die Übersetzung anstoßen: ein Auftrag je Artikel. Liegt sie schon ab oder ist sie in Arbeit, nur der Stand."""
+        try:
+            return await artikel.anstossen(buch, pfad, wer)
+        except (BuchFehlt, EintragFehlt) as f:
+            raise HTTPException(status_code=404, detail=str(f))
 
     return r

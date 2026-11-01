@@ -39,7 +39,6 @@ die Oberfläche sagt es.
 |---|---|---|
 | Fundus | Bedeutungssuche | nur Index |
 | Kellerwolke | Konten, Ablage | ein Nutzer, eigene Datenbank (Betriebsart ohne Anmeldung, Bau 8) |
-| Leitstelle | Übersetzen, Vorschläge | ausgeblendet |
-| Vorlesedienst | Vorlesen | ausgeblendet |
+| Leitstelle | Übersetzen (Suche und Artikel, als Auftrag), Korrektur, Spracheingabe (Hördienst), Vorlesen (Sprechdienst) | ausgeblendet |
 
 Hausinternes (Adressen, Schlüssel, Ausrollen) gehört nicht in dieses Repo.

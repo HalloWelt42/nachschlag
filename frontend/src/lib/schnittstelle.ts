@@ -1,7 +1,7 @@
 // Alle Abrufe der Oberfläche an einer Stelle (über `hole` der Schale: Anmeldung, Fehler, gemeinsame Abrufe).
 import { hole } from "appkern-oberflaeche";
-import type { Artikel, AutorenSeite, AutorSeite, Bibliotheksstand, FragenSeite, SchlagwortSeite, Sortierung, Suchergebnis,
-              Vorschlag } from "./typen";
+import type { Abschnitt, Artikel, AutorenSeite, AutorSeite, Bibliotheksstand, FragenSeite, SchlagwortSeite, Sortierung, Suchergebnis,
+              Steckbrief, Vorschlag } from "./typen";
 
 function pfadTeil(pfad: string): string {
   return pfad.split("/").map(encodeURIComponent).join("/");
@@ -57,3 +57,31 @@ export const autorenHolen = (buch: string, anfang: string, ab: number, anzahl = 
 
 export const autorHolen = (buch: string, schluessel: string, ab: number, anzahl = 30) =>
   hole<AutorSeite>(`/register/autoren/${encodeURIComponent(buch)}/${encodeURIComponent(schluessel)}?${abfrage({ ab, anzahl })}`);
+
+// --- Artikel übersetzen (WIKI-8): ein Auftrag je Artikel, das Ergebnis gilt für alle Konten ---
+export interface ArtikelUebersetzung {
+  titel: string;
+  html: string;
+  abschnitte: Abschnitt[];
+  steckbrief: Steckbrief | null;
+  aus: string;                     // Sprache des Originals für "aus dem ..." (Englischen)
+  modell: string;
+  wann: string;
+  stuecke: number;
+  im_original: number;             // so viele Stücke bestanden die Prüfung nicht und stehen im Original (mit lang)
+}
+
+export interface Artikelstand {
+  zustand: "fertig" | "laeuft" | "fehlt" | "fehler" | "nicht_moeglich" | "nicht_noetig";
+  auftrag: string;
+  anteil: number | null;
+  schritt: string;
+  grund: string;
+  uebersetzung: ArtikelUebersetzung | null;
+}
+
+export const artikelstandHolen = (buch: string, pfad: string, signal?: AbortSignal) =>
+  hole<Artikelstand>(`/uebersetzung/artikel/${encodeURIComponent(buch)}/${pfadTeil(pfad)}`, { signal });
+
+export const artikelUebersetzen = (buch: string, pfad: string) =>
+  hole<Artikelstand>(`/uebersetzung/artikel/${encodeURIComponent(buch)}/${pfadTeil(pfad)}`, { method: "POST" });
