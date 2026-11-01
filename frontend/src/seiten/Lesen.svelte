@@ -711,11 +711,12 @@
       </div>
     </div>
   </div>
-  {#if fassungen && meineFassung && !zeigeOriginal}
-    <div class="fundband fassung" class:warn={!gibtEsInFassung}>
-      <i class="fa-solid {gibtEsInFassung ? 'fa-code-branch' : 'fa-triangle-exclamation'}"></i>
-      <span>{#if gibtEsInFassung}Gefiltert auf <b>{fassungen.produkt} {meineFassung}</b>: Änderungen für spätere Fassungen sind blass, die Änderungen bis zu deiner sind markiert.
-        {:else}<b>Diese Seite gibt es in {fassungen.produkt} {meineFassung} nicht.</b> Die Fassungen, in denen es sie gibt, nennt der Steckbrief.{/if}</span>
+  <!-- Der Filter zeigt sich an der Auswahl "Meine Fassung" und an den Markierungen im Text (Nutzer: kein Band); ein Band
+       nur, wenn es die Seite in der gewählten Fassung gar nicht gibt -->
+  {#if fassungen && meineFassung && !zeigeOriginal && !gibtEsInFassung}
+    <div class="fundband fassung warn">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span><b>Diese Seite gibt es in {fassungen.produkt} {meineFassung} nicht.</b> Die Fassungen, in denen es sie gibt, nennt der Steckbrief.</span>
       <button class="knopf still" onclick={() => fassungWaehlen("")}><i class="fa-solid fa-xmark"></i>Filter aus</button>
     </div>
   {/if}
