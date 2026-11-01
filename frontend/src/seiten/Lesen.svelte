@@ -655,7 +655,7 @@
       <button class="knopf still" title="Ein zufälliger Artikel aus dieser Quelle" onclick={zufall}>
         <i class="fa-solid fa-dice"></i><span class="wort">Zufall</span></button>
       {#if artikel.darstellung === "lesedesign"}
-        <VorleseKnopf kennung={vorleseKennung} beschriftung="Vorlesen" titel="Ab dem Abschnitt vorlesen, in dem du liest"
+        <VorleseKnopf kennung={vorleseKennung} beschriftung={geraet.mobil ? "" : "Vorlesen"} titel="Ab dem Abschnitt vorlesen, in dem du liest"
                       daten={{ sprache: textSprache || "de" }} text={() => (text ? vorlesetext(text, aktiv) : "")} />
       {/if}
       {#if uebersetzbar && !zeigeOriginal}
@@ -920,7 +920,7 @@
         {#if inhalt.length}
           <button class="knopf still" class:an={inhaltTafel} onclick={() => (inhaltTafel = !inhaltTafel)}><i class="fa-solid fa-list"></i><span class="wort">Inhalt</span></button>
         {/if}
-        <VorleseKnopf kennung={vorleseKennung} beschriftung="Vorlesen" titel="Ab dem Abschnitt vorlesen, in dem du liest"
+        <VorleseKnopf kennung={vorleseKennung} beschriftung={geraet.mobil ? "" : "Vorlesen"} titel="Ab dem Abschnitt vorlesen, in dem du liest"
                       daten={{ sprache: textSprache || "de" }} text={() => (text ? vorlesetext(text, aktiv) : "")} />
         <button class="knopf still" class:an={!!eintrag} title={eintrag ? "Vom Merkzettel nehmen" : "Auf den Merkzettel"} onclick={merkenUmschalten}>
           <i class="fa-{eintrag ? 'solid' : 'regular'} fa-bookmark"></i></button>

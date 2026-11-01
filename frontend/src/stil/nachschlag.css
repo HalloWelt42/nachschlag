@@ -58,7 +58,7 @@
 .artikel-kopf h1 { margin: var(--a1) 0 0; font-size: calc(var(--seitentitel) + 6px); line-height: 1.15; font-weight: 600; letter-spacing: .005em; overflow-wrap: anywhere; }
 .werkzeuge { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2); margin-top: var(--a3); }
 .werkzeuge .knopf.an { background: var(--akzent-weich); color: var(--akzent); border-color: transparent; font-weight: 600; }
-.werkzeuge .rechts { margin-left: auto; display: flex; gap: var(--a2); align-items: center; }
+.werkzeuge .rechts { margin-left: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--a2); align-items: center; min-width: 0; }
 
 /* Band: wie der Leser hierher kam (Treffer der Suche) */
 .fundband { display: flex; align-items: center; gap: var(--a3); margin: var(--a3) var(--a5) 0; padding: var(--a2) var(--a3); border-radius: var(--r2);
@@ -965,15 +965,16 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 
 /* Ansicht C (WIKI-7, Entwurf artikel-c.html): nur das Blatt. Das Rollfeld des Artikels legt sich über die Schale (über
    ihren Ebenen, unter Notizblatt, Leuchtkasten und Codeansicht); Kopf und Werkzeugleiste schweben darüber. */
-.nur-blatt .rollfeld { position: fixed; inset: calc(56px + env(safe-area-inset-top)) 0 0; z-index: 35; background: var(--flaeche); }
+.nur-blatt .rollfeld { position: fixed; inset: calc(56px + var(--rahmen-sicher-oben)) 0 0; z-index: 35; background: var(--flaeche); }
 /* ein Seitenrand, am Blatt selbst; unten Platz für die schwebende Leiste */
 .nur-blatt .lesen { display: block; max-width: 46em; margin: 0 auto; padding: var(--a5) var(--a4) 120px; }
 @media (max-width: 700px) { .nur-blatt .lesen { padding-inline: var(--a3); } }
+[data-rahmen="app"] .nur-blatt .lesen { padding-inline: 0; }      /* am Telefon setzt die Schale den einen Seitenrand */
 .nur-blatt .lesen:is([data-art="frage_antwort"], [data-art="dokumentation"]) { max-width: 72em; }
 .nur-blatt .lesen .inhalt { display: none; }
 .blatt-titel { font-size: calc(var(--seitentitel) + 14px); line-height: 1.1; margin: 0 0 var(--a4); font-weight: 600; }
 .ruhe-kopf { position: fixed; top: 0; left: 0; right: 0; z-index: 36; display: flex; align-items: center; gap: var(--a3);
-  height: calc(56px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) var(--a4) 0; background: var(--flaeche);
+  height: calc(56px + var(--rahmen-sicher-oben)); padding: var(--rahmen-sicher-oben) var(--a4) 0; background: var(--flaeche);
   box-shadow: 0 1px 0 var(--rand); }
 .ruhe-kopf .titel { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .ruhe-kopf .buch { font-size: var(--klein); color: var(--text-3); white-space: nowrap; }
@@ -981,12 +982,12 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .ruhe-kopf .fortschritt { position: absolute; left: 0; bottom: -1px; height: 3px; background: var(--akzent); transition: width .2s; }
 .pille-uebersetzt { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: var(--r1); white-space: nowrap;
   font-size: var(--marke); color: var(--petrol); background: color-mix(in srgb, var(--petrol) 12%, transparent); }
-.schwebeleiste { position: fixed; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 36;
+.schwebeleiste { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 36;
   display: flex; align-items: center; gap: 4px; padding: 6px; border-radius: 28px; background: var(--flaeche);
   box-shadow: var(--schatten-schwebend), 0 0 0 1px var(--rand); max-width: calc(100vw - 2 * var(--a3)); }
 .schwebeleiste .knopf, .schwebeleiste .rund { border-radius: 21px; }
 .schwebeleiste .lesegroesse-tafel { top: auto; bottom: calc(100% + 10px); }
-.inhalt-tafel { position: fixed; z-index: 36; top: calc(64px + env(safe-area-inset-top)); left: var(--a4); width: min(360px, calc(100vw - 2 * var(--a4)));
+.inhalt-tafel { position: fixed; z-index: 36; top: calc(64px + var(--rahmen-sicher-oben)); left: var(--a4); width: min(360px, calc(100vw - 2 * var(--a4)));
   max-height: calc(100dvh - 200px); overflow-y: auto; padding: var(--a3); border-radius: var(--r3); background: var(--flaeche);
   box-shadow: var(--schatten-schwebend), 0 0 0 1px var(--rand); }
 .inhalt-tafel ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -1042,3 +1043,11 @@ button.kachel:disabled { opacity: .6; cursor: default; }
   .start-innen.magazin { grid-template-columns: minmax(0, 1fr); }
   .start-innen.magazin > .heute, .start-innen.magazin > .weiterlesen, .start-innen.magazin > .merkzettel { grid-column: 1; grid-row: auto; }
 }
+/* Ansicht C am Telefon: Kopf und Fuß bleiben die der Schale (zentral, stil/rahmen.css). Das Blatt verliert nur den
+   Artikelkopf und die Bänder (das Band einer Übersetzung bleibt: sie ist immer gekennzeichnet); die Werkzeuge schweben
+   über der Fußleiste, die Inhaltstafel unter dem Kopf. */
+[data-rahmen="app"] .nur-blatt .rollfeld { position: static; inset: auto; z-index: auto; background: none; }
+[data-rahmen="app"] .nur-blatt .ruhe-kopf, [data-rahmen="app"] .nur-blatt > .artikel-kopf,
+[data-rahmen="app"] .nur-blatt > .fundband:not(.uebersetzt) { display: none; }
+[data-rahmen="app"] .schwebeleiste { bottom: calc(var(--rahmen-fuss) + var(--a3)); }
+[data-rahmen="app"] .inhalt-tafel { top: calc(var(--rahmen-kopf-unten) + var(--a2)); max-height: calc(100% - var(--rahmen-kopf-unten) - var(--rahmen-fuss) - 90px); }
