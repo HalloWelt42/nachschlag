@@ -26,6 +26,7 @@
   import Kachel from "../teile/Kachel.svelte";
   import Fragekarte from "../teile/Fragekarte.svelte";
   import Codeansicht from "../teile/Codeansicht.svelte";
+  import { belegeDerAuswahl, recherche, rechercheUmschalten } from "../lib/recherche.svelte";
   import Leuchtkasten from "../teile/Leuchtkasten.svelte";
   import { medienImArtikel, type Medium } from "../lib/medien";
   import { themenLaden } from "../lib/themen.svelte";
@@ -345,7 +346,7 @@
 
   let blatt = $state<{ notiz: Notiz | null; entwurf: NotizNeu | null; schreiben?: boolean } | null>(null);
   // `markiert`: Notizen, deren Markierung die Auswahl berührt (dann entfernt die Leiste, statt doppelt zu markieren)
-  let textwahl = $state<{ stelle: Stelle; markiert: Notiz[]; x: number; y: number; unten: boolean } | null>(null);
+  let textwahl = $state<{ stelle: Stelle; markiert: Notiz[]; belege: number[]; x: number; y: number; unten: boolean } | null>(null);
   let kopiert = $state<"" | "ja" | "nein">("");
   let wahlLeiste = $state<HTMLElement>();
   let wahlWarten: ReturnType<typeof setTimeout> | undefined;
@@ -374,7 +375,8 @@
       const unten = geraet.mobil || r.top < 140;
       const ids = new Set([...text!.querySelectorAll<HTMLElement>("mark.notiz")].filter((m) => bereich.intersectsNode(m)).map((m) => m.dataset.notiz));
       const markiert = artikelNotizen.filter((n) => ids.has(n.id));
-      textwahl = { stelle, markiert, x: r.left + r.width / 2, y: unten ? r.bottom + LEISTE_ABSTAND_PX : r.top - LEISTE_ABSTAND_PX, unten };
+      const belege = recherche.an ? belegeDerAuswahl(text!, bereich) : [];
+      textwahl = { stelle, markiert, belege, x: r.left + r.width / 2, y: unten ? r.bottom + LEISTE_ABSTAND_PX : r.top - LEISTE_ABSTAND_PX, unten };
     }, TEXTWAHL_WARTEN_MS);
   }
 
@@ -394,11 +396,15 @@
    *  entstehen keine doppelten Markierungen, die nach dem Löschen der einen weiter zu sehen wären. */
   async function anStelle(mitBlatt: boolean) {
     if (!artikel || !textwahl) return;
-    const { stelle } = textwahl;
+    const { stelle, belege } = textwahl;
     wahlBeenden();
+    // Recherchemodus: die Belege des Absatzes und der Artikel im Netz kommen mit
+    const recherchiert = recherche.an
+      ? { belege: artikel.belege.filter((b) => belege.includes(b.nummer)), quelle_url: artikel.quelle_url } : {};
     try {
       const n = artikelNotizen.find((x) => x.zitat === stelle.zitat && x.davor === stelle.davor)
-        ?? await notieren({ buch: artikel.buch, pfad: artikel.pfad, titel: artikel.titel, bild: artikel.bild, ...stelle, text: "" });
+        ?? await notieren({ buch: artikel.buch, pfad: artikel.pfad, titel: artikel.titel, bild: artikel.bild, ...stelle, text: "",
+                            ...recherchiert });
       if (mitBlatt) blatt = { notiz: n, entwurf: null, schreiben: true };
     } catch (f) {
       fehler = seitenFehler(f);
@@ -433,7 +439,8 @@
   function notizZumArtikel() {
     if (!artikel) return;
     blatt = { notiz: null, entwurf: { buch: artikel.buch, pfad: artikel.pfad, titel: artikel.titel, bild: artikel.bild,
-                                      abschnitt: "", zitat: "", davor: "", text: "" } };
+                                      abschnitt: "", zitat: "", davor: "", text: "",
+                                      ...(recherche.an ? { quelle_url: artikel.quelle_url } : {}) } };
   }
 
   function notizZeigen(n: Notiz) {
@@ -545,6 +552,11 @@
       {/if}
       <button class="knopf still" title="Ein zufälliger Artikel aus dieser Quelle" onclick={zufall}>
         <i class="fa-solid fa-dice"></i><span class="wort">Zufall</span></button>
+      {#if artikel.belege.length || artikel.quelle_url}
+        <button class="knopf" class:an={recherche.an} onclick={rechercheUmschalten}
+                title={recherche.an ? "Recherche an: Markierungen und Notizen nehmen ihre Belege mit" : "Recherche: Belege mit den Notizen sammeln"}>
+          <i class="fa-solid fa-graduation-cap"></i><span class="wort">Recherche</span></button>
+      {/if}
       <div class="rechts">
         {#if fassungen && !zeigeOriginal}
           <Auswahl wert={meineFassung} symbol="fa-code-branch" titel="Meine Fassung, bleibt für diese Quelle eingestellt" onwahl={fassungWaehlen}

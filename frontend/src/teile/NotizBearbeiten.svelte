@@ -4,7 +4,7 @@
   // an einer Stelle gibt es schon (als Markierung), sobald die Stelle markiert ist.
   import { onDestroy, untrack } from "svelte";
   import { kopieren, seitenFehler } from "appkern-oberflaeche";
-  import { buchName } from "../lib/bibliothek.svelte";
+  import { buch as buchVon, buchName } from "../lib/bibliothek.svelte";
   import { RUECKMELDUNG_MS, zitatMitHerkunft } from "../lib/zitat";
   import Sprechknopf from "./Sprechknopf.svelte";
   import { notieren, notizAendern, notizLoeschen, type Notiz, type NotizNeu } from "../lib/meins.svelte";
@@ -59,6 +59,16 @@
   const zitat = $derived(notiz?.zitat ?? entwurf?.zitat ?? "");
   const titel = $derived(notiz?.titel ?? entwurf?.titel ?? "");
   const abschnitt = $derived(notiz?.abschnitt ?? entwurf?.abschnitt ?? "");
+  const belege = $derived(notiz?.belege ?? entwurf?.belege ?? []);
+  const quelleUrl = $derived(notiz?.quelle_url ?? entwurf?.quelle_url ?? "");
+  // im Zitat der Titel der Quelle, wie sie sich selbst nennt (ohne Sprache)
+  const buchTitel = $derived.by(() => {
+    const k = notiz?.buch ?? entwurf?.buch ?? "";
+    return (k && buchVon(k)?.titel) || notiz?.buch_name || "";
+  });
+  // Zitiervorschlag für die Quellenangabe einer Arbeit: Titel, Werk, Adresse und Tag des Abrufs
+  const zitiervorschlag = $derived(quelleUrl
+    ? `${titel}. In: ${buchTitel}. ${quelleUrl} (abgerufen am ${new Date().toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })})` : "");
   const vor = $derived(Math.max(0, Math.round((jetzt - gespeichertUm) / 1000)));
 
   function tippen() {
@@ -132,6 +142,18 @@
     {:else if gespeichertUm}<i class="fa-solid fa-check"></i>Gespeichert {vor < 5 ? "gerade eben" : vor < 60 ? `vor ${vor} Sekunden` : `vor ${Math.round(vor / 60)} Minuten`}
     {:else}<i class="fa-solid fa-floppy-disk"></i>Speichert von selbst{/if}
   </div>
+  {#if belege.length || quelleUrl}
+    <!-- Recherchemodus (WIKI-31): was die Stelle belegt und wo der Artikel im Netz steht -->
+    <div class="feld-titel">Belege</div>
+    <div class="belege">
+      {#if quelleUrl}<a class="beleg-im-netz" href={quelleUrl} target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-globe"></i>Artikel im Netz</a>{/if}
+      {#each belege as b (b.nummer)}
+        <div class="beleg-zeile"><span class="nummer">{b.nummer}</span>
+          <span>{b.text}{#if b.url} <a href={b.url} target="_blank" rel="noopener noreferrer" title={b.url}><i class="fa-solid fa-arrow-up-right-from-square"></i></a>{/if}</span></div>
+      {/each}
+      {#if zitiervorschlag}<div class="zitiervorschlag" title="Zitiervorschlag">{zitiervorschlag}</div>{/if}
+    </div>
+  {/if}
   {#if loeschenFragen}
     <div class="fundband warn"><i class="fa-solid fa-triangle-exclamation"></i>
       <span>{zitat ? "Notiz und Markierung löschen?" : "Notiz löschen?"}</span>

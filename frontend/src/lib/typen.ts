@@ -93,6 +93,8 @@ export interface Artikel {
   bild: string;
   verweise: Verweiszahlen;
   online: string[];
+  belege: Beleg[];                 // Einzelnachweise; im Text als span.beleg[data-beleg] (WIKI-31)
+  quelle_url: string;              // der Artikel im Netz
   original: string;
   kacheln: Kachel[];
   gruppen: Gruppe[];
@@ -160,3 +162,6 @@ export interface AutorenSeite { eintraege: AutorEintrag[]; gesamt: number; ohne_
 export interface AutorBeitrag { pfad: string; titel: string; art: "frage" | "antwort"; stimmen: number; datum: string; akzeptiert: boolean }
 export interface AutorSeite { autor: AutorEintrag; beitraege: AutorBeitrag[]; gesamt: number }
 export type Sortierung = "stimmen" | "neueste";
+
+/** Ein Einzelnachweis (in der Oberfläche "Beleg", WIKI-31). */
+export interface Beleg { nummer: number; text: string; url: string }

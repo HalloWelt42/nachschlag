@@ -346,6 +346,13 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .sprechknopf.hoert { background: var(--gefahr); color: var(--auf-farbe); animation: sprechen 1.2s ease-in-out infinite; }
 @keyframes sprechen { 50% { opacity: .65; } }
 .sprech-stand { font-size: var(--marke); color: var(--gefahr); }
+/* Recherchemodus (WIKI-31): Belege im Notizblatt */
+.belege { display: flex; flex-direction: column; gap: 6px; font-size: var(--klein); }
+.beleg-zeile { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--a2); overflow-wrap: anywhere; color: var(--nebentext); }
+.beleg-zeile .nummer { font-family: var(--schrift-zahl); color: var(--text-3); }
+.beleg-zeile a, .beleg-im-netz { color: var(--verweis); }
+.beleg-im-netz { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; text-decoration: none; }
+.zitiervorschlag { padding: 6px 10px; border-radius: var(--r2); background: var(--flaeche-2); color: var(--text-2); overflow-wrap: anywhere; user-select: all; }
 .notiz-feldkopf { display: flex; align-items: center; justify-content: space-between; gap: var(--a2); }
 /* Codeansicht (WIKI-30): Knopf am Codeblock (nur Telefon) und Ansicht über den ganzen Schirm */
 .code-rahmen { position: relative; }

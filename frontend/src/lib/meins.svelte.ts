@@ -2,6 +2,7 @@
 // der Server hält sie). Eine Stelle für alle Seiten: Artikel (Merken, Notizen, Lesestand), Start (Weiterlesen,
 // Merkzettel), Suche (gesucht), Merkzettel, Notizen und Verlauf.
 import { hole, json } from "appkern-oberflaeche";
+import type { Beleg } from "./typen";
 
 export interface Merkeintrag {
   id: string;
@@ -43,11 +44,14 @@ export interface Notiz {
   zitat: string;
   davor: string;
   text: string;
+  belege: Beleg[];                 // Recherchemodus: Belege der Stelle (WIKI-31)
+  quelle_url: string;              // Recherchemodus: der Artikel im Netz
   angelegt: string;
   geaendert: string;
 }
 
-export type NotizNeu = Pick<Notiz, "buch" | "pfad" | "titel" | "bild" | "abschnitt" | "zitat" | "davor" | "text">;
+export type NotizNeu = Pick<Notiz, "buch" | "pfad" | "titel" | "bild" | "abschnitt" | "zitat" | "davor" | "text">
+  & Partial<Pick<Notiz, "belege" | "quelle_url">>;
 
 export const meins = $state<{ merkzettel: Merkeintrag[]; notizen: Notiz[]; geladen: boolean; vorlieben: Record<string, string> }>({
   merkzettel: [], notizen: [], geladen: false, vorlieben: {} });
