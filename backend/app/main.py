@@ -22,6 +22,8 @@ from .einstellungen import ARTEN_JE_STUFE, AppEinstellungen
 from .meins import Meins
 from .meins.api import router as meins_router
 from .register import Register
+from .uebersetzung import Uebersetzer
+from .uebersetzung.api import router as uebersetzung_router
 from .register.api import router as register_router
 from .medien import Medien
 from .medien.api import router as medien_router
@@ -56,6 +58,8 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     themen = Themen(geruest.db, bibliothek.name_von, bibliothek.kennung_von)
     geruest.begleiter_anmelden(themen)                   # nach Meins: Einträge lesen Lesestand und Notizen von dort
     geruest.begleiter_anmelden(indexauftraege)
+    uebersetzer = Uebersetzer(geruest.db, lambda: geruest.leitstelle, lambda: e().uebersetzung_modell)
+    geruest.begleiter_anmelden(uebersetzer)
     geruest.verbindung_anmelden("Index-Dienst", indexauftraege.verbindung)
 
     # Was das System kennt, ist kein Textfeld: die Bücher der Bibliothek als Auswahl, der Fundus aus dem Verzeichnis
@@ -65,6 +69,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
                                  for b in stand.buecher], eigener_wert=False, stand=f"{len(stand.buecher)} Quellen")
 
     geruest.einstellungen.anbieten("bedeutung_buch", buecher)
+    geruest.einstellungen.anbieten("uebersetzung_modell", geruest.leitstelle_angebot("text", leer="Kette der App"))
     geruest.einstellungen.anbieten("fundus_adresse", geruest.verbund.angebot("Fundus", "fundus", lambda: e().fundus_adresse))
     geruest.verbund.anmelden("Fundus", lambda: e().fundus_adresse)
 
@@ -78,6 +83,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     app.include_router(medien_router(geruest, Medien(leser, suche)))
     app.include_router(stoebern_router(geruest, Stoebern(bibliothek, leser, suche, meins.gelesen)))
     app.include_router(register_router(geruest, Register(bibliothek, eigen)))
+    app.include_router(uebersetzung_router(geruest, uebersetzer))
     app.include_router(indexdienst_router(indexauftraege))           # nur mit dem Schlüssel des Index-Dienstes
     # unter /lesen trägt der Weg Pfade aus Büchern, oft mit Punkt (function.array-map.php): immer eine Seite
     geruest.oberflaeche_ausliefern(app, seiten=["lesen"])

@@ -2,12 +2,14 @@
   // Suchergebnisse (Entwurf mockups/suche.html, WIKI-17 docs/SUCHE.md): jedes Buch wird für sich gefragt und zeigt
   // seinen Stand (sucht, fertig mit n Treffern, keine Antwort); die Treffer stehen nach Buch gruppiert, das Buch, aus
   // dem gesucht wurde, zuerst. Links die Bücher als Filter, rechts die Vorschau. Weg: /suche?frage=&buch=&nur=1
+  // Englische Quellen fragt die Seite zusätzlich mit der Übersetzung der Frage (WIKI-40, Punkt 5): deren Treffer kommen
+  // dazu, sobald die Übersetzung da ist; sie steht sichtbar über den Treffern und lässt sich ändern.
   import { navigation, seitenFehler } from "appkern-oberflaeche";
   import { untrack } from "svelte";
   import Suchfeld from "../teile/Suchfeld.svelte";
   import Buchmarke from "../teile/Buchmarke.svelte";
   import { bibliothek, bibliothekLaden, zahl } from "../lib/bibliothek.svelte";
-  import { artikelHolen, sucheHolen } from "../lib/schnittstelle";
+  import { artikelHolen, sucheHolen, uebersetzungHolen, uebersetzungKorrigieren, type Uebersetzung } from "../lib/schnittstelle";
   import type { Artikel, Buch, Suchergebnis, Treffer } from "../lib/typen";
   import { lesen, suchen } from "../lib/ziele";
   import { gesuchtMelden } from "../lib/meins.svelte";
@@ -19,15 +21,34 @@
 
   interface Stand {
     stand: "sucht" | "fertig" | "fehler";
-    ergebnis: Suchergebnis | null;
+    ergebnis: Suchergebnis | null;       // was die Seite zeigt: die Treffer der Übersetzung zuerst, dann die übrigen
     ms: number;
+    original?: Suchergebnis;
+    uebersetzt?: Suchergebnis;
   }
+
+  /** Beide Antworten eines Buchs zusammen: die Treffer der Übersetzung zuerst, jede Seite einmal. */
+  function gemischt(st: Stand): Stand {
+    const teile = [st.uebersetzt, st.original].filter((e): e is Suchergebnis => !!e);
+    if (!teile.length) return st;
+    const gesehen = new Set<string>();
+    const treffer = teile.flatMap((e) => e.treffer).filter((t) => !gesehen.has(t.pfad) && !!gesehen.add(t.pfad));
+    const basis = st.original ?? teile[0];
+    return { ...st, ergebnis: { ...basis, treffer, index_gesamt: Math.max(...teile.map((e) => e.index_gesamt)) } };
+  }
+
+  const gleich = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
   let staende = $state.raw<Record<string, Stand>>({});
   let aus = $state<string[]>([]);             // abgewählte Bücher
   let gewaehlt = $state.raw<Treffer | null>(null);
   let vorschau = $state.raw<Artikel | null>(null);
   let fehler = $state("");
+  let uebersetzung = $state.raw<Uebersetzung | null>(null);
+  let uebersetzungGrund = $state("");
+  let aendern = $state(false);
+  let neuText = $state("");
+  let nochmal = $state(0);                    // nach einer Korrektur der Übersetzung neu fragen
 
   const zusatz = $derived(new URLSearchParams(navigation.suche));
   const frage = $derived(zusatz.get("frage") ?? "");
@@ -48,6 +69,7 @@
 
   $effect(() => {
     const f = frage, buecher = reihenfolge.map((b) => b.kennung), k = kontext, n = nur;
+    void nochmal;
     if (!f || !buecher.length) return;
     const abruf = new AbortController();
     untrack(() => alleFragen(f, buecher, k, n, abruf.signal));
@@ -61,20 +83,60 @@
     vorschau = null;
     navigation.titel = `Suche: ${f}`;
     staende = Object.fromEntries(buecher.map((b) => [b, { stand: "sucht", ergebnis: null, ms: 0 } as Stand]));
-    await Promise.all(buecher.map(async (b) => {
+    uebersetzung = null;
+    uebersetzungGrund = "";
+    aendern = false;
+    const englisch = buecher.filter((b) => bibliothek.buecher.find((x) => x.kennung === b)?.sprache === "eng");
+    const anzahl = (b: string) => n ? NUR_EIN_BUCH : b === k ? IM_KONTEXT : JE_BUCH;
+    const uebersetzt = englisch.length ? uebersetztFragen(f, englisch, anzahl, signal) : Promise.resolve();
+    await Promise.all([uebersetzt, ...buecher.map(async (b) => {
       const anfang = performance.now();
       try {
-        const ergebnis = await sucheHolen(f, { buecher: [b], anzahl: n ? NUR_EIN_BUCH : b === k ? IM_KONTEXT : JE_BUCH }, signal);
+        const original = await sucheHolen(f, { buecher: [b], anzahl: anzahl(b) }, signal);
         if (signal.aborted) return;
-        staende = { ...staende, [b]: { stand: "fertig", ergebnis, ms: Math.round(performance.now() - anfang) } };
+        staende = { ...staende, [b]: gemischt({ ...staende[b], stand: "fertig", original, ms: Math.round(performance.now() - anfang) }) };
+        const ergebnis = staende[b].ergebnis!;
         if (!gewaehlt && ergebnis.treffer[0] && (b === buecher[0] || !staende[buecher[0]]?.ergebnis?.treffer.length)) void waehlen(ergebnis.treffer[0]);
       } catch (e) {
         if (signal.aborted) return;
         staende = { ...staende, [b]: { stand: "fehler", ergebnis: null, ms: Math.round(performance.now() - anfang) } };
         if (buecher.length === 1) fehler = seitenFehler(e);
       }
-    }));
+    })]);
     if (!signal.aborted) void gesuchtMelden(f, Object.values(staende).reduce((x, s) => x + (s.ergebnis?.index_gesamt ?? 0), 0));
+  }
+
+  /** Die englischen Quellen noch einmal mit der Übersetzung; ohne Leitstelle steht der Grund über den Treffern. */
+  async function uebersetztFragen(f: string, buecher: string[], anzahl: (b: string) => number, signal: AbortSignal) {
+    let u: Uebersetzung;
+    try {
+      u = await uebersetzungHolen(f, signal);
+    } catch (e) {
+      if (!signal.aborted) uebersetzungGrund = seitenFehler(e);
+      return;
+    }
+    if (signal.aborted) return;
+    uebersetzung = u;
+    if (gleich(u.text, f)) return;
+    await Promise.all(buecher.map(async (b) => {
+      try {
+        const ergebnis = await sucheHolen(u.text, { buecher: [b], anzahl: anzahl(b) }, signal);
+        if (!signal.aborted) staende = { ...staende, [b]: gemischt({ ...staende[b], uebersetzt: ergebnis }) };
+      } catch {
+        // die Treffer der Frage selbst bleiben
+      }
+    }));
+  }
+
+  async function korrigieren(e: SubmitEvent) {
+    e.preventDefault();
+    if (!neuText.trim()) return;
+    try {
+      await uebersetzungKorrigieren(frage, neuText.trim());
+      nochmal += 1;
+    } catch (x) {
+      uebersetzungGrund = seitenFehler(x);
+    }
   }
 
   async function waehlen(t: Treffer) {
@@ -129,6 +191,23 @@
 {#if hinweisBedeutung}
   <div class="fundband warn"><i class="fa-solid fa-triangle-exclamation"></i>
     <span><b>Nur Index:</b> {hinweisBedeutung}. Treffer passen deshalb nur dem Wortlaut nach.</span></div>
+{/if}
+<!-- Übersetzte Suche (WIKI-40): womit die englischen Quellen zusätzlich gefragt werden, änderbar -->
+{#if uebersetzung && !gleich(uebersetzung.text, frage)}
+  <div class="fundband uebersetzt"><i class="fa-solid fa-language"></i>
+    {#if aendern}
+      <form class="uebersetzung-aendern" onsubmit={korrigieren}>
+        <input bind:value={neuText} aria-label="Übersetzung für die englischen Quellen" />
+        <button class="knopf primaer" type="submit">Übernehmen</button>
+        <button class="knopf still" type="button" onclick={() => (aendern = false)}>Abbrechen</button>
+      </form>
+    {:else}
+      <span>Englische Quellen auch mit <b>{uebersetzung.text}</b>{uebersetzung.von === "nutzer" ? " (deine Übersetzung)" : ""}</span>
+      <button class="knopf still" onclick={() => { neuText = uebersetzung!.text; aendern = true; }}><i class="fa-solid fa-pen"></i>Ändern</button>
+    {/if}
+  </div>
+{:else if uebersetzungGrund}
+  <div class="fundband"><i class="fa-solid fa-language"></i><span>Englische Quellen ohne Übersetzung: {uebersetzungGrund}</span></div>
 {/if}
 <div class="suchseite">
   <aside class="filterspalte">

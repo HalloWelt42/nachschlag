@@ -30,6 +30,15 @@ export const sucheHolen = (frage: string, optionen: { buecher?: string[]; wege?:
   hole<Suchergebnis>(`/suche?${abfrage({ frage, buecher: optionen.buecher ?? [], wege: optionen.wege ?? "beide",
                                          anzahl: optionen.anzahl ?? 20 })}`, { signal });
 
+// --- Übersetzte Suche (WIKI-40): Frage für englische Quellen, gemerkt; die Korrektur des Nutzers gilt ---
+export interface Uebersetzung { frage: string; ziel: string; text: string; von: "modell" | "nutzer" }
+
+export const uebersetzungHolen = (frage: string, signal?: AbortSignal) =>
+  hole<Uebersetzung>(`/uebersetzung?${abfrage({ frage })}`, { signal });
+
+export const uebersetzungKorrigieren = (frage: string, text: string) =>
+  hole<Uebersetzung>("/uebersetzung", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ frage, text }) });
+
 // --- Register (WIKI-39): ohne Buch über alle Frage-Antwort-Bücher, seitenweise ---
 export const schlagwoerterHolen = (buch: string, anfang: string, ab: number, anzahl = 60) =>
   hole<SchlagwortSeite>(`/register/schlagwoerter?${abfrage({ buch, anfang, ab, anzahl })}`);

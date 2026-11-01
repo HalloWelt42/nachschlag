@@ -24,6 +24,10 @@ fehlenden Feldern (Schlagwörter, Stimmen, Autoren, Rubriken).
 5. **Übersetzte Suche:** automatisch, wenn englische Bücher dabei sind. Die Leitstelle übersetzt lokal; Fachbegriffe,
    Code und Bezeichner bleiben. Die englischen Treffer kommen nach, sobald die Übersetzung da ist. Die Übersetzung
    steht sichtbar über den Treffern und lässt sich ändern; einmal übersetzte Fragen werden gemerkt.
+   **Umgesetzt (Schritt 4, WIKI-40):** Sind englische Quellen dabei, fragt die Suchseite die Leitstelle nach der
+   Übersetzung (Modell einstellbar, sonst die Kette der App) und fragt die englischen Quellen damit zusätzlich; deren
+   Treffer stehen vorn, jede Seite einmal. Ein Band über den Treffern zeigt die Übersetzung, "Ändern" speichert die
+   eigene; gemerkt wird für alle Konten. Ohne Leitstelle steht der Grund im Band, die Suche läuft ohne Übersetzung.
 6. **Treffer nach Buch gruppiert:** je Buch ein Abschnitt mit Flagge, Stand und den besten Treffern (etwa 5),
    "alle aus diesem Buch" klappt auf. Trefferkarte je Buchart (Handbuch: Name und Rubrik; Frage und Antwort: Stimmen,
    Antworten, Haken). Blöcke erscheinen, sobald ihr Buch geantwortet hat.
