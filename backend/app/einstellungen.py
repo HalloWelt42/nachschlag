@@ -7,6 +7,7 @@ from typing import Literal
 from pydantic import Field, SecretStr
 
 from appkern.app import Grundeinstellungen
+from appkern.vorlesen import VorlesenEinstellungen
 
 BIBLIOTHEK = {"gruppe": "Bibliothek"}
 SUCHE = {"gruppe": "Suche"}
@@ -19,7 +20,7 @@ ARTEN_JE_STUFE: dict[str, list[str]] = {
     "alle": ["dokumentation", "frage_antwort", "enzyklopaedie", "webseite", "sonstiges"]}
 
 
-class AppEinstellungen(Grundeinstellungen):
+class AppEinstellungen(Grundeinstellungen, VorlesenEinstellungen):
     # --- Bibliothek -------------------------------------------------------------------------------------------------
     buecher_ordner: str = Field("/buecher", title="Ordner der ZIM-Libs", json_schema_extra=BIBLIOTHEK,
                                 description="Jede ZIM-Datei in diesem Ordner ist eine Quelle; neue Dateien erscheinen von selbst. "

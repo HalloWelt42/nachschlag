@@ -346,6 +346,8 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .sprechknopf.hoert { background: var(--gefahr); color: var(--auf-farbe); animation: sprechen 1.2s ease-in-out infinite; }
 @keyframes sprechen { 50% { opacity: .65; } }
 .sprech-stand { font-size: var(--marke); color: var(--gefahr); }
+/* Mitlesen beim Vorlesen (WIKI-8): der gesprochene Satz */
+::highlight(vorlesen) { background-color: color-mix(in srgb, var(--akzent) 30%, transparent); }
 /* Recherchemodus (WIKI-31): Belege im Notizblatt */
 .belege { display: flex; flex-direction: column; gap: 6px; font-size: var(--klein); }
 .beleg-zeile { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--a2); overflow-wrap: anywhere; color: var(--nebentext); }

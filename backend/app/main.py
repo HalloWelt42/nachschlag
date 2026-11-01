@@ -11,6 +11,7 @@ from fastapi import FastAPI
 
 from appkern.app import Geruest
 from appkern.einstellungen import Angebot, Option
+from appkern.vorlesen import Vorlesen
 
 from .api import router
 from .artikel import Artikelleser
@@ -56,6 +57,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     indexauftraege = Indexauftraege(eigen, bibliothek, geruest.auftraege, lambda: e().indexdienst_schluessel.get_secret_value(),
                                     lambda: ARTEN_JE_STUFE[e().eigene_indizes], lambda: e().eigenindex_hoechstens_gb)
 
+    vorlesen = Vorlesen(geruest)                         # Angebote für Vertonung und Stimme, Verbindung in der Fußleiste
     meins = Meins(geruest.db, bibliothek.name_von, bibliothek.kennung_von)
     geruest.begleiter_anmelden(meins)
     themen = Themen(geruest.db, bibliothek.name_von, bibliothek.kennung_von)
@@ -88,6 +90,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     app.include_router(stoebern_router(geruest, Stoebern(bibliothek, leser, suche, meins.gelesen)))
     app.include_router(register_router(geruest, Register(bibliothek, eigen)))
     app.include_router(uebersetzung_router(geruest, uebersetzer))
+    app.include_router(vorlesen.router())               # Vorlesen über die Vertonung (WIKI-8)
     app.include_router(sprache_router(geruest, lambda: e().hoerdienst))
     app.include_router(korrektur_router(geruest, Korrektor(eigen.alle, lambda: geruest.leitstelle, lambda: e().suchmodell)))
     app.include_router(indexdienst_router(indexauftraege))           # nur mit dem Schlüssel des Index-Dienstes

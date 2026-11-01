@@ -27,6 +27,8 @@
   import Fragekarte from "../teile/Fragekarte.svelte";
   import Codeansicht from "../teile/Codeansicht.svelte";
   import { belegeDerAuswahl, recherche, rechercheUmschalten } from "../lib/recherche.svelte";
+  import { VorleseKnopf, vorleser } from "appkern-oberflaeche";
+  import { hervorhebungWeg, satzHervorheben, vorlesetext } from "../lib/mitlesen";
   import Leuchtkasten from "../teile/Leuchtkasten.svelte";
   import { medienImArtikel, type Medium } from "../lib/medien";
   import { themenLaden } from "../lib/themen.svelte";
@@ -269,6 +271,18 @@
       rahmen.append(knopf);
     }
   }
+
+  // Vorlesen mit Mitlesen (WIKI-8): ab dem Abschnitt, in dem man liest; der gesprochene Satz ist hervorgehoben und rollt
+  // in Sicht, solange der Vorleser diesen Artikel liest
+  const vorleseKennung = $derived(artikel ? `artikel:${artikel.buch}/${artikel.pfad}` : "");
+  $effect(() => {
+    const satz = vorleser.kennung === vorleseKennung ? vorleser.satz : null;
+    untrack(() => {
+      if (!satz || !text) return hervorhebungWeg();
+      const el = satzHervorheben(text, satz.text);
+      if (el) stelleZeigen(el, "smooth");
+    });
+  });
 
   /** Symbole aus dem Entwurf an Teilen, die der Baustein liefert (Haken an der akzeptierten Antwort). Die Bausteine
    *  liefern nur Inhalt und Klassen; Symbole gehören zur Oberfläche. */
@@ -552,6 +566,10 @@
       {/if}
       <button class="knopf still" title="Ein zufälliger Artikel aus dieser Quelle" onclick={zufall}>
         <i class="fa-solid fa-dice"></i><span class="wort">Zufall</span></button>
+      {#if artikel.darstellung === "lesedesign"}
+        <VorleseKnopf kennung={vorleseKennung} beschriftung="Vorlesen" titel="Ab dem Abschnitt vorlesen, in dem du liest"
+                      text={() => (text ? vorlesetext(text, aktiv) : "")} />
+      {/if}
       {#if artikel.belege.length || artikel.quelle_url}
         <button class="knopf" class:an={recherche.an} onclick={rechercheUmschalten}
                 title={recherche.an ? "Recherche an: Markierungen und Notizen nehmen ihre Belege mit" : "Recherche: Belege mit den Notizen sammeln"}>
