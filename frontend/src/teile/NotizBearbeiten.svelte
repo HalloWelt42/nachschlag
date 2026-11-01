@@ -4,7 +4,10 @@
   // an einer Stelle gibt es schon (als Markierung), sobald die Stelle markiert ist.
   import { onDestroy, untrack } from "svelte";
   import { kopieren, seitenFehler } from "appkern-oberflaeche";
-  import { buch as buchVon, buchName } from "../lib/bibliothek.svelte";
+  import { Auswahl } from "appkern-oberflaeche";
+  import { buchName } from "../lib/bibliothek.svelte";
+  import { ZITIERFORMEN, zitierform, zitierformMerken } from "../lib/recherche.svelte";
+  import { zitateHolen, type Zitate } from "../lib/schnittstelle";
   import { RUECKMELDUNG_MS, zitatMitHerkunft } from "../lib/zitat";
   import Sprechknopf from "./Sprechknopf.svelte";
   import { notieren, notizAendern, notizLoeschen, type Notiz, type NotizNeu } from "../lib/meins.svelte";
@@ -61,14 +64,23 @@
   const abschnitt = $derived(notiz?.abschnitt ?? entwurf?.abschnitt ?? "");
   const belege = $derived(notiz?.belege ?? entwurf?.belege ?? []);
   const quelleUrl = $derived(notiz?.quelle_url ?? entwurf?.quelle_url ?? "");
-  // im Zitat der Titel der Quelle, wie sie sich selbst nennt (ohne Sprache)
-  const buchTitel = $derived.by(() => {
-    const k = notiz?.buch ?? entwurf?.buch ?? "";
-    return (k && buchVon(k)?.titel) || notiz?.buch_name || "";
+  // Zitiervorschlag (WIKI-31) in der Form, die dieses Gerät gewählt hat. Alle Formen kommen vorab vom Server (dort
+  // stehen sie an einer Stelle, mit Autor und Datum bei Frage und Antwort); die Zwischenablage gibt es nur im Klick.
+  let zitate = $state.raw<Zitate | null>(null);
+  let zitatKopiert = $state<"" | "ja" | "nein">("");
+  $effect(() => {
+    const b = notiz?.buch ?? entwurf?.buch ?? "", p = notiz?.pfad ?? entwurf?.pfad ?? "";
+    zitate = null;
+    if (!quelleUrl || !b || !p) return;
+    const abruf = new AbortController();
+    zitateHolen(b, p, abruf.signal).then((z) => (zitate = z)).catch(() => {});
+    return () => abruf.abort();
   });
-  // Zitiervorschlag für die Quellenangabe einer Arbeit: Titel, Werk, Adresse und Tag des Abrufs
-  const zitiervorschlag = $derived(quelleUrl
-    ? `${titel}. In: ${buchTitel}. ${quelleUrl} (abgerufen am ${new Date().toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })})` : "");
+  const zitiervorschlag = $derived(zitate ? zitate[zitierform.form] : "");
+  async function zitiervorschlagKopieren() {
+    zitatKopiert = (await kopieren(zitiervorschlag)) ? "ja" : "nein";
+    setTimeout(() => (zitatKopiert = ""), RUECKMELDUNG_MS);
+  }
   const vor = $derived(Math.max(0, Math.round((jetzt - gespeichertUm) / 1000)));
 
   function tippen() {
@@ -151,7 +163,15 @@
         <div class="beleg-zeile"><span class="nummer">{b.nummer}</span>
           <span>{b.text}{#if b.url} <a href={b.url} target="_blank" rel="noopener noreferrer" title={b.url}><i class="fa-solid fa-arrow-up-right-from-square"></i></a>{/if}</span></div>
       {/each}
-      {#if zitiervorschlag}<div class="zitiervorschlag" title="Zitiervorschlag">{zitiervorschlag}</div>{/if}
+      {#if zitiervorschlag}
+        <div class="zitier-kopf">
+          <Auswahl wert={zitierform.form} symbol="fa-quote-right" titel="Zitierform, bleibt auf diesem Gerät eingestellt"
+                   optionen={ZITIERFORMEN} onwahl={zitierformMerken} />
+          <button class="knopf still" class:kopiert-ok={zitatKopiert === "ja"} onclick={zitiervorschlagKopieren}>
+            <i class="fa-{zitatKopiert === 'ja' ? 'solid fa-check' : zitatKopiert === 'nein' ? 'solid fa-triangle-exclamation' : 'regular fa-copy'}"></i>{zitatKopiert === "ja" ? "Kopiert" : zitatKopiert === "nein" ? "Geht nicht" : "Kopieren"}</button>
+        </div>
+        <div class="zitiervorschlag" class:block={zitierform.form === "bibtex"} title="Zitiervorschlag">{zitiervorschlag}</div>
+      {/if}
     </div>
   {/if}
   {#if loeschenFragen}

@@ -14,9 +14,11 @@ from ..modell.themen import (
     Ablehnung, Angebot, Bereich, BereichAenderung, BereichNeu, EintragNeu, Thema, ThemaAenderung, Themeneintrag, Themenkopf,
     ThemaNeu, Verschieben, Zuordnung,
 )
-from ..bibliothek import Bibliothek
+from ..artikel import Artikelleser
+from ..bibliothek import Bibliothek, BuchFehlt, EintragFehlt
 from ..meins import Meins
 from ..suche import Suche
+from ..zitieren import Form
 from .literatur import Literaturliste, literaturliste
 from .speicher import Themen
 
@@ -38,9 +40,9 @@ def _da(wert: T | None, was: str = "Dieses Thema gibt es nicht") -> T:
     return wert
 
 
-def router(geruest: Geruest, themen: Themen, suche: Suche, bibliothek: Bibliothek, meins: Meins) -> APIRouter:
+def router(geruest: Geruest, themen: Themen, suche: Suche, bibliothek: Bibliothek, meins: Meins, leser: Artikelleser) -> APIRouter:
     """`bibliothek`: Namen und Angaben der Quellen (Angebote mit Bekanntem vergleichen, Literaturliste); `meins`: die
-    Notizen mit ihren Belegen (Literaturliste)."""
+    Notizen mit ihren Belegen (Literaturliste); `leser`: Autor und Datum von Fragen (Literaturliste)."""
     name_von: Callable[[str], Awaitable[str]] = bibliothek.name_von
     r = APIRouter(prefix="/api/v1/meins/themen", tags=["themen"])
 
@@ -64,12 +66,20 @@ def router(geruest: Geruest, themen: Themen, suche: Suche, bibliothek: Bibliothe
         return _da(await themen.thema(konto.id, thema))
 
     @r.get("/{thema}/literatur", response_model=Literaturliste)
-    async def literatur(thema: str, konto: Konto = geruest.mensch) -> Literaturliste:
-        """Literaturliste des Themas als Markdown (WIKI-31): Artikel mit Quelle und Adresse im Netz, darunter die Belege,
-        die der Recherchemodus mit den Notizen gesammelt hat."""
+    async def literatur(thema: str, form: Form = "einfach", konto: Konto = geruest.mensch) -> Literaturliste:
+        """Literaturliste des Themas (WIKI-31) in einer Zitierform (einfach, apa, din, bibtex): je Artikel die
+        Quellenangabe, darunter die Belege, die der Recherchemodus mit den Notizen gesammelt hat."""
         t = _da(await themen.thema(konto.id, thema))
         buecher = {b.kennung: b for b in (await bibliothek.stand()).buecher}
-        return Literaturliste(markdown=literaturliste(t, buecher, await meins.notizen(konto.id)))
+
+        async def verfasser(buch: str, pfad: str) -> tuple[str, str]:
+            try:
+                a = await leser.lesen(buch, pfad)
+            except (BuchFehlt, EintragFehlt):
+                return "", ""
+            return a.autor, a.datum
+
+        return Literaturliste(form=form, text=await literaturliste(t, buecher, await meins.notizen(konto.id), form, verfasser))
 
     @r.patch("/{thema}", response_model=Thema)
     async def aendern(thema: str, aenderung: ThemaAenderung, konto: Konto = geruest.mensch) -> Thema:

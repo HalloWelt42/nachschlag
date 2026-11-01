@@ -603,7 +603,22 @@ async def test_literaturliste_eines_themas(nachschlag):
     await c.post(f"{w}/eintraege", json={"buch": buch, "pfad": "Arrhenius", "titel": "Svante Arrhenius"})
     await c.post("/api/v1/meins/notizen", json={"buch": buch, "pfad": "Rotfuchs", "titel": "Rotfuchs", "zitat": "Fuchs",
                                                "belege": [{"nummer": 1, "text": "Beleg", "url": "https://example.org/beleg"}]})
-    text = (await c.get(f"{w}/literatur")).json()["markdown"]
+    text = (await c.get(f"{w}/literatur")).json()["text"]
     assert text.startswith("# Literatur: Füchse") and "## Tiere" in text
     assert "- Rotfuchs. In: " in text and "  - Beleg 1: Beleg https://example.org/beleg" in text
     assert text.index("Svante Arrhenius") < text.index("## Tiere")         # ohne Bereich zuerst
+    bib = (await c.get(f"{w}/literatur", params={"form": "bibtex"})).json()
+    assert bib["form"] == "bibtex" and bib["text"].startswith("% Literatur: Füchse") and "% Tiere" in bib["text"]
+    assert "@misc{rotfuchs" in bib["text"] and "% Beleg 1: Beleg https://example.org/beleg" in bib["text"]
+    apa = (await c.get(f"{w}/literatur", params={"form": "apa"})).json()["text"]
+    assert "- Rotfuchs. (" in apa
+
+
+async def test_zitate_einer_frage_nennen_autor_und_datum(nachschlag):
+    """Frage und Antwort (WIKI-31): wer fragte und wann, in jeder Zitierform."""
+    c, _, _ = nachschlag
+    z = (await c.get("/api/v1/zitate/probeqa_en_all_2026-10/questions/84/clipboard")).json()
+    assert (z["angaben"]["autor"], z["angaben"]["datum"]) == ("thameera", "2015-02-03")
+    assert z["apa"].startswith("thameera. (2015, 3. Februar).") and "[Forumsbeitrag]" in z["apa"]
+    assert "author = {{thameera}}" in z["bibtex"]
+    assert (await c.get("/api/v1/zitate/probeqa_en_all_2026-10/gibt-es-nicht")).status_code == 404

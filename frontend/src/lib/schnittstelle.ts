@@ -85,3 +85,15 @@ export const artikelstandHolen = (buch: string, pfad: string, signal?: AbortSign
 
 export const artikelUebersetzen = (buch: string, pfad: string) =>
   hole<Artikelstand>(`/uebersetzung/artikel/${encodeURIComponent(buch)}/${pfadTeil(pfad)}`, { method: "POST" });
+
+// --- Zitieren (WIKI-31): eine Seite in allen Zitierformen, vorab geholt (Zwischenablage nur direkt im Klick) ---
+export interface Zitate {
+  angaben: { titel: string; quelle: string; stand: string; url: string; autor: string; datum: string };
+  einfach: string;
+  apa: string;
+  din: string;
+  bibtex: string;
+}
+
+export const zitateHolen = (buch: string, pfad: string, signal?: AbortSignal) =>
+  hole<Zitate>(`/zitate/${encodeURIComponent(buch)}/${pfadTeil(pfad)}`, { signal });

@@ -5,6 +5,7 @@
   import Buchmarke from "./Buchmarke.svelte";
   import { Auswahl, geraet, hole, kopieren, navigation, Rueckfrage, seitenFehler } from "appkern-oberflaeche";
   import { RUECKMELDUNG_MS } from "../lib/zitat";
+  import { ZITIERFORMEN, zitierform, zitierformMerken } from "../lib/recherche.svelte";
   import { untrack } from "svelte";
   import { bezeichnung, bibliothek, bibliothekLaden, buchName } from "../lib/bibliothek.svelte";
   import {
@@ -16,22 +17,23 @@
 
   let { id, ongeloescht }: { id: string; ongeloescht: () => void } = $props();
 
-  /** Literaturliste (WIKI-31): Artikel mit Quelle, Adresse im Netz und gesammelten Belegen als Markdown kopieren. Die
-   *  Liste liegt vorher bereit: die Zwischenablage gibt es nur direkt im Klick, ohne Warten dazwischen. */
+  /** Literaturliste (WIKI-31): Artikel mit Quellenangabe in der Zitierform des Geräts (einfach, APA, DIN ISO 690 als
+   *  Markdown, oder BibTeX) und den gesammelten Belegen kopieren. Die Liste liegt vorher bereit: die Zwischenablage
+   *  gibt es nur direkt im Klick, ohne Warten dazwischen. */
   let literatur = $state("");
   let literaturKopiert = $state<"" | "ja" | "nein">("");
-  async function literaturLaden(thema: string) {
+  async function literaturLaden(thema: string, form: string) {
     try {
-      literatur = (await hole<{ markdown: string }>(`/meins/themen/${encodeURIComponent(thema)}/literatur`)).markdown;
+      literatur = (await hole<{ text: string }>(`/meins/themen/${encodeURIComponent(thema)}/literatur?form=${form}`)).text;
     } catch {
       literatur = "";
     }
   }
-  $effect(() => void literaturLaden(id));
+  $effect(() => void literaturLaden(id, zitierform.form));
   async function literaturKopieren() {
     literaturKopiert = literatur && (await kopieren(literatur)) ? "ja" : "nein";
     setTimeout(() => (literaturKopiert = ""), RUECKMELDUNG_MS);
-    void literaturLaden(id);                     // für das nächste Mal mit den neuesten Notizen
+    void literaturLaden(id, zitierform.form);   // für das nächste Mal mit den neuesten Notizen
   }
 
   type Ansicht = "karten" | "liste";
@@ -252,8 +254,10 @@
         <button class="knopf" onclick={() => (neuerBereich = "")}><i class="fa-solid fa-folder-plus"></i><span class="wort">Bereich</span></button>
         {#if geraet.mobil && !bearbeiten}<button class="knopf" onclick={bearbeitenBeginnen}><i class="fa-solid fa-pen"></i><span class="wort">Bearbeiten</span></button>{/if}
         <button class="knopf" class:kopiert-ok={literaturKopiert === "ja"} onclick={literaturKopieren}
-                title="Literaturliste (Markdown) mit Quellen, Adressen im Netz und den Belegen aus den Notizen kopieren">
+                title="Literaturliste in der gewählten Zitierform mit den Belegen aus den Notizen kopieren">
           <i class="fa-solid {literaturKopiert === 'ja' ? 'fa-check' : literaturKopiert === 'nein' ? 'fa-triangle-exclamation' : 'fa-list-ol'}"></i><span class="wort">{literaturKopiert === "ja" ? "Kopiert" : literaturKopiert === "nein" ? "Geht nicht" : "Literatur"}</span></button>
+        <Auswahl wert={zitierform.form} symbol="fa-quote-right" titel="Zitierform der Literaturliste, bleibt auf diesem Gerät eingestellt"
+                 optionen={ZITIERFORMEN} onwahl={zitierformMerken} />
       {/if}
       <div class="rechts">
         <span class="segment">

@@ -358,6 +358,8 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .beleg-zeile a, .beleg-im-netz { color: var(--verweis); }
 .beleg-im-netz { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; text-decoration: none; }
 .zitiervorschlag { padding: 6px 10px; border-radius: var(--r2); background: var(--flaeche-2); color: var(--text-2); overflow-wrap: anywhere; user-select: all; }
+.zitiervorschlag.block { white-space: pre-wrap; font-family: var(--schrift-code); font-size: var(--klein); }
+.zitier-kopf { display: flex; align-items: center; justify-content: space-between; gap: var(--a2); flex-wrap: wrap; }
 .notiz-feldkopf { display: flex; align-items: center; justify-content: space-between; gap: var(--a2); }
 /* Codeansicht (WIKI-30): Knopf am Codeblock (nur Telefon) und Ansicht über den ganzen Schirm */
 .code-rahmen { position: relative; }

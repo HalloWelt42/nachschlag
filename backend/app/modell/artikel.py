@@ -108,6 +108,8 @@ class Artikel(BaseModel):
     online: list[str] = Field(default_factory=list, description="Online-Verweise (Belege, Weblinks) für 'Über diesen Artikel'")
     belege: list[Beleg] = Field(default_factory=list, description="Einzelnachweise; im Text stehen sie als span.beleg[data-beleg]")
     quelle_url: str = Field("", description="Der Artikel im Netz (etwa in der Wikipedia), für Belege und Zitate")
+    autor: str = Field("", description="Wer die Seite verfasst hat, soweit die Quelle es nennt (Frage und Antwort: wer fragte)")
+    datum: str = Field("", description="Wann (JJJJ-MM-TT; Frage und Antwort: gefragt am), für Zitate")
     original: str = Field(description="Adresse der unveränderten Seite (Originalansicht)")
     kacheln: list[Kachel] = Field(default_factory=list, description="Einträge der Übersicht (nur Darstellung uebersicht)")
     gruppen: list[Gruppe] = Field(default_factory=list, description="Rubriken der Übersicht eines Handbuchs (nur Darstellung uebersicht)")

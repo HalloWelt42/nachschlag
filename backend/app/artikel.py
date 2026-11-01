@@ -6,6 +6,7 @@ import asyncio
 from urllib.parse import quote
 
 from .bausteine import Wege, baustein_fuer
+from .bausteine.basis import Aufbereitet
 from .bausteine.html import online_adresse
 from .bibliothek import Bibliothek
 from .modell.artikel import Artikel
@@ -25,6 +26,14 @@ def wege(bibliothek: Bibliothek) -> Wege:
                 autor=lambda buch, nr: f"/register/autoren/{quote(buch)}/{quote(nr, safe='')}")
 
 
+def _verfasser(fertig: Aufbereitet) -> dict[str, str]:
+    """Autor und Datum für Zitate: bei Frage und Antwort, wer fragte und wann; sonst nennt die Quelle niemanden."""
+    if fertig.frage is None:
+        return {}
+    frage = next((b for b in fertig.frage.beitraege if b.art == "frage"), None)
+    return {"autor": frage.autor if frage else "", "datum": fertig.frage.gefragt}
+
+
 class Artikelleser:
     def __init__(self, bibliothek: Bibliothek) -> None:
         self._bib = bibliothek
@@ -42,7 +51,7 @@ class Artikelleser:
                        original=self._wege.original(buch, eintrag.pfad), kacheln=fertig.kacheln,
                        gruppen=fertig.gruppen, rubrik=fertig.rubrik, nachbarn=fertig.nachbarn, titelart=fertig.titelart,
                        fragen=fertig.fragen, zurueck=fertig.zurueck, weiter=fertig.weiter, belege=fertig.belege,
-                       quelle_url=online_adresse(b, eintrag.pfad))
+                       quelle_url=online_adresse(b, eintrag.pfad), **_verfasser(fertig))
 
     async def zufall(self, buch: str) -> str:
         """Pfad eines zufälligen Artikels (ohne Weiterleitungen)."""

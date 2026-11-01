@@ -36,3 +36,31 @@ export function belegeDerAuswahl(wurzel: HTMLElement, bereich: Range): number[] 
   }
   return [...nummern].sort((a, b) => a - b);
 }
+
+// Zitierform (WIKI-31), je Gerät gemerkt: so zeigt das Notizblatt den Zitiervorschlag, so kommt die Literaturliste
+export type Zitierform = "einfach" | "apa" | "din" | "bibtex";
+export const ZITIERFORMEN: { wert: Zitierform; titel: string }[] = [
+  { wert: "einfach", titel: "Einfach" }, { wert: "apa", titel: "APA" }, { wert: "din", titel: "DIN ISO 690" },
+  { wert: "bibtex", titel: "BibTeX" }];
+const FORM_SCHLUESSEL = "nachschlag.zitierform";
+
+function gemerkteForm(): Zitierform {
+  try {
+    const f = localStorage.getItem(FORM_SCHLUESSEL);
+    return ZITIERFORMEN.some((z) => z.wert === f) ? (f as Zitierform) : "einfach";
+  } catch {
+    return "einfach";
+  }
+}
+
+export const zitierform = $state({ form: gemerkteForm() });
+
+export function zitierformMerken(form: string): void {
+  if (!ZITIERFORMEN.some((z) => z.wert === form)) return;
+  zitierform.form = form as Zitierform;
+  try {
+    localStorage.setItem(FORM_SCHLUESSEL, form);
+  } catch {
+    // ohne Speicher gilt die Wahl nur jetzt
+  }
+}
