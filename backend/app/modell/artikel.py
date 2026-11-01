@@ -56,6 +56,27 @@ class Fragekarte(BaseModel):
     gefragt: str = ""
 
 
+class Beitrag(BaseModel):
+    """Ein Beitrag einer Frage-Antwort-Seite, wie ihn Register und Autorenseite brauchen (WIKI-39)."""
+    art: Literal["frage", "antwort"]
+    autor: str = Field("", description="Name, wie er im Buch steht")
+    autor_nr: str = Field("", description="Nummer des Kontos im Buch (users/13055/...); unterscheidet gleiche Namen")
+    stimmen: int = 0
+    datum: str = Field("", description="JJJJ-MM-TT; leer, wenn das Jahr nicht dasteht")
+    akzeptiert: bool = False
+
+
+class FrageAngaben(BaseModel):
+    """Metadaten einer Frage (Inhaltsart Frage und Antwort) für Index, Register und Trefferkarte (docs/SUCHE.md,
+    Punkt 11). Der Baustein liest sie einmal; Lesen und Index nutzen dieselben Werte."""
+    stimmen: int = 0
+    antworten: int = 0
+    akzeptiert: bool = False
+    gefragt: str = Field("", description="JJJJ-MM-TT")
+    schlagwoerter: list[str] = Field(default_factory=list)
+    beitraege: list[Beitrag] = Field(default_factory=list)
+
+
 class Kachel(BaseModel):
     """Ein Eintrag einer Übersicht: Artikel mit Bild."""
     pfad: str

@@ -231,7 +231,8 @@ def _qa_beitrag(art: str, kennung: str, punkte: str, text: str, wer: str, wann: 
             + ('<div class="post-taglist"><a href="../../questions/tagged/os-clipboard" class="post-tag">os-clipboard</a></div>'
                if art == "frage" else "")
             + f'<div class="post-signature"><div class="s-user-card"><time class="s-user-card--time" datetime="{wann}">{wann}</time>'
-            f'<div class="s-user-card--info"><a href="../../users/1/x" class="s-user-card--link">{wer}</a></div></div></div></div>'
+            f'<div class="s-user-card--info"><a href="../../users/{len(wer)}/{wer.lower().replace(" ", "-")}" class="s-user-card--link">{wer}</a>'
+            '</div></div></div></div>'
             f'<div class="comments"><ul class="comments-list">{kommentare}</ul></div></div></div>')
 
 

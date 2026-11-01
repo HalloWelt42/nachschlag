@@ -12,11 +12,14 @@ from pathlib import Path
 from typing import Literal
 
 from ..bausteine.html import gerade
+from ..modell.suche import Fragezahlen
 from ..suche.index import markieren
 from . import schema
 
 #: Gewichte der Spalten im Volltext: Titel, Name, Rubrik, Einleitung, Text
 GEWICHTE = (10.0, 12.0, 2.0, 3.0, 1.0)
+#: So stark heben Stimmen eine Frage (Gewicht aus dem Bau, logarithmisch) gegen die Passung des Volltexts
+STIMMEN_ZAEHLEN = 1.5
 #: Wörter wie im Tokenizer des Index (Unterstrich, Doppelpunkt, Dollar und Backslash gehören zum Wort)
 WORT = re.compile(r"[\w:$\\]+", re.UNICODE)
 #: Weiter zählt die Gesamtzahl nicht (häufige Wörter in großen Büchern); darüber gilt sie als "mindestens"
@@ -34,6 +37,7 @@ class Fund:
     rubrik: str
     ausschnitt: str      # reiner Text, maskiert, Fundwörter in <em>
     stufe: Stufe
+    frage: Fragezahlen | None = None
 
 
 def ausdruck(frage: str) -> str:
@@ -85,13 +89,25 @@ def suchen(datei: Path, frage: str, anzahl: int = 20) -> tuple[list[Fund], int]:
                 gewichte = ", ".join(str(g) for g in GEWICHTE)
                 zeilen = v.execute(
                     f"SELECT s.nr, s.pfad, s.titel, s.rubrik, snippet(volltext, -1, char(2), char(3), ' ... ', 24) AS stelle "
-                    f"FROM volltext JOIN seiten s ON s.nr = volltext.rowid WHERE volltext MATCH ? "
-                    f"ORDER BY bm25(volltext, {gewichte}) LIMIT ?", (suchausdruck, anzahl + len(gesehen))).fetchall()
+                    f"FROM volltext JOIN seiten s ON s.nr = volltext.rowid LEFT JOIN fragen f ON f.nr = s.nr "
+                    f"WHERE volltext MATCH ? ORDER BY bm25(volltext, {gewichte}) - COALESCE(f.gewicht, 0) * {STIMMEN_ZAEHLEN} "
+                    f"LIMIT ?", (suchausdruck, anzahl + len(gesehen))).fetchall()
                 nehmen(zeilen, "volltext", lambda z: _snippet(z["stelle"]))
                 gesamt = v.execute("SELECT COUNT(*) FROM (SELECT 1 FROM volltext WHERE volltext MATCH ? LIMIT ?)",
                                    (suchausdruck, ZAEHLEN_BIS)).fetchone()[0]
             except sqlite3.OperationalError:
                 pass                                       # Ausdruck, den der Volltext nicht versteht: nur die Namen
+        for f in funde:
+            f.frage = _fragezahlen(v, f.pfad)
         return funde, max(gesamt, len(funde))
     finally:
         v.close()
+
+
+def _fragezahlen(v: sqlite3.Connection, pfad: str) -> Fragezahlen | None:
+    z = v.execute("SELECT f.nr, f.stimmen, f.antworten, f.akzeptiert FROM fragen f JOIN seiten s ON s.nr = f.nr WHERE s.pfad = ?",
+                  (pfad,)).fetchone()
+    if z is None:
+        return None
+    woerter = [w["wort"] for w in v.execute("SELECT wort FROM schlagwoerter WHERE nr = ?", (z["nr"],))]
+    return Fragezahlen(stimmen=z["stimmen"], antworten=z["antworten"], akzeptiert=bool(z["akzeptiert"]), schlagwoerter=woerter)

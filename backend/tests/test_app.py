@@ -299,8 +299,10 @@ async def test_frage_und_antwort_nach_entwurf(nachschlag):
     assert [s["titel"] for s in a["abschnitte"]] == ["Frage", "2 Antworten", "40 · Martin Tournoij", "53 · Quincy Bowers"]
     html = a["html"]
     assert '<div class="qa-stimmen"><span class="zahl">520</span><span class="was">Stimmen</span></div>' in html
-    assert '<div class="schlagwoerter"><span>os-clipboard</span></div>' in html
-    assert '<span>gefragt 03.02.2015 von thameera</span>' in html
+    # Schlagwörter und Autoren führen ins Register (WIKI-39)
+    assert ('<div class="schlagwoerter"><a href="/register/schlagwoerter/os-clipboard?buch=probeqa_en_all_2026-10" '
+            'class="register">os-clipboard</a></div>') in html
+    assert '<span>gefragt 03.02.2015 von <a href="/register/autoren/probeqa_en_all_2026-10/8" class="register">thameera</a></span>' in html
     assert '<details class="kommentare"><summary>1 Kommentar</summary><ul class="kommentar-liste"><li><b>+15</b>Asked on SO.' in html
     assert html.index('id="antwort-96"') < html.index('id="antwort-97"')       # akzeptiert vor mehr Stimmen
     assert '<div class="antwort akzeptiert" id="antwort-96">' in html and '<span class="akz-marke">Akzeptierte Antwort</span>' in html
@@ -460,10 +462,15 @@ def test_stimmen_mit_tausenderpunkt():
 def test_stimmen_zaehlen_als_zahl_trotz_tausenderpunkt():
     """Steckbrief und Reihenfolge rechnen mit der Zahl; geschrieben wird mit Punkt (WIKI-38: Steckbrief zeigte 0)."""
     from lxml import html as lhtml
+    from app.bausteine import Wege
     from app.bausteine.frage_antwort import _beitrag
-    kasten, stimmen, _ = _beitrag(lhtml.fromstring('<div data-score="27527"><div class="js-post-body"><p>x</p></div></div>'), "gefragt")
-    assert stimmen == 27527 and kasten.xpath("string(.//span[@class='zahl'])") == "27.527"
-    assert _beitrag(lhtml.fromstring('<div data-score="-3"></div>'), "beantwortet")[1] == -3
+    from app.modell.buch import Buch, Faehigkeiten
+    buch = Buch(kennung="q", name="q", titel="Q", art="frage_antwort", eintraege=0, artikel=0, medien=0, groesse=0,
+                faehigkeiten=Faehigkeiten(titelindex=False, volltext=False, bilder=False, lesedesign=True))
+    wege = Wege(artikel=lambda b, p: "", medien=lambda b, p: "", original=lambda b, p: "", gibt_es=lambda b, p: False)
+    kasten, beitrag = _beitrag(lhtml.fromstring('<div data-score="27527"><div class="js-post-body"><p>x</p></div></div>'), "gefragt", buch, wege)
+    assert beitrag.stimmen == 27527 and kasten.xpath("string(.//span[@class='zahl'])") == "27.527"
+    assert _beitrag(lhtml.fromstring('<div data-score="-3"></div>'), "beantwortet", buch, wege)[1].stimmen == -3
 
 
 def test_verschachtelter_code_einmal_entmaskiert():

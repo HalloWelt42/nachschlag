@@ -22,6 +22,7 @@ from app.eigenindex import abfrage, aufbau, schema  # noqa: E402
 from app.eigenindex.ablage import Eigenindizes  # noqa: E402
 from app.indexdienst.arbeiter import Arbeiter  # noqa: E402
 from app.main import app_bauen  # noqa: E402
+from app.register import Register  # noqa: E402
 
 DOKU = "probedoku_en_php_2026-08"
 SCHLUESSEL = {"Authorization": "Bearer geheim"}
@@ -84,6 +85,37 @@ def test_ablage_sieht_austausch(buecher, tmp_path):
     neu.replace(tmp_path / schema.dateiname(DOKU))
     assert ablage.datei(DOKU) == tmp_path / schema.dateiname(DOKU)
     assert Eigenindizes(lambda: "").datei(DOKU) is None                   # ohne Ordner kein eigener Index
+
+
+async def test_register_und_trefferzahlen_frage_antwort(tmp_path):
+    """Frage und Antwort (WIKI-39): nur Fragen kommen in den Index, mit Stimmen, Schlagwörtern und Autoren; daraus die
+    Register über alle Bücher oder eines, und Treffer tragen die Zahlen der Frage."""
+    qa = "probeqa_en_all_2026-10"
+    buecher, ablage = tmp_path / "buecher", tmp_path / "pi"
+    probebuch.bauen_qa(buecher)
+    ablage.mkdir()
+    reg = Register(Bibliothek(lambda: str(buecher)), Eigenindizes(lambda: str(ablage)))
+    assert (await reg.schlagwoerter()).ohne_index == [qa]                     # Register entsteht erst mit dem Index
+    ziel = ablage / schema.dateiname(qa)
+    assert _bauen(buecher, qa, ziel).seiten == 1                               # Fragenliste und Nebenseiten zählen nicht
+
+    s = await reg.schlagwoerter()
+    assert [(e.wort, e.fragen, e.stimmen, e.buecher) for e in s.eintraege] == [("os-clipboard", 1, 520, [qa])] and not s.ohne_index
+    assert (await reg.schlagwoerter(anfang="xyz")).eintraege == []
+    f = (await reg.fragen("OS-Clipboard")).eintraege[0]
+    assert (f.titel, f.stimmen, f.antworten, f.akzeptiert, f.gefragt, f.buch) == (
+        "How can I copy text to the clipboard?", 520, 2, True, "03.02.2015", qa)
+    a = await reg.autoren()
+    assert {x.autor for x in a.eintraege} == {"thameera", "Martin Tournoij", "Quincy Bowers"} and a.gesamt == 3
+    assert [x.autor for x in (await reg.autoren(anfang="mar")).eintraege] == ["Martin Tournoij"]
+    seite = await reg.autor(qa, "8")                                           # thameera hat das Konto users/8
+    assert (seite.autor.autor, seite.autor.fragen, seite.autor.von) == ("thameera", 1, "2015-02-03")
+    assert seite.beitraege[0].art == "frage" and seite.beitraege[0].datum == "03.02.2015"
+    martin = await reg.autor(qa, "15")
+    assert martin.autor.akzeptiert == 1 and martin.beitraege[0].akzeptiert
+
+    funde, _ = abfrage.suchen(ziel, "copy block text")
+    assert funde[0].frage is not None and (funde[0].frage.stimmen, funde[0].frage.schlagwoerter) == (520, ["os-clipboard"])
 
 
 # ----- Pi und Mac -------------------------------------------------------------------------------------------------------

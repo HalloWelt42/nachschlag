@@ -11,7 +11,8 @@ from dataclasses import dataclass, field
 from typing import Protocol
 
 from ..bibliothek import Eintrag
-from ..modell.artikel import Abschnitt, Darstellung, Fragekarte, Gruppe, Kachel, Nachbar, Steckbrief, Verweiszahlen
+from ..modell.artikel import (Abschnitt, Darstellung, FrageAngaben, Fragekarte, Gruppe, Kachel, Nachbar, Steckbrief,
+                              Verweiszahlen)
 from ..modell.buch import Art, Buch
 
 
@@ -23,6 +24,8 @@ class Wege:
     original: Callable[[str, str], str]          # (buch, pfad) -> Adresse der unveränderten Seite
     gibt_es: Callable[[str, str], bool]          # (buch, pfad) -> steht der Pfad im Buch?
     datei: Callable[[str, str], bytes | None] = lambda buch, pfad: None   # (buch, pfad) -> Inhalt einer Nebendatei (etwa die Gliederung)
+    schlagwort: Callable[[str, str], str] = lambda buch, wort: ""   # (buch, wort) -> Registerseite des Schlagworts
+    autor: Callable[[str, str], str] = lambda buch, nr: ""          # (buch, Kontonummer) -> Seite des Autors
 
 
 @dataclass
@@ -44,6 +47,7 @@ class Aufbereitet:
     zurueck: str = ""
     weiter: str = ""
     darstellung: Darstellung | None = None       # nur wenn die Seite anders gezeigt wird als sonst beim Baustein
+    frage: FrageAngaben | None = None             # Metadaten einer Frage (Frage und Antwort): Index, Register, Treffer
 
 
 class Baustein(Protocol):

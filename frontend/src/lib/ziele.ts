@@ -34,6 +34,7 @@ export function suchen(frage: string, buch = "", nur = false): void {
 
 /** Ein Verweis im Artikeltext (`/lesen/<buch>/<pfad>#anker`) als Ziel der App. */
 export function verweisZiel(href: string): { ziel: string; anker: string } | null {
+  if (href.startsWith("/register/")) return { ziel: href.slice(1), anker: "" };     // Schlagwort, Autor (WIKI-39)
   if (!href.startsWith("/lesen/")) return null;
   const [pfad, anker = ""] = href.slice(1).split("#");
   return { ziel: anker ? `${pfad}?${new URLSearchParams({ anker: decodeURIComponent(anker) })}` : pfad, anker };

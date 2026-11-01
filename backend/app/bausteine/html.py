@@ -29,7 +29,7 @@ EIGENE_KLASSEN = {"wl", "ort", "hinweis", "steckbrief", "steckbrief-kopf", "stec
                   "ausgabe-titel", "ausgabe", "siehe", "c-kw", "c-tag", "c-fn", "c-var", "c-str", "c-num", "c-kom",
                   # Frage und Antwort (Entwurf frage-antwort.html)
                   "qa-beitrag", "qa-stimmen", "zahl", "was", "akz-marke", "antwort", "akzeptiert", "antworten-kopf",
-                  "beitrag-fuss", "schlagwoerter", "kommentare", "kommentar-liste", "codeblock", "verwandt",
+                  "beitrag-fuss", "schlagwoerter", "register", "kommentare", "kommentar-liste", "codeblock", "verwandt",
                   # Formeln: abgesetzte Formel mit eigenem Rollfeld
                   "formel"}
 #: MathML: die Elemente und Angaben, die eine Formel zum Setzen braucht (der Browser setzt sie in der Textfarbe)
@@ -116,8 +116,8 @@ def verweise_umschreiben(wurzel, buch: str, eintragspfad: str, wege: Wege) -> tu
     online: list[str] = []
     for a in list(wurzel.iter("a")):
         href = (a.get("href") or "").strip()
-        if not href or href.startswith("#"):
-            continue
+        if not href or href.startswith("#") or "register" in (a.get("class") or "").split():
+            continue                                    # Anker und Verweise, die ein Baustein schon auf die App legte
         if href.startswith("geo:"):
             zahlen.koordinaten += 1
             a.tag = "span"

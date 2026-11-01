@@ -9,6 +9,14 @@ from pydantic import BaseModel, Field
 Weg = Literal["bedeutung", "index"]
 
 
+class Fragezahlen(BaseModel):
+    """Was eine Trefferkarte einer Frage zeigt (Frage und Antwort): Stimmen, Antworten, Haken, Schlagwörter."""
+    stimmen: int = 0
+    antworten: int = 0
+    akzeptiert: bool = False
+    schlagwoerter: list[str] = Field(default_factory=list)
+
+
 class Treffer(BaseModel):
     buch: str
     pfad: str
@@ -19,6 +27,7 @@ class Treffer(BaseModel):
     wege: list[Weg]
     rang: float = Field(description="gemischter Rang (RRF), größer ist besser")
     bild: str = ""
+    frage: Fragezahlen | None = Field(None, description="Zahlen der Frage, wenn der Treffer eine ist (eigener Index)")
 
 
 class Zeiten(BaseModel):

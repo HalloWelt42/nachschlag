@@ -43,8 +43,8 @@ class Suche:
         if datei is None:
             return None
         funde, gesamt = abfrage.suchen(datei, frage, anzahl)
-        return [Treffer(buch=b.kennung, pfad=f.pfad, titel=f.titel, ausschnitt=f.ausschnitt, wege=["index"], rang=_rang(platz))
-                for platz, f in enumerate(funde, 1)], gesamt
+        return [Treffer(buch=b.kennung, pfad=f.pfad, titel=f.titel, ausschnitt=f.ausschnitt, wege=["index"], rang=_rang(platz),
+                        frage=f.frage) for platz, f in enumerate(funde, 1)], gesamt
 
     async def _index(self, buecher: list[Buch], frage: str, anzahl: int) -> tuple[list[Treffer], int]:
         """Treffer aller gewählten Bücher, je Buch nach Platz gerankt (die Indizes verschiedener Bücher sind nicht

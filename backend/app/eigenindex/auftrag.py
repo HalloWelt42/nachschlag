@@ -114,9 +114,11 @@ class FalscheStelle(ValueError):
 
 class Indexauftraege(Begleiter):
     def __init__(self, ablage: Eigenindizes, bibliothek: Bibliothek, auftraege: Auftraege, schluessel: Callable[[], str],
-                 arten: Callable[[], list[str]], *, takt_s: float = 2.0, still_s: float = STILL_S) -> None:
+                 arten: Callable[[], list[str]], hoechstens_gb: Callable[[], float] = lambda: float("inf"), *,
+                 takt_s: float = 2.0, still_s: float = STILL_S) -> None:
         self._ablage, self._bib, self._auftraege = ablage, bibliothek, auftraege
         self._schluessel, self._arten, self._takt, self._still = schluessel, arten, takt_s, still_s
+        self._hoechstens_gb = hoechstens_gb
         self._kanaele: dict[str, _Kanal] = {}
         self._pruefung: asyncio.Task | None = None
         self._kontakt = 0.0                         # wann sich der Index-Dienst zuletzt gemeldet hat (monotonic)
@@ -170,12 +172,14 @@ class Indexauftraege(Begleiter):
 
     async def fehlende_einreihen(self) -> list[str]:
         """Reiht je Buch der eingestellten Arten einen Auftrag ein, wenn es keinen geltenden Index hat und kein Auftrag
-        dafür offen oder gescheitert ist (Gescheitertes wiederholt man auf der Seite Aufträge). Kleine Bücher zuerst.
-        Ohne Ordner oder Schlüssel nichts: dann könnte kein Index-Dienst die Aufträge abholen."""
+        dafür offen oder gescheitert ist (Gescheitertes wiederholt man auf der Seite Aufträge). Kleine Bücher zuerst,
+        nur bis zur eingestellten Größe. Ohne Ordner oder Schlüssel nichts: dann könnte kein Index-Dienst die Aufträge
+        abholen."""
         if not (self._schluessel() and self._ablage.pfad("-")):
             return []
-        arten = set(self._arten())
-        buecher = sorted((b for b in (await self._bib.stand()).buecher if b.art in arten), key=lambda b: b.groesse)
+        arten, grenze = set(self._arten()), self._hoechstens_gb() * 1e9
+        buecher = sorted((b for b in (await self._bib.stand()).buecher if b.art in arten and b.groesse <= grenze),
+                         key=lambda b: b.groesse)
         eingereiht = []
         for b in buecher:
             if self._ablage.datei(b.kennung) or await self._hat_auftrag(b.kennung):

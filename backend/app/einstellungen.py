@@ -27,10 +27,15 @@ class AppEinstellungen(Grundeinstellungen):
 
     # --- Suche ------------------------------------------------------------------------------------------------------
     eigene_indizes: Literal["keine", "handbuecher", "handbuecher_fragen", "alle"] = Field(
-        "handbuecher", title="Bücher mit eigenem Index", json_schema_extra={**SUCHE, "beschriftungen": EIGENE_INDIZES},
+        "handbuecher_fragen", title="Bücher mit eigenem Index", json_schema_extra={**SUCHE, "beschriftungen": EIGENE_INDIZES},
         description="Ein eigener Index findet Namen aus dem Code (array_map), Rubriken und Einleitungen und sucht in Büchern "
                     "ohne eingebauten Index. Gebaut wird er auf dem Mac, kleine Bücher zuerst; bis er steht, sucht das Buch "
                     "über den Index der ZIM-Datei.")
+    eigenindex_hoechstens_gb: float = Field(
+        5, ge=0, title="Eigener Index von selbst bis", json_schema_extra={**SUCHE, "schritt": 1, "einheit": "GB"},
+        description="Bücher bis zu dieser Größe bekommen ihren Index von selbst. Größere (etwa Stack Overflow, 115 GB) "
+                    "brauchen auf dem Mac viele Stunden und mehrere hundert GB Platz; sie beginnen erst, wenn die Grenze "
+                    "darüber liegt.")
     eigenindex_ordner: str = Field("/eigenindex", title="Ordner der eigenen Indizes", json_schema_extra=SUCHE,
                                    description="Je Buch eine Datei. Leer: keine eigenen Indizes. Gehört in die Sicherung "
                                                "(Rechenzeit), anders als die Bücher.")

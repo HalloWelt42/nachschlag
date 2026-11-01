@@ -11,17 +11,19 @@ zeigt die Originalansicht."""
 from __future__ import annotations
 
 import re
+from typing import NamedTuple
 
 from lxml import html as lhtml
 from lxml.etree import SubElement
 
 from ..bibliothek import Eintrag
-from ..modell.artikel import Abschnitt, Fragekarte, Steckbrief
+from ..modell.artikel import Abschnitt, Beitrag, FrageAngaben, Fragekarte, Steckbrief
 from ..modell.buch import Buch
 from . import html as h
 from .basis import Aufbereitet, Wege
 from .code import code_text
 
+KONTO = re.compile(r"users/(\d+)")
 MONATE = {m: i for i, m in enumerate("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(), 1)}
 ZEIT = re.compile(r"(asked|answered|edited)?\s*([A-Z][a-z]{2})\s+(\d{1,2})(?:\s*'(\d{2}))?")
 
@@ -63,18 +65,44 @@ def _listentitel(quelle: str) -> str:
     return quelle
 
 
-def _signaturen(beitrag) -> dict[str, tuple[str, str]]:
-    """Wer und Wann eines Beitrags: {"gefragt": ("03.02.2015", "thameera"), "bearbeitet": (...)}."""
-    ergebnis: dict[str, tuple[str, str]] = {}
+class Signatur(NamedTuple):
+    datum: str           # TT.MM.JJJJ (ohne Jahr nur TT.MM)
+    wer: str
+    nr: str              # Nummer des Kontos im Buch (users/13055/...), leer, wenn die Quelle keine nennt
+
+
+def _signaturen(beitrag) -> dict[str, Signatur]:
+    """Wer und Wann eines Beitrags: {"gefragt": Signatur("03.02.2015", "thameera", "13055"), "bearbeitet": ...}."""
+    ergebnis: dict[str, Signatur] = {}
     for sig in beitrag.xpath(".//div[contains(@class,'post-signature')]"):
         zeit = next(iter(sig.xpath(".//time")), None)
         wer = next(iter(sig.xpath(".//a[contains(@class,'s-user-card--link')]|.//*[contains(@class,'s-user-card--info')]//span")), None)
         if zeit is None:
             continue
         art, datum = _datum(zeit.get("datetime") or h.text_von(zeit))
+        konto = KONTO.search(wer.get("href") or "") if wer is not None and wer.tag == "a" else None
         if art:
-            ergebnis[art] = (datum, h.text_von(wer) if wer is not None else "")
+            ergebnis[art] = Signatur(datum, h.text_von(wer) if wer is not None else "", konto.group(1) if konto else "")
     return ergebnis
+
+
+def _iso(datum: str) -> str:
+    """TT.MM.JJJJ -> JJJJ-MM-TT (zum Sortieren und für Zeiträume); ohne Jahr leer."""
+    m = re.fullmatch(r"(\d{2})\.(\d{2})\.(\d{4})", datum)
+    return f"{m.group(3)}-{m.group(2)}-{m.group(1)}" if m else ""
+
+
+def _schlagwoerter(eltern, marken: list[str], buch: Buch, wege: Wege) -> None:
+    """Schlagwörter als Reihe; jedes führt ins Register (Klasse register: das Umschreiben lässt den Verweis stehen)."""
+    reihe = SubElement(eltern, "div")
+    reihe.set("class", "schlagwoerter")
+    for m in marken:
+        ziel = wege.schlagwort(buch.kennung, m)
+        el = SubElement(reihe, "a" if ziel else "span")
+        el.text = m
+        if ziel:
+            el.set("href", ziel)
+            el.set("class", "register")
 
 
 def _kommentare(beitrag):
@@ -102,9 +130,10 @@ def _kommentare(beitrag):
     return kasten
 
 
-def _beitrag(quelle, art: str, akzeptiert: bool = False):
-    """Ein Beitrag (Frage oder Antwort) als qa-beitrag: Stimmen links, Text, Fuß mit Wer und Wann, Kommentare. Gibt die
-    Stimmen als Zahl zurück (zum Sortieren und für den Steckbrief); geschrieben werden sie mit Tausenderpunkt."""
+def _beitrag(quelle, art: str, buch: Buch, wege: Wege, akzeptiert: bool = False) -> tuple[object, Beitrag]:
+    """Ein Beitrag (Frage oder Antwort) als qa-beitrag: Stimmen links, Text, Fuß mit Wer (verweist auf den Autor im
+    Register) und Wann, Kommentare. Dazu der Beitrag als Angabe: Stimmen als Zahl (zum Sortieren, für Steckbrief und
+    Register; geschrieben mit Tausenderpunkt), Autor mit Kontonummer, Datum."""
     roh = (quelle.get("data-score") or "0").strip()
     zahl = int(roh) if roh.lstrip("-").isdigit() else 0
     stimmen = _deutsche_zahl(roh)
@@ -132,19 +161,27 @@ def _beitrag(quelle, art: str, akzeptiert: bool = False):
     if art == "gefragt":
         marken = [h.text_von(a) for a in quelle.xpath(".//a[contains(@class,'post-tag')]")]
         if marken:
-            reihe = SubElement(rechts, "div")
-            reihe.set("class", "schlagwoerter")
-            for m in marken:
-                SubElement(reihe, "span").text = m
+            _schlagwoerter(rechts, marken, buch, wege)
     sig = _signaturen(quelle).get(art)
     fuss = SubElement(rechts, "div")
     fuss.set("class", "beitrag-fuss")
     if sig:
-        SubElement(fuss, "span").text = f"{art} {sig[0]}" + (f" von {sig[1]}" if sig[1] else "")
+        zeile = SubElement(fuss, "span")
+        zeile.text = f"{art} {sig.datum}" + (" von " if sig.wer else "")
+        ziel = wege.autor(buch.kennung, sig.nr) if sig.nr else ""
+        if sig.wer and ziel:
+            autor = SubElement(zeile, "a")
+            autor.set("href", ziel)
+            autor.set("class", "register")
+            autor.text = sig.wer
+        elif sig.wer:
+            zeile.text += sig.wer
     kommentare = _kommentare(quelle)
     if kommentare is not None:
         rechts.append(kommentare)
-    return kasten, zahl, (sig[1] if sig else "")
+    angabe = Beitrag(art="frage" if art == "gefragt" else "antwort", autor=sig.wer if sig else "", autor_nr=sig.nr if sig else "",
+                     stimmen=zahl, datum=_iso(sig.datum) if sig else "", akzeptiert=akzeptiert)
+    return kasten, angabe
 
 
 class FrageAntwort:
@@ -170,15 +207,16 @@ class FrageAntwort:
         wurzel = lhtml.Element("div")
         abschnitt = SubElement(wurzel, "section")
         abschnitt.set("id", "frage")
-        beitrag, stimmen_frage, _ = _beitrag(frage, "gefragt")
+        beitrag, frage_beitrag = _beitrag(frage, "gefragt", buch, wege)
+        stimmen_frage = frage_beitrag.stimmen
         abschnitt.append(beitrag)
         abschnitte = [Abschnitt(anker="frage", titel="Frage", ebene=2)]
 
         antworten = []
         for quelle in doc.xpath("//div[contains(concat(' ', normalize-space(@class), ' '), ' answer ')]"):
             akzeptiert = "accepted-answer" in (quelle.get("class") or "")
-            kasten, stimmen, wer = _beitrag(quelle, "beantwortet", akzeptiert)
-            antworten.append((not akzeptiert, -stimmen, quelle.get("data-answerid") or "", kasten, stimmen, wer, akzeptiert))
+            kasten, b = _beitrag(quelle, "beantwortet", buch, wege, akzeptiert)
+            antworten.append((not akzeptiert, -b.stimmen, quelle.get("data-answerid") or "", kasten, b.stimmen, b.autor, akzeptiert, b))
         antworten.sort(key=lambda a: (a[0], a[1]))            # die akzeptierte zuerst, dann nach Stimmen
         if antworten:
             kopf_a = SubElement(wurzel, "div")
@@ -187,7 +225,7 @@ class FrageAntwort:
             ueberschrift.set("id", "antworten")
             ueberschrift.text = f"{len(antworten)} {'Antwort' if len(antworten) == 1 else 'Antworten'}"
             abschnitte.append(Abschnitt(anker="antworten", titel=ueberschrift.text, ebene=2))
-        for _, _, kennung, kasten, stimmen, wer, akzeptiert in antworten:
+        for _, _, kennung, kasten, stimmen, wer, akzeptiert, _ in antworten:
             antwort = SubElement(wurzel, "div")
             antwort.set("class", "antwort akzeptiert" if akzeptiert else "antwort")
             antwort.set("id", f"antwort-{kennung}")
@@ -202,8 +240,12 @@ class FrageAntwort:
         html = "".join(h.als_html(k) for k in wurzel)
 
         steckbrief = self._steckbrief(doc, buch, eintrag, wege, nummer, stimmen_frage, antworten, signaturen)
+        marken = [h.text_von(a) for a in frage.xpath(".//a[contains(@class,'post-tag')]")]
+        angaben = FrageAngaben(stimmen=stimmen_frage, antworten=len(antworten), akzeptiert=any(a[6] for a in antworten),
+                               gefragt=frage_beitrag.datum, schlagwoerter=marken,
+                               beitraege=[frage_beitrag, *(a[7] for a in antworten)])
         return Aufbereitet(titel=titel, html=html, einleitung=einleitung, abschnitte=abschnitte, steckbrief=steckbrief,
-                           bild=bild, verweise=verweise, online=online, rubrik="Fragen")
+                           bild=bild, verweise=verweise, online=online, rubrik="Fragen", frage=angaben)
 
     @staticmethod
     def _liste(doc, buch: Buch, eintrag: Eintrag, wege: Wege) -> Aufbereitet:
@@ -249,8 +291,8 @@ class FrageAntwort:
         akzeptiert = any(a[6] for a in antworten)
         zeilen = [("Stimmen", _deutsche_zahl(str(stimmen))),
                   ("Antworten", f"{len(antworten)}" + (", eine akzeptiert" if akzeptiert else "")),
-                  ("Gefragt", " von ".join(x for x in signaturen.get("gefragt", ("", ""))) if "gefragt" in signaturen else ""),
-                  ("Bearbeitet", signaturen["bearbeitet"][0] if "bearbeitet" in signaturen else "")]
+                  ("Gefragt", " von ".join(x for x in signaturen["gefragt"][:2] if x) if "gefragt" in signaturen else ""),
+                  ("Bearbeitet", signaturen["bearbeitet"].datum if "bearbeitet" in signaturen else "")]
         for name, wert in zeilen:
             if wert:
                 SubElement(werte, "dt").text = name
@@ -259,10 +301,7 @@ class FrageAntwort:
         if marken:
             SubElement(wurzel, "div").set("class", "steckbrief-gruppe")
             wurzel[-1].text = "Schlagwörter"
-            reihe = SubElement(wurzel, "div")
-            reihe.set("class", "schlagwoerter")
-            for m in marken:
-                SubElement(reihe, "span").text = m
+            _schlagwoerter(wurzel, marken, buch, wege)
         verwandt = []
         for a in doc.xpath("//*[@id='sidebar']//a[contains(@class,'question-hyperlink')]"):
             ziel = h.ziel_im_buch(eintrag.pfad, a.get("href") or "")

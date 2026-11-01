@@ -21,6 +21,8 @@ from .eigenindex.auftrag import Indexauftraege
 from .einstellungen import ARTEN_JE_STUFE, AppEinstellungen
 from .meins import Meins
 from .meins.api import router as meins_router
+from .register import Register
+from .register.api import router as register_router
 from .medien import Medien
 from .medien.api import router as medien_router
 from .stoebern import Stoebern
@@ -47,7 +49,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     suche = Suche(bibliothek, bedeutung, lambda: e().bedeutung_warten_s, lambda: e().bedeutung_buch,
                   lambda buch, pfad: "", eigen)
     indexauftraege = Indexauftraege(eigen, bibliothek, geruest.auftraege, lambda: e().indexdienst_schluessel.get_secret_value(),
-                                    lambda: ARTEN_JE_STUFE[e().eigene_indizes])
+                                    lambda: ARTEN_JE_STUFE[e().eigene_indizes], lambda: e().eigenindex_hoechstens_gb)
 
     meins = Meins(geruest.db, bibliothek.name_von, bibliothek.kennung_von)
     geruest.begleiter_anmelden(meins)
@@ -75,6 +77,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     app.include_router(themen_router(geruest, themen, suche, bibliothek.name_von))
     app.include_router(medien_router(geruest, Medien(leser, suche)))
     app.include_router(stoebern_router(geruest, Stoebern(bibliothek, leser, suche, meins.gelesen)))
+    app.include_router(register_router(geruest, Register(bibliothek, eigen)))
     app.include_router(indexdienst_router(indexauftraege))           # nur mit dem Schlüssel des Index-Dienstes
     # unter /lesen trägt der Weg Pfade aus Büchern, oft mit Punkt (function.array-map.php): immer eine Seite
     geruest.oberflaeche_ausliefern(app, seiten=["lesen"])

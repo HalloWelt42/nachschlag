@@ -2,15 +2,19 @@
 Index der ZIM-Datei nicht kennt (Name aus dem Code, Rubrik, Einleitung), und einem Volltext darüber (FTS5).
 
 Unterstrich, Doppelpunkt, Dollar und Backslash gehören zum Wort, damit `array_map`, `Foo::bar` und `$var` ganze Begriffe
-bleiben. Der Stand des Aufbaus steht in der Datei selbst: so setzt ein abgebrochener Aufbau dort fort."""
+bleiben. Der Stand des Aufbaus steht in der Datei selbst: so setzt ein abgebrochener Aufbau dort fort.
+
+Metadaten je Inhaltsart (Punkt 11): Frage und Antwort hat je Frage Stimmen, Antworten, Haken und Datum (fragen), ihre
+Schlagwörter und die Beiträge mit Autor (beitraege). Die Register (Punkt 10) werden am Ende des Aufbaus daraus
+verdichtet, damit Listen über Millionen Fragen sofort antworten."""
 
 from __future__ import annotations
 
 import sqlite3
 from pathlib import Path
 
-#: Fassung des Schemas; eine andere Fassung baut den Index neu
-FASSUNG = 1
+#: Fassung des Schemas; eine andere Fassung baut den Index neu (2: Frage und Antwort mit Registern, WIKI-39)
+FASSUNG = 2
 
 SCHEMA = f"""
 PRAGMA journal_mode = WAL;
@@ -23,6 +27,23 @@ CREATE INDEX IF NOT EXISTS seiten_titel ON seiten (titel COLLATE NOCASE);
 CREATE VIRTUAL TABLE IF NOT EXISTS volltext USING fts5(
   titel, name, rubrik, einleitung, text, content='seiten', content_rowid='nr',
   tokenize = "unicode61 remove_diacritics 2 tokenchars '_:$\\\\'", prefix = '2 3');
+CREATE TABLE IF NOT EXISTS fragen (
+  nr INTEGER PRIMARY KEY, stimmen INTEGER NOT NULL, antworten INTEGER NOT NULL, akzeptiert INTEGER NOT NULL,
+  gefragt TEXT NOT NULL DEFAULT '', gewicht REAL NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS schlagwoerter (wort TEXT NOT NULL, nr INTEGER NOT NULL, PRIMARY KEY (wort, nr)) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS schlagwoerter_nr ON schlagwoerter (nr);
+CREATE TABLE IF NOT EXISTS beitraege (
+  nr INTEGER NOT NULL, schluessel TEXT NOT NULL, autor TEXT NOT NULL, art TEXT NOT NULL, stimmen INTEGER NOT NULL,
+  datum TEXT NOT NULL, akzeptiert INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS beitraege_schluessel ON beitraege (schluessel);
+CREATE INDEX IF NOT EXISTS beitraege_nr ON beitraege (nr);
+CREATE TABLE IF NOT EXISTS register_schlagwoerter (wort TEXT PRIMARY KEY, fragen INTEGER NOT NULL, stimmen INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS register_schlagwoerter_fragen ON register_schlagwoerter (fragen DESC);
+CREATE TABLE IF NOT EXISTS register_autoren (
+  schluessel TEXT PRIMARY KEY, autor TEXT NOT NULL, beitraege INTEGER NOT NULL, fragen INTEGER NOT NULL,
+  antworten INTEGER NOT NULL, akzeptiert INTEGER NOT NULL, stimmen INTEGER NOT NULL, von TEXT NOT NULL, bis TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS register_autoren_beitraege ON register_autoren (beitraege DESC);
+CREATE INDEX IF NOT EXISTS register_autoren_name ON register_autoren (autor COLLATE NOCASE);
 INSERT OR IGNORE INTO angaben (schluessel, wert) VALUES ('fassung', '{FASSUNG}');
 """
 
@@ -30,6 +51,11 @@ INSERT OR IGNORE INTO angaben (schluessel, wert) VALUES ('fassung', '{FASSUNG}')
 def dateiname(kennung: str) -> str:
     """Name der Indexdatei eines Buchs; die Kennung trägt die Fassung des Buchs, so hat jede Fassung ihren Index."""
     return f"{kennung}.sqlite"
+
+
+def autor_schluessel(autor_nr: str, autor: str) -> str:
+    """Wer ein Autor im Buch ist: die Kontonummer, sonst der Name (gleiche Namen ohne Konto fallen zusammen)."""
+    return autor_nr or f"name:{autor}"
 
 
 def oeffnen(pfad: Path) -> sqlite3.Connection:

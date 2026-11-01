@@ -19,7 +19,9 @@ def wege(bibliothek: Bibliothek) -> Wege:
     return Wege(artikel=lambda buch, pfad: f"/lesen/{quote(buch)}/{_pfad(pfad)}",
                 medien=lambda buch, pfad: f"/api/v1/inhalt/medien/{quote(buch)}/{_pfad(pfad)}",
                 original=lambda buch, pfad: f"/api/v1/inhalt/original/{quote(buch)}/{_pfad(pfad)}",
-                gibt_es=bibliothek.gibt_es, datei=bibliothek.datei)
+                gibt_es=bibliothek.gibt_es, datei=bibliothek.datei,
+                schlagwort=lambda buch, wort: f"/register/schlagwoerter/{quote(wort, safe='')}?buch={quote(buch)}",
+                autor=lambda buch, nr: f"/register/autoren/{quote(buch)}/{quote(nr, safe='')}")
 
 
 class Artikelleser:

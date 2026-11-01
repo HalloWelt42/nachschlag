@@ -6,6 +6,7 @@ Stapel. Fertig ist ein Index erst, wenn alle Einträge gelesen sind; dann steht 
 from __future__ import annotations
 
 import hashlib
+import math
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -16,6 +17,7 @@ from lxml import html as lhtml
 
 from ..bausteine import Wege, baustein_fuer
 from ..bibliothek import Eintrag
+from ..modell.artikel import FrageAngaben
 from ..modell.buch import Buch
 from . import schema
 
@@ -24,6 +26,21 @@ STAPEL = 400
 #: So viel Text je Seite kommt in den Volltext (lange Seiten tragen ihr Thema vorn)
 TEXT_HOECHSTENS = 20_000
 _SPRUNG = re.compile(rb"http-equiv=[\"']?refresh", re.I)
+
+
+@dataclass
+class Zeile:
+    """Eine Seite für den Index: Felder des Volltexts und die Metadaten ihrer Inhaltsart."""
+    pfad: str
+    titel: str
+    name: str
+    rubrik: str
+    einleitung: str
+    text: str
+    frage: FrageAngaben | None = None
+
+    def volltext(self) -> tuple[str, str, str, str, str]:
+        return self.titel, self.name, self.rubrik, self.einleitung, self.text
 
 
 @dataclass
@@ -50,18 +67,49 @@ def _text(html: str) -> str:
     return " ".join(wurzel.text_content().split())[:TEXT_HOECHSTENS]
 
 
-def _schreiben(v, zeilen: list[tuple[str, str, str, str, str, str]], naechste: int) -> None:
-    """Ein Stapel in einem Zug: Seiten, Volltext und der Stand, bei dem es weitergeht."""
+METADATEN = ("fragen", "schlagwoerter", "beitraege")
+
+
+def _schreiben(v, zeilen: list[Zeile], naechste: int) -> None:
+    """Ein Stapel in einem Zug: Seiten, Volltext, Metadaten und der Stand, bei dem es weitergeht."""
     with v:
         for z in zeilen:
-            alt = v.execute("SELECT nr, titel, name, rubrik, einleitung, text FROM seiten WHERE pfad=?", (z[0],)).fetchone()
-            if alt:   # nach einem Abbruch schon geschrieben: nicht doppelt in den Volltext
+            alt = v.execute("SELECT nr, titel, name, rubrik, einleitung, text FROM seiten WHERE pfad=?", (z.pfad,)).fetchone()
+            if alt:   # nach einem Abbruch schon geschrieben: nicht doppelt in Volltext und Metadaten
                 v.execute("INSERT INTO volltext(volltext, rowid, titel, name, rubrik, einleitung, text) VALUES('delete',?,?,?,?,?,?)",
                           (alt["nr"], alt["titel"], alt["name"], alt["rubrik"], alt["einleitung"], alt["text"]))
-                v.execute("DELETE FROM seiten WHERE nr=?", (alt["nr"],))
-            nr = v.execute("INSERT INTO seiten (pfad, titel, name, rubrik, einleitung, text) VALUES (?,?,?,?,?,?)", z).lastrowid
-            v.execute("INSERT INTO volltext(rowid, titel, name, rubrik, einleitung, text) VALUES (?,?,?,?,?,?)", (nr, *z[1:]))
+                for tabelle in ("seiten", *METADATEN):
+                    v.execute(f"DELETE FROM {tabelle} WHERE nr=?", (alt["nr"],))
+            nr = v.execute("INSERT INTO seiten (pfad, titel, name, rubrik, einleitung, text) VALUES (?,?,?,?,?,?)",
+                           (z.pfad, *z.volltext())).lastrowid
+            v.execute("INSERT INTO volltext(rowid, titel, name, rubrik, einleitung, text) VALUES (?,?,?,?,?,?)", (nr, *z.volltext()))
+            if z.frage:
+                _frage_schreiben(v, nr, z.frage)
         schema.angabe_setzen(v, "naechste", str(naechste))
+
+
+def _frage_schreiben(v, nr: int, f: FrageAngaben) -> None:
+    # Gewicht für die Rangfolge: Stimmen logarithmisch (10 Stimmen 1, 1000 Stimmen 3), mit Haken etwas mehr
+    gewicht = math.log10(1 + max(f.stimmen, 0)) + (0.5 if f.akzeptiert else 0)
+    v.execute("INSERT INTO fragen (nr, stimmen, antworten, akzeptiert, gefragt, gewicht) VALUES (?,?,?,?,?,?)",
+              (nr, f.stimmen, f.antworten, int(f.akzeptiert), f.gefragt, gewicht))
+    v.executemany("INSERT OR IGNORE INTO schlagwoerter (wort, nr) VALUES (?,?)", [(w.lower(), nr) for w in f.schlagwoerter])
+    v.executemany("INSERT INTO beitraege (nr, schluessel, autor, art, stimmen, datum, akzeptiert) VALUES (?,?,?,?,?,?,?)",
+                  [(nr, schema.autor_schluessel(b.autor_nr, b.autor), b.autor, b.art, b.stimmen, b.datum, int(b.akzeptiert))
+                   for b in f.beitraege if b.autor])
+
+
+def _register_verdichten(v) -> None:
+    """Register aus den Metadaten: je Schlagwort Fragen und Stimmen, je Autor Beiträge, Stimmen und Zeitraum."""
+    with v:
+        v.execute("DELETE FROM register_schlagwoerter")
+        v.execute("INSERT INTO register_schlagwoerter (wort, fragen, stimmen) SELECT s.wort, COUNT(*), COALESCE(SUM(f.stimmen), 0) "
+                  "FROM schlagwoerter s JOIN fragen f ON f.nr = s.nr GROUP BY s.wort")
+        v.execute("DELETE FROM register_autoren")
+        v.execute("INSERT INTO register_autoren (schluessel, autor, beitraege, fragen, antworten, akzeptiert, stimmen, von, bis) "
+                  "SELECT schluessel, MAX(autor), COUNT(*), SUM(art = 'frage'), SUM(art = 'antwort'), SUM(akzeptiert), "
+                  "COALESCE(SUM(stimmen), 0), COALESCE(MIN(NULLIF(datum, '')), ''), COALESCE(MAX(NULLIF(datum, '')), '') "
+                  "FROM beitraege GROUP BY schluessel")
 
 
 def _buch_lesbar(archiv: Archive) -> bool:
@@ -99,7 +147,7 @@ def bauen(archiv: Archive, buch: Buch, wege: Wege, ziel: Path, melden: Callable[
             return Stand(gesamt, gesamt, v.execute("SELECT COUNT(*) FROM seiten").fetchone()[0], True)
         schema.angabe_setzen(v, "buch", buch.kennung)
         nr = int(schema.angabe(v, "naechste", "0"))
-        zeilen: list[tuple[str, str, str, str, str, str]] = []
+        zeilen: list[Zeile] = []
         seiten = v.execute("SELECT COUNT(*) FROM seiten").fetchone()[0]
         while nr < gesamt:
             e = archiv.get_entry_by_id(nr)
@@ -119,8 +167,10 @@ def bauen(archiv: Archive, buch: Buch, wege: Wege, ziel: Path, melden: Callable[
                 if not _buch_lesbar(archiv):
                     raise
                 continue
+            if buch.art == "frage_antwort" and fertig.frage is None:
+                continue                                    # Fragenlisten, Konten, Schlagwortseiten: nur die Fragen zählen
             name = fertig.titel if fertig.titelart == "code" else ""
-            zeilen.append((e.path, fertig.titel, name, fertig.rubrik, fertig.einleitung, _text(fertig.html)))
+            zeilen.append(Zeile(e.path, fertig.titel, name, fertig.rubrik, fertig.einleitung, _text(fertig.html), fertig.frage))
             if len(zeilen) >= stapel:
                 _schreiben(v, zeilen, nr)
                 seiten += len(zeilen)
@@ -131,6 +181,7 @@ def bauen(archiv: Archive, buch: Buch, wege: Wege, ziel: Path, melden: Callable[
                     return Stand(nr, gesamt, seiten, False)
         _schreiben(v, zeilen, gesamt)
         seiten += len(zeilen)
+        _register_verdichten(v)
         with v:
             v.execute("INSERT INTO volltext(volltext) VALUES('optimize')")
             schema.angabe_setzen(v, "fertig", "1")
