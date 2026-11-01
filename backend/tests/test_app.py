@@ -4,6 +4,7 @@ Vorschläge, Suche nur im Index und mit Bedeutung."""
 
 import asyncio
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -111,6 +112,10 @@ async def test_belege_auch_in_abschnitten(nachschlag):
     assert [s["titel"] for s in a["abschnitte"]] == ["Leben"]
     assert "Ein Buch" not in a["html"] and "Beleg" not in a["html"]
     assert a["online"] == ["https://example.org/arrhenius"]
+    # Bildname mit wörtlichem %2C: Weg einmal verschlüsselt, das Bild kommt
+    weg = re.search(r'src="([^"]+Ufer\.png)"', a["html"]).group(1)
+    assert weg.endswith("/K%C3%B6ln%252C_Ufer.png")
+    assert (await c.get(weg)).content == probebuch.PNG
 
 
 async def test_weiterleitung_auf_abschnitt(nachschlag):

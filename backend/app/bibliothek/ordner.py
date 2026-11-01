@@ -140,9 +140,10 @@ class Bibliothek:
             raise BuchFehlt(f"Ein Buch {kennung} gibt es in der Bibliothek nicht")
         return offen
 
-    def _eintrag(self, kennung: str, pfad: str, tiefe: int = 0) -> Eintrag:
+    def _eintrag(self, kennung: str, pfad: str, tiefe: int = 0, anker: str = "") -> Eintrag:
+        """`pfad` ist der echte Pfad im Buch (schon entschlüsselt, wie ihn die Wege der Schnittstelle liefern); ein Name
+        darf selbst `%` enthalten (Bilder heißen etwa `..._J%C3%BCchen%2C_...`) und wird nie ein zweites Mal entschlüsselt."""
         a = self.archiv(kennung)
-        pfad, _, anker = unquote(pfad).partition("#")
         try:
             e = a.get_entry_by_path(pfad)
         except KeyError:
@@ -153,11 +154,11 @@ class Bibliothek:
         inhalt = bytes(item.content)
         # Weiterleitung als HTML-Seite mit Sprung (so legt mwoffliner Weiterleitungen auf Abschnitte an)
         if tiefe < 3 and item.mimetype.startswith("text/html") and len(inhalt) < 4096 and (m := UMLEITUNG_HTML.search(inhalt)):
-            ziel = m.group(1).decode("utf-8", "replace")
+            # der Sprung steht als Adresse im HTML (verschlüsselt): einmal entschlüsseln, Anker abtrennen
+            ziel, _, ziel_anker = m.group(1).decode("utf-8", "replace").partition("#")
             basis = e.path.rsplit("/", 1)[0] + "/" if "/" in e.path else ""
-            weiter = self._eintrag(kennung, basis + ziel, tiefe + 1)
-            return weiter if weiter.anker else Eintrag(weiter.pfad, weiter.titel, weiter.mime, weiter.inhalt,
-                                                       unquote(ziel.partition("#")[2]))
+            weiter = self._eintrag(kennung, basis + unquote(ziel), tiefe + 1, unquote(ziel_anker))
+            return weiter
         return Eintrag(e.path, e.title, item.mimetype, inhalt, anker)
 
     async def eintrag(self, kennung: str, pfad: str) -> Eintrag:
@@ -175,8 +176,9 @@ class Bibliothek:
         return ziel.pfad + (f"#{ziel.anker}" if ziel.anker else "")
 
     def gibt_es(self, kennung: str, pfad: str) -> bool:
-        """Steht ein Pfad im Buch (auch als Weiterleitung)? Für das Prüfen von Verweisen, ohne Inhalt zu lesen."""
+        """Steht ein Pfad (echter Pfad im Buch, ohne Anker) darin, auch als Weiterleitung? Für das Prüfen von Verweisen,
+        ohne Inhalt zu lesen."""
         try:
-            return self.archiv(kennung).has_entry_by_path(unquote(pfad.partition("#")[0]))
+            return self.archiv(kennung).has_entry_by_path(pfad)
         except BuchFehlt:
             return False

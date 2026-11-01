@@ -48,7 +48,8 @@ wird daher meistens als {AUF}der Fuchs{ZU} bezeichnet<sup class="reference"><a h
 #: Aufbau heutiger Seiten: jeder Abschnitt in einem eigenen <section>, die Überschrift vorn
 ARRHENIUS = seite("Svante Arrhenius", """
 <section><p>Svante Arrhenius war ein schwedischer Physiker und Chemiker.</p></section>
-<section><div class="mw-heading mw-heading2"><h2 id="Leben">Leben</h2></div><p>Er wurde 1859 geboren.</p></section>
+<section><div class="mw-heading mw-heading2"><h2 id="Leben">Leben</h2></div><p>Er wurde 1859 geboren.</p>
+<figure><img src="./_assets_/a/K%C3%B6ln%252C_Ufer.png" width="200" height="120"><figcaption>Köln</figcaption></figure></section>
 <section><div class="mw-heading mw-heading2"><h2 id="Literatur">Literatur</h2></div><ul><li>Ein Buch</li></ul></section>
 <section><div class="mw-heading mw-heading2"><h2 id="Weblinks">Weblinks</h2></div><ul><li><a href="https://example.org/arrhenius">Seite</a></li></ul></section>
 <section><div class="mw-heading mw-heading2"><h2 id="Einzelnachweise">Einzelnachweise</h2></div><ol class="references"><li>Beleg</li></ol></section>
@@ -87,4 +88,6 @@ def bauen(ordner: Path, name: str = "probe_de_all_2026-01", erzeuger: str = "mwo
         c.add_item(_Seite("Kreuzfuchs", "Kreuzfuchs", artikel("Kreuzfuchs", "Der Kreuzfuchs ist eine Farbform des Rotfuchses.")))
         c.add_item(_Seite("Stadtfuchs", "Stadtfuchs", "<html><head><meta http-equiv=\"refresh\" content=\"0;URL='./Rotfuchs#Lebensraum'\" /></head></html>"))
         c.add_item(_Seite("_assets_/a/fuchs.png", "", PNG, "image/png", vorne=False))
+        # ein Name mit wörtlichem %2C (so heißen Bilder in der Quelle); im HTML steht er verschlüsselt als %252C
+        c.add_item(_Seite("_assets_/a/Köln%2C_Ufer.png", "", PNG, "image/png", vorne=False))
     return datei
