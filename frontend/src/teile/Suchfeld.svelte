@@ -153,11 +153,11 @@
     <input bind:this={feld} bind:value={frage} type="search" placeholder={platzhalter} autocomplete="off" spellcheck="false"
            aria-label="Suchen" oninput={eingabe} onkeydown={tasten} onfocus={() => (offen = true)} onblur={schliessen} />
     {#if kontext}
-      <button type="button" class="buchwahl mit-buch" title="Treffer aus diesem Buch zuerst; antippen: alle Bücher gleich"
+      <button type="button" class="buchwahl mit-buch" title="Treffer aus dieser Quelle zuerst; antippen: alle Quellen gleich"
               onmousedown={(e) => e.preventDefault()} onclick={() => (ohneKontext = true)}>
         <Buchmarke kennung={kontext} symbol={false} /><span class="zuerst">zuerst</span><i class="fa-solid fa-xmark"></i></button>
     {:else}
-      <span class="buchwahl" title="Gesucht wird in allen Büchern"><i class="fa-solid fa-book"></i>Alle Bücher</span>
+      <span class="buchwahl" title="Gesucht wird in allen Quellen"><i class="fa-solid fa-book"></i>Alle Quellen</span>
     {/if}
     {#if taste}<kbd title="Taste / setzt die Schreibmarke ins Suchfeld">/</kbd>{/if}
   </label>
@@ -191,7 +191,7 @@
           </div>
         {/each}
       {/if}
-      {#if !titel.length && !stellen.length}<div class="leer">Kein Titel beginnt so. Enter sucht im Text aller Bücher.</div>{/if}
+      {#if !titel.length && !stellen.length}<div class="leer">Kein Titel beginnt so. Enter sucht im Text aller Quellen.</div>{/if}
       <div class="fuss-zeile">
         <span><kbd>↑</kbd> <kbd>↓</kbd> wählen</span><span><kbd>Enter</kbd> öffnen</span><span><kbd>Esc</kbd> schließen</span>
         <span class="rechts" role="button" tabindex="-1" onclick={alleTreffer} onkeydown={() => {}}>Alle Treffer zeigen</span>

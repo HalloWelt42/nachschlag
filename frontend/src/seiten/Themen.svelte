@@ -32,7 +32,7 @@
 
   function art(k: (typeof themen.liste)[number]): string {
     const teile = [k.bereiche ? `${k.bereiche} ${k.bereiche === 1 ? "Bereich" : "Bereiche"}` : "ohne Bereiche"];
-    if (k.buecher > 1) teile.push(`aus ${k.buecher} Büchern`);
+    if (k.buecher > 1) teile.push(`aus ${k.buecher} Quellen`);
     return teile.join(" · ");
   }
 
@@ -56,7 +56,7 @@
         {/if}
         {#if fehler}<div class="fehlertext">{fehler}</div>{/if}
         {#if themen.geladen && !themen.liste.length && neu === null}
-          <p class="leer-hinweis">Noch keine Themen. Ein Thema sammelt Artikel aus allen Büchern, auf Wunsch in Bereichen und mit einer Suche, die neue Treffer vorschlägt.</p>
+          <p class="leer-hinweis">Noch keine Themen. Ein Thema sammelt Artikel aus allen Quellen, auf Wunsch in Bereichen und mit einer Suche, die neue Treffer vorschlägt.</p>
         {/if}
         {#each themen.liste as k (k.id)}
           <button class="thema-eintrag" class:aktiv={k.id === gewaehlt} onclick={() => gehe(`themen/${k.id}`)}>

@@ -20,7 +20,7 @@
                            : teile[0] === "autoren" ? "autoren" : "schlagwoerter");
   const buch = $derived(ansicht === "autor" ? teile[1] : new URLSearchParams(navigation.suche).get("buch") ?? "");
   const fragebuecher = $derived(bibliothek.buecher.filter((b) => b.art === "frage_antwort"));
-  const buchwahl = $derived([{ wert: "", titel: "Alle Frage-Antwort-Bücher" }, ...fragebuecher.map((b) => ({ wert: b.kennung, titel: bezeichnung(b) }))]);
+  const buchwahl = $derived([{ wert: "", titel: "Alle Frage-Antwort-Quellen" }, ...fragebuecher.map((b) => ({ wert: b.kennung, titel: bezeichnung(b) }))]);
 
   let anfang = $state("");
   let sortierung = $state<Sortierung>("stimmen");
@@ -107,7 +107,7 @@
           </div>
         </div>
         <div class="register-filter">
-          <Auswahl wert={buch} symbol="fa-book" titel="Welche Bücher" optionen={buchwahl} onwahl={(w: string) => weg(ansicht === "autoren" ? "register/autoren" : "register", w)} />
+          <Auswahl wert={buch} symbol="fa-book" titel="Welche Quellen" optionen={buchwahl} onwahl={(w: string) => weg(ansicht === "autoren" ? "register/autoren" : "register", w)} />
           <label class="suchfeld register-anfang"><i class="fa-solid fa-filter"></i>
             <input type="search" bind:value={anfang} placeholder={ansicht === "autoren" ? "Name beginnt mit" : "Schlagwort beginnt mit"}
                    aria-label="Filter" /></label>
@@ -122,8 +122,10 @@
 
       {#each ohneIndex as k (k)}
         <div class="fundband"><i class="fa-solid fa-hourglass-half"></i>
-          <span><Buchmarke kennung={k} />: das Register entsteht mit dem eigenen Index des Buchs.</span>
-          <button class="knopf still" onclick={() => gehe("auftraege")}>Aufträge</button></div>
+          <span><Buchmarke kennung={k} />: noch ohne eigenen Index, mit ihm entsteht das Register. Große Quellen beginnen erst,
+            wenn die Grenze unter Einstellungen, Suche darüber liegt.</span>
+          <button class="knopf still" onclick={() => gehe("auftraege")}>Aufträge</button>
+          <button class="knopf still" onclick={() => gehe("einstellungen/suche")}>Einstellungen</button></div>
       {/each}
       {#if fehler}<div class="fehlertext">{fehler}</div>{/if}
 
@@ -150,7 +152,7 @@
       {:else if ansicht === "schlagwort"}
         <div class="register-titel">
           <h1><span class="wort">{teile[1]}</span></h1>
-          <span class="register-zahl">{zahl(gesamt)} {gesamt === 1 ? "Frage" : "Fragen"}{buch ? "" : " in allen Frage-Antwort-Büchern"}</span>
+          <span class="register-zahl">{zahl(gesamt)} {gesamt === 1 ? "Frage" : "Fragen"}{buch ? "" : " in allen Frage-Antwort-Quellen"}</span>
           <div class="register-sortierung" role="tablist">
             <button role="tab" aria-selected={sortierung === "stimmen"} class:aktiv={sortierung === "stimmen"} onclick={() => (sortierung = "stimmen")}>Meiste Stimmen</button>
             <button role="tab" aria-selected={sortierung === "neueste"} class:aktiv={sortierung === "neueste"} onclick={() => (sortierung = "neueste")}>Neueste</button>

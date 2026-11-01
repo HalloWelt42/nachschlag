@@ -153,7 +153,7 @@
         {#if !geraet.mobil}<h1>Stöbern</h1>{/if}          <!-- am Telefon steht der Titel im Kopf -->
         <div class="filterzeile">
           {#if buecher.length > 1}
-            <Auswahl wert={stoebern.buch} symbol="fa-book" titel="Buch zum Stöbern" onwahl={buchWaehlen}
+            <Auswahl wert={stoebern.buch} symbol="fa-book" titel="Quelle zum Stöbern" onwahl={buchWaehlen}
                      optionen={buecher.map((b) => ({ wert: b.kennung, titel: bezeichnung(b) }))} />
           {/if}
           <button class="chip" class:an={stoebern.mitBild} aria-pressed={stoebern.mitBild} onclick={() => filterUmschalten("mitBild")}>
@@ -166,7 +166,7 @@
 
       <section>
         <div class="abschnitt-kopf"><h2><i class="fa-solid fa-dice"></i>Zufall</h2>
-          <span class="neben">aus {buch ? bezeichnung(buch) : "dem Buch"}{stoebern.mitBild ? ", mit Bild" : ""}{stoebern.ungelesen ? ", noch nicht gelesen" : ""}</span></div>
+          <span class="neben">aus {buch ? bezeichnung(buch) : "der Quelle"}{stoebern.mitBild ? ", mit Bild" : ""}{stoebern.ungelesen ? ", noch nicht gelesen" : ""}</span></div>
         <div class="zufall-buehne" class:mit-eben={stoebern.eben.length > 0}>
           {#if stoebern.fund}
             {@const f = stoebern.fund}
@@ -244,7 +244,7 @@
       </section>
 
       <section>
-        <div class="abschnitt-kopf"><h2><i class="fa-solid fa-book-open"></i>Blättern wie im Buch</h2><span class="neben">Titel in der Reihenfolge des Buchs, ohne Weiterleitungen</span></div>
+        <div class="abschnitt-kopf"><h2><i class="fa-solid fa-book-open"></i>Blättern wie im Buch</h2><span class="neben">Titel in der Reihenfolge der Quelle, ohne Weiterleitungen</span></div>
         <div class="alphabet">
           {#each BUCHSTABEN as b (b)}
             <button class:an={stoebern.buchstabe === b} onclick={() => blaettern({ buchstabe: b })}>{b}</button>

@@ -21,20 +21,20 @@
   {#if offen}
     <div class="lesegroesse-tafel" role="dialog" aria-label="Lesegröße">
       <div class="groesse-zeile">
-        <span class="was"><b>{buchTitel}</b>{eigene ? "eigene Größe" : "wie alle Bücher"}</span>
+        <span class="was"><b>{buchTitel}</b>{eigene ? "eigene Größe" : "wie alle Quellen"}</span>
         <button class="rund" title="Kleiner" disabled={jetzt <= ERSTE} onclick={() => buchSetzen(buchName, naechste(jetzt, -1))}><i class="fa-solid fa-minus"></i></button>
         <span class="wert">{jetzt} %</span>
         <button class="rund" title="Größer" disabled={jetzt >= LETZTE} onclick={() => buchSetzen(buchName, naechste(jetzt, 1))}><i class="fa-solid fa-plus"></i></button>
       </div>
       <div class="groesse-zeile">
-        <span class="was"><b>Alle Bücher</b>Vorgabe</span>
+        <span class="was"><b>Alle Quellen</b>Vorgabe</span>
         <button class="rund" title="Kleiner" disabled={lesegroesse.vorgabe <= ERSTE} onclick={() => vorgabeSetzen(naechste(lesegroesse.vorgabe, -1))}><i class="fa-solid fa-minus"></i></button>
         <span class="wert">{lesegroesse.vorgabe} %</span>
         <button class="rund" title="Größer" disabled={lesegroesse.vorgabe >= LETZTE} onclick={() => vorgabeSetzen(naechste(lesegroesse.vorgabe, 1))}><i class="fa-solid fa-plus"></i></button>
       </div>
       <div class="groesse-fuss">
         <span>Gilt auf diesem Gerät.</span>
-        {#if eigene}<button class="knopf still" onclick={() => buchSetzen(buchName, null)}>Wie alle Bücher</button>{/if}
+        {#if eigene}<button class="knopf still" onclick={() => buchSetzen(buchName, null)}>Wie alle Quellen</button>{/if}
       </div>
     </div>
   {/if}

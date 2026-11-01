@@ -17,21 +17,21 @@
   import { meins } from "./lib/meins.svelte";
 
   const bereiche: Bereich[] = [
-    { schluessel: "start", titel: "Start", symbol: "fa-house", seite: Start, reiter: true, hinweis: "Suchen, stöbern, die Bücher der Bibliothek" },
+    { schluessel: "start", titel: "Start", symbol: "fa-house", seite: Start, reiter: true, hinweis: "Suchen, stöbern, die Quellen der Bibliothek" },
     { schluessel: "lesen", titel: "Artikel", symbol: "fa-book-open", seite: Lesen, reiter: false, hinweis: "Der zuletzt geöffnete Artikel" },
     { schluessel: "stoebern", titel: "Stöbern", symbol: "fa-shuffle", seite: Stoebern, reiter: true,
       hinweis: "Zufallsfunde, Entdeckungspfad und Blättern wie im Buch" },
     { schluessel: "medien", titel: "Medien", symbol: "fa-images", seite: Medien, reiter: false,
-      hinweis: "Bilder zu einem Begriff aus den Artikeln der Bücher, groß ansehen" },
+      hinweis: "Bilder zu einem Begriff aus den Artikeln der Quellen, groß ansehen" },
     { schluessel: "suche", titel: "Suche", symbol: "fa-magnifying-glass", seite: Suche, reiter: false, hinweis: "Alle Treffer zu einer Frage" },
     { schluessel: "register", titel: "Register", symbol: "fa-tags", seite: Register, reiter: false,
-      hinweis: "Schlagwörter und Autoren der Frage-Antwort-Bücher" },
+      hinweis: "Schlagwörter und Autoren der Frage-Antwort-Quellen" },
     { schluessel: "merkzettel", titel: "Merkzettel", symbol: "fa-bookmark", seite: Merkzettel, reiter: true,
       hinweis: "Gemerkte Seiten mit Lesestand, auf allen Geräten", zahl: () => meins.merkzettel.length },
     { schluessel: "notizen", titel: "Notizen", symbol: "fa-note-sticky", seite: Notizen, reiter: false,
       hinweis: "Notizen und Markierungen an Artikeln und Stellen, auf allen Geräten", zahl: () => meins.notizen.length },
     { schluessel: "themen", titel: "Themen", symbol: "fa-layer-group", seite: Themen, reiter: true,
-      hinweis: "Eigene Sammlungen von Artikeln aus allen Büchern, in Bereichen", zahl: () => themen.liste.length },
+      hinweis: "Eigene Sammlungen von Artikeln aus allen Quellen, in Bereichen", zahl: () => themen.liste.length },
     { schluessel: "verlauf", titel: "Verlauf", symbol: "fa-clock-rotate-left", seite: Verlauf, reiter: false, hinweis: "Gelesenes und Gesuchtes, auf allen Geräten" },
   ];
 </script>

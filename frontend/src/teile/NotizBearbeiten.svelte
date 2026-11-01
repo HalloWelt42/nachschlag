@@ -137,7 +137,7 @@
     <div class="notiz-knoepfe">
       {#if zurStelle}<button class="knopf" onclick={zurStelle}><i class="fa-solid fa-arrow-up-right-from-square"></i>{zitat ? "Zur Stelle" : "Zum Artikel"}</button>{/if}
       {#if zitat}<button class="knopf" class:kopiert-ok={kopiert === "ja"} onclick={zitieren}
-                         title="Zitat mit Artikel, Abschnitt und Buch in die Zwischenablage">
+                         title="Zitat mit Artikel, Abschnitt und Quelle in die Zwischenablage">
         <i class="fa-solid {kopiert === 'ja' ? 'fa-check' : kopiert === 'nein' ? 'fa-triangle-exclamation' : 'fa-quote-right'}"></i>{kopiert === "ja" ? "Kopiert" : kopiert === "nein" ? "Geht nicht" : "Zitieren"}</button>{/if}
       {#if id}<button class="knopf gefahr" onclick={() => (loeschenFragen = true)}><i class="fa-solid fa-trash"></i>Löschen</button>{/if}
     </div>

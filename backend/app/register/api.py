@@ -56,7 +56,7 @@ def router(geruest: Geruest, register: Register) -> APIRouter:
         except BuchFehlt as f:
             raise fehlt(f)
         if seite is None:
-            raise HTTPException(404, "Diesen Autor kennt das Register nicht (oder das Buch hat noch keinen eigenen Index)")
+            raise HTTPException(404, "Diesen Autor kennt das Register nicht (oder die Quelle hat noch keinen eigenen Index)")
         return seite
 
     return r

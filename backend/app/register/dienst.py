@@ -45,7 +45,7 @@ class Register:
         """Frage-Antwort-Bücher (oder das eine) mit geltendem Index und die Kennungen derer, die noch keinen haben."""
         buecher = [b for b in (await self._bib.stand()).buecher if b.art == ART and (not buch or b.kennung == buch)]
         if buch and not buecher:
-            raise BuchFehlt(f"Ein Frage-Antwort-Buch {buch} gibt es in der Bibliothek nicht")
+            raise BuchFehlt(f"Eine Frage-Antwort-Quelle {buch} gibt es in der Bibliothek nicht")
         mit = [(b.kennung, d) for b in buecher if (d := self._eigen.datei(b.kennung))]
         return mit, [b.kennung for b in buecher if not self._eigen.datei(b.kennung)]
 

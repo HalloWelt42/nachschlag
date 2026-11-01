@@ -415,7 +415,7 @@ class Dokumentation:
         wurzel[-1].text = "Quelle"
         werte = SubElement(wurzel, "dl")
         werte.set("class", "steckbrief-werte")
-        for name, wert in (("Buch", f"{buch.titel}, Stand {h.datum(buch.stand)}"), ("Rubrik", rubrik),
+        for name, wert in (("Quelle", f"{buch.titel}, Stand {h.datum(buch.stand)}"), ("Rubrik", rubrik),
                            ("Notizen", f"{notizen} der Nutzer" if notizen else "")):
             if wert:
                 SubElement(werte, "dt").text = name

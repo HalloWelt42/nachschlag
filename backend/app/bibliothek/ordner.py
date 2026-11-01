@@ -132,7 +132,7 @@ class Bibliothek:
                 except RuntimeError as f:
                     self._offen.pop(kennung, None)
                     self._fehler[kennung] = f"{pfad.name}: {f}"
-                    logger.warning("Buch lässt sich nicht öffnen: %s", self._fehler[kennung])
+                    logger.warning("Quelle lässt sich nicht öffnen: %s", self._fehler[kennung])
 
     async def stand(self) -> Bibliotheksstand:
         await asyncio.to_thread(self._abgleichen)
@@ -159,7 +159,7 @@ class Bibliothek:
             with self._sperre:
                 offen = self._offen.get(kennung)
         if offen is None:
-            raise BuchFehlt(f"Ein Buch {kennung} gibt es in der Bibliothek nicht")
+            raise BuchFehlt(f"Eine Quelle {kennung} gibt es in der Bibliothek nicht")
         return offen
 
     def _eintrag(self, kennung: str, pfad: str, tiefe: int = 0, anker: str = "") -> Eintrag:
@@ -169,7 +169,7 @@ class Bibliothek:
         try:
             e = a.get_entry_by_path(pfad)
         except KeyError:
-            raise EintragFehlt(f"{pfad} steht nicht im Buch {kennung}") from None
+            raise EintragFehlt(f"{pfad} steht nicht in der Quelle {kennung}") from None
         if e.is_redirect:
             e = e.get_redirect_entry()
         item = e.get_item()

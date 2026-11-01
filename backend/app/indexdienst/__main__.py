@@ -48,7 +48,7 @@ def main() -> None:
     halt = threading.Event()
     for zeichen in (signal.SIGTERM, signal.SIGINT):
         signal.signal(zeichen, lambda *_: halt.set())
-    logging.getLogger("nachschlag.indexdienst").info("Index-Dienst läuft: Bücher %s, Indizes %s", buecher, ziel)
+    logging.getLogger("nachschlag.indexdienst").info("Index-Dienst läuft: ZIM-Libs %s, Indizes %s", buecher, ziel)
     with pi:
         Arbeiter(pi, buecher, ziel, einhaengen).laufen(halt)
 

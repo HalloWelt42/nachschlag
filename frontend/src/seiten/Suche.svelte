@@ -107,9 +107,9 @@
     <div class="suchstand">
       {#if nur}
         <span>Nur in <Buchmarke kennung={kontext} symbol={false} /></span>
-        <button class="knopf still" onclick={() => suchen(frage, kontext)}><i class="fa-solid fa-swatchbook"></i>In allen Büchern suchen</button>
+        <button class="knopf still" onclick={() => suchen(frage, kontext)}><i class="fa-solid fa-swatchbook"></i>In allen Quellen suchen</button>
       {:else}
-        <span>{#if fertig}{reihenfolge.length} {reihenfolge.length === 1 ? "Buch" : "Bücher"} durchsucht, rund {zahl(gesamt)} Treffer{:else}Sucht in {reihenfolge.length} {reihenfolge.length === 1 ? "Buch" : "Büchern"} ...{/if}</span>
+        <span>{#if fertig}{reihenfolge.length} {reihenfolge.length === 1 ? "Quelle" : "Quellen"} durchsucht, rund {zahl(gesamt)} Treffer{:else}Sucht in {reihenfolge.length} {reihenfolge.length === 1 ? "Quelle" : "Quellen"} ...{/if}</span>
       {/if}
       <!-- Stand je Buch (docs/SUCHE.md Punkt 7): sucht, fertig mit Zahl und Zeit, keine Antwort -->
       <span class="buchstaende">
@@ -132,10 +132,10 @@
 {/if}
 <div class="suchseite">
   <aside class="filterspalte">
-    <div class="filtergruppe"><h4>Bücher</h4>
+    <div class="filtergruppe"><h4>Quellen</h4>
       {#each durchsucht as b (b.kennung)}
         {@const an = !aus.includes(b.kennung)}
-        <button class:an class:aus={!an} onclick={() => umschalten(b.kennung)} title={an ? "Dieses Buch nicht durchsuchen" : "Dieses Buch durchsuchen"}>
+        <button class:an class:aus={!an} onclick={() => umschalten(b.kennung)} title={an ? "Diese Quelle nicht durchsuchen" : "Diese Quelle durchsuchen"}>
           <i class="fa-{an ? 'solid fa-square-check' : 'regular fa-square'}"></i><Buchmarke kennung={b.kennung} symbol={false} />
           <span class="zahl">{staende[b.kennung]?.ergebnis ? zahl(staende[b.kennung].ergebnis!.index_gesamt) : ""}</span></button>
       {/each}
@@ -157,7 +157,7 @@
       {/if}
       {#each mitTreffern as b, i (b.kennung)}
         {@const st = staende[b.kennung]}
-        {#if i > 0 && mitTreffern[i - 1].kennung === kontext && !nur}<div class="andere-buecher">In den anderen Büchern</div>{/if}
+        {#if i > 0 && mitTreffern[i - 1].kennung === kontext && !nur}<div class="andere-buecher">In den anderen Quellen</div>{/if}
         <section class="buchtreffer">
           <div class="buchtreffer-kopf">
             <Buchmarke kennung={b.kennung} />
@@ -165,7 +165,7 @@
             {:else if st.stand === "fehler"}<span class="buchstand-text fehlt"><i class="fa-solid fa-triangle-exclamation"></i>keine Antwort</span>
             {:else}<span class="buchstand-text">rund {zahl(st.ergebnis?.index_gesamt ?? 0)} Treffer</span>{/if}
             {#if !nur && st?.stand === "fertig" && (st.ergebnis?.index_gesamt ?? 0) > (st.ergebnis?.treffer.length ?? 0)}
-              <button class="alle" onclick={() => suchen(frage, b.kennung, true)}>Alle aus diesem Buch</button>
+              <button class="alle" onclick={() => suchen(frage, b.kennung, true)}>Alle aus dieser Quelle</button>
             {/if}
           </div>
           {#each st?.ergebnis?.treffer ?? [] as t, ti (t.buch + t.pfad + ti)}

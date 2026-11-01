@@ -515,14 +515,14 @@
         <i class="fa-regular fa-note-sticky"></i><span class="wort">Notiz</span>{#if artikelNotizen.length}<span class="zahl">{artikelNotizen.length}</span>{/if}</button>
       {#if buch}<ThemaWahl artikel={{ buch: artikel.buch, pfad: artikel.pfad, titel: artikel.titel, bild: artikel.bild }} buchName={buch.name} />{/if}
       {#if artikel.darstellung !== "original"}
-        <button class="knopf" class:an={original} title="Die Seite so, wie sie im Buch steht" onclick={() => (original = !original)}>
+        <button class="knopf" class:an={original} title="Die Seite so, wie sie in der Quelle steht" onclick={() => (original = !original)}>
           <i class="fa-solid fa-file-code"></i><span class="wort">Original</span></button>
       {/if}
-      <button class="knopf still" title="Ein zufälliger Artikel aus diesem Buch" onclick={zufall}>
+      <button class="knopf still" title="Ein zufälliger Artikel aus dieser Quelle" onclick={zufall}>
         <i class="fa-solid fa-dice"></i><span class="wort">Zufall</span></button>
       <div class="rechts">
         {#if fassungen && !zeigeOriginal}
-          <Auswahl wert={meineFassung} symbol="fa-code-branch" titel="Meine Fassung, bleibt für dieses Buch eingestellt" onwahl={fassungWaehlen}
+          <Auswahl wert={meineFassung} symbol="fa-code-branch" titel="Meine Fassung, bleibt für diese Quelle eingestellt" onwahl={fassungWaehlen}
                    optionen={[{ wert: "", titel: "Alle Fassungen" },
                               ...fassungen.optionen.map((f) => ({ wert: f, titel: `Meine Fassung: ${fassungen!.produkt} ${f}` }))]} />
         {/if}
@@ -555,12 +555,12 @@
         <label class="suchfeld"><i class="fa-solid fa-filter"></i>
           <input type="search" bind:value={filterText} placeholder="In dieser Übersicht filtern" aria-label="In dieser Übersicht filtern" /></label>
         {#if filterText.trim()}
-          <button class="knopf" onclick={() => suchen(filterText.trim(), artikel!.buch, true)}><i class="fa-solid fa-magnifying-glass"></i>Im ganzen Buch suchen</button>
+          <button class="knopf" onclick={() => suchen(filterText.trim(), artikel!.buch, true)}><i class="fa-solid fa-magnifying-glass"></i>In der ganzen Quelle suchen</button>
           <span class="filter-stand">{gefiltert.zahl} von {gefiltert.gesamt}</span>
         {/if}
       </div>
       {#if filterText.trim() && !gefiltert.zahl}
-        <p class="leer-hinweis uebersicht-leer">Nichts in dieser Übersicht passt zu "{filterText.trim()}". "Im ganzen Buch suchen" findet es auch in den Seiten selbst.</p>
+        <p class="leer-hinweis uebersicht-leer">Nichts in dieser Übersicht passt zu "{filterText.trim()}". "In der ganzen Quelle suchen" findet es auch in den Seiten selbst.</p>
       {/if}
       {#if gefiltert.gruppen.length}
         <!-- Handbuch: die Rubriken der Gliederung mit ihren Seiten -->
@@ -657,8 +657,8 @@
             <summary><i class="fa-solid fa-circle-info"></i>Über diesen Artikel<span>Quelle, Verweise</span></summary>
             <dl>
               <dt>Quelle</dt><dd>{buch ? bezeichnung(buch) : artikel.buch}{buch ? `, Stand ${datum(buch.stand)}` : ""}</dd>
-              {#if buch?.beschreibung}<dt>Buch</dt><dd>{buch.beschreibung}</dd>{/if}
-              <dt>Verweise</dt><dd>{artikel.verweise.intern} im Buch{artikel.verweise.ohne_ziel ? `, ${artikel.verweise.ohne_ziel} ohne Ziel im Buch (nur Text)` : ""}{artikel.verweise.koordinaten ? `, ${artikel.verweise.koordinaten} Orte` : ""}</dd>
+              {#if buch?.beschreibung}<dt>Quelle</dt><dd>{buch.beschreibung}</dd>{/if}
+              <dt>Verweise</dt><dd>{artikel.verweise.intern} in der Quelle{artikel.verweise.ohne_ziel ? `, ${artikel.verweise.ohne_ziel} ohne Ziel in der Quelle (nur Text)` : ""}{artikel.verweise.koordinaten ? `, ${artikel.verweise.koordinaten} Orte` : ""}</dd>
               {#if artikel.online.length}
                 <dt>Im Netz</dt>
                 <dd><ul>{#each artikel.online as o}<li><a href={o} target="_blank" rel="noopener noreferrer">{o}</a></li>{/each}</ul></dd>
@@ -685,7 +685,7 @@
       <button onclick={() => anStelle(false)}><i class="fa-solid fa-highlighter"></i>Markieren</button>
     {/if}
     <button onclick={() => anStelle(true)}><i class="fa-solid fa-note-sticky"></i>Notiz</button>
-    <button class:kopiert-ok={kopiert === "ja"} onclick={zitieren} title="Zitat mit Artikel, Abschnitt und Buch in die Zwischenablage">
+    <button class:kopiert-ok={kopiert === "ja"} onclick={zitieren} title="Zitat mit Artikel, Abschnitt und Quelle in die Zwischenablage">
       <i class="fa-solid {kopiert === 'ja' ? 'fa-check' : kopiert === 'nein' ? 'fa-triangle-exclamation' : 'fa-quote-right'}"></i>{kopiert === "ja" ? "Kopiert" : kopiert === "nein" ? "Geht nicht" : "Zitieren"}</button>
     <button onclick={() => { const z = textwahl!.stelle.zitat; textwahl = null; suchen(z.slice(0, 200)); }}><i class="fa-solid fa-magnifying-glass"></i>Suchen</button>
   </div>

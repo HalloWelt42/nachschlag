@@ -191,16 +191,16 @@
         <label><span class="feld-titel">Beschreibung</span><textarea class="eingabe" rows="2" bind:value={bearbeiten.beschreibung} maxlength="1000"></textarea></label>
         <label><span class="feld-titel">Wächst mit der Suche</span>
           <input class="eingabe" bind:value={bearbeiten.regel} maxlength="400" placeholder="leer: nur von Hand" /></label>
-        <div><span class="feld-titel">In welchen Büchern</span>
+        <div><span class="feld-titel">In welchen Quellen</span>
           <Auswahl bind:wert={bearbeiten.regel_buch} symbol="fa-book"
-                   optionen={[{ wert: "", titel: "Alle Bücher" }, ...bibliothek.buecher.map((b) => ({ wert: b.kennung, titel: bezeichnung(b) }))]} /></div>
+                   optionen={[{ wert: "", titel: "Alle Quellen" }, ...bibliothek.buecher.map((b) => ({ wert: b.kennung, titel: bezeichnung(b) }))]} /></div>
         <div class="thema-knoepfe">
           <button class="knopf primaer" disabled={!bearbeiten.titel.trim()} onclick={speichern}><i class="fa-solid fa-check"></i>Speichern</button>
           <button class="knopf still" onclick={() => (bearbeiten = null)}>Abbrechen</button>
           <button class="knopf gefahr rechts" onclick={() => (loeschenFragen = true)}><i class="fa-solid fa-trash"></i>Thema löschen</button>
         </div>
         {#if loeschenFragen}
-          <Rueckfrage frage="Thema {thema.titel} löschen?" hinweis="Die Artikel bleiben in den Büchern, Merkzettel und Notizen bleiben."
+          <Rueckfrage frage="Thema {thema.titel} löschen?" hinweis="Die Artikel bleiben in den Quellen, Merkzettel und Notizen bleiben."
                       knopf="Löschen" onabbrechen={() => (loeschenFragen = false)} onja={loeschen} />
         {/if}
       </div>
@@ -212,7 +212,7 @@
       <div class="regel">
         {#if thema.regel}
           <span class="chip"><i class="fa-solid fa-wand-magic-sparkles"></i>wächst mit: "{thema.regel}"</span>
-          <span class="chip aus"><i class="fa-solid fa-book"></i>{thema.regel_buch ? `nur ${buchName(thema.regel_buch)}` : "alle Bücher"}</span>
+          <span class="chip aus"><i class="fa-solid fa-book"></i>{thema.regel_buch ? `nur ${buchName(thema.regel_buch)}` : "alle Quellen"}</span>
           <span class="neben">neue Treffer kommen als Vorschlag, nie von selbst</span>
         {:else}
           <span class="chip aus"><i class="fa-solid fa-hand"></i>von Hand</span>
@@ -298,7 +298,7 @@
                 {@const stand = standVon(e)}
                 <Kachel art="quer" bild={e.bild} titel={e.titel} gesperrt={!e.buch} ziel={() => oeffnen(e)}
                        class={[ziehe?.id === e.id && "zieht", ziel?.bereich === g.id && ziel.platz === ei && ziehe?.art === "eintrag" && "davor"].filter(Boolean).join(" ")}
-                       hinweis={e.buch ? "Öffnen; ziehen zum Umordnen" : "Das Buch gibt es nicht mehr in der Bibliothek"}
+                       hinweis={e.buch ? "Öffnen; ziehen zum Umordnen" : "Die Quelle gibt es nicht mehr in der Bibliothek"}
                        draggable="true" ondragstart={(d: DragEvent) => ziehenBeginnen(d, "eintrag", e.id)} ondragover={(d: DragEvent) => ueberKarte(d, g.id, ei)}>
                   <span class="stand-zeile">{#if stand.art === "notiz"}<i class="fa-solid fa-note-sticky marke-notiz"></i>{:else if stand.art === "gelesen"}<i class="fa-solid fa-circle-check gelesen"></i>{/if}{stand.text}</span>
                   {#snippet ecke()}<i class="fa-solid fa-grip-vertical griff"></i>{/snippet}

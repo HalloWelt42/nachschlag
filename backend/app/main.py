@@ -36,7 +36,7 @@ from .suche.bedeutung import FundusBedeutung
 
 def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) -> FastAPI:
     """`transport` nur für Tests (Kellerwolke, Leitstelle und Fundus nachgestellt)."""
-    geruest = Geruest(name="Nachschlag", kennung="nachschlag", rolle="liest jedes Buch der Bibliothek", symbol="fa-book-open", symbolbild="/favicon.svg",
+    geruest = Geruest(name="Nachschlag", kennung="nachschlag", rolle="liest jede Quelle der Bibliothek", symbol="fa-book-open", symbolbild="/favicon.svg",
                       farbe="#08758b", fassung=FASSUNG, daten=daten, einstellungen=AppEinstellungen,
                       oberflaeche=WURZEL / "frontend" / "dist", transport=transport)
     e = lambda: geruest.einstellungen.stand  # noqa: E731
@@ -62,7 +62,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     async def buecher() -> Angebot:
         stand = await bibliothek.stand()
         return Angebot(optionen=[Option(wert=b.kennung, titel=b.titel, hinweis=f"{b.kennung}, Stand {b.stand}")
-                                 for b in stand.buecher], eigener_wert=False, stand=f"{len(stand.buecher)} Bücher")
+                                 for b in stand.buecher], eigener_wert=False, stand=f"{len(stand.buecher)} Quellen")
 
     geruest.einstellungen.anbieten("bedeutung_buch", buecher)
     geruest.einstellungen.anbieten("fundus_adresse", geruest.verbund.angebot("Fundus", "fundus", lambda: e().fundus_adresse))

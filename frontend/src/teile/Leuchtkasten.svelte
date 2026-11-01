@@ -77,7 +77,7 @@
       <b class="titel">{m.unterschrift || m.datei}</b>
       <dl>
         <dt>Artikel</dt><dd>{m.artikel}{m.abschnitt ? `, Abschnitt ${m.abschnitt}` : ""}</dd>
-        {#if m.breite}<dt>Größe</dt><dd>{m.breite} x {m.hoehe} Pixel, wie im Buch</dd>{/if}
+        {#if m.breite}<dt>Größe</dt><dd>{m.breite} x {m.hoehe} Pixel, wie in der Quelle</dd>{/if}
         <dt>Datei</dt><dd class="datei">{m.datei}</dd>
       </dl>
       <div class="angaben-knoepfe">

@@ -57,7 +57,7 @@
       <Suchfeld gross />
       {#if bibliothek.buecher.length}
         <div class="unter">Index über <span class="zahl">{zahl(artikelGesamt)}</span> Artikel in {bibliothek.buecher.length}
-          {bibliothek.buecher.length === 1 ? "Buch" : "Büchern"}</div>
+          {bibliothek.buecher.length === 1 ? "Quelle" : "Quellen"}</div>
       {/if}
     </div>
 
@@ -119,15 +119,15 @@
 
     <section>
       <div class="abschnitt-kopf"><h2><i class="fa-solid fa-swatchbook"></i>Bibliothek</h2>
-        <span class="neben">{bibliothek.buecher.length} {bibliothek.buecher.length === 1 ? "Buch" : "Bücher"}</span></div>
+        <span class="neben">{bibliothek.buecher.length} {bibliothek.buecher.length === 1 ? "Quelle" : "Quellen"}</span></div>
       {#if bibliothek.meldung}<div class="fehlertext">{bibliothek.meldung}</div>{/if}
       {#if bibliothek.geladen && !bibliothek.buecher.length && !bibliothek.meldung}
-        <p class="leer-hinweis">Im Ordner der Bücher liegt noch keine ZIM-Datei. Den Ordner nennen die Einstellungen unter Bibliothek.</p>
+        <p class="leer-hinweis">Im Ordner der ZIM-Libs liegt noch keine ZIM-Datei. Den Ordner nennen die Einstellungen unter Bibliothek.</p>
       {/if}
       <div class="buecher">
         {#each bibliothek.buecher as b (b.kennung)}
           <Kachel art="quer" symbol={SYMBOL[b.art]} titel={b.titel} untertitel={`${zahl(b.artikel)} Artikel · Stand ${datum(b.stand)}`}
-                 hinweis="Startseite des Buchs öffnen" ziel={() => lesen(b.kennung, b.startseite)}>
+                 hinweis="Startseite der Quelle öffnen" ziel={() => lesen(b.kennung, b.startseite)}>
             {#snippet ecke()}<Sprachmarke kuerzel={b.sprache} />{/snippet}
             {#snippet fuss()}
               <span class="faehig">

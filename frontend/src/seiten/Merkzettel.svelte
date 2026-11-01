@@ -56,7 +56,7 @@
         {#each liste as m (m.id)}
           <div class="liste-zeile">
             <button class="liste-ziel" disabled={!m.buch} onclick={() => lesen(m.buch, m.pfad)}
-                    title={m.buch ? "Öffnen" : "Das Buch gibt es nicht mehr in der Bibliothek"}>
+                    title={m.buch ? "Öffnen" : "Die Quelle gibt es nicht mehr in der Bibliothek"}>
               {#if m.bild}<img src={m.bild} alt="" loading="lazy" />{:else}<span class="ohne-bild"><i class="fa-solid fa-bookmark"></i></span>{/if}
               <span><span class="t">{m.titel}{m.abschnitt ? ` › ${m.abschnitt}` : ""}</span>
                 <span class="u"><Buchmarke kennung={m.buch} ersatz={m.buch_name} symbol={false} /> · gemerkt {wann(m.angelegt)}</span></span>

@@ -13,7 +13,7 @@ SUCHE = {"gruppe": "Suche"}
 
 #: Welche Bücher einen eigenen Index bekommen (WIKI-17): Stufen in der Reihenfolge des Baus, docs/SUCHE.md
 EIGENE_INDIZES = {"keine": "keine", "handbuecher": "Handbücher", "handbuecher_fragen": "Handbücher, Frage und Antwort",
-                  "alle": "alle Bücher"}
+                  "alle": "alle Quellen"}
 ARTEN_JE_STUFE: dict[str, list[str]] = {
     "keine": [], "handbuecher": ["dokumentation"], "handbuecher_fragen": ["dokumentation", "frage_antwort"],
     "alle": ["dokumentation", "frage_antwort", "enzyklopaedie", "webseite", "sonstiges"]}
@@ -21,38 +21,38 @@ ARTEN_JE_STUFE: dict[str, list[str]] = {
 
 class AppEinstellungen(Grundeinstellungen):
     # --- Bibliothek -------------------------------------------------------------------------------------------------
-    buecher_ordner: str = Field("/buecher", title="Ordner der Bücher", json_schema_extra=BIBLIOTHEK,
-                                description="Jede ZIM-Datei in diesem Ordner ist ein Buch; neue Dateien erscheinen von selbst. "
+    buecher_ordner: str = Field("/buecher", title="Ordner der ZIM-Libs", json_schema_extra=BIBLIOTHEK,
+                                description="Jede ZIM-Datei in diesem Ordner ist eine Quelle; neue Dateien erscheinen von selbst. "
                                             "Nachschlag liest nur.")
 
     # --- Suche ------------------------------------------------------------------------------------------------------
     eigene_indizes: Literal["keine", "handbuecher", "handbuecher_fragen", "alle"] = Field(
-        "handbuecher_fragen", title="Bücher mit eigenem Index", json_schema_extra={**SUCHE, "beschriftungen": EIGENE_INDIZES},
-        description="Ein eigener Index findet Namen aus dem Code (array_map), Rubriken und Einleitungen und sucht in Büchern "
-                    "ohne eingebauten Index. Gebaut wird er auf dem Mac, kleine Bücher zuerst; bis er steht, sucht das Buch "
+        "handbuecher_fragen", title="Quellen mit eigenem Index", json_schema_extra={**SUCHE, "beschriftungen": EIGENE_INDIZES},
+        description="Ein eigener Index findet Namen aus dem Code (array_map), Rubriken und Einleitungen und sucht in Quellen "
+                    "ohne eingebauten Index. Gebaut wird er auf dem Mac, kleine Quellen zuerst; bis er steht, sucht die Quelle "
                     "über den Index der ZIM-Datei.")
     eigenindex_hoechstens_gb: float = Field(
         5, ge=0, title="Eigener Index von selbst bis", json_schema_extra={**SUCHE, "schritt": 1, "einheit": "GB"},
-        description="Bücher bis zu dieser Größe bekommen ihren Index von selbst. Größere (etwa Stack Overflow, 115 GB) "
+        description="Quellen bis zu dieser Größe bekommen ihren Index von selbst. Größere (etwa Stack Overflow, 115 GB) "
                     "brauchen auf dem Mac viele Stunden und mehrere hundert GB Platz; sie beginnen erst, wenn die Grenze "
                     "darüber liegt.")
     eigenindex_ordner: str = Field("/eigenindex", title="Ordner der eigenen Indizes", json_schema_extra=SUCHE,
-                                   description="Je Buch eine Datei. Leer: keine eigenen Indizes. Gehört in die Sicherung "
-                                               "(Rechenzeit), anders als die Bücher.")
+                                   description="Je Quelle eine Datei. Leer: keine eigenen Indizes. Gehört in die Sicherung "
+                                               "(Rechenzeit), anders als die ZIM-Libs.")
     indexdienst_schluessel: SecretStr = Field(SecretStr(""), title="Schlüssel des Index-Dienstes", json_schema_extra=SUCHE,
                                               description="Mit diesem Schlüssel holt der Index-Dienst auf dem Mac die "
                                                           "Aufträge hier ab (dort NACHSCHLAG_INDEX_SCHLUESSEL). Leer: "
                                                           "kein Index-Dienst, es wird nichts gebaut.")
     fundus_adresse: str = Field("", title="Bedeutungssuche (Fundus)", json_schema_extra=SUCHE,
-                                description="Adresse des Fundus, der die Artikel eines Buchs nach Abschnitten eingebettet hält. "
-                                            "Leer: Nachschlag sucht nur im Index der Bücher.")
+                                description="Adresse des Fundus, der die Artikel einer Quelle nach Abschnitten eingebettet hält. "
+                                            "Leer: Nachschlag sucht nur im Index der Quellen.")
     fundus_sammlung: str = Field("", title="Sammlung im Fundus", json_schema_extra=SUCHE,
-                                 description="Die Sammlung, in der der Fundus das Buch eingebettet hat.")
+                                 description="Die Sammlung, in der der Fundus die Quelle eingebettet hat.")
     fundus_vorsilbe: str = Field("wikipedia:de/", title="Herkunft der Treffer", json_schema_extra=SUCHE,
-                                 description="Vorsilbe, mit der der Fundus die Artikel dieses Buchs kennzeichnet; dahinter "
-                                             "steht der Pfad im Buch.")
-    bedeutung_buch: str = Field("", title="Buch der Bedeutungssuche", json_schema_extra=SUCHE,
-                                description="Das Buch, zu dem die Sammlung gehört; ihre Treffer öffnen dort.")
+                                 description="Vorsilbe, mit der der Fundus die Artikel dieser Quelle kennzeichnet; dahinter "
+                                             "steht der Pfad in der Quelle.")
+    bedeutung_buch: str = Field("", title="Quelle der Bedeutungssuche", json_schema_extra=SUCHE,
+                                description="Die Quelle, zu der die Sammlung gehört; ihre Treffer öffnen dort.")
     bedeutung_warten_s: float = Field(1.5, ge=0.2, le=10, title="Warten auf die Bedeutungssuche",
                                       json_schema_extra={**SUCHE, "schritt": 0.1, "einheit": "Sekunden"},
                                       description="Danach kommen die Treffer aus dem Index allein, mit Hinweis.")
