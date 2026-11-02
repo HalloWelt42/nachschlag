@@ -526,6 +526,7 @@
     const symbol = document.createElement("i");
     symbol.className = "fa-solid fa-user-pen";
     const titel = document.createElement("span");
+    titel.className = "eigen-titel";
     titel.textContent = `Dein Beispiel: ${b.titel}`;
     const marke = document.createElement("span");
     marke.className = "eigen-marke";
@@ -538,8 +539,11 @@
     pre.append(code);
     kasten.append(kopf, pre);
     codeEinfaerben(kasten, b.sprache);
+    // die Knöpfe als Gruppe: in schmalen Spalten rücken sie zusammen unter den Titel
+    const knoepfe = document.createElement("span");
+    knoepfe.className = "eigen-knoepfe";
     if (laufbar.includes(b.sprache)) {
-      kopf.append(probierKnopf(() => ({ titel: b.vorlage || b.titel, sprache: b.sprache, code: b.code, block: b.block, eigen: b })));
+      knoepfe.append(probierKnopf(() => ({ titel: b.vorlage || b.titel, sprache: b.sprache, code: b.code, block: b.block, eigen: b })));
     }
     const kopierer = codeKnopf("fa-regular fa-copy", "Kopieren", "Kopieren", "kopieren");
     kopierer.addEventListener("click", async () => {
@@ -547,23 +551,25 @@
       kopierer.querySelector("i")!.className = "fa-solid fa-check";
       setTimeout(() => (kopierer.querySelector("i")!.className = "fa-regular fa-copy"), RUECKMELDUNG_MS);
     });
-    kopf.append(kopierer, loeschKnopf(b));
+    knoepfe.append(kopierer, loeschKnopf(b));
+    kopf.append(knoepfe);
     return kasten;
   }
 
-  /** Löschen in zwei Klicks: der erste fragt im Knopf nach, der zweite löscht (ohne Dialog des Browsers). */
+  /** Löschen in zwei Klicks: der erste fragt im Knopf nach, der zweite löscht (ohne Dialog des Browsers). Beide
+   *  Beschriftungen liegen übereinander, so bleibt der Knopf gleich breit und der zweite Klick trifft. */
   function loeschKnopf(b: Beispiel): HTMLButtonElement {
-    const knopf = codeKnopf("fa-solid fa-trash", "Löschen", "Dein Beispiel löschen");
+    const knopf = codeKnopf("fa-solid fa-trash", "", "Dein Beispiel löschen");
     const wort = knopf.querySelector(".wort")!;
+    wort.classList.add("wort-paar");
+    wort.innerHTML = "<span>Löschen</span><span>Wirklich?</span>";
     let scharf = 0;
     knopf.addEventListener("click", async () => {
       if (!scharf) {
         knopf.classList.add("scharf");
-        wort.textContent = "Wirklich löschen?";
         scharf = window.setTimeout(() => {
           scharf = 0;
           knopf.classList.remove("scharf");
-          wort.textContent = "Löschen";
         }, NACHFRAGE_MS);
         return;
       }
@@ -576,6 +582,7 @@
       } catch (f) {
         knopf.disabled = false;
         scharf = 0;
+        knopf.classList.remove("scharf");
         wort.textContent = "Löschen ging nicht";
         knopf.title = f instanceof Error ? f.message : String(f);
       }

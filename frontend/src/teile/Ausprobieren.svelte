@@ -27,7 +27,10 @@
   let behalten = $state<{ titel: string } | null>(null);
   let speichert = $state(false);
   let meldung = $state("");
+  let namensfeld = $state<HTMLInputElement>();
   const sitzung = new DebugSitzung();
+  // Tastenkürzel zum Ausführen, wie die Tastatur ihn beschriftet
+  const KUERZEL = /Mac|iPhone|iPad/.test(navigator.userAgent) ? "Cmd Enter" : "Strg Enter";
 
   const kann = $derived(!!stand?.bereit && stand.sprachen.includes(sprache));
   const lage = $derived(!stand ? "Frage die Sandbox ..." : kann ? "Sandbox bereit, ohne Netz"
@@ -36,6 +39,12 @@
 
   onMount(() => {
     void ausprobierstand().then((s) => (stand = s));
+  });
+
+  // die Leiste zum Behalten öffnet mit dem Namen im Fokus, markiert zum Überschreiben
+  $effect(() => {
+    namensfeld?.focus();
+    namensfeld?.select();
   });
 
   function starten(ziel: "ausgabe" | "debugger") {
@@ -75,20 +84,23 @@
     }
   }
 
+  /** Ausführen mit Strg oder Cmd und Enter: vor dem Editor abgefangen, der damit sonst eine Zeile einfügt */
+  function tasteVorab(e: KeyboardEvent) {
+    if (e.key !== "Enter" || !(e.ctrlKey || e.metaKey)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    starten("ausgabe");
+  }
+
   function taste(e: KeyboardEvent) {
-    if (e.defaultPrevented) return;                  // der Editor hat sie selbst gebraucht (etwa die Vervollständigung)
-    if (e.key === "Escape") {
-      e.preventDefault();
-      if (behalten) behalten = null;
-      else onzu();
-    } else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault();
-      starten("ausgabe");
-    }
+    if (e.defaultPrevented || e.key !== "Escape") return;   // der Editor hat sie selbst gebraucht (Vervollständigung)
+    e.preventDefault();
+    if (behalten) behalten = null;
+    else onzu();
   }
 </script>
 
-<svelte:window onkeydown={taste} />
+<svelte:window onkeydowncapture={tasteVorab} onkeydown={taste} />
 
 <div class="probe-schleier" onclick={onzu} aria-hidden="true"></div>
 <div class="probe" role="dialog" aria-modal="true" aria-label="Ausprobieren">
@@ -99,7 +111,7 @@
     <span class="probe-lage" class:aus={!!stand && !kann}><span class="punkt"></span>{lage}</span>
     <div class="rechts">
       <button class="knopf primaer" onclick={() => starten("ausgabe")} disabled={!kann || sitzung.laeuft}
-              title="In der Sandbox ausführen (Strg Enter)"><i class="fa-solid fa-play" aria-hidden="true"></i>Ausführen<kbd>Strg Enter</kbd></button>
+              title="In der Sandbox ausführen ({KUERZEL})"><i class="fa-solid fa-play" aria-hidden="true"></i>Ausführen<kbd>{KUERZEL}</kbd></button>
       <button class="knopf" class:an={reiter === "debugger" && sitzung.aktiv} onclick={() => starten("debugger")}
               disabled={!kann || sitzung.laeuft} title="Den Lauf aufzeichnen und Schritt für Schritt ansehen"><i class="fa-solid fa-bug" aria-hidden="true"></i>Debuggen</button>
       <button class="knopf still" onclick={zuruecksetzen} disabled={code === original}
@@ -114,8 +126,7 @@
     <form class="probe-leiste" onsubmit={speichern}>
       <i class="fa-solid fa-user-pen" aria-hidden="true"></i>
       <label for="probe-name">Name deines Beispiels</label>
-      <!-- svelte-ignore a11y_autofocus -->
-      <input id="probe-name" class="eingabe" bind:value={behalten.titel} maxlength="200" autofocus />
+      <input id="probe-name" class="eingabe" bind:this={namensfeld} bind:value={behalten.titel} maxlength="200" />
       <button class="knopf primaer" type="submit" disabled={!behalten.titel.trim() || speichert}>{eigen ? "Speichern" : "Behalten"}</button>
       <button class="knopf still" type="button" onclick={() => (behalten = null)}>Abbrechen</button>
       {#if meldung}<span class="fehler">{meldung}</span>{/if}

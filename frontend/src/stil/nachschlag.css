@@ -468,8 +468,16 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .bwerkzeuge > button { height: 28px; padding: 0 10px; background: color-mix(in srgb, var(--ed-grund) 85%, transparent); }
 /* Ausprobieren (WIKI-48, Entwurf ausprobieren.html): der Knopf hebt sich ab; eigene Beispiele mit Marke und Kante */
 .artikel-text .ausprobieren { color: var(--petrol); font-weight: 600; }
-.beispiel .bkopf > .scharf { color: var(--gefahr); }
+.beispiel .eigen-knoepfe { display: flex; gap: var(--a2); margin-left: auto; }
+.beispiel .eigen-knoepfe > button { height: 28px; padding: 0 10px; font-weight: 400; }
+.beispiel .eigen-knoepfe > .scharf { color: var(--gefahr); }
+.wort-paar { display: inline-grid; }
+.wort-paar > span { grid-area: 1 / 1; }
+.knopf:not(.scharf) .wort-paar > :last-child, .knopf.scharf .wort-paar > :first-child { visibility: hidden; }
 .beispiel.eigen { box-shadow: var(--schatten), inset 3px 0 0 var(--akzent-flaeche); border-radius: 0; }
+/* in schmalen Spalten (Antworten) rücken die Knöpfe unter den Titel, statt ihn Wort für Wort zu umbrechen */
+.artikel-text .beispiel.eigen .bkopf { flex-wrap: wrap; }
+.beispiel.eigen .eigen-titel { flex: 1 1 14em; min-width: 0; }
 .beispiel.eigen .bkopf::before { content: none; }
 .beispiel.eigen .bkopf > i { color: var(--akzent); }
 .beispiel .eigen-marke { font-size: var(--marke); font-weight: 400; padding: 1px 7px; background: var(--akzent-weich); color: var(--akzent); white-space: nowrap; }
