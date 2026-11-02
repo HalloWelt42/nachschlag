@@ -7,6 +7,7 @@ from typing import Literal
 from pydantic import Field, SecretStr
 
 from appkern.app import Grundeinstellungen
+from appkern.app.einstellungen import VERBINDUNGEN
 
 BIBLIOTHEK = {"gruppe": "Bibliothek"}
 SUCHE = {"gruppe": "Suche"}
@@ -76,6 +77,10 @@ class AppEinstellungen(Grundeinstellungen):
                                               description="Mit diesem Schlüssel holt der Index-Dienst auf dem Mac die "
                                                           "Aufträge hier ab (dort NACHSCHLAG_INDEX_SCHLUESSEL). Leer: "
                                                           "kein Index-Dienst, es wird nichts gebaut.")
+    codeschmiede_adresse: str = Field("", title="Ausprobieren (Codeschmiede)", json_schema_extra=VERBINDUNGEN,
+                                      description="Adresse der Codeschmiede: in ihrer Sandbox laufen Beispiele aus Handbüchern "
+                                                  "zum Ausprobieren und Debuggen (sie muss Nachschlag zulassen). Leer: ohne "
+                                                  "Ausprobieren.")
     fundus_adresse: str = Field("", title="Bedeutungssuche (Fundus)", json_schema_extra=SUCHE,
                                 description="Adresse des Fundus, der die Artikel einer Quelle nach Abschnitten eingebettet hält. "
                                             "Leer: Nachschlag sucht nur im Index der Quellen.")

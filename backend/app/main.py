@@ -38,6 +38,8 @@ from .medien.api import router as medien_router
 from .stoebern import Stoebern
 from .quellenarchiv import Quellenarchiv
 from .sammlung import Sammlungen
+from .ausprobieren import Ausprobieren
+from .ausprobieren.api import router as ausprobieren_router
 from .sammlung.api import router as sammlung_router
 from .quellenarchiv.api import router as quellenarchiv_router
 from .stoebern.api import router as stoebern_router
@@ -119,6 +121,9 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     geruest.einstellungen.anbieten("suchmodell", geruest.leitstelle_angebot("text", leer="Kette der App"))
     geruest.einstellungen.anbieten("fundus_adresse", geruest.verbund.angebot("Fundus", "fundus", lambda: e().fundus_adresse))
     geruest.verbund.anmelden("Fundus", lambda: e().fundus_adresse)
+    geruest.verbund.anmelden("Codeschmiede", lambda: e().codeschmiede_adresse)   # Ausprobieren (WIKI-48)
+    geruest.einstellungen.anbieten("codeschmiede_adresse",
+                                   geruest.verbund.angebot("Codeschmiede", "codeschmiede", lambda: e().codeschmiede_adresse))
     geruest.verbund.anmelden("Vertonung", lambda: e().vertonung_adresse)   # nur Proben eigener Stimmen
 
     # Stapelarbeit je Sammlung (WIKI-44): jede Arbeit mit eigener Stimme spricht über einen eigenen Sprechdienst
@@ -136,6 +141,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     app.include_router(router(geruest, bibliothek, leser, suche, quellen))
     app.include_router(quellenarchiv_router(geruest, quellen))
     app.include_router(sammlung_router(geruest, sammlungen, stimmen))
+    app.include_router(ausprobieren_router(geruest, Ausprobieren(lambda: geruest.verbund, lambda: e().codeschmiede_adresse)))
     app.include_router(meins_router(geruest, meins))
     app.include_router(themen_router(geruest, themen, suche, bibliothek, meins, leser))
     app.include_router(zitieren_router(geruest, bibliothek, leser))
