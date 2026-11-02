@@ -9,7 +9,7 @@
   // Sprachen ohne Aufzeichnung laufen nur (Ausgabe, Hinweise, Fehler mit Zeile), ohne Debugger.
   import { onMount, untrack } from "svelte";
   import { Auswahl } from "appkern-oberflaeche";
-  import { DebuggerBereich, DebugSitzung, EditorBereich } from "appkern-oberflaeche/code";
+  import { DebuggerBereich, DebugSitzung, EditorBereich, type Rahmen } from "appkern-oberflaeche/code";
   import { ausprobierstand, beispielAendern, beispielAnlegen, bestandFuer, DATEINAMEN, passendeFassung, phpFunktionen, probelauf,
            SPRACHNAMEN, SYMBOLE, type Ausprobierstand, type Beispiel, type Probe, type Probelauf } from "../lib/ausprobieren";
 
@@ -27,6 +27,7 @@
   let gesichert = $state(original);                 // Stand des eigenen Beispiels (Behalten ändert es danach)
   let reiter = $state<"ausgabe" | "debugger">("ausgabe");
   let zeile = $state<number | null>(null);
+  let rahmen = $state.raw<readonly Rahmen[] | null>(null);   // Schritt des Debuggers: Werte beim Überfahren (WIKI-53)
   let stand = $state.raw<Ausprobierstand | null>(null);
   let behalten = $state<{ titel: string } | null>(null);
   let speichert = $state(false);
@@ -178,7 +179,7 @@
       </div>
       <div class="probe-code">
         <EditorBereich {sprache} bind:code markierteZeile={reiter === "debugger" ? zeile : fehlerzeile} mitHaltepunkten={aufzeichnen}
-                       bind:haltepunkte={sitzung.haltepunkte} {bestand} />
+                       bind:haltepunkte={sitzung.haltepunkte} {bestand} werte={reiter === "debugger" ? rahmen : null} />
       </div>
       {#if aufzeichnen || bestand}
         <div class="probe-hinweis">
@@ -219,7 +220,7 @@
         {#if !sitzung.aktiv}
           <p class="leise">Debuggen zeichnet den Lauf auf: danach geht jeder Schritt vor und zurück, mit Aufrufstapel, Speicher und Ausgabe bis dahin.</p>
         {/if}
-        <DebuggerBereich {sitzung} {sprache} {code} bind:zeile />
+        <DebuggerBereich {sitzung} {sprache} {code} bind:zeile bind:rahmen />
       {/if}
       <div class="probe-fuss"><i class="fa-solid fa-circle-info" aria-hidden="true"></i>Du arbeitest an einer Kopie; das Beispiel im Artikel bleibt, wie es ist.</div>
     </aside>
