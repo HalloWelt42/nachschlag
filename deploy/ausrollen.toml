@@ -8,3 +8,8 @@ ton = false
 # Symbole freigestellt, auch am Startbildschirm (Nutzer 01.11.2026: "es sollte freigestellt bleiben", bewusst
 # "Überall durchsichtig" gewählt, obwohl iOS durchsichtige Stellen selbst füllt)
 symbole = "durchsichtig"
+# Zugänge besorgt das Ausrollen (HELF-77, Appkern docs/ZUGAENGE.md): der Zugang zur Leitstelle mit genau diesen
+# Fähigkeiten; der Schlüssel geht als feste Einstellung in die .env auf dem Pi, niemand trägt ihn mehr ein
+[zugaenge]
+name = "Nachschlag"
+leitstelle = ["text", "uebersetzen", "stimme"]
