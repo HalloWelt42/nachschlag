@@ -88,6 +88,16 @@ class NotizAenderung(BaseModel):
     text: str = Field(max_length=20000)
 
 
+class Notizbild(BaseModel):
+    """Ein Bild an einer Notiz (WIKI-51): liegt in der Kellerwolke (Knoten), die Notiz merkt sich Name und Art."""
+    id: str
+    knoten: str = Field(description="Knoten der Datei in der Kellerwolke")
+    name: str = Field(description="Dateiname, wie er hochkam (oder aus der Zwischenablage benannt)")
+    typ: str = Field(description="Art des Bilds, etwa image/png")
+    groesse: int = 0
+    angelegt: str
+
+
 class Notiz(BaseModel):
     id: str
     buch_name: str
@@ -101,6 +111,7 @@ class Notiz(BaseModel):
     text: str = ""
     belege: list[Beleg] = Field(default_factory=list)
     quelle_url: str = ""
+    bilder: list[Notizbild] = Field(default_factory=list, description="Bilder an der Notiz, in der Reihenfolge des Anlegens")
     angelegt: str
     geaendert: str
 

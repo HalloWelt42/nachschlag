@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query, Response
+from fastapi import APIRouter, HTTPException, Query, Response, UploadFile
+from fastapi.responses import StreamingResponse
 
 from appkern.anmeldung import Konto
 from appkern.app import Geruest
 
 from ..modell.meins import (Beispiel, BeispielAenderung, BeispielNeu, Lesestand, Merkeintrag, Merken, Notiz, NotizAenderung,
                             NotizNeu, Suchmeldung, Verlaufseintrag, Vorliebe)
+from .bilder import HOECHSTENS_BYTES, BildFehler, Notizbilder
 from .speicher import Meins
 
 
-def router(geruest: Geruest, meins: Meins) -> APIRouter:
+def router(geruest: Geruest, meins: Meins, bilder: Notizbilder) -> APIRouter:
     r = APIRouter(prefix="/api/v1/meins", tags=["meins"])
 
     @r.get("/merkzettel", response_model=list[Merkeintrag])
@@ -50,8 +52,27 @@ def router(geruest: Geruest, meins: Meins) -> APIRouter:
 
     @r.delete("/notizen/{kennung}", status_code=204)
     async def notiz_loeschen(kennung: str, konto: Konto = geruest.mensch) -> Response:
-        if not await meins.notiz_loeschen(konto.id, kennung):
+        notiz = await meins.notiz(konto.id, kennung)
+        if notiz is None or not await meins.notiz_loeschen(konto.id, kennung):
             raise HTTPException(status_code=404, detail="Diese Notiz gibt es nicht")
+        await bilder.alle_entfernen(notiz)
+        return Response(status_code=204)
+
+    @r.post("/notizen/{kennung}/bilder", response_model=Notiz)
+    async def bild_anfuegen(kennung: str, datei: UploadFile, konto: Konto = geruest.mensch) -> Notiz:
+        """Ein Bild an die Notiz (WIKI-51): aus der Zwischenablage oder einer Datei; PNG, JPEG, GIF oder WebP."""
+        try:
+            return await bilder.anfuegen(konto.id, kennung, datei.filename or "", await datei.read(HOECHSTENS_BYTES + 1))
+        except BildFehler as f:
+            raise HTTPException(status_code=f.status, detail=f.meldung) from f
+
+    @r.delete("/notizen/{kennung}/bilder/{bild_id}", status_code=204)
+    async def bild_entfernen(kennung: str, bild_id: str, konto: Konto = geruest.mensch) -> Response:
+        """Das Bild von der Notiz; die Datei kommt in den Papierkorb der Kellerwolke."""
+        try:
+            await bilder.entfernen(konto.id, kennung, bild_id)
+        except BildFehler as f:
+            raise HTTPException(status_code=f.status, detail=f.meldung) from f
         return Response(status_code=204)
 
     @r.get("/beispiele", response_model=list[Beispiel])
@@ -109,5 +130,22 @@ def router(geruest: Geruest, meins: Meins) -> APIRouter:
             raise HTTPException(status_code=422, detail="Schlüssel zu lang")
         await meins.vorliebe(konto.id, schluessel, eingabe.wert)
         return Response(status_code=204)
+
+    return r
+
+
+def inhalt_router(geruest: Geruest, bilder: Notizbilder) -> APIRouter:
+    """Bilder an Notizen für <img>: unter /api/v1/inhalt mit dem Cookie des Lesezugangs (der Browser schickt beim Laden
+    eines Bilds keinen Kopf)."""
+    r = APIRouter(prefix="/api/v1/inhalt", tags=["meins"])
+
+    @r.get("/notizbilder/{kennung}/{bild_id}", response_class=StreamingResponse)
+    async def bild(kennung: str, bild_id: str, konto: Konto = geruest.lesen) -> StreamingResponse:
+        """Das Bild aus der Kellerwolke; ein Bild ändert sich nie (neues Bild, neue Kennung)."""
+        try:
+            b, inhalt = await bilder.lesen(konto.id, kennung, bild_id)
+        except BildFehler as f:
+            raise HTTPException(status_code=f.status, detail=f.meldung) from f
+        return StreamingResponse(inhalt, media_type=b.typ, headers={"Cache-Control": "private, max-age=2592000, immutable"})
 
     return r

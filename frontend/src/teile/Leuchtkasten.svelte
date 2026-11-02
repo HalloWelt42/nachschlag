@@ -72,7 +72,8 @@
   }
 </script>
 
-<svelte:window onkeydown={taste} />
+<!-- in der Fangphase: die Bildansicht nimmt ihre Tasten vor der Leiste darunter (Escape schließt nur sie) -->
+<svelte:window onkeydowncapture={taste} />
 {#if m}
   <div class="leuchtkasten" role="dialog" aria-modal="true" aria-label="Bild: {m.unterschrift || m.datei}">
     <div class="buehne-b">

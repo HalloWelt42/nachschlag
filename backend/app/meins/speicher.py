@@ -12,7 +12,7 @@ from appkern.app.begleiter import Begleiter
 from appkern.datenbank import Datenbank
 
 from ..modell.meins import (Beispiel, BeispielAenderung, BeispielNeu, Lesestand, Merkeintrag, Merken, Notiz, NotizAenderung,
-                            NotizNeu, Suchmeldung, Verlaufseintrag)
+                            Notizbild, NotizNeu, Suchmeldung, Verlaufseintrag)
 
 STUFEN = ["""
 CREATE TABLE merkzettel (
@@ -47,6 +47,9 @@ CREATE INDEX beispiele_artikel ON beispiele (konto, buch_name, pfad);
 """, """
 -- PHP-Fassung, in der ein eigenes Beispiel lief (WIKI-52)
 ALTER TABLE beispiele ADD COLUMN fassung TEXT NOT NULL DEFAULT '';
+""", """
+-- Bilder an Notizen (WIKI-51): Liste als JSON, die Dateien liegen in der Kellerwolke
+ALTER TABLE notizen ADD COLUMN bilder TEXT NOT NULL DEFAULT '[]';
 """]
 
 #: Wie viele Einträge der Verlauf je Konto höchstens behält (älteste fallen beim Schreiben weg)
@@ -119,6 +122,30 @@ class Meins(Begleiter):
     async def notiz_loeschen(self, konto: str, kennung: str) -> bool:
         return await self._db.ausfuehren("DELETE FROM notizen WHERE konto=? AND id=?", (konto, kennung)) > 0
 
+    async def notiz(self, konto: str, kennung: str) -> Notiz | None:
+        return await self._notiz_holen(konto, kennung)
+
+    async def bild_anfuegen(self, konto: str, kennung: str, bild: Notizbild) -> Notiz | None:
+        """Ein Bild an die Notiz hängen (die Datei liegt schon in der Kellerwolke); die Notiz gilt als geändert."""
+        notiz = await self._notiz_holen(konto, kennung)
+        if notiz is None:
+            return None
+        bilder = [b.model_dump() for b in [*notiz.bilder, bild]]
+        await self._db.ausfuehren("UPDATE notizen SET bilder=?, geaendert=? WHERE konto=? AND id=?",
+                                  (json.dumps(bilder, ensure_ascii=False), _jetzt(), konto, kennung))
+        return await self._notiz_holen(konto, kennung)
+
+    async def bild_entfernen(self, konto: str, kennung: str, bild_id: str) -> Notizbild | None:
+        """Das Bild aus der Liste der Notiz nehmen; gibt es zurück, damit seine Datei weg kann."""
+        notiz = await self._notiz_holen(konto, kennung)
+        bild = next((b for b in notiz.bilder if b.id == bild_id), None) if notiz else None
+        if bild is None:
+            return None
+        bilder = [b.model_dump() for b in notiz.bilder if b.id != bild_id]
+        await self._db.ausfuehren("UPDATE notizen SET bilder=?, geaendert=? WHERE konto=? AND id=?",
+                                  (json.dumps(bilder, ensure_ascii=False), _jetzt(), konto, kennung))
+        return bild
+
     async def _notiz_holen(self, konto: str, kennung: str) -> Notiz | None:
         z = await self._db.zeile("SELECT * FROM notizen WHERE konto=? AND id=?", (konto, kennung))
         return self._notiz(z, await self._kennung_von(z["buch_name"])) if z else None
@@ -127,6 +154,7 @@ class Meins(Begleiter):
     def _notiz(z: dict, buch: str) -> Notiz:
         werte = {k: z[k] for k in Notiz.model_fields if k in z}
         werte["belege"] = json.loads(z.get("belege") or "[]")
+        werte["bilder"] = json.loads(z.get("bilder") or "[]")
         return Notiz(**werte, buch=buch)
 
     # --- Eigene Beispiele -----------------------------------------------------------------------------------------

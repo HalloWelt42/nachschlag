@@ -6,7 +6,7 @@
   import { onMount } from "svelte";
   import { Auswahl, geraet, Leiste, leisteOeffnen } from "appkern-oberflaeche";
   import { bibliothekLaden, buchName } from "../lib/bibliothek.svelte";
-  import { meins, meinsLaden, wann, type Notiz } from "../lib/meins.svelte";
+  import { meins, meinsLaden, notizBildAdresse, wann, type Notiz } from "../lib/meins.svelte";
   import { lesen } from "../lib/ziele";
   import { themen, themenLaden, themenVon } from "../lib/themen.svelte";
   import NotizBearbeiten from "../teile/NotizBearbeiten.svelte";
@@ -94,7 +94,14 @@
               <div class="notiz-eintrag" class:gewaehlt={n.id === gewaehltId} role="button" tabindex="0" onclick={() => waehlen(n)}
                    onkeydown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), waehlen(n))}>
                 {#if n.zitat}<div class="zitat">"{n.zitat}"</div>{/if}
-                <div class="text" class:ohne-text={!n.text}>{n.text || "Markierung ohne Notiz"}</div>
+                <div class="text" class:ohne-text={!n.text}>{n.text || (n.bilder.length ? "" : "Markierung ohne Notiz")}</div>
+                {#if n.bilder.length}
+                  <!-- Bilder der Notiz (WIKI-51): die ersten als kleine Leiste, groß in der Notiz selbst -->
+                  <div class="notiz-bildleiste">
+                    {#each n.bilder.slice(0, 4) as b (b.id)}<img src={notizBildAdresse(n.id, b.id)} alt={b.name} loading="lazy" />{/each}
+                    {#if n.bilder.length > 4}<span class="zahl">+{n.bilder.length - 4}</span>{/if}
+                  </div>
+                {/if}
                 <div class="wo">
                   {#if n.zitat}<span><i class="fa-solid fa-paragraph"></i>{n.abschnitt || "Einleitung"}</span>
                   {:else}<span><i class="fa-solid fa-file-lines"></i>am ganzen Artikel</span>{/if}

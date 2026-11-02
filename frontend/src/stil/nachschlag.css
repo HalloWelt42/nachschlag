@@ -361,6 +361,18 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .zitiervorschlag.block { white-space: pre-wrap; font-family: var(--schrift-code); font-size: var(--klein); }
 .zitier-kopf { display: flex; align-items: center; justify-content: space-between; gap: var(--a2); flex-wrap: wrap; }
 .notiz-feldkopf { display: flex; align-items: center; justify-content: space-between; gap: var(--a2); }
+.notiz-feldknoepfe { display: inline-flex; align-items: center; gap: var(--a2); }
+/* Bilder an Notizen (WIKI-51): Kacheln unter dem Text, Entfernen in zwei Klicks; in der Übersicht eine kleine Leiste */
+.notiz-bilder { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: var(--a2); }
+.notiz-bild { position: relative; aspect-ratio: 1; border-radius: var(--r2); overflow: hidden; background: var(--flaeche); }
+.notiz-bild-zeigen { display: block; width: 100%; height: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
+.notiz-bild img, .notiz-bildleiste img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.notiz-bild-weg { position: absolute; top: 4px; right: 4px; width: 28px; height: 28px; display: grid; place-items: center; padding: 0; border: 0;
+                  border-radius: 50%; background: color-mix(in srgb, var(--flaeche) 85%, transparent); color: var(--text-2); cursor: pointer; }
+.notiz-bild-weg.scharf { background: var(--gefahr); color: var(--auf-farbe); }
+.notiz-bildleiste { display: flex; gap: 4px; align-items: center; }
+.notiz-bildleiste img { width: 44px; height: 44px; border-radius: var(--r1); }
+.notiz-bildleiste .zahl { font-size: var(--marke); color: var(--text-3); }
 /* Codeansicht (WIKI-30): Knopf am Codeblock (nur Telefon) und Ansicht über den ganzen Schirm */
 .code-rahmen { position: relative; }
 .code-gross { position: absolute; top: 4px; right: 4px; padding: 4px 8px; font-size: var(--marke); background: color-mix(in srgb, var(--ed-grund) 85%, transparent); }

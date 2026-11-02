@@ -22,7 +22,9 @@ from .eigenindex.api import router as indexdienst_router
 from .eigenindex.auftrag import Indexauftraege
 from .einstellungen import ARTEN_JE_STUFE, AppEinstellungen
 from .meins import Meins
+from .meins.api import inhalt_router as notizbilder_router
 from .meins.api import router as meins_router
+from .meins.bilder import Notizbilder
 from .register import Register
 from .korrektur import Korrektor
 from .korrektur.api import router as korrektur_router
@@ -142,7 +144,9 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     app.include_router(quellenarchiv_router(geruest, quellen))
     app.include_router(sammlung_router(geruest, sammlungen, stimmen))
     app.include_router(ausprobieren_router(geruest, Ausprobieren(lambda: geruest.verbund, lambda: e().codeschmiede_adresse)))
-    app.include_router(meins_router(geruest, meins))
+    notizbilder = Notizbilder(meins, lambda: geruest.kellerwolke)
+    app.include_router(meins_router(geruest, meins, notizbilder))
+    app.include_router(notizbilder_router(geruest, notizbilder))                 # Bilder für <img> (Cookie)
     app.include_router(themen_router(geruest, themen, suche, bibliothek, meins, leser))
     app.include_router(zitieren_router(geruest, bibliothek, leser))
     app.include_router(medien_router(geruest, Medien(leser, suche)))

@@ -9,6 +9,8 @@ Schlüssel sind nur Platzhalter), anmelden mit Kennung `probe` und Passwort `pro
 
 import json
 import os
+import re
+import uuid
 from pathlib import Path
 
 import httpx
@@ -18,6 +20,13 @@ from app.main import app_bauen
 
 KONTO = {"id": "1", "name": "probe", "rolle": "mitglied", "aktiv": True}
 SITZUNG = "probe-sitzung"
+#: Ablage der nachgestellten Kellerwolke (nur im Speicher, weg nach dem Neustart): Knoten -> (Pfad, Inhalt)
+ABLAGE: dict[str, tuple[str, bytes]] = {}
+
+
+def knoten(kennung: str, pfad: str, typ: str = "datei") -> dict:
+    return {"id": kennung, "name": pfad.rsplit("/", 1)[-1], "typ": typ, "pfad": pfad, "recht": "schreiben",
+            "erstellt_am": "2026-11-02T12:00:00Z", "geaendert_am": "2026-11-02T12:00:00Z"}
 
 
 def kellerwolke(request: httpx.Request) -> httpx.Response:
@@ -34,6 +43,20 @@ def kellerwolke(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json={"angemeldet": ok, "benutzer": KONTO if ok else None})
     if pfad == "/api/v1/auth/logout":
         return httpx.Response(204)
+    # Ablage für Dateien der App (etwa Bilder an Notizen)
+    if pfad == "/api/v1/ablage/ordner":
+        return httpx.Response(200, json=knoten(str(uuid.uuid4()), json.loads(request.content)["pfad"], "ordner"))
+    if pfad == "/api/v1/ablage/datei" and request.method == "PUT":
+        kennung = str(uuid.uuid4())
+        ABLAGE[kennung] = (request.url.params["pfad"], request.content)
+        return httpx.Response(200, json=knoten(kennung, request.url.params["pfad"]))
+    if (m := re.fullmatch(r"/api/v1/ablage/knoten/([0-9a-f-]+)(/inhalt)?", pfad)):
+        if m.group(1) not in ABLAGE:
+            return httpx.Response(404, json={"detail": "gibt es nicht"})
+        if request.method == "DELETE":
+            del ABLAGE[m.group(1)]
+            return httpx.Response(204)
+        return httpx.Response(200, content=ABLAGE[m.group(1)][1])
     return httpx.Response(404, json={"detail": "im Probebetrieb nicht nachgestellt"})
 
 

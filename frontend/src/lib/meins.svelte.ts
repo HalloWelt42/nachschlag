@@ -32,6 +32,16 @@ export interface Verlaufseintrag {
   zuletzt: string;
 }
 
+/** Ein Bild an einer Notiz (WIKI-51); die Datei liegt in der Kellerwolke, Nachschlag liefert sie aus. */
+export interface Notizbild {
+  id: string;
+  knoten: string;
+  name: string;
+  typ: string;
+  groesse: number;
+  angelegt: string;
+}
+
 /** Notiz am ganzen Artikel (ohne Zitat) oder an einer markierten Stelle; ohne Text ist sie eine Markierung. */
 export interface Notiz {
   id: string;
@@ -46,6 +56,7 @@ export interface Notiz {
   text: string;
   belege: Beleg[];                 // Recherchemodus: Belege der Stelle (WIKI-31)
   quelle_url: string;              // Recherchemodus: der Artikel im Netz
+  bilder: Notizbild[];             // Bilder an der Notiz (WIKI-51)
   angelegt: string;
   geaendert: string;
 }
@@ -103,6 +114,33 @@ export async function notizAendern(id: string, text: string): Promise<Notiz> {
   const notiz = await hole<Notiz>("/meins/notizen/" + encodeURIComponent(id), { method: "PATCH", ...json({ text }) });
   if (!geloescht.has(id)) meins.notizen = [notiz, ...meins.notizen.filter((n) => n.id !== id)];
   return notiz;
+}
+
+/** so lange darf das Hochladen eines Bilds dauern (Fotos vom Telefon über ein langsames Netz) */
+const HOCHLADEN_MS = 120_000;
+
+/** Ein Bild an die Notiz (aus der Zwischenablage oder einer Datei); die Notiz kommt mit ihrer neuen Liste zurück. */
+export async function notizBildAnfuegen(id: string, datei: File): Promise<Notiz> {
+  const formular = new FormData();
+  formular.append("datei", datei, datei.name || "Bild");
+  const notiz = await hole<Notiz>(`/meins/notizen/${encodeURIComponent(id)}/bilder`,
+                                  { method: "POST", body: formular, zeitgrenzeMs: HOCHLADEN_MS });
+  if (!geloescht.has(id)) meins.notizen = [notiz, ...meins.notizen.filter((n) => n.id !== id)];
+  return notiz;
+}
+
+export async function notizBildEntfernen(id: string, bild: string): Promise<void> {
+  await hole(`/meins/notizen/${encodeURIComponent(id)}/bilder/${encodeURIComponent(bild)}`, { method: "DELETE" });
+  meins.notizen = meins.notizen.map((n) => (n.id === id ? { ...n, bilder: n.bilder.filter((b) => b.id !== bild) } : n));
+}
+
+/** Adresse eines Bilds für <img> (Lesezugang über das Cookie unter /api/v1/inhalt) */
+export const notizBildAdresse = (id: string, bild: string) =>
+  `/api/v1/inhalt/notizbilder/${encodeURIComponent(id)}/${encodeURIComponent(bild)}`;
+
+/** Bilder aus Einfügen oder Ablegen (Zwischenablage, Ziehen); andere Dateien und Text bleiben, wo sie hingehören. */
+export function bilderAus(daten: DataTransfer | null | undefined): File[] {
+  return Array.from(daten?.files ?? []).filter((f) => f.type.startsWith("image/"));
 }
 
 export async function notizLoeschen(id: string): Promise<void> {
