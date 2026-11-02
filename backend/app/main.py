@@ -37,6 +37,8 @@ from .medien import Medien
 from .medien.api import router as medien_router
 from .stoebern import Stoebern
 from .quellenarchiv import Quellenarchiv
+from .sammlung import Sammlungen
+from .sammlung.api import router as sammlung_router
 from .quellenarchiv.api import router as quellenarchiv_router
 from .stoebern.api import router as stoebern_router
 from .themen import Themen
@@ -52,7 +54,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     geruest = Geruest(name="Nachschlag", kennung="nachschlag", rolle="liest jede Quelle der Bibliothek", symbol="fa-book-open", symbolbild="/favicon.svg",
                       farbe="#08758b", fassung=FASSUNG, daten=daten, einstellungen=AppEinstellungen,
                       oberflaeche=WURZEL / "frontend" / "dist", transport=transport,
-                      gleichzeitig=2)                    # Indexbau und Übersetzungen nebeneinander, je Art höchstens einer
+                      gleichzeitig=3)                    # Indexbau, Übersetzungen und Sammlungen nebeneinander, je Art höchstens einer
     e = lambda: geruest.einstellungen.stand  # noqa: E731
 
     bibliothek = Bibliothek(lambda: e().buecher_ordner)
@@ -119,12 +121,21 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     geruest.verbund.anmelden("Fundus", lambda: e().fundus_adresse)
     geruest.verbund.anmelden("Vertonung", lambda: e().vertonung_adresse)   # nur Proben eigener Stimmen
 
+    # Stapelarbeit je Sammlung (WIKI-44): jede Arbeit mit eigener Stimme spricht über einen eigenen Sprechdienst
+    sammlungen = Sammlungen(geruest.db, geruest.auftraege, themen, bibliothek, leser, artikeluebersetzer,
+                            lambda stimme: Sprechdienst(lambda: geruest.leitstelle, lambda: e().sprechdienst,
+                                                        lambda: stimme or e().vorlesestimme, lambda: e().klondienst, stimmenquelle),
+                            lambda: geruest.leitstelle, lambda: e().suchmodell, lambda: geruest.kellerwolke,
+                            lambda: (e().nachts_von, e().nachts_bis))
+    geruest.begleiter_anmelden(sammlungen)
+
     app = geruest.fastapi()
     app.state.geruest = geruest
     app.state.bibliothek = bibliothek
     app.state.indexauftraege = indexauftraege
     app.include_router(router(geruest, bibliothek, leser, suche, quellen))
     app.include_router(quellenarchiv_router(geruest, quellen))
+    app.include_router(sammlung_router(geruest, sammlungen, stimmen))
     app.include_router(meins_router(geruest, meins))
     app.include_router(themen_router(geruest, themen, suche, bibliothek, meins, leser))
     app.include_router(zitieren_router(geruest, bibliothek, leser))

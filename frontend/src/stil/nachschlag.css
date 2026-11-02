@@ -1085,3 +1085,24 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .archiv-ablegen { padding: 0 var(--a4) var(--a3); display: flex; }
 .pille-archiv { display: inline-flex; align-items: center; gap: 6px; padding: 1px 8px; border-radius: var(--r1); font-size: var(--marke);
   color: var(--text-2); background: var(--flaeche-2); }
+
+/* Über Nacht (WIKI-44): Stapelarbeit an der Sammlung, zugeklappt über den Bereichen */
+.ueber-nacht { margin: var(--a3) 0; border-radius: var(--r3); background: var(--flaeche); box-shadow: var(--schatten); }
+.ueber-nacht > summary { display: flex; align-items: center; gap: var(--a2); padding: var(--a3) var(--a4); cursor: pointer; flex-wrap: wrap; }
+.ueber-nacht > summary i { color: var(--violett); }
+.ueber-nacht .neben { font-size: var(--klein); color: var(--text-3); }
+.ueber-nacht .zahl { margin-left: auto; font-size: var(--klein); color: var(--petrol); }
+.nacht-wahl { display: flex; flex-direction: column; gap: var(--a3); padding: 0 var(--a4) var(--a3); }
+.nacht-wahl .chips { display: flex; flex-wrap: wrap; gap: var(--a2); }
+.nacht-wahl .chip { cursor: pointer; border: 0; font: inherit; }
+.nacht-wahl .chip.an { background: var(--akzent-weich); color: var(--akzent); font-weight: 600; }
+.nacht-zeile { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2); }
+.nacht-zeile .knopf.primaer { margin-left: auto; }
+.nacht-laeuft, .nacht-ergebnisse { display: flex; flex-direction: column; gap: var(--a2); padding: 0 var(--a4) var(--a3); }
+.nacht-auftrag { display: grid; grid-template-columns: max-content minmax(0, 1fr) minmax(0, 160px); gap: var(--a3); align-items: center; font-size: var(--klein); }
+.nacht-auftrag .spur { height: 6px; border-radius: 3px; background: var(--flaeche-2); overflow: hidden; }
+.nacht-auftrag .spur span { display: block; height: 100%; background: var(--petrol); }
+.nacht-ergebnis { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2); }
+.nacht-ergebnis .ablage { font-size: var(--klein); color: var(--text-3); overflow-wrap: anywhere; min-width: 0; }
+.nacht-ergebnis .ergebnis-text { flex-basis: 100%; white-space: pre-wrap; padding: var(--a3); border-radius: var(--r2); background: var(--flaeche-2);
+  font-size: var(--klein); max-height: 50vh; overflow-y: auto; }

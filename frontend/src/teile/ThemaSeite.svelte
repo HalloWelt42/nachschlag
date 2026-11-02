@@ -13,6 +13,7 @@
     themaHolen, themaLoeschen, verschieben, type Angebot, type Thema, type Themeneintrag,
   } from "../lib/themen.svelte";
   import { lesen } from "../lib/ziele";
+  import UeberNacht from "./UeberNacht.svelte";
   import Kachel from "./Kachel.svelte";
 
   let { id, ongeloescht }: { id: string; ongeloescht: () => void } = $props();
@@ -290,6 +291,7 @@
         </div>
       </div>
     {/if}
+    {#if thema.eintraege.length}<UeberNacht {thema} />{/if}
     {#if !thema.eintraege.length}
       <p class="leer-hinweis thema-leer">Noch keine Artikel. Im Artikel oben "Thema" wählen{thema.regel ? " oder oben Vorschläge übernehmen" : ""}.</p>
     {/if}

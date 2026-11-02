@@ -11,6 +11,7 @@ from appkern.app import Grundeinstellungen
 BIBLIOTHEK = {"gruppe": "Bibliothek"}
 SUCHE = {"gruppe": "Suche"}
 VORLESEN = {"gruppe": "Vorlesen"}
+UEBER_NACHT = {"gruppe": "Über Nacht"}
 
 #: Welche Bücher einen eigenen Index bekommen (WIKI-17): Stufen in der Reihenfolge des Baus, docs/SUCHE.md
 EIGENE_INDIZES = {"keine": "keine", "handbuecher": "Handbücher", "handbuecher_fragen": "Handbücher, Frage und Antwort",
@@ -42,6 +43,13 @@ class AppEinstellungen(Grundeinstellungen):
                                                "darf (Vertonung, Einstellungen, Private Stimmen für). Nachschlag holt dort "
                                                "nur die Probe; gesprochen wird über die Leitstelle. Leer: nur "
                                                "Katalogstimmen.")
+
+    # --- Über Nacht (WIKI-44): Arbeiten an Sammlungen, die für heute Nacht bestellt sind --------------------------------
+    nachts_von: int = Field(22, ge=0, le=23, title="Nacht beginnt um", json_schema_extra={**UEBER_NACHT, "einheit": "Uhr"},
+                            description="Ab dieser Stunde laufen Arbeiten an Sammlungen, die für heute Nacht bestellt sind "
+                                        "(Ortszeit).")
+    nachts_bis: int = Field(7, ge=0, le=23, title="Nacht endet um", json_schema_extra={**UEBER_NACHT, "einheit": "Uhr"},
+                            description="Bis zu dieser Stunde; was dann nicht fertig ist, läuft in der nächsten Nacht weiter.")
 
     # --- Suche ------------------------------------------------------------------------------------------------------
     suchmodell: str = Field("qwen/qwen3-next-80b", title="Modell für Übersetzung und Korrektur", json_schema_extra=SUCHE,
