@@ -1,6 +1,6 @@
-"""Was einem Konto gehört (Meins): Merkzettel, Notizen, Verlauf mit Lesestand, Vorlieben (etwa die Fassung je Buch). Gilt auf
-allen Geräten des Kontos. Einträge zeigen auf ein Buch über seinen Namen ohne Datum (`buch_name`); so überstehen sie
-neue Fassungen des Buchs. `buch` ist die Kennung der Datei, die gerade zu diesem Namen gehört (leer, wenn es keine
+"""Was einem Konto gehört (Meins): Merkzettel, Notizen, eigene Beispiele, Verlauf mit Lesestand, Vorlieben (etwa die
+Fassung je Buch). Gilt auf allen Geräten des Kontos. Einträge zeigen auf ein Buch über seinen Namen ohne Datum
+(`buch_name`); so überstehen sie neue Fassungen des Buchs. `buch` ist die Kennung der Datei, die gerade zu diesem Namen gehört (leer, wenn es keine
 mehr gibt)."""
 
 from __future__ import annotations
@@ -101,5 +101,39 @@ class Notiz(BaseModel):
     text: str = ""
     belege: list[Beleg] = Field(default_factory=list)
     quelle_url: str = ""
+    angelegt: str
+    geaendert: str
+
+
+#: Sprachen eigener Beispiele: die von Ausprobieren (Bauplan docs/AUSPROBIEREN.md)
+Codesprache = Literal["php", "python", "javascript"]
+
+
+class BeispielNeu(BaseModel):
+    """Eigenes Beispiel (WIKI-48): die Kopie aus Ausprobieren, behalten am Artikel, unter dem Code, aus dem sie stammt."""
+    buch: str = Field(description="Kennung des Buchs, in dem das Beispiel steht")
+    pfad: str
+    titel: str = Field(min_length=1, max_length=200)
+    sprache: Codesprache
+    code: str = Field(min_length=1, max_length=20_000)
+    vorlage: str = Field("", max_length=300, description="Titel des Beispiels im Artikel, aus dem es stammt")
+    block: int = Field(-1, ge=-1, le=10_000, description="Codeblock im Artikel (ab 0), hinter dem es steht; -1: am Ende")
+
+
+class BeispielAenderung(BaseModel):
+    titel: str = Field(min_length=1, max_length=200)
+    code: str = Field(min_length=1, max_length=20_000)
+
+
+class Beispiel(BaseModel):
+    id: str
+    buch_name: str
+    buch: str = Field(description="Kennung des Buchs, das heute zum Namen gehört; leer, wenn es keins gibt")
+    pfad: str
+    titel: str
+    sprache: Codesprache
+    code: str
+    vorlage: str = ""
+    block: int = -1
     angelegt: str
     geaendert: str

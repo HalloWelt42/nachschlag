@@ -7,7 +7,8 @@ from fastapi import APIRouter, HTTPException, Query, Response
 from appkern.anmeldung import Konto
 from appkern.app import Geruest
 
-from ..modell.meins import Lesestand, Merkeintrag, Merken, Notiz, NotizAenderung, NotizNeu, Suchmeldung, Verlaufseintrag, Vorliebe
+from ..modell.meins import (Beispiel, BeispielAenderung, BeispielNeu, Lesestand, Merkeintrag, Merken, Notiz, NotizAenderung,
+                            NotizNeu, Suchmeldung, Verlaufseintrag, Vorliebe)
 from .speicher import Meins
 
 
@@ -51,6 +52,29 @@ def router(geruest: Geruest, meins: Meins) -> APIRouter:
     async def notiz_loeschen(kennung: str, konto: Konto = geruest.mensch) -> Response:
         if not await meins.notiz_loeschen(konto.id, kennung):
             raise HTTPException(status_code=404, detail="Diese Notiz gibt es nicht")
+        return Response(status_code=204)
+
+    @r.get("/beispiele", response_model=list[Beispiel])
+    async def beispiele(buch: str, pfad: str, konto: Konto = geruest.mensch) -> list[Beispiel]:
+        """Die eigenen Beispiele eines Artikels (WIKI-48), in der Reihenfolge des Anlegens."""
+        return await meins.beispiele(konto.id, buch, pfad)
+
+    @r.post("/beispiele", response_model=Beispiel)
+    async def beispiel_anlegen(eingabe: BeispielNeu, konto: Konto = geruest.mensch) -> Beispiel:
+        """Die Kopie aus Ausprobieren als eigenes Beispiel am Artikel behalten; das Original bleibt unverändert."""
+        return await meins.beispiel_anlegen(konto.id, eingabe)
+
+    @r.patch("/beispiele/{kennung}", response_model=Beispiel)
+    async def beispiel_aendern(kennung: str, aenderung: BeispielAenderung, konto: Konto = geruest.mensch) -> Beispiel:
+        beispiel = await meins.beispiel_aendern(konto.id, kennung, aenderung)
+        if not beispiel:
+            raise HTTPException(status_code=404, detail="Dieses Beispiel gibt es nicht")
+        return beispiel
+
+    @r.delete("/beispiele/{kennung}", status_code=204)
+    async def beispiel_loeschen(kennung: str, konto: Konto = geruest.mensch) -> Response:
+        if not await meins.beispiel_loeschen(konto.id, kennung):
+            raise HTTPException(status_code=404, detail="Dieses Beispiel gibt es nicht")
         return Response(status_code=204)
 
     @r.get("/verlauf", response_model=list[Verlaufseintrag])

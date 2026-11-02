@@ -16,7 +16,17 @@ export default defineConfig({
   define: { __APP_FASSUNG__: JSON.stringify(FASSUNG) },
   // Die Oberfläche des Appkerns kommt als Svelte-Quelltext mit TypeScript; Vite bündelt sie nicht vor, sie wird wie
   // eigener Code übersetzt (sonst scheitert das Vorbündeln an den .svelte.ts-Dateien)
-  optimizeDeps: { exclude: ["appkern-oberflaeche"] },
+  optimizeDeps: {
+    exclude: ["appkern-oberflaeche"],
+    // CodeMirror nur einmal: der Editor des Appkerns (appkern-oberflaeche/code, nicht vorgebündelt) braucht von jedem
+    // Paket dieselbe Fassung, sonst greifen Erweiterungen und Farben nicht ("multiple instances of @codemirror/state")
+    include: [
+      "@codemirror/autocomplete", "@codemirror/commands", "@codemirror/lang-css", "@codemirror/lang-html",
+      "@codemirror/lang-javascript", "@codemirror/lang-markdown", "@codemirror/lang-php", "@codemirror/lang-python",
+      "@codemirror/lang-sql", "@codemirror/language", "@codemirror/lint", "@codemirror/search", "@codemirror/state",
+      "@codemirror/view", "@lezer/common", "@lezer/highlight",
+    ],
+  },
   server: {
     port: 9711,
     strictPort: true,

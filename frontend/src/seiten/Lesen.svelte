@@ -29,6 +29,8 @@
   import Kachel from "../teile/Kachel.svelte";
   import Fragekarte from "../teile/Fragekarte.svelte";
   import Codeansicht from "../teile/Codeansicht.svelte";
+  import { ausprobierstand, beispieleHolen, beispielLoeschen, codeSprache, type Beispiel, type Codesprache,
+           type Probe } from "../lib/ausprobieren";
   import { belegeDerAuswahl, recherche, rechercheUmschalten } from "../lib/recherche.svelte";
   import { VorleseKnopf, vorleser } from "appkern-oberflaeche";
   import { hervorhebungWeg, satzHervorheben, vorlesetext } from "../lib/mitlesen";
@@ -40,6 +42,7 @@
            type Fassungen } from "../lib/fassung";
 
   const WOERTER_JE_MINUTE = 200;
+  const NACHFRAGE_MS = 4000;              // so lange fragt ein Löschknopf nach, bevor er wieder harmlos ist
   const MITLAUF_ABSTAND_PX = 90;          // eine Überschrift gilt als erreicht, sobald sie so nah am oberen Rand steht
 
   let artikel = $state.raw<Artikel | null>(null);   // was gezeigt wird (Original oder Übersetzung); nur lesen, ohne Proxy
@@ -118,6 +121,7 @@
 
   async function laden(b: string, p: string, signal: AbortSignal) {
     laedt = true;
+    probe = null;
     fehler = "";
     original = false;
     blatt = null;
@@ -144,6 +148,7 @@
   /** Einen Artikel zeigen (Original oder Übersetzung) und seinen Text aufbereiten: Code färben, Knöpfe, Symbole,
    *  Fassungen; danach stehen auch die Markierungen der Notizen. */
   async function zeigen(a: Artikel) {
+    text?.querySelectorAll(".beispiel.eigen").forEach((e) => e.remove());   // gehören nicht zum Text des Artikels
     artikel = a;
     navigation.titel = a.titel;
     await tick();
@@ -153,6 +158,7 @@
       codeEinfaerben(text, spracheAus([...text.querySelectorAll(".schlagwoerter :is(span, a)")].map((e) => e.textContent ?? "")));
       kopierknoepfe(text);
       kommentarSchalter(text);
+      void ausprobierenAnbringen(text, a);
       if (geraet.mobil) codeGrossKnoepfe(text);
       symboleAnbringen(text);
     }
@@ -338,10 +344,40 @@
         knopf.querySelector("i")!.className = "fa-solid fa-check";
         setTimeout(() => (knopf.querySelector("i")!.className = "fa-regular fa-copy"), 1500);
       });
-      const kopf = kasten.querySelector<HTMLElement>(".bkopf");
-      if (kopf) kopf.append(knopf);
-      else kasten.prepend(knopf);
+      if (kasten.classList.contains("signatur")) kasten.prepend(knopf);
+      else werkzeugleiste(code).append(knopf);
     }
+  }
+
+  /** Der Ort für Knöpfe an einem Codeblock: der Kopf seines Beispiels, sonst eine Leiste oben rechts im Kasten (Beispiel
+   *  ohne Kopf) oder in einem Rahmen um den Block (Code im Text, etwa in Antworten). */
+  function werkzeugleiste(pre: HTMLElement): HTMLElement {
+    const kasten = pre.closest<HTMLElement>(".beispiel");
+    const kopf = kasten?.querySelector<HTMLElement>(".bkopf");
+    if (kopf) return kopf;
+    let halter = kasten ?? (pre.parentElement?.classList.contains("code-rahmen") ? pre.parentElement : null);
+    if (!halter) {
+      halter = document.createElement("div");
+      halter.className = "code-rahmen";
+      pre.replaceWith(halter);
+      halter.append(pre);
+    }
+    let leiste = halter.querySelector<HTMLElement>(":scope > .bwerkzeuge");
+    if (!leiste) {
+      leiste = document.createElement("div");
+      leiste.className = "bwerkzeuge";
+      halter.append(leiste);
+    }
+    return leiste;
+  }
+
+  /** Ein Knopf an Code (Symbol, Wort, Erklärung); Beschriftung nur aus festen Texten. */
+  function codeKnopf(symbol: string, wort: string, titel: string, klasse = ""): HTMLButtonElement {
+    const knopf = document.createElement("button");
+    knopf.className = `knopf still ${klasse}`.trim();
+    knopf.title = titel;
+    knopf.innerHTML = `<i class="${symbol}"></i><span class="wort">${wort}</span>`;
+    return knopf;
   }
 
   /** Kommentare im Code (WIKI-8): Gibt es übersetzte Kommentare, bekommt jeder Codeabschnitt mit welchen einen Schalter
@@ -396,6 +432,161 @@
       });
       rahmen.append(knopf);
     }
+  }
+
+  // --- Ausprobieren (WIKI-48, Bauplan docs/AUSPROBIEREN.md): Code in der Sandbox der Codeschmiede ausführen und
+  // debuggen, an einer Kopie; behaltene Kopien stehen als eigene Beispiele unter dem Code, aus dem sie stammen ---
+  let probe = $state.raw<Probe | null>(null);
+  let eigene = $state.raw<Beispiel[]>([]);
+  let laufbar = $state.raw<Codesprache[]>([]);      // was die Sandbox gerade kann; am Telefon nichts (nur am Rechner)
+
+  /** Codeblöcke des Artikels in ihrer Reihenfolge (wie die Kommentare sie zählen); eigene Beispiele zählen nicht mit. */
+  function codebloecke(wurzel: HTMLElement): HTMLElement[] {
+    return [...wurzel.querySelectorAll<HTMLElement>("pre")].filter((pre) => !pre.closest(".beispiel.eigen"));
+  }
+
+  async function ausprobierenAnbringen(wurzel: HTMLElement, a: Artikel) {
+    const [stand, liste] = await Promise.all([geraet.mobil ? null : ausprobierstand(),
+                                              beispieleHolen(a.buch, a.pfad).catch(() => [] as Beispiel[])]);
+    if (artikel !== a) return;                        // inzwischen ein anderer Text
+    laufbar = stand?.bereit ? stand.sprachen : [];
+    probierknoepfe(wurzel);
+    eigene = liste;
+    eigeneZeigen();
+  }
+
+  /** Codeblöcke in Sprachen, die die Sandbox kann, bekommen "Ausprobieren" vor den anderen Knöpfen. */
+  function probierknoepfe(wurzel: HTMLElement) {
+    for (const [block, pre] of codebloecke(wurzel).entries()) {
+      const sprache = codeSprache(pre);
+      if (!sprache || !laufbar.includes(sprache) || pre.dataset.probe) continue;
+      pre.dataset.probe = "ja";
+      const titel = vorlageTitel(wurzel, pre, block);
+      const knopf = probierKnopf(() => ({ titel, sprache, code: codeText(pre), block, eigen: null }));
+      const leiste = werkzeugleiste(pre);
+      const erster = leiste.querySelector(":scope > button");
+      if (erster) erster.before(knopf);
+      else leiste.append(knopf);
+    }
+  }
+
+  function probierKnopf(was: () => Pick<Probe, "titel" | "sprache" | "code" | "block" | "eigen">): HTMLButtonElement {
+    const knopf = codeKnopf("fa-solid fa-play", "Ausprobieren", "Ausprobieren: eine Kopie ausführen und debuggen", "ausprobieren");
+    knopf.addEventListener("click", () => {
+      if (artikel) probe = { ...was(), buch: artikel.buch, pfad: artikel.pfad, quelle: buch ? bezeichnung(buch) : artikel.buch };
+    });
+    return knopf;
+  }
+
+  function codeText(pre: HTMLElement): string {
+    return ((pre.querySelector("code") ?? pre).textContent ?? "").replace(/\n+$/, "");
+  }
+
+  /** Wie ein Codeblock heißt: der Kopf seines Beispiels, sonst die Überschrift davor, sonst seine Nummer. */
+  function vorlageTitel(wurzel: HTMLElement, pre: HTMLElement, block: number): string {
+    const kopf = pre.closest(".beispiel")?.querySelector(".bkopf");
+    if (kopf) {
+      const kopie = kopf.cloneNode(true) as HTMLElement;
+      kopie.querySelectorAll("button").forEach((b) => b.remove());
+      if (kopie.textContent?.trim()) return kopie.textContent.trim();
+    }
+    for (let el: Element | null = pre; el && el !== wurzel; el = el.parentElement) {
+      for (let davor = el.previousElementSibling; davor; davor = davor.previousElementSibling) {
+        if (/^H[2-4]$/.test(davor.tagName) && davor.textContent?.trim()) return `Code unter ${davor.textContent.trim()}`;
+      }
+    }
+    return `Codeblock ${block + 1}`;
+  }
+
+  /** Eigene Beispiele unter dem Codeblock, aus dem sie stammen, in der Reihenfolge des Anlegens; gibt es den Block
+   *  nicht mehr (neue Fassung des Buchs), stehen sie am Ende des Texts. */
+  function eigeneZeigen() {
+    if (!text) return;
+    text.querySelectorAll(".beispiel.eigen").forEach((e) => e.remove());
+    const bloecke = codebloecke(text);
+    const zuletzt = new Map<number, Element>();
+    for (const b of eigene) {
+      const el = eigenesBeispiel(b);
+      const pre = b.block >= 0 ? bloecke[b.block] : undefined;
+      const nach = pre ? zuletzt.get(b.block) ?? pre.closest(".beispiel, .code-rahmen") ?? pre : null;
+      if (nach) {
+        nach.after(el);
+        zuletzt.set(b.block, el);
+      } else {
+        text.append(el);
+      }
+    }
+  }
+
+  function eigenesBeispiel(b: Beispiel): HTMLElement {
+    const kasten = document.createElement("div");
+    kasten.className = "beispiel eigen";
+    const kopf = document.createElement("div");
+    kopf.className = "bkopf";
+    const symbol = document.createElement("i");
+    symbol.className = "fa-solid fa-user-pen";
+    const titel = document.createElement("span");
+    titel.textContent = `Dein Beispiel: ${b.titel}`;
+    const marke = document.createElement("span");
+    marke.className = "eigen-marke";
+    marke.textContent = `von dir · ${wann(b.geaendert)}`;
+    if (b.vorlage) marke.title = `abgewandelt aus ${b.vorlage}`;
+    kopf.append(symbol, titel, marke);
+    const pre = document.createElement("pre");
+    const code = document.createElement("code");
+    code.textContent = b.code;
+    pre.append(code);
+    kasten.append(kopf, pre);
+    codeEinfaerben(kasten, b.sprache);
+    if (laufbar.includes(b.sprache)) {
+      kopf.append(probierKnopf(() => ({ titel: b.vorlage || b.titel, sprache: b.sprache, code: b.code, block: b.block, eigen: b })));
+    }
+    const kopierer = codeKnopf("fa-regular fa-copy", "Kopieren", "Kopieren", "kopieren");
+    kopierer.addEventListener("click", async () => {
+      await kopieren(b.code);
+      kopierer.querySelector("i")!.className = "fa-solid fa-check";
+      setTimeout(() => (kopierer.querySelector("i")!.className = "fa-regular fa-copy"), RUECKMELDUNG_MS);
+    });
+    kopf.append(kopierer, loeschKnopf(b));
+    return kasten;
+  }
+
+  /** Löschen in zwei Klicks: der erste fragt im Knopf nach, der zweite löscht (ohne Dialog des Browsers). */
+  function loeschKnopf(b: Beispiel): HTMLButtonElement {
+    const knopf = codeKnopf("fa-solid fa-trash", "Löschen", "Dein Beispiel löschen");
+    const wort = knopf.querySelector(".wort")!;
+    let scharf = 0;
+    knopf.addEventListener("click", async () => {
+      if (!scharf) {
+        knopf.classList.add("scharf");
+        wort.textContent = "Wirklich löschen?";
+        scharf = window.setTimeout(() => {
+          scharf = 0;
+          knopf.classList.remove("scharf");
+          wort.textContent = "Löschen";
+        }, NACHFRAGE_MS);
+        return;
+      }
+      clearTimeout(scharf);
+      knopf.disabled = true;
+      try {
+        await beispielLoeschen(b.id);
+        eigene = eigene.filter((x) => x.id !== b.id);
+        eigeneZeigen();
+      } catch (f) {
+        knopf.disabled = false;
+        scharf = 0;
+        wort.textContent = "Löschen ging nicht";
+        knopf.title = f instanceof Error ? f.message : String(f);
+      }
+    });
+    return knopf;
+  }
+
+  /** Aus der Ebene behalten: neu am Ende seines Blocks, geändert an seiner Stelle. */
+  function beispielBehalten(b: Beispiel) {
+    eigene = eigene.some((x) => x.id === b.id) ? eigene.map((x) => (x.id === b.id ? b : x)) : [...eigene, b];
+    eigeneZeigen();
   }
 
   // Vorlesen mit Mitlesen (WIKI-8): ab dem Abschnitt, in dem man liest; der gesprochene Satz ist hervorgehoben und rollt
@@ -1042,6 +1233,12 @@
 {/if}
 {#if bilder && artikel}
   <Leuchtkasten medien={bilder.medien} start={bilder.start} titel={`in ${artikel.titel}`} onzu={() => (bilder = null)} />
+{/if}
+{#if probe}
+  <!-- erst beim Öffnen geladen: Editor und Debugger (CodeMirror) braucht nur, wer etwas ausprobiert -->
+  {#await import("../teile/Ausprobieren.svelte") then { default: Ausprobieren }}
+    <Ausprobieren {probe} onzu={() => (probe = null)} onbehalten={beispielBehalten} />
+  {/await}
 {/if}
 {#if codeGross}
   <Codeansicht html={codeGross.html} text={codeGross.text} sprache={codeGross.sprache} onzu={() => (codeGross = null)} />

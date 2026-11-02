@@ -461,8 +461,18 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .artikel-text .beispiel .bkopf { display: flex; align-items: center; gap: var(--a2); margin: 0; padding: 8px 12px; font-size: var(--klein); font-weight: 600;
                                  line-height: 1.4; background: var(--flaeche-2); }
 .beispiel .bkopf::before { content: ""; width: 4px; height: 1em; background: var(--violett); }
-.beispiel .bkopf .kopieren { margin-left: auto; height: 28px; padding: 0 10px; font-weight: 400; }
-.beispiel > .kopieren { position: absolute; top: 6px; right: 6px; height: 28px; padding: 0 10px; }
+.beispiel .bkopf > button { height: 28px; padding: 0 10px; font-weight: 400; }
+.beispiel .bkopf > button:first-of-type { margin-left: auto; }
+/* Knöpfe an Code ohne Kopf (Beispiel ohne Titel, Code in Antworten): oben rechts über dem Code */
+.bwerkzeuge { position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; }
+.bwerkzeuge > button { height: 28px; padding: 0 10px; background: color-mix(in srgb, var(--ed-grund) 85%, transparent); }
+/* Ausprobieren (WIKI-48, Entwurf ausprobieren.html): der Knopf hebt sich ab; eigene Beispiele mit Marke und Kante */
+.artikel-text .ausprobieren { color: var(--petrol); font-weight: 600; }
+.beispiel .bkopf > .scharf { color: var(--gefahr); }
+.beispiel.eigen { box-shadow: var(--schatten), inset 3px 0 0 var(--akzent-flaeche); border-radius: 0; }
+.beispiel.eigen .bkopf::before { content: none; }
+.beispiel.eigen .bkopf > i { color: var(--akzent); }
+.beispiel .eigen-marke { font-size: var(--marke); font-weight: 400; padding: 1px 7px; background: var(--akzent-weich); color: var(--akzent); white-space: nowrap; }
 .beispiel pre { margin: 0; padding: 12px 14px; font-family: var(--schrift-editor); font-size: calc(var(--klein) - 1px); line-height: 1.55;
                 font-variant-ligatures: none; overflow-x: auto; background: var(--ed-grund); color: var(--ed-text); }
 .beispiel pre.ausgabe { background: var(--ed-konsole); color: var(--ed-konsole-text); }

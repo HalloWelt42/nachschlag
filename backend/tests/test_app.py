@@ -266,7 +266,7 @@ async def test_spiegel_von_php_net_wie_die_dokumentation(nachschlag):
     assert buch["art"] == "dokumentation" and buch["faehigkeiten"]["lesedesign"]   # Art nach der Quelle des Spiegels
     assert [n["pfad"] for n in a["nachbarn"]][1] == "www.php.net/manual/en/function.array-map.php"
     html = a["html"]
-    assert '<pre><span class="c-tag">&lt;?php</span>\n<span class="c-var">$b</span> = <span class="c-fn">array_map</span>(<span class="c-str">\'cube\'</span>);\n<span class="c-tag">?&gt;</span></pre>' in html
+    assert '<pre data-sprache="php"><span class="c-tag">&lt;?php</span>\n<span class="c-var">$b</span> = <span class="c-fn">array_map</span>(<span class="c-str">\'cube\'</span>);\n<span class="c-tag">?&gt;</span></pre>' in html
     assert "<script" not in html and "select" not in html and "first" not in html
     assert "<dt>Notizen</dt><dd>2 der Nutzer</dd>" in a["steckbrief"]["html"]
 
@@ -368,6 +368,30 @@ async def test_notizen_an_stelle_und_artikel(nachschlag):
     assert (await c.delete(f"/api/v1/meins/notizen/{artikel['id']}")).status_code == 204
     assert (await c.delete(f"/api/v1/meins/notizen/{artikel['id']}")).status_code == 404
     assert (await c.patch(f"/api/v1/meins/notizen/{artikel['id']}", json={"text": "x"})).status_code == 404
+
+
+async def test_eigene_beispiele_je_artikel(nachschlag):
+    """Eigene Beispiele (WIKI-48): je Artikel in der Reihenfolge des Anlegens, mit Vorlage und Stelle; Ändern von Titel
+    und Code, Löschen; nur Sprachen von Ausprobieren; unbekannte Beispiele geben 404."""
+    c, _, _ = nachschlag
+    buch = "probe_de_all_2026-01"
+    erstes = (await c.post("/api/v1/meins/beispiele", json={
+        "buch": buch, "pfad": "Rotfuchs", "titel": "Quadrate", "sprache": "python", "code": "print([x * x for x in range(3)])",
+        "vorlage": "Beispiel 1", "block": 0})).json()
+    assert (erstes["buch_name"], erstes["buch"], erstes["vorlage"], erstes["block"]) == ("probe_de_all", buch, "Beispiel 1", 0)
+    zweites = (await c.post("/api/v1/meins/beispiele", json={
+        "buch": buch, "pfad": "Rotfuchs", "titel": " Summe ", "sprache": "javascript", "code": "console.log(1 + 2)"})).json()
+    assert (zweites["titel"], zweites["block"]) == ("Summe", -1)
+    await c.post("/api/v1/meins/beispiele", json={"buch": buch, "pfad": "Arrhenius", "titel": "anders", "sprache": "php", "code": "<?php echo 1;"})
+    nur = (await c.get("/api/v1/meins/beispiele", params={"buch": buch, "pfad": "Rotfuchs"})).json()
+    assert [b["id"] for b in nur] == [erstes["id"], zweites["id"]]
+    geaendert = (await c.patch(f"/api/v1/meins/beispiele/{erstes['id']}", json={"titel": "Quadrate bis 9", "code": "print(9)"})).json()
+    assert (geaendert["titel"], geaendert["code"]) == ("Quadrate bis 9", "print(9)") and geaendert["geaendert"] > geaendert["angelegt"]
+    assert (await c.post("/api/v1/meins/beispiele", json={"buch": buch, "pfad": "Rotfuchs", "titel": "x", "sprache": "ruby",
+                                                         "code": "puts 1"})).status_code == 422
+    assert (await c.delete(f"/api/v1/meins/beispiele/{zweites['id']}")).status_code == 204
+    assert (await c.delete(f"/api/v1/meins/beispiele/{zweites['id']}")).status_code == 404
+    assert (await c.patch(f"/api/v1/meins/beispiele/{zweites['id']}", json={"titel": "x", "code": "y"})).status_code == 404
 
 
 async def test_themen_bereiche_eintraege_und_angebote(nachschlag):
@@ -527,7 +551,7 @@ async def test_meins_trennt_konten(tmp_path):
     """Was ein Konto merkt, sieht kein anderes."""
     from appkern.datenbank import Datenbank
     from app.meins import Meins
-    from app.modell.meins import Merken, NotizAenderung, NotizNeu
+    from app.modell.meins import BeispielAenderung, BeispielNeu, Merken, NotizAenderung, NotizNeu
     from app.modell.themen import EintragNeu, ThemaNeu
     from app.themen import Themen
     db = await Datenbank(tmp_path / "meins.sqlite").oeffnen()
@@ -542,6 +566,9 @@ async def test_meins_trennt_konten(tmp_path):
         notiz = await meins.notieren("eins", NotizNeu(buch="probe_2026-01", pfad="A", titel="A", text="nur meins"))
         assert await meins.notizen("zwei") == [] and not await meins.notiz_loeschen("zwei", notiz.id)
         assert await meins.notiz_aendern("zwei", notiz.id, NotizAenderung(text="fremd")) is None
+        beispiel = await meins.beispiel_anlegen("eins", BeispielNeu(buch="probe_2026-01", pfad="A", titel="B", sprache="python", code="1"))
+        assert await meins.beispiele("zwei", "probe_2026-01", "A") == [] and not await meins.beispiel_loeschen("zwei", beispiel.id)
+        assert await meins.beispiel_aendern("zwei", beispiel.id, BeispielAenderung(titel="fremd", code="2")) is None
         themen = Themen(db, name, kennung)
         await themen.starten()
         t = await themen.anlegen("eins", ThemaNeu(titel="Meins"))

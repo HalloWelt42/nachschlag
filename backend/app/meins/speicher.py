@@ -1,5 +1,5 @@
-"""Speicher für Meins in der Datenbank der App (je Konto): Merkzettel, Notizen, Verlauf mit Lesestand, Vorlieben. Bücher stehen
-hier mit ihrem Namen ohne Datum; welche Datei heute dazu gehört, sagt die Bibliothek."""
+"""Speicher für Meins in der Datenbank der App (je Konto): Merkzettel, Notizen, eigene Beispiele, Verlauf mit Lesestand,
+Vorlieben. Bücher stehen hier mit ihrem Namen ohne Datum; welche Datei heute dazu gehört, sagt die Bibliothek."""
 
 from __future__ import annotations
 
@@ -11,7 +11,8 @@ from datetime import UTC, datetime
 from appkern.app.begleiter import Begleiter
 from appkern.datenbank import Datenbank
 
-from ..modell.meins import Lesestand, Merkeintrag, Merken, Notiz, NotizAenderung, NotizNeu, Suchmeldung, Verlaufseintrag
+from ..modell.meins import (Beispiel, BeispielAenderung, BeispielNeu, Lesestand, Merkeintrag, Merken, Notiz, NotizAenderung,
+                            NotizNeu, Suchmeldung, Verlaufseintrag)
 
 STUFEN = ["""
 CREATE TABLE merkzettel (
@@ -36,6 +37,13 @@ CREATE INDEX notizen_neu ON notizen (konto, geaendert DESC);
 -- Recherchemodus (WIKI-31): Belege der Stelle (JSON) und der Artikel im Netz
 ALTER TABLE notizen ADD COLUMN belege TEXT NOT NULL DEFAULT '[]';
 ALTER TABLE notizen ADD COLUMN quelle_url TEXT NOT NULL DEFAULT '';
+""", """
+-- Eigene Beispiele (WIKI-48): behaltene Kopien aus Ausprobieren, je Artikel hinter dem Codeblock, aus dem sie stammen
+CREATE TABLE beispiele (
+  id TEXT PRIMARY KEY, konto TEXT NOT NULL, buch_name TEXT NOT NULL, pfad TEXT NOT NULL, titel TEXT NOT NULL,
+  sprache TEXT NOT NULL, code TEXT NOT NULL, vorlage TEXT NOT NULL DEFAULT '', block INTEGER NOT NULL DEFAULT -1,
+  angelegt TEXT NOT NULL, geaendert TEXT NOT NULL);
+CREATE INDEX beispiele_artikel ON beispiele (konto, buch_name, pfad);
 """]
 
 #: Wie viele Einträge der Verlauf je Konto höchstens behält (älteste fallen beim Schreiben weg)
@@ -117,6 +125,39 @@ class Meins(Begleiter):
         werte = {k: z[k] for k in Notiz.model_fields if k in z}
         werte["belege"] = json.loads(z.get("belege") or "[]")
         return Notiz(**werte, buch=buch)
+
+    # --- Eigene Beispiele -----------------------------------------------------------------------------------------
+    async def beispiele(self, konto: str, buch: str, pfad: str) -> list[Beispiel]:
+        """Die eigenen Beispiele eines Artikels, in der Reihenfolge des Anlegens."""
+        zeilen = await self._db.zeilen("SELECT * FROM beispiele WHERE konto=? AND buch_name=? AND pfad=? ORDER BY angelegt",
+                                       (konto, await self._name_von(buch), pfad))
+        return [self._beispiel(z, buch) for z in zeilen]
+
+    async def beispiel_anlegen(self, konto: str, eingabe: BeispielNeu) -> Beispiel:
+        jetzt, neu = _jetzt(), str(uuid.uuid4())
+        await self._db.ausfuehren(
+            "INSERT INTO beispiele (id, konto, buch_name, pfad, titel, sprache, code, vorlage, block, angelegt, geaendert) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            (neu, konto, await self._name_von(eingabe.buch), eingabe.pfad, eingabe.titel.strip(), eingabe.sprache, eingabe.code,
+             eingabe.vorlage, eingabe.block, jetzt, jetzt))
+        return await self._beispiel_holen(konto, neu)  # type: ignore[return-value]
+
+    async def beispiel_aendern(self, konto: str, kennung: str, aenderung: BeispielAenderung) -> Beispiel | None:
+        if not await self._db.ausfuehren("UPDATE beispiele SET titel=?, code=?, geaendert=? WHERE konto=? AND id=?",
+                                         (aenderung.titel.strip(), aenderung.code, _jetzt(), konto, kennung)):
+            return None
+        return await self._beispiel_holen(konto, kennung)
+
+    async def beispiel_loeschen(self, konto: str, kennung: str) -> bool:
+        return await self._db.ausfuehren("DELETE FROM beispiele WHERE konto=? AND id=?", (konto, kennung)) > 0
+
+    async def _beispiel_holen(self, konto: str, kennung: str) -> Beispiel | None:
+        z = await self._db.zeile("SELECT * FROM beispiele WHERE konto=? AND id=?", (konto, kennung))
+        return self._beispiel(z, await self._kennung_von(z["buch_name"])) if z else None
+
+    @staticmethod
+    def _beispiel(z: dict, buch: str) -> Beispiel:
+        return Beispiel(**{k: z[k] for k in Beispiel.model_fields if k in z}, buch=buch)
 
     # --- Verlauf --------------------------------------------------------------------------------------------------
     async def lesestand(self, konto: str, stand: Lesestand) -> None:

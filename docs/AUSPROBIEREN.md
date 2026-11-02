@@ -45,6 +45,19 @@ Nachschlag (Oberfläche: Ebene Ausprobieren, Editor, Ausgabe, Debugger)
 - Codeschmiede stellt um: Thema am `<html>` als `hell`/`dunkel` wie der Appkern, lädt `marken.css` und ordnet an einer
   Stelle die Marken ihren eigenen Farben und Schriften zu; ihre Kopien von Editor, Debugger und Speicherbild entfallen.
 
+## Ebene Ausprobieren in Nachschlag (Schritt 4)
+
+- Knopf "Ausprobieren" vor "Kopieren" an jedem Codeblock in einer Sprache, die die Sandbox gerade kann (Stand aus
+  `GET /api/v1/ausprobieren`); nur am Rechner. Die Sprache nennt gefärbter Code selbst (`data-sprache` vom Backend,
+  sonst die Färbung im Browser). Code ohne Kopf bekommt die Knöpfe oben rechts über dem Code.
+- Die Ebene arbeitet an einer Kopie: Ausführen (Strg Enter) zeigt die Ausgabe, Debuggen den aufgezeichneten Lauf;
+  beides ist derselbe Probelauf als Aufzeichner der `DebugSitzung`. Zurücksetzen holt das Original, Escape schließt.
+- Behalten legt die Kopie mit einem Namen als eigenes Beispiel ab (`/api/v1/meins/beispiele`, je Konto, Buch über
+  seinen Namen ohne Datum). Es steht im Artikel direkt unter dem Codeblock, aus dem es stammt (Nummer des Blocks wie
+  bei den Kommentaren; fehlt er in einer neuen Fassung, am Ende des Texts), mit Ausprobieren, Kopieren und Löschen in
+  zwei Klicks. Aus einem eigenen Beispiel geöffnet, speichert Behalten dieses.
+- Die Ebene wird erst beim Öffnen geladen; Editor und Debugger (CodeMirror) braucht nur, wer etwas ausprobiert.
+
 ## Reihenfolge des Baus
 
 1. Codeschmiede: Schnittstelle für Apps (Anmeldung mit App-Schlüssel über den Appkern, Erlaubnisliste, Grenzen), Tests,

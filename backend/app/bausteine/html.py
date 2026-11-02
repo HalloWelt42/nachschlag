@@ -20,7 +20,7 @@ GERADE = str.maketrans({0x201E: '"', 0x201C: '"', 0x201D: '"', 0x201A: "'", 0x20
 #: sicher tote Ziele (Platzhalter von Archivierungsdiensten)
 TOT = re.compile(r"\.invalid(/|$)", re.I)
 ERLAUBTE_ATTRIBUTE = {"href", "src", "alt", "title", "id", "width", "height", "colspan", "rowspan", "class", "lang", "dir",
-                      "data-geo", "data-buch", "data-pfad", "data-beleg", "loading", "decoding"}
+                      "data-geo", "data-buch", "data-pfad", "data-beleg", "data-sprache", "loading", "decoding"}
 #: Klassen, die das Lesedesign kennt; alle Klassen der Quelle fallen weg
 EIGENE_KLASSEN = {"wl", "ort", "hinweis", "steckbrief", "steckbrief-kopf", "steckbrief-unter", "steckbrief-bild",
                   "steckbrief-gruppe", "steckbrief-werte", "steckbrief-name", "klade", "linie-unten", "linie-links",

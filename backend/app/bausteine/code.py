@@ -49,11 +49,13 @@ def code_text(el) -> str:
 
 
 def einfaerben(code: str, sprache: str):
-    """Ein `<pre>` mit dem eingefärbten Code (Text maskiert über den Elementbaum, nie als Zeichenkette gebaut)."""
+    """Ein `<pre>` mit dem eingefärbten Code (Text maskiert über den Elementbaum, nie als Zeichenkette gebaut). Gefärbter
+    Code nennt seine Sprache (`data-sprache`): daran erkennt die Oberfläche, ob er sich ausprobieren lässt (WIKI-48)."""
     pre = lhtml.Element("pre")
     if sprache != "php":
         pre.text = code
         return pre
+    pre.set("data-sprache", sprache)
     letztes = None
     rest = 0
 
