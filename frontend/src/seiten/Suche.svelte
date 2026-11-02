@@ -10,7 +10,7 @@
   import { untrack } from "svelte";
   import Suchfeld from "../teile/Suchfeld.svelte";
   import Buchmarke from "../teile/Buchmarke.svelte";
-  import { bibliothek, bibliothekLaden, zahl } from "../lib/bibliothek.svelte";
+  import { bibliothek, bibliothekLaden, zahl, nutzbar } from "../lib/bibliothek.svelte";
   import { artikelHolen, korrekturHolen, sucheHolen, uebersetzungHolen, uebersetzungKorrigieren, type Uebersetzung } from "../lib/schnittstelle";
   import type { Artikel, Buch, Suchergebnis, Treffer } from "../lib/typen";
   import { lesen, suchen } from "../lib/ziele";
@@ -59,7 +59,7 @@
   const nur = $derived(zusatz.get("nur") === "1" && !!kontext);
   const statt = $derived(zusatz.get("statt") ?? "");          // korrigiert aus dieser Frage (sie fand nichts)
   const genau = $derived(zusatz.get("genau") === "1");        // ohne Korrektur, so wie getippt
-  const durchsucht = $derived(bibliothek.buecher.filter((b) => b.faehigkeiten.volltext));
+  const durchsucht = $derived(bibliothek.buecher.filter((b) => b.faehigkeiten.volltext && nutzbar(b)));   // ohne Archiv (WIKI-46)
   // Reihenfolge: das Buch, aus dem gesucht wurde, dann die übrigen wie in der Bibliothek
   const reihenfolge = $derived.by((): Buch[] => {
     const gewaehlte = durchsucht.filter((b) => !aus.includes(b.kennung) && (!nur || b.kennung === kontext));

@@ -1,5 +1,5 @@
 // Die Bücher der Bibliothek, einmal geladen und von allen Seiten geteilt.
-import { seitenFehler } from "appkern-oberflaeche";
+import { hole, seitenFehler } from "appkern-oberflaeche";
 import { spracheInWorten } from "./sprache";
 import { buecherHolen } from "./schnittstelle";
 import type { Buch } from "./typen";
@@ -62,3 +62,15 @@ export function buchName(kennung: string): string {
 
 /** Sprache eines Buchs in Worten (Kürzel nach ISO 639-3, mehrere mit Komma). */
 export const sprache = spracheInWorten;
+
+// --- Archiv der Quellen (WIKI-46) ---
+/** Zählt in Suche, Stöbern und Startseite mit: aktiv oder im Archiv mit "mitnutzen". */
+export const nutzbar = (b: Buch): boolean => !b.archiv || b.archiv.mitnutzen;
+
+/** Archivieren (zustand archiv), wieder aktiv setzen (aktiv), wie von selbst (null) oder mitnutzen; danach die
+ *  Bibliothek neu, damit jede Seite den neuen Stand sieht. */
+export async function archivAendern(kennung: string, aenderung: { zustand?: "archiv" | "aktiv" | null; mitnutzen?: boolean }): Promise<void> {
+  await hole<Buch>(`/buecher/${encodeURIComponent(kennung)}/archiv`, {
+    method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(aenderung) });
+  await bibliothekLaden(true);
+}

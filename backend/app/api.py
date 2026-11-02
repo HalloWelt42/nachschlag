@@ -17,6 +17,7 @@ from .bibliothek import Bibliothek, BuchFehlt, EintragFehlt
 from .modell.artikel import Artikel
 from .modell.buch import Bibliotheksstand, Buch
 from .modell.suche import Suchergebnis, Vorschlag
+from .quellenarchiv import Quellenarchiv
 from .suche import Suche
 
 #: Skripte einer Originalseite; sie dürften im abgeschirmten Rahmen ohnehin nicht laufen und kommen gar nicht erst mit
@@ -30,19 +31,20 @@ def _fehlt(f: Exception) -> HTTPException:
     return HTTPException(status_code=404, detail=str(f))
 
 
-def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche: Suche) -> APIRouter:
+def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche: Suche, quellen: Quellenarchiv) -> APIRouter:
     r = APIRouter(prefix="/api/v1", tags=["nachschlag"])
     pflicht, lesen = [geruest.pflicht], [geruest.lesen]
 
     @r.get("/buecher", response_model=Bibliotheksstand, dependencies=pflicht)
     async def buecher() -> Bibliotheksstand:
-        """Alle Bücher im Ordner mit ihren Angaben und Fähigkeiten; Dateien, die sich nicht öffnen ließen, mit Grund."""
-        return await bibliothek.stand()
+        """Alle Bücher im Ordner mit ihren Angaben, Fähigkeiten und dem Archivstand (WIKI-46); Dateien, die sich nicht
+        öffnen ließen, mit Grund."""
+        return await quellen.stand()
 
     @r.get("/buecher/{buch}", response_model=Buch, dependencies=pflicht)
     async def buch(buch: str) -> Buch:
         try:
-            return await bibliothek.buch(buch)
+            return await quellen.buch(buch)
         except BuchFehlt as f:
             raise _fehlt(f)
 

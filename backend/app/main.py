@@ -36,6 +36,8 @@ from .register.api import router as register_router
 from .medien import Medien
 from .medien.api import router as medien_router
 from .stoebern import Stoebern
+from .quellenarchiv import Quellenarchiv
+from .quellenarchiv.api import router as quellenarchiv_router
 from .stoebern.api import router as stoebern_router
 from .themen import Themen
 from .themen.api import router as themen_router
@@ -58,10 +60,13 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     bedeutung = FundusBedeutung(lambda: geruest.verbund, lambda: e().fundus_adresse, lambda: e().fundus_sammlung,
                                 lambda: e().fundus_vorsilbe)
     eigen = Eigenindizes(lambda: e().eigenindex_ordner)
+    quellen = Quellenarchiv(geruest.db, bibliothek)           # Archiv der Quellen (WIKI-46)
+    geruest.begleiter_anmelden(quellen)
     suche = Suche(bibliothek, bedeutung, lambda: e().bedeutung_warten_s, lambda: e().bedeutung_buch,
-                  lambda buch, pfad: "", eigen)
+                  lambda buch, pfad: "", eigen, nutzbare=quellen.nutzbare)
     indexauftraege = Indexauftraege(eigen, bibliothek, geruest.auftraege, lambda: e().indexdienst_schluessel.get_secret_value(),
-                                    lambda: ARTEN_JE_STUFE[e().eigene_indizes], lambda: e().eigenindex_hoechstens_gb)
+                                    lambda: ARTEN_JE_STUFE[e().eigene_indizes], lambda: e().eigenindex_hoechstens_gb,
+                                    nutzbare=quellen.nutzbare)
 
     stimmenquelle = Stimmenquelle(geruest, lambda: e().vertonung_adresse)      # eigene Stimmen: nur die Probe
     sprechdienst = Sprechdienst(lambda: geruest.leitstelle, lambda: e().sprechdienst, lambda: e().vorlesestimme,
@@ -118,7 +123,8 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
     app.state.geruest = geruest
     app.state.bibliothek = bibliothek
     app.state.indexauftraege = indexauftraege
-    app.include_router(router(geruest, bibliothek, leser, suche))
+    app.include_router(router(geruest, bibliothek, leser, suche, quellen))
+    app.include_router(quellenarchiv_router(geruest, quellen))
     app.include_router(meins_router(geruest, meins))
     app.include_router(themen_router(geruest, themen, suche, bibliothek, meins, leser))
     app.include_router(zitieren_router(geruest, bibliothek, leser))

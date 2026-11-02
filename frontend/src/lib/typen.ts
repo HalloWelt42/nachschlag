@@ -24,7 +24,11 @@ export interface Buch {
   groesse: number;
   faehigkeiten: Faehigkeiten;
   startseite: string;
+  archiv: Archivstand | null;        // im Archiv (WIKI-46); null: aktive Quelle
 }
+
+/** Eine Quelle im Archiv: ersetzt durch eine neuere Fassung oder von Hand; ohne "mitnutzen" nicht in Suche und Stöbern. */
+export interface Archivstand { grund: "ersetzt" | "von_hand"; ersetzt_durch: string; mitnutzen: boolean }
 
 export interface Bibliotheksstand {
   ordner: string;

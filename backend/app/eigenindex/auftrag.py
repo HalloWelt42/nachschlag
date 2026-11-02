@@ -15,7 +15,7 @@ import hmac
 import logging
 import os
 import time
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
@@ -28,6 +28,7 @@ from appkern.auftraege import Art, AuftragFehler, Auftraege, Kontext
 from appkern.auftraege.modelle import Phase
 
 from ..bibliothek import Bibliothek
+from ..modell.buch import Buch
 from .ablage import Eigenindizes
 
 logger = logging.getLogger("nachschlag.eigenindex")
@@ -115,8 +116,10 @@ class FalscheStelle(ValueError):
 class Indexauftraege(Begleiter):
     def __init__(self, ablage: Eigenindizes, bibliothek: Bibliothek, auftraege: Auftraege, schluessel: Callable[[], str],
                  arten: Callable[[], list[str]], hoechstens_gb: Callable[[], float] = lambda: float("inf"), *,
-                 takt_s: float = 2.0, still_s: float = STILL_S) -> None:
+                 takt_s: float = 2.0, still_s: float = STILL_S, nutzbare: Callable[[], Awaitable[list[Buch]]] | None = None) -> None:
+        """`nutzbare`: die Quellen, die einen eigenen Index bekommen dürfen (ohne archivierte, WIKI-46); sonst alle."""
         self._ablage, self._bib, self._auftraege = ablage, bibliothek, auftraege
+        self._nutzbare = nutzbare
         self._schluessel, self._arten, self._takt, self._still = schluessel, arten, takt_s, still_s
         self._hoechstens_gb = hoechstens_gb
         self._kanaele: dict[str, _Kanal] = {}
@@ -178,7 +181,8 @@ class Indexauftraege(Begleiter):
         if not (self._schluessel() and self._ablage.pfad("-")):
             return []
         arten, grenze = set(self._arten()), self._hoechstens_gb() * 1e9
-        buecher = sorted((b for b in (await self._bib.stand()).buecher if b.art in arten and b.groesse <= grenze),
+        quellen = await self._nutzbare() if self._nutzbare else (await self._bib.stand()).buecher
+        buecher = sorted((b for b in quellen if b.art in arten and b.groesse <= grenze),
                          key=lambda b: b.groesse)
         eingereiht = []
         for b in buecher:

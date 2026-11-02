@@ -705,6 +705,7 @@
     <nav class="pfad" aria-label="Pfad"><i class="fa-solid fa-book"></i>
       <a href={buch ? "/" + lesenZiel(artikel.buch, buch.startseite) : undefined}
          onclick={(e) => { if (!buch) return; e.preventDefault(); lesen(artikel!.buch, buch.startseite); }}><b><Buchmarke kennung={artikel.buch} symbol={false} /></b></a>
+      {#if buch?.archiv}<span class="pille-archiv" title="Diese Quelle liegt im Archiv (Startseite, Bibliothek, Archiv)"><i class="fa-solid fa-box-archive"></i>Archiv</span>{/if}
       <i class="fa-solid fa-chevron-right"></i>
       {#if artikel.rubrik}
         <a href={rubrikZiel ? "/" + rubrikZiel : undefined} onclick={(e) => { if (!rubrikZiel) return; e.preventDefault(); gehe(rubrikZiel); }}>{artikel.rubrik}</a>

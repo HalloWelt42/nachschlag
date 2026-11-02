@@ -633,3 +633,33 @@ async def test_artikel_fuer_heute_aus_den_eigenen_themen(nachschlag):
     h = (await c.get("/api/v1/meins/themen/heute")).json()
     assert (h["pfad"], h["thema"]) == ("Rotfuchs", "Füchse") and h["grund"] == 'Aus deinem Thema "Füchse", noch nicht gelesen'
     assert (await c.get("/api/v1/meins/themen/heute")).json() == h
+
+
+async def test_archiv_aeltere_fassung_von_hand_und_mitnutzen(nachschlag, tmp_path: Path):
+    """Archiv der Quellen (WIKI-46): die ältere Fassung liegt von selbst im Archiv und fehlt in der Suche; mitgenutzt
+    zählt sie wieder; von Hand archivieren und wieder aktiv setzen; lesbar bleibt sie immer."""
+    c, geruest, _ = nachschlag
+    ordner = tmp_path / "archivbuecher"
+    probebuch.bauen(ordner, "probe_de_all_2025-06")
+    probebuch.bauen(ordner, "probe_de_all_2026-01")
+    probebuch.bauen_doku(ordner)
+    await geruest.einstellungen.aendern({"buecher_ordner": str(ordner)})
+
+    stand = {b["kennung"]: b["archiv"] for b in (await c.get("/api/v1/buecher")).json()["buecher"]}
+    assert stand["probe_de_all_2026-01"] is None and stand["probedoku_en_php_2026-08"] is None
+    assert stand["probe_de_all_2025-06"] == {"grund": "ersetzt", "ersetzt_durch": "probe_de_all_2026-01", "mitnutzen": False}
+
+    async def buecher_der_treffer() -> set[str]:
+        s = (await c.get("/api/v1/suche", params={"frage": "Fuchs", "wege": "index"})).json()
+        return {t["buch"] for t in s["treffer"]}
+
+    assert "probe_de_all_2025-06" not in await buecher_der_treffer()
+    assert (await c.get("/api/v1/artikel/probe_de_all_2025-06/Rotfuchs")).status_code == 200      # lesbar bleibt sie
+    b = (await c.put("/api/v1/buecher/probe_de_all_2025-06/archiv", json={"mitnutzen": True})).json()
+    assert b["archiv"]["mitnutzen"] and "probe_de_all_2025-06" in await buecher_der_treffer()
+
+    b = (await c.put("/api/v1/buecher/probedoku_en_php_2026-08/archiv", json={"zustand": "archiv"})).json()
+    assert b["archiv"] == {"grund": "von_hand", "ersetzt_durch": "", "mitnutzen": False}
+    b = (await c.put("/api/v1/buecher/probe_de_all_2025-06/archiv", json={"zustand": "aktiv"})).json()
+    assert b["archiv"] is None
+    assert (await c.put("/api/v1/buecher/gibt-es-nicht/archiv", json={})).status_code == 404

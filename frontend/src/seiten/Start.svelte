@@ -8,7 +8,7 @@
   import Suchfeld from "../teile/Suchfeld.svelte";
   import Kachel from "../teile/Kachel.svelte";
   import Sprachmarke from "../teile/Sprachmarke.svelte";
-  import { bibliothek, bibliothekLaden, datum, zahl } from "../lib/bibliothek.svelte";
+  import { archivAendern, bezeichnung, bibliothek, bibliothekLaden, buch as buchVon, datum, nutzbar, zahl } from "../lib/bibliothek.svelte";
   import { artikelHolen, heuteHolen, zufallHolen, type Heute } from "../lib/schnittstelle";
   import { STARTANSICHTEN, startansicht, startansichtMerken } from "../lib/ansicht.svelte";
   import { themaHolen } from "../lib/themen.svelte";
@@ -49,8 +49,21 @@
   });
   let fehler = $state("");
 
-  const artikelGesamt = $derived(bibliothek.buecher.reduce((s, b) => s + b.artikel, 0));
-  const mitLesedesign = $derived(bibliothek.buecher.filter((b) => b.faehigkeiten.lesedesign));
+  // Archiv der Quellen (WIKI-46): die Bibliothek zeigt die aktiven, das Archiv darunter; gezählt und gestöbert wird in
+  // allem, was nutzbar ist (aktiv oder mitgenutzt)
+  const aktive = $derived(bibliothek.buecher.filter((b) => !b.archiv));
+  const archivierte = $derived(bibliothek.buecher.filter((b) => b.archiv));
+  const artikelGesamt = $derived(bibliothek.buecher.filter(nutzbar).reduce((s, b) => s + b.artikel, 0));
+  const mitLesedesign = $derived(bibliothek.buecher.filter((b) => b.faehigkeiten.lesedesign && nutzbar(b)));
+  let archivFehler = $state("");
+  async function archiv(kennung: string, aenderung: { zustand?: "archiv" | "aktiv" | null; mitnutzen?: boolean }) {
+    try {
+      archivFehler = "";
+      await archivAendern(kennung, aenderung);
+    } catch (f) {
+      archivFehler = seitenFehler(f);
+    }
+  }
 
   async function zufallsfund(b: Buch) {
     try {
@@ -100,8 +113,8 @@
         <h1>Was möchtest du nachschlagen?</h1>
         <Suchfeld gross />
         {#if bibliothek.buecher.length}
-          <div class="unter">Index über <span class="zahl">{zahl(artikelGesamt)}</span> Artikel in {bibliothek.buecher.length}
-            {bibliothek.buecher.length === 1 ? "Quelle" : "Quellen"}</div>
+          <div class="unter">Index über <span class="zahl">{zahl(artikelGesamt)}</span> Artikel in {bibliothek.buecher.filter(nutzbar).length}
+            {bibliothek.buecher.filter(nutzbar).length === 1 ? "Quelle" : "Quellen"}</div>
         {/if}
       </div>
     {/if}
@@ -191,13 +204,13 @@
 
     <section>
       <div class="abschnitt-kopf"><h2><i class="fa-solid fa-swatchbook"></i>Bibliothek</h2>
-        <span class="neben">{bibliothek.buecher.length} {bibliothek.buecher.length === 1 ? "Quelle" : "Quellen"}</span></div>
+        <span class="neben">{aktive.length} {aktive.length === 1 ? "Quelle" : "Quellen"}</span></div>
       {#if bibliothek.meldung}<div class="fehlertext">{bibliothek.meldung}</div>{/if}
       {#if bibliothek.geladen && !bibliothek.buecher.length && !bibliothek.meldung}
         <p class="leer-hinweis">Im Ordner der ZIM-Libs liegt noch keine ZIM-Datei. Den Ordner nennen die Einstellungen unter Bibliothek.</p>
       {/if}
       <div class="buecher">
-        {#each bibliothek.buecher as b (b.kennung)}
+        {#each aktive as b (b.kennung)}
           <Kachel art="quer" symbol={SYMBOL[b.art]} titel={b.titel} untertitel={`${zahl(b.artikel)} Artikel · Stand ${datum(b.stand)}`}
                  hinweis="Startseite der Quelle öffnen" ziel={() => lesen(b.kennung, b.startseite)}>
             {#snippet ecke()}<Sprachmarke kuerzel={b.sprache} />{/snippet}
@@ -212,6 +225,42 @@
         {/each}
       </div>
       {#each bibliothek.fehler as f}<div class="fehlertext">{f}</div>{/each}
+      {#if bibliothek.buecher.length}
+        <!-- Archiv der Quellen (WIKI-46): ältere Fassungen von selbst, andere von Hand; je Quelle mitnutzen oder wieder aktiv -->
+        <details class="archiv-block">
+          <summary><i class="fa-solid fa-box-archive"></i><b>Archiv</b><span class="zahl">{archivierte.length}</span>
+            <span class="neben">ältere Fassungen und Abgelegtes; ohne "Mitnutzen" nicht in Suche und Stöbern, lesbar bleibt alles</span></summary>
+          <div class="liste">
+            {#each archivierte as b (b.kennung)}
+              {@const neu = b.archiv?.ersetzt_durch ? buchVon(b.archiv.ersetzt_durch) : undefined}
+              <div class="liste-zeile">
+                <button class="liste-ziel" onclick={() => lesen(b.kennung, b.startseite)}>
+                  <span class="ohne-bild"><i class="fa-solid {SYMBOL[b.art]}"></i></span>
+                  <span><span class="t">{bezeichnung(b)}</span>
+                    <span class="u">Stand {datum(b.stand)} · {b.archiv?.grund === "ersetzt"
+                      ? `ersetzt durch die Fassung ${neu ? `vom ${datum(neu.stand)}` : b.archiv.ersetzt_durch}` : "von Hand abgelegt"}</span></span>
+                </button>
+                <button class="knopf still" class:an={b.archiv?.mitnutzen} title="In Suche, Stöbern und Startseite mitzählen (hinter den aktiven Quellen)"
+                        onclick={() => archiv(b.kennung, { mitnutzen: !b.archiv?.mitnutzen })}>
+                  <i class="fa-solid {b.archiv?.mitnutzen ? 'fa-toggle-on' : 'fa-toggle-off'}"></i><span class="wort">Mitnutzen</span></button>
+                <button class="knopf still" title="Wieder als aktive Quelle führen"
+                        onclick={() => archiv(b.kennung, { zustand: b.archiv?.grund === "ersetzt" ? "aktiv" : null })}>
+                  <i class="fa-solid fa-box-open"></i><span class="wort">Wieder aktiv</span></button>
+              </div>
+            {:else}
+              <p class="leer-hinweis">Noch nichts im Archiv. Ältere Fassungen einer Quelle kommen von selbst hierher.</p>
+            {/each}
+          </div>
+          {#if aktive.length}
+            <div class="archiv-ablegen">
+              <Auswahl wert="" symbol="fa-box-archive" titel="Eine aktive Quelle von Hand ins Archiv legen"
+                       optionen={[{ wert: "", titel: "Quelle ins Archiv legen" }, ...aktive.map((b) => ({ wert: b.kennung, titel: bezeichnung(b) }))]}
+                       onwahl={(k) => k && archiv(k, { zustand: "archiv" })} />
+            </div>
+          {/if}
+          {#if archivFehler}<div class="fehlertext">{archivFehler}</div>{/if}
+        </details>
+      {/if}
     </section>
     {#if fehler}<div class="fehlertext">{fehler}</div>{/if}
   </div>

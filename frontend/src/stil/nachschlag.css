@@ -1073,3 +1073,15 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .artikel-text .kommentar-schalter { height: 28px; padding: 0 10px; font-size: var(--klein); }
 .artikel-text .kommentar-schalter.an { color: var(--petrol); }
 .artikel-text :not(.bkopf) > .kommentar-schalter { display: flex; margin: 0 0 4px auto; }
+
+/* Archiv der Quellen (WIKI-46): zugeklappt unter der Bibliothek; Hinweis im Pfad beim Lesen */
+.archiv-block { margin-top: var(--a4); border-radius: var(--r3); background: var(--flaeche); box-shadow: var(--schatten); }
+.archiv-block > summary { display: flex; align-items: center; gap: var(--a2); padding: var(--a3) var(--a4); cursor: pointer; flex-wrap: wrap; }
+.archiv-block > summary i { color: var(--text-3); }
+.archiv-block > summary .zahl { font-family: var(--schrift-zahl); font-size: var(--marke); color: var(--text-3); }
+.archiv-block > summary .neben { font-size: var(--klein); color: var(--text-3); }
+.archiv-block .liste { padding: 0 var(--a2) var(--a2); }
+.archiv-block .knopf.an { color: var(--petrol); }
+.archiv-ablegen { padding: 0 var(--a4) var(--a3); display: flex; }
+.pille-archiv { display: inline-flex; align-items: center; gap: 6px; padding: 1px 8px; border-radius: var(--r1); font-size: var(--marke);
+  color: var(--text-2); background: var(--flaeche-2); }

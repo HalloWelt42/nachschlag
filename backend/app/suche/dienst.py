@@ -8,7 +8,7 @@ from __future__ import annotations
 import asyncio
 import html
 import time
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 
 from ..bibliothek import Bibliothek, BuchFehlt, EintragFehlt
 from ..eigenindex import abfrage
@@ -27,13 +27,17 @@ def _rang(platz: int) -> float:
 
 class Suche:
     def __init__(self, bibliothek: Bibliothek, bedeutung: Bedeutung, wartezeit_s: Callable[[], float],
-                 bedeutungsbuch: Callable[[], str], medien: Callable[[str, str], str], eigen: Eigenindizes) -> None:
-        """`bedeutungsbuch`: Kennung des Buchs, zu dem die Bedeutungssuche gehört (ihre Treffer zeigen in dieses Buch)."""
+                 bedeutungsbuch: Callable[[], str], medien: Callable[[str, str], str], eigen: Eigenindizes,
+                 nutzbare: Callable[[], Awaitable[list[Buch]]] | None = None) -> None:
+        """`bedeutungsbuch`: Kennung des Buchs, zu dem die Bedeutungssuche gehört (ihre Treffer zeigen in dieses Buch).
+        `nutzbare`: die Quellen ohne Auswahl (ohne archivierte, die nicht mitgenutzt werden, WIKI-46); sonst alle."""
         self._bib, self._bedeutung, self._warten, self._bedeutungsbuch = bibliothek, bedeutung, wartezeit_s, bedeutungsbuch
         self._medien, self._eigen = medien, eigen
+        self._nutzbare = nutzbare
 
     async def _buecher(self, auswahl: list[str]) -> list[Buch]:
-        alle = (await self._bib.stand()).buecher
+        """Die gewählten Quellen (auch archivierte, wer sie ausdrücklich wählt), ohne Wahl die nutzbaren."""
+        alle = (await self._bib.stand()).buecher if auswahl or self._nutzbare is None else await self._nutzbare()
         return [b for b in alle if (b.faehigkeiten.volltext or self._eigen.datei(b.kennung))
                 and (not auswahl or b.kennung in auswahl)]
 

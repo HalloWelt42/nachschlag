@@ -4,7 +4,7 @@
   // wie im gedruckten Lexikon (Titel in der Reihenfolge des Buchs um den Fund herum).
   import { onMount } from "svelte";
   import { Auswahl, gehe, geraet, seitenFehler } from "appkern-oberflaeche";
-  import { bezeichnung, bibliothek, bibliothekLaden, hauptbuch } from "../lib/bibliothek.svelte";
+  import { bezeichnung, bibliothek, bibliothekLaden, hauptbuch, nutzbar } from "../lib/bibliothek.svelte";
   import { gemerkt, meins, meinsLaden, merken, vergessen, vorliebeSetzen } from "../lib/meins.svelte";
   import { EBEN_HOECHSTENS, fundHolen, schrittHolen, seiteHolen, stoebern, zufallHolen, type Fund, type Nachbar } from "../lib/stoebern.svelte";
   import { eintragen, themaAnlegen, themenVon } from "../lib/themen.svelte";
@@ -16,7 +16,7 @@
   let zieht = $state(false);
   let schrittLaedt = $state(false);
 
-  const buecher = $derived(bibliothek.buecher.filter((b) => b.faehigkeiten.lesedesign));
+  const buecher = $derived(bibliothek.buecher.filter((b) => b.faehigkeiten.lesedesign && nutzbar(b)));   // ohne Archiv (WIKI-46)
   const buch = $derived(bibliothek.buecher.find((b) => b.kennung === stoebern.buch));
 
   async function zufall() {

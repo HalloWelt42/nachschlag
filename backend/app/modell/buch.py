@@ -17,6 +17,14 @@ class Faehigkeiten(BaseModel):
     lesedesign: bool                 # ein Baustein mit eigenem Lesedesign; sonst Originalansicht
 
 
+class Archivstand(BaseModel):
+    """Eine Quelle im Archiv (WIKI-46): ersetzt durch eine neuere Fassung derselben Quelle oder von Hand archiviert.
+    Ohne "mitnutzen" fehlt sie in Suche, Vorschlägen, Stöbern und Startseite, bleibt aber lesbar."""
+    grund: Literal["ersetzt", "von_hand"]
+    ersetzt_durch: str = Field("", description="Kennung der neueren Fassung (Grund ersetzt)")
+    mitnutzen: bool = False
+
+
 class Buch(BaseModel):
     kennung: str = Field(description="Dateiname ohne .zim; eindeutig in der Bibliothek")
     name: str = Field(description="Name des Buchs ohne Fassung (Angabe Name), etwa wikipedia_de_all")
@@ -32,6 +40,7 @@ class Buch(BaseModel):
     groesse: int = Field(description="Größe der Datei in Bytes")
     faehigkeiten: Faehigkeiten
     startseite: str = Field("", description="Pfad der Startseite im Buch")
+    archiv: Archivstand | None = Field(None, description="im Archiv (WIKI-46); leer: aktive Quelle")
 
 
 class Bibliotheksstand(BaseModel):
