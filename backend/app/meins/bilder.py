@@ -62,7 +62,7 @@ class Notizbilder:
         bild_id = str(uuid.uuid4())
         kw = self._wolke()
         try:
-            ordner = f"{(await kw.ich()).zweig}/Notizen/{notiz_id}"
+            ordner = await self._ordner(kw, notiz_id)
             await kw.ordner(ordner)
             knoten = await kw.schreiben(f"{ordner}/{bild_id}{endung}", daten, nur_neu=True, inhaltstyp=typ)
         except KellerwolkeFehler as f:
@@ -102,15 +102,38 @@ class Notizbilder:
         if bild is None:
             raise BildFehler("Dieses Bild gibt es nicht", 404)
         kw = self._kw()
-        if kw is not None:
-            await self._weg(kw, bild.knoten)
+        if kw is None:
+            return
+        await self._weg(kw, bild.knoten)
+        notiz = await self._meins.notiz(konto, notiz_id)
+        if notiz is not None and not notiz.bilder:          # das letzte Bild: kein leerer Ordner bleibt zurück
+            await self._ordner_weg(kw, notiz_id)
 
     async def alle_entfernen(self, notiz: Notiz) -> None:
-        """Beim Löschen einer Notiz: ihre Bilder in den Papierkorb der Kellerwolke."""
+        """Beim Löschen einer Notiz: ihr Ordner mit den Bildern in den Papierkorb der Kellerwolke (als Ganzes
+        wiederherstellbar); fehlt er, die Bilder einzeln."""
         kw = self._kw()
-        if kw is not None:
+        if kw is None or not notiz.bilder:
+            return
+        if not await self._ordner_weg(kw, notiz.id):
             for b in notiz.bilder:
                 await self._weg(kw, b.knoten)
+
+    @staticmethod
+    async def _ordner(kw: Kellerwolke, notiz_id: str) -> str:
+        """Der Ordner der Bilder einer Notiz: <Zweig der App>/Notizen/<Notiz>."""
+        return f"{(await kw.ich()).zweig}/Notizen/{notiz_id}"
+
+    async def _ordner_weg(self, kw: Kellerwolke, notiz_id: str) -> bool:
+        """Den Ordner einer Notiz samt Inhalt in den Papierkorb; False, wenn es ihn nicht gibt oder es nicht ging."""
+        try:
+            ordner = await kw.finden(await self._ordner(kw, notiz_id))
+            if ordner is None:
+                return False
+            await kw.loeschen(ordner.id)
+            return True
+        except KellerwolkeFehler:
+            return False
 
     @staticmethod
     async def _weg(kw: Kellerwolke, knoten: str) -> None:

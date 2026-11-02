@@ -13,6 +13,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent))
 import buch as probebuch  # noqa: E402
+from ablage_nachbau import Ablage  # noqa: E402
 
 from app.main import app_bauen  # noqa: E402
 
@@ -34,32 +35,16 @@ class Fundus:
             {"herkunft": "anderswo:Seite", "titel": "Fremd", "dicht": 0.9}]})
 
 
-#: Ablage der nachgestellten Kellerwolke: Knoten -> (Pfad, Inhalt)
-ABLAGE: dict[str, tuple[str, bytes]] = {}
-
-
-def _knoten(kennung: str, pfad: str, typ: str = "datei") -> dict:
-    return {"id": kennung, "name": pfad.rsplit("/", 1)[-1], "typ": typ, "pfad": pfad, "recht": "schreiben",
-            "erstellt_am": "2026-11-02T12:00:00Z", "geaendert_am": "2026-11-02T12:00:00Z"}
+#: Ablage der nachgestellten Kellerwolke (ablage_nachbau.py, auch im Probebetrieb)
+ABLAGE = Ablage()
 
 
 def kellerwolke(request: httpx.Request) -> httpx.Response:
     pfad = request.url.path
     if pfad == "/api/v1/ablage/ich":
         return httpx.Response(200, json={"app": "Nachschlag", "konto": "probe", "rechte": []})
-    if pfad == "/api/v1/ablage/ordner":
-        return httpx.Response(200, json=_knoten("00000000-0000-0000-0000-000000000001", json.loads(request.content)["pfad"], "ordner"))
-    if pfad == "/api/v1/ablage/datei" and request.method == "PUT":
-        kennung = f"00000000-0000-0000-0000-{len(ABLAGE) + 2:012d}"
-        ABLAGE[kennung] = (request.url.params["pfad"], request.content)
-        return httpx.Response(200, json=_knoten(kennung, request.url.params["pfad"]))
-    if (m := re.fullmatch(r"/api/v1/ablage/knoten/([0-9a-f-]+)(/inhalt)?", pfad)):
-        if m.group(1) not in ABLAGE:
-            return httpx.Response(404, json={"detail": "gibt es nicht"})
-        if request.method == "DELETE":
-            del ABLAGE[m.group(1)]
-            return httpx.Response(204)
-        return httpx.Response(200, content=ABLAGE[m.group(1)][1])
+    if (antwort := ABLAGE.antwort(request)) is not None:
+        return antwort
     if pfad == "/api/v1/auth/login":
         return httpx.Response(200, json={"token": "t1", "benutzer": {"id": "1", "name": "probe", "rolle": "mitglied", "aktiv": True}})
     if pfad == "/api/v1/auth/status":
@@ -403,8 +388,9 @@ async def test_bilder_an_notizen_in_der_kellerwolke(nachschlag):
     assert r.status_code == 200, r.text
     bild = r.json()["bilder"][0]
     assert (bild["typ"], bild["name"], bild["groesse"]) == ("image/png", "image.png", len(png))
-    pfad, inhalt = ABLAGE[bild["knoten"]]
-    assert pfad == f"Apps/Nachschlag/Notizen/{n['id']}/{bild['id']}.png" and inhalt == png
+    ordner = f"Apps/Nachschlag/Notizen/{n['id']}"
+    pfad, inhalt = ABLAGE.knoten[bild["knoten"]]
+    assert pfad == f"{ordner}/{bild['id']}.png" and inhalt == png
     # wie <img>: ohne Kopf, nur mit dem Cookie des Lesezugangs
     assert (await c.post("/api/v1/anmeldung/zugang")).status_code == 204
     token = c.headers.pop("X-Kellerwolke-Sitzung")
@@ -418,13 +404,20 @@ async def test_bilder_an_notizen_in_der_kellerwolke(nachschlag):
     kein = await c.post(f"/api/v1/meins/notizen/{n['id']}/bilder", files={"datei": ("x.png", b"<svg>", "image/png")})
     assert kein.status_code == 422 and "kein Bild" in kein.json()["detail"]
     assert (await c.post("/api/v1/meins/notizen/fremd/bilder", files={"datei": ("x.png", png, "image/png")})).status_code == 404
-    # ein Bild entfernen, dann die Notiz mit dem zweiten: die Dateien gehen in den Papierkorb
+    # ein Bild entfernen, dann die Notiz mit dem zweiten: die Dateien gehen in den Papierkorb, zuletzt mit dem Ordner
     zweites = (await c.post(f"/api/v1/meins/notizen/{n['id']}/bilder", files={"datei": ("foto.jpg", b"\xff\xd8\xff" + b"1" * 20, "image/jpeg")})).json()["bilder"][1]
     assert (await c.delete(f"/api/v1/meins/notizen/{n['id']}/bilder/{bild['id']}")).status_code == 204
-    assert bild["knoten"] not in ABLAGE and zweites["knoten"] in ABLAGE
+    assert bild["knoten"] not in ABLAGE.knoten and zweites["knoten"] in ABLAGE.knoten
     assert (await c.get(f"/api/v1/inhalt/notizbilder/{n['id']}/{bild['id']}")).status_code == 404
     assert (await c.delete(f"/api/v1/meins/notizen/{n['id']}")).status_code == 204
-    assert zweites["knoten"] not in ABLAGE
+    assert not ABLAGE.unter(ordner)
+    # das letzte Bild entfernt: kein leerer Ordner bleibt zurück
+    m = (await c.post("/api/v1/meins/notizen", json={"buch": "probe_de_all_2026-01", "pfad": "Rotfuchs", "titel": "Rotfuchs",
+                                                     "text": "ein Bild"})).json()
+    einzig = (await c.post(f"/api/v1/meins/notizen/{m['id']}/bilder", files={"datei": ("a.gif", b"GIF89a" + b"0" * 9, "image/gif")})).json()["bilder"][0]
+    assert len(ABLAGE.unter(f"Apps/Nachschlag/Notizen/{m['id']}")) == 2
+    assert (await c.delete(f"/api/v1/meins/notizen/{m['id']}/bilder/{einzig['id']}")).status_code == 204
+    assert not ABLAGE.unter(f"Apps/Nachschlag/Notizen/{m['id']}")
 
 
 async def test_eigene_beispiele_je_artikel(nachschlag):
