@@ -13,3 +13,5 @@ symbole = "durchsichtig"
 [zugaenge]
 name = "Nachschlag"
 leitstelle = ["text", "uebersetzen", "stimme"]
+# Konto der Kellerwolke, dem die App gehört: das Ausrollen besorgt auch ihren App-Schlüssel dort
+kellerwolke = "admin"
