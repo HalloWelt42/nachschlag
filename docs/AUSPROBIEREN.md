@@ -58,6 +58,26 @@ Nachschlag (Oberfläche: Ebene Ausprobieren, Editor, Ausgabe, Debugger)
   zwei Klicks. Aus einem eigenen Beispiel geöffnet, speichert Behalten dieses.
 - Die Ebene wird erst beim Öffnen geladen; Editor und Debugger (CodeMirror) braucht nur, wer etwas ausprobiert.
 
+## PHP mit Fassungen (Schritt 5, WIKI-52)
+
+Entscheidungen (Gespräch 02.11.2026): PHP-Fassungen 5.6, 7.4 und 8.0 bis 8.5, je eine als eigenes Abbild der Sandbox;
+der Editor kennt die Funktionen jeder Fassung aus der Sandbox selbst. Nutzer: "zwischen den php-versionen zu wechseln,
+passend zum code. und das im editor ausführenansicht des overlay live zu ändern"; "auch der editor muss dann darauf
+reagieren, z.b. wenns befehle in alten versionen nich tgab".
+
+- Codeschmiede: die Fassungen stehen nur in `sandbox/laufzeiten.py` (Laufzeit `php-8.3`, Abbild
+  `codeschmiede-sandbox:php-8.3` aus `sandbox-bilder/php.Dockerfile`). Für Apps: `GET /api/v1/sandbox/sprachen`
+  (Sprachen, Fassungen, ob aufgezeichnet wird), `POST /api/v1/sandbox/ausfuehren` (Ausgabe, Hinweise, Fehler mit
+  Zeile) und `GET /api/v1/sandbox/funktionen/php` (je Fassung die eingebauten Funktionen).
+- Nachschlag nimmt das Angebot von der Codeschmiede (keine eigene Liste). PHP läuft ohne Aufzeichnung: kein Debugger,
+  keine Haltepunkte; Hinweise (Warnungen) stehen unter der Ausgabe, die Zeile eines Fehlers ist im Editor markiert.
+- Die Ebene beginnt mit Meine Fassung des Buchs (genau sie, sonst die neueste ihrer Reihe, "8" ergibt 8.5) und lässt
+  die Fassung im Kopf wählen. Ein Wechsel lässt einen gezeigten Lauf in der neuen Fassung gleich noch einmal laufen.
+- Der Editor (Appkern, `Funktionsbestand`) unterstreicht Aufrufe, die es in der gewählten Fassung nicht gibt, mit dem
+  Hinweis, ab oder bis wann es sie gibt; die Vervollständigung bietet die Funktionen der Fassung an. Was keine Fassung
+  kennt (Erweiterungen ohne Abbild), bleibt unmarkiert.
+- Eigene Beispiele merken sich die Fassung, in der sie liefen.
+
 ## Reihenfolge des Baus
 
 1. Codeschmiede: Schnittstelle für Apps (Anmeldung mit App-Schlüssel über den Appkern, Erlaubnisliste, Grenzen), Tests,
@@ -65,4 +85,5 @@ Nachschlag (Oberfläche: Ebene Ausprobieren, Editor, Ausgabe, Debugger)
 2. Nachschlag: Weg zum Ausprobieren über den Verbund (Adresse der Codeschmiede aus dem Verzeichnis), Tests.
 3. Appkern-Oberfläche: Editor und Debugger als gemeinsame Bausteine aus der Codeschmiede; die Codeschmiede stellt um.
 4. Nachschlag: Ebene Ausprobieren nach dem Entwurf (Knopf am Beispiel, nur am Rechner), Behalten als eigenes Beispiel.
-5. PHP-Abbild in der Sandbox, danach die Aufzeichnung für PHP.
+5. PHP-Abbilder je Fassung in der Sandbox, Wahl der Fassung und Funktionsbestand im Editor (WIKI-52); danach die
+   Aufzeichnung für PHP.

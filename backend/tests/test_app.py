@@ -382,9 +382,13 @@ async def test_eigene_beispiele_je_artikel(nachschlag):
     zweites = (await c.post("/api/v1/meins/beispiele", json={
         "buch": buch, "pfad": "Rotfuchs", "titel": " Summe ", "sprache": "javascript", "code": "console.log(1 + 2)"})).json()
     assert (zweites["titel"], zweites["block"]) == ("Summe", -1)
-    await c.post("/api/v1/meins/beispiele", json={"buch": buch, "pfad": "Arrhenius", "titel": "anders", "sprache": "php", "code": "<?php echo 1;"})
+    php = (await c.post("/api/v1/meins/beispiele", json={"buch": buch, "pfad": "Arrhenius", "titel": "anders", "sprache": "php",
+                                                         "code": "<?php echo 1;", "fassung": "7.4"})).json()
+    assert php["fassung"] == "7.4" and erstes["fassung"] == ""
     nur = (await c.get("/api/v1/meins/beispiele", params={"buch": buch, "pfad": "Rotfuchs"})).json()
     assert [b["id"] for b in nur] == [erstes["id"], zweites["id"]]
+    geaendert = (await c.patch(f"/api/v1/meins/beispiele/{php['id']}", json={"titel": "anders", "code": "<?php echo 2;", "fassung": "8.5"})).json()
+    assert (geaendert["code"], geaendert["fassung"]) == ("<?php echo 2;", "8.5")
     geaendert = (await c.patch(f"/api/v1/meins/beispiele/{erstes['id']}", json={"titel": "Quadrate bis 9", "code": "print(9)"})).json()
     assert (geaendert["titel"], geaendert["code"]) == ("Quadrate bis 9", "print(9)") and geaendert["geaendert"] > geaendert["angelegt"]
     assert (await c.post("/api/v1/meins/beispiele", json={"buch": buch, "pfad": "Rotfuchs", "titel": "x", "sprache": "ruby",

@@ -118,11 +118,13 @@ class BeispielNeu(BaseModel):
     code: str = Field(min_length=1, max_length=20_000)
     vorlage: str = Field("", max_length=300, description="Titel des Beispiels im Artikel, aus dem es stammt")
     block: int = Field(-1, ge=-1, le=10_000, description="Codeblock im Artikel (ab 0), hinter dem es steht; -1: am Ende")
+    fassung: str = Field("", max_length=10, description="Fassung der Sprache, in der es lief (PHP, WIKI-52); leer: keine Wahl")
 
 
 class BeispielAenderung(BaseModel):
     titel: str = Field(min_length=1, max_length=200)
     code: str = Field(min_length=1, max_length=20_000)
+    fassung: str = Field("", max_length=10)
 
 
 class Beispiel(BaseModel):
@@ -135,5 +137,6 @@ class Beispiel(BaseModel):
     code: str
     vorlage: str = ""
     block: int = -1
+    fassung: str = ""
     angelegt: str
     geaendert: str

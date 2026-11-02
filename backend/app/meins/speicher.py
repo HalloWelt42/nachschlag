@@ -44,6 +44,9 @@ CREATE TABLE beispiele (
   sprache TEXT NOT NULL, code TEXT NOT NULL, vorlage TEXT NOT NULL DEFAULT '', block INTEGER NOT NULL DEFAULT -1,
   angelegt TEXT NOT NULL, geaendert TEXT NOT NULL);
 CREATE INDEX beispiele_artikel ON beispiele (konto, buch_name, pfad);
+""", """
+-- PHP-Fassung, in der ein eigenes Beispiel lief (WIKI-52)
+ALTER TABLE beispiele ADD COLUMN fassung TEXT NOT NULL DEFAULT '';
 """]
 
 #: Wie viele Einträge der Verlauf je Konto höchstens behält (älteste fallen beim Schreiben weg)
@@ -136,15 +139,15 @@ class Meins(Begleiter):
     async def beispiel_anlegen(self, konto: str, eingabe: BeispielNeu) -> Beispiel:
         jetzt, neu = _jetzt(), str(uuid.uuid4())
         await self._db.ausfuehren(
-            "INSERT INTO beispiele (id, konto, buch_name, pfad, titel, sprache, code, vorlage, block, angelegt, geaendert) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO beispiele (id, konto, buch_name, pfad, titel, sprache, code, vorlage, block, fassung, angelegt, geaendert) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
             (neu, konto, await self._name_von(eingabe.buch), eingabe.pfad, eingabe.titel.strip(), eingabe.sprache, eingabe.code,
-             eingabe.vorlage, eingabe.block, jetzt, jetzt))
+             eingabe.vorlage, eingabe.block, eingabe.fassung, jetzt, jetzt))
         return await self._beispiel_holen(konto, neu)  # type: ignore[return-value]
 
     async def beispiel_aendern(self, konto: str, kennung: str, aenderung: BeispielAenderung) -> Beispiel | None:
-        if not await self._db.ausfuehren("UPDATE beispiele SET titel=?, code=?, geaendert=? WHERE konto=? AND id=?",
-                                         (aenderung.titel.strip(), aenderung.code, _jetzt(), konto, kennung)):
+        if not await self._db.ausfuehren("UPDATE beispiele SET titel=?, code=?, fassung=?, geaendert=? WHERE konto=? AND id=?",
+                                         (aenderung.titel.strip(), aenderung.code, aenderung.fassung, _jetzt(), konto, kennung)):
             return None
         return await self._beispiel_holen(konto, kennung)
 

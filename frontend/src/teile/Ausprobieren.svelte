@@ -4,10 +4,14 @@
   // Gerechnet wird in der Sandbox der Codeschmiede; der Lauf ist aufgezeichnet, darum geht jeder Schritt vor und zurück.
   // Das Original im Artikel bleibt; "Zurücksetzen" holt es wieder, "Behalten" legt die Kopie als eigenes Beispiel unter
   // den Code, aus dem sie stammt. Escape oder Schließen kehren zurück, die Stelle im Artikel bleibt.
+  // Wo die Sandbox Fassungen hat (PHP, WIKI-52), wählt man sie im Kopf: die Ebene beginnt mit Meine Fassung, der Editor
+  // markiert Funktionen, die es dort nicht gibt, und ein Wechsel lässt den letzten Lauf in der neuen Fassung neu laufen.
+  // Sprachen ohne Aufzeichnung laufen nur (Ausgabe, Hinweise, Fehler mit Zeile), ohne Debugger.
   import { onMount, untrack } from "svelte";
+  import { Auswahl } from "appkern-oberflaeche";
   import { DebuggerBereich, DebugSitzung, EditorBereich } from "appkern-oberflaeche/code";
-  import { ausprobierstand, beispielAendern, beispielAnlegen, DATEINAMEN, probelauf, SPRACHNAMEN, SYMBOLE, type Ausprobierstand,
-           type Beispiel, type Probe } from "../lib/ausprobieren";
+  import { ausprobierstand, beispielAendern, beispielAnlegen, bestandFuer, DATEINAMEN, passendeFassung, phpFunktionen, probelauf,
+           SPRACHNAMEN, SYMBOLE, type Ausprobierstand, type Beispiel, type Probe, type Probelauf } from "../lib/ausprobieren";
 
   let { probe, onzu, onbehalten }: {
     probe: Probe;
@@ -28,17 +32,32 @@
   let speichert = $state(false);
   let meldung = $state("");
   let namensfeld = $state<HTMLInputElement>();
+  let wurzel = $state<HTMLElement>();
+  let fassung = $state("");                         // gewählte Fassung (PHP); leer: die Sprache hat keine Wahl
+  let laufFassung = $state("");                     // in der der gezeigte Lauf lief
+  let alleFunktionen = $state.raw<Record<string, string[]>>({});
   const sitzung = new DebugSitzung();
   // Tastenkürzel zum Ausführen, wie die Tastatur ihn beschriftet
   const KUERZEL = /Mac|iPhone|iPad/.test(navigator.userAgent) ? "Cmd Enter" : "Strg Enter";
 
-  const kann = $derived(!!stand?.bereit && stand.sprachen.includes(sprache));
+  const angebot = $derived(stand?.bereit ? stand.sprachen.find((s) => s.sprache === sprache) ?? null : null);
+  const fassungen = $derived(angebot?.fassungen ?? []);
+  const aufzeichnen = $derived(!!angebot?.aufzeichnen);
+  const kann = $derived(!!angebot);
   const lage = $derived(!stand ? "Frage die Sandbox ..." : kann ? "Sandbox bereit, ohne Netz"
-    : stand.bereit ? `${SPRACHNAMEN[sprache]} läuft in der Sandbox noch nicht` : stand.grund);
-  const lauf = $derived(sitzung.lauf);
+    : stand.bereit ? `${SPRACHNAMEN[sprache]} läuft in der Sandbox nicht` : stand.grund);
+  const lauf = $derived(sitzung.lauf as Probelauf | null);
+  const bestand = $derived(fassung ? bestandFuer(SPRACHNAMEN[sprache], fassung, alleFunktionen) : null);
+  // ohne Aufzeichnung zeigt der Editor die Zeile, an der der Lauf scheiterte
+  const fehlerzeile = $derived(lauf?.fehler && lauf.fehlerzeile && !sitzung.veraltet(code) ? lauf.fehlerzeile : null);
 
   onMount(() => {
-    void ausprobierstand().then((s) => (stand = s));
+    void ausprobierstand().then((s) => {
+      stand = s;
+      const wunsch = geoeffnet?.fassung || untrack(() => probe.fassung);
+      fassung = passendeFassung(s.sprachen.find((a) => a.sprache === sprache)?.fassungen ?? [], wunsch);
+    });
+    if (sprache === "php") void phpFunktionen().then((b) => (alleFunktionen = b));
   });
 
   // die Leiste zum Behalten öffnet mit dem Namen im Fokus, markiert zum Überschreiben
@@ -48,9 +67,16 @@
   });
 
   function starten(ziel: "ausgabe" | "debugger") {
-    if (!kann || sitzung.laeuft) return;
+    if (!kann || sitzung.laeuft || (ziel === "debugger" && !aufzeichnen)) return;
     reiter = ziel;
-    void sitzung.starten(code, probelauf(sprache));
+    laufFassung = fassung;
+    void sitzung.starten(code, probelauf(sprache, fassung));
+  }
+
+  /** Eine andere Fassung: der Editor prüft gegen sie, und ein gezeigter Lauf läuft in ihr gleich noch einmal */
+  function fassungWechseln(neu: string) {
+    fassung = neu;
+    if ((sitzung.lauf || sitzung.fehler) && !sitzung.laeuft) starten(reiter);
   }
 
   function zuruecksetzen() {
@@ -70,8 +96,9 @@
     speichert = true;
     meldung = "";
     try {
-      const b = eigen ? await beispielAendern(eigen.id, titel, code)
-        : await beispielAnlegen({ buch: probe.buch, pfad: probe.pfad, titel, sprache, code, vorlage: probe.titel, block: probe.block });
+      const b = eigen ? await beispielAendern(eigen.id, titel, code, fassung)
+        : await beispielAnlegen({ buch: probe.buch, pfad: probe.pfad, titel, sprache, code, vorlage: probe.titel, block: probe.block,
+                                  fassung });
       eigen = b;
       gesichert = code;
       behalten = null;
@@ -94,6 +121,7 @@
 
   function taste(e: KeyboardEvent) {
     if (e.defaultPrevented || e.key !== "Escape") return;   // der Editor hat sie selbst gebraucht (Vervollständigung)
+    if (wurzel?.querySelector(".auswahl-liste")) return;     // eine offene Auswahl schließt sich selbst
     e.preventDefault();
     if (behalten) behalten = null;
     else onzu();
@@ -103,17 +131,24 @@
 <svelte:window onkeydowncapture={tasteVorab} onkeydown={taste} />
 
 <div class="probe-schleier" onclick={onzu} aria-hidden="true"></div>
-<div class="probe" role="dialog" aria-modal="true" aria-label="Ausprobieren">
+<div class="probe" role="dialog" aria-modal="true" aria-label="Ausprobieren" bind:this={wurzel}>
   <header class="probe-kopf">
     <i class="fa-solid fa-flask" aria-hidden="true"></i>
     <div class="probe-titel"><b>Ausprobieren</b><span>{eigen ? `Dein Beispiel: ${eigen.titel}` : probe.titel} · {probe.quelle}</span></div>
-    <span class="chip"><i class={SYMBOLE[sprache]} aria-hidden="true"></i>{SPRACHNAMEN[sprache]}</span>
+    {#if fassungen.length && fassung}
+      <Auswahl wert={fassung} symbol="fa-code-branch" titel="Fassung, in der der Code läuft und gegen die der Editor prüft"
+               optionen={fassungen.map((f) => ({ wert: f, titel: `${SPRACHNAMEN[sprache]} ${f}` }))} onwahl={fassungWechseln} />
+    {:else}
+      <span class="chip"><i class={SYMBOLE[sprache]} aria-hidden="true"></i>{SPRACHNAMEN[sprache]}</span>
+    {/if}
     <span class="probe-lage" class:aus={!!stand && !kann}><span class="punkt"></span>{lage}</span>
     <div class="rechts">
       <button class="knopf primaer" onclick={() => starten("ausgabe")} disabled={!kann || sitzung.laeuft}
               title="In der Sandbox ausführen ({KUERZEL})"><i class="fa-solid fa-play" aria-hidden="true"></i>Ausführen<kbd>{KUERZEL}</kbd></button>
-      <button class="knopf" class:an={reiter === "debugger" && sitzung.aktiv} onclick={() => starten("debugger")}
-              disabled={!kann || sitzung.laeuft} title="Den Lauf aufzeichnen und Schritt für Schritt ansehen"><i class="fa-solid fa-bug" aria-hidden="true"></i>Debuggen</button>
+      {#if aufzeichnen}
+        <button class="knopf" class:an={reiter === "debugger" && sitzung.aktiv} onclick={() => starten("debugger")}
+                disabled={sitzung.laeuft} title="Den Lauf aufzeichnen und Schritt für Schritt ansehen"><i class="fa-solid fa-bug" aria-hidden="true"></i>Debuggen</button>
+      {/if}
       <button class="knopf still" onclick={zuruecksetzen} disabled={code === original}
               title={geoeffnet ? "Wieder dein Beispiel, wie es gespeichert war" : "Wieder das Beispiel aus dem Artikel"}><i class="fa-solid fa-rotate-left" aria-hidden="true"></i>Zurücksetzen</button>
       <button class="knopf still" class:an={!!behalten} onclick={behaltenOeffnen}
@@ -142,16 +177,22 @@
         {#if code !== gesichert}<span class="geaendert">geändert</span>{/if}
       </div>
       <div class="probe-code">
-        <EditorBereich {sprache} bind:code markierteZeile={reiter === "debugger" ? zeile : null} mitHaltepunkten
-                       bind:haltepunkte={sitzung.haltepunkte} />
+        <EditorBereich {sprache} bind:code markierteZeile={reiter === "debugger" ? zeile : fehlerzeile} mitHaltepunkten={aufzeichnen}
+                       bind:haltepunkte={sitzung.haltepunkte} {bestand} />
       </div>
-      <div class="probe-hinweis"><i class="fa-solid fa-circle" aria-hidden="true"></i>Haltepunkt: links neben die Zeilennummer klicken</div>
+      {#if aufzeichnen}
+        <div class="probe-hinweis"><i class="fa-solid fa-circle" aria-hidden="true"></i>Haltepunkt: links neben die Zeilennummer klicken</div>
+      {:else if bestand}
+        <div class="probe-hinweis"><i class="fa-solid fa-code-branch" aria-hidden="true"></i>Unterstrichen: Funktionen, die es in {SPRACHNAMEN[sprache]} {fassung} nicht gibt</div>
+      {/if}
     </div>
 
     <aside class="probe-rechts">
       <div class="probe-reiterleiste" role="tablist">
         <button role="tab" aria-selected={reiter === "ausgabe"} class:aktiv={reiter === "ausgabe"} onclick={() => (reiter = "ausgabe")}>Ausgabe</button>
-        <button role="tab" aria-selected={reiter === "debugger"} class:aktiv={reiter === "debugger"} onclick={() => (reiter = "debugger")}>Debugger</button>
+        {#if aufzeichnen}
+          <button role="tab" aria-selected={reiter === "debugger"} class:aktiv={reiter === "debugger"} onclick={() => (reiter = "debugger")}>Debugger</button>
+        {/if}
       </div>
 
       {#if reiter === "ausgabe"}
@@ -165,8 +206,11 @@
           {#if lauf.fehler}
             <div class="probe-meldung"><i class="fa-solid fa-bug" aria-hidden="true"></i><span>{lauf.fehler}{lauf.fehlerzeile ? ` (Zeile ${lauf.fehlerzeile})` : ""}</span></div>
           {/if}
+          {#if lauf.hinweise}
+            <div class="probe-hinweise"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><pre>{lauf.hinweise}</pre></div>
+          {/if}
           {#if lauf.zeitueberschreitung}<p class="leise">Zeit überschritten: der Lauf wurde abgebrochen.</p>{/if}
-          <p class="leise">Lief <span class="zahl">{Math.round(lauf.laufzeit_ms)}</span> ms in der Sandbox der Codeschmiede.</p>
+          <p class="leise">Lief <span class="zahl">{Math.round(lauf.laufzeit_ms)}</span> ms{laufFassung ? ` mit ${SPRACHNAMEN[sprache]} ${laufFassung}` : ""} in der Sandbox der Codeschmiede.</p>
         {:else}
           <p class="leise">Ausführen schickt den Code in die Sandbox der Codeschmiede: ohne Netz, mit Grenzen für Zeit und Speicher.</p>
         {/if}
@@ -226,5 +270,9 @@
   .probe-meldung { display: flex; gap: var(--a2); align-items: baseline; padding: 8px 10px; border-radius: var(--r2); font-size: var(--klein);
                    background: color-mix(in srgb, var(--gefahr) 10%, transparent); color: var(--text); }
   .probe-meldung i { color: var(--gefahr); }
+  .probe-hinweise { display: flex; gap: var(--a2); align-items: baseline; padding: 8px 10px; border-radius: var(--r2); font-size: var(--klein);
+                    background: color-mix(in srgb, var(--warn) 10%, transparent); }
+  .probe-hinweise i { color: var(--warn); }
+  .probe-hinweise pre { margin: 0; font-family: var(--schrift-editor); font-size: var(--klein); white-space: pre-wrap; overflow-wrap: anywhere; }
   .probe-fuss { margin-top: auto; padding-top: var(--a3); font-size: var(--klein); color: var(--text-3); display: flex; gap: 8px; align-items: baseline; }
 </style>

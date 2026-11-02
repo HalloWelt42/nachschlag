@@ -449,7 +449,7 @@
     const [stand, liste] = await Promise.all([geraet.mobil ? null : ausprobierstand(),
                                               beispieleHolen(a.buch, a.pfad).catch(() => [] as Beispiel[])]);
     if (artikel !== a) return;                        // inzwischen ein anderer Text
-    laufbar = stand?.bereit ? stand.sprachen : [];
+    laufbar = stand?.bereit ? stand.sprachen.map((s) => s.sprache) : [];
     probierknoepfe(wurzel);
     eigene = liste;
     eigeneZeigen();
@@ -470,10 +470,11 @@
     }
   }
 
-  function probierKnopf(was: () => Pick<Probe, "titel" | "sprache" | "code" | "block" | "eigen">): HTMLButtonElement {
+  /** `fassung` (PHP): die eines eigenen Beispiels, sonst gilt Meine Fassung des Buchs */
+  function probierKnopf(was: () => Pick<Probe, "titel" | "sprache" | "code" | "block" | "eigen"> & Partial<Pick<Probe, "fassung">>): HTMLButtonElement {
     const knopf = codeKnopf("fa-solid fa-play", "Ausprobieren", "Ausprobieren: eine Kopie ausführen und debuggen", "ausprobieren");
     knopf.addEventListener("click", () => {
-      if (artikel) probe = { ...was(), buch: artikel.buch, pfad: artikel.pfad, quelle: buch ? bezeichnung(buch) : artikel.buch };
+      if (artikel) probe = { fassung: meineFassung, ...was(), buch: artikel.buch, pfad: artikel.pfad, quelle: buch ? bezeichnung(buch) : artikel.buch };
     });
     return knopf;
   }
@@ -543,7 +544,8 @@
     const knoepfe = document.createElement("span");
     knoepfe.className = "eigen-knoepfe";
     if (laufbar.includes(b.sprache)) {
-      knoepfe.append(probierKnopf(() => ({ titel: b.vorlage || b.titel, sprache: b.sprache, code: b.code, block: b.block, eigen: b })));
+      knoepfe.append(probierKnopf(() => ({ titel: b.vorlage || b.titel, sprache: b.sprache, code: b.code, block: b.block, eigen: b,
+                                           ...(b.fassung ? { fassung: b.fassung } : {}) })));
     }
     const kopierer = codeKnopf("fa-regular fa-copy", "Kopieren", "Kopieren", "kopieren");
     kopierer.addEventListener("click", async () => {
