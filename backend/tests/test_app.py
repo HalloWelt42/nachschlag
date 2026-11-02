@@ -508,6 +508,24 @@ def test_verschachtelter_code_einmal_entmaskiert():
     assert code_text(absichtlich) == "s.replace('<', '&lt;')"
 
 
+def test_alle_codebloecke_nach_verschachteltem():
+    """Stack Overflow: steht ein Block im Code eines anderen, werden trotzdem alle Blöcke danach zu Codeblöcken (vorher
+    blieben sie roh: ohne Gestaltung, ohne Umbruch, über den Rand)."""
+    from lxml import html as lhtml
+    from app.bausteine import Wege
+    from app.bausteine.frage_antwort import _beitrag
+    from app.modell.buch import Buch, Faehigkeiten
+    buch = Buch(kennung="q", name="q", titel="Q", art="frage_antwort", eintraege=0, artikel=0, medien=0, groesse=0,
+                faehigkeiten=Faehigkeiten(titelindex=False, volltext=False, bilder=False, lesedesign=True))
+    wege = Wege(artikel=lambda b, p: "", medien=lambda b, p: "", original=lambda b, p: "", gibt_es=lambda b, p: False)
+    quelle = lhtml.fromstring('<div data-score="1"><div class="js-post-body"><pre><code>a\n<pre><code>b</code></pre></code></pre>'
+                              '<p>dann</p><pre><code>c = 1</code></pre><pre><code>d = 2</code></pre></div></div>')
+    kasten, _ = _beitrag(quelle, "beantwortet", buch, wege)
+    bloecke = kasten.xpath(".//pre")
+    assert [p.get("class") for p in bloecke] == ["codeblock"] * 3
+    assert [p.text for p in bloecke] == ["a\nb", "c = 1", "d = 2"]
+
+
 def test_formeln_als_mathml_ohne_ersatzbild():
     """Formeln der Quelle (verstecktes MathML und schwarzes Ersatzbild) werden zu sichtbarem MathML ohne Bild und ohne
     TeX-Quelle; der Text danach bleibt; abgesetzte Formeln stehen in einem eigenen Kasten."""

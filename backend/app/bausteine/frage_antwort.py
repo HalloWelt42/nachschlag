@@ -151,7 +151,9 @@ def _beitrag(quelle, art: str, buch: Buch, wege: Wege, akzeptiert: bool = False)
         rechts[-1].text = "Akzeptierte Antwort"
     text = next(iter(quelle.xpath(".//div[contains(@class,'js-post-body')]")), None)
     if text is not None:
-        for pre in text.iter("pre"):
+        # nur äußere Blöcke, vorher gesammelt: die Quelle verschachtelt Blöcke (Block im Code eines Blocks), und das
+        # Aushängen der Kinder hielte ein laufendes iter() im ausgehängten Teil fest; alle Blöcke danach blieben roh
+        for pre in text.xpath(".//pre[not(ancestor::pre)]"):
             code = code_text(pre)
             for k in list(pre):
                 pre.remove(k)
