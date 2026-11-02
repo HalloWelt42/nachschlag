@@ -25,15 +25,16 @@ class Antwort:
 class Verbund:
     """Antwortet wie die Codeschmiede; `fehler` lehnt jede Anfrage ab, `funktionen` sind die Fassungen, die antworten."""
 
-    def __init__(self, fehler: VerbundFehler | None = None, funktionen: tuple[str, ...] = ("8.5", "7.4")) -> None:
-        self.fehler, self.funktionen, self.aufrufe = fehler, funktionen, []
+    def __init__(self, fehler: VerbundFehler | None = None, funktionen: tuple[str, ...] = ("8.5", "7.4"),
+                 angebot: list | None = None) -> None:
+        self.fehler, self.funktionen, self.angebot, self.aufrufe = fehler, funktionen, angebot or ANGEBOT, []
 
     async def anfrage(self, methode, adresse, pfad, **art):
         self.aufrufe.append((methode, adresse, pfad, art))
         if self.fehler:
             raise self.fehler
         if pfad.endswith("/sprachen"):
-            return Antwort(ANGEBOT)
+            return Antwort(self.angebot)
         if pfad.endswith("/funktionen/php"):
             return Antwort({f: ["strlen"] + (["str_contains"] if f == "8.5" else ["each"]) for f in self.funktionen})
         if pfad.endswith("/ausfuehren"):
@@ -63,6 +64,15 @@ async def test_php_laeuft_ohne_aufzeichnung_in_der_fassung():
     assert lauf.aufzeichnung["ausgabe"] == "8\n" and lauf.aufzeichnung["schritte"] == []
     assert v.aufrufe[-1][2] == "/api/v1/sandbox/ausfuehren"
     assert v.aufrufe[-1][3]["json"] == {"code": "<?php echo 8;", "sprache": "php", "fassung": "7.4"}
+
+
+async def test_php_mit_debugger_zeichnet_in_der_fassung_auf():
+    angebot = [*ANGEBOT[:2], {**ANGEBOT[2], "aufzeichnen": True}]
+    v = Verbund(angebot=angebot)
+    a = Ausprobieren(lambda: v, lambda: "https://c")
+    await a.laufen("<?php echo 8;", "php", "5.6", [])
+    assert v.aufrufe[-1][2] == "/api/v1/sandbox/aufzeichnen"
+    assert v.aufrufe[-1][3]["json"] == {"code": "<?php echo 8;", "sprache": "php", "eingabe": [], "fassung": "5.6"}
 
 
 async def test_funktionen_je_fassung_gemerkt_wenn_alle_antworten():

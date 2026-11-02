@@ -180,10 +180,11 @@
         <EditorBereich {sprache} bind:code markierteZeile={reiter === "debugger" ? zeile : fehlerzeile} mitHaltepunkten={aufzeichnen}
                        bind:haltepunkte={sitzung.haltepunkte} {bestand} />
       </div>
-      {#if aufzeichnen}
-        <div class="probe-hinweis"><i class="fa-solid fa-circle" aria-hidden="true"></i>Haltepunkt: links neben die Zeilennummer klicken</div>
-      {:else if bestand}
-        <div class="probe-hinweis"><i class="fa-solid fa-code-branch" aria-hidden="true"></i>Unterstrichen: Funktionen, die es in {SPRACHNAMEN[sprache]} {fassung} nicht gibt</div>
+      {#if aufzeichnen || bestand}
+        <div class="probe-hinweis">
+          {#if aufzeichnen}<span><i class="fa-solid fa-circle haltepunkt" aria-hidden="true"></i>Haltepunkt: links neben die Zeilennummer klicken</span>{/if}
+          {#if bestand}<span><i class="fa-solid fa-code-branch" aria-hidden="true"></i>Unterstrichen: Funktionen, die es in {SPRACHNAMEN[sprache]} {fassung} nicht gibt</span>{/if}
+        </div>
       {/if}
     </div>
 
@@ -255,8 +256,11 @@
   .probe-reiter .aktiv { color: var(--ed-text); display: inline-flex; gap: 6px; align-items: center; font-family: var(--schrift-editor); }
   .probe-reiter .geaendert { margin-left: auto; color: var(--warn); }
   .probe-code { min-height: 0; overflow: hidden; }
-  .probe-hinweis { padding: 8px 12px; font-size: var(--klein); color: var(--ed-nr); background: var(--ed-rand); display: flex; gap: 8px; align-items: center; }
-  .probe-hinweis i { color: var(--ed-haltepunkt); font-size: var(--marke); }
+  .probe-hinweis { padding: 8px 12px; font-size: var(--klein); color: var(--ed-nr); background: var(--ed-rand); display: flex; flex-wrap: wrap;
+                   gap: 4px var(--a4); align-items: center; }
+  .probe-hinweis span { display: inline-flex; gap: 8px; align-items: center; }
+  .probe-hinweis i { font-size: var(--marke); }
+  .probe-hinweis i.haltepunkt { color: var(--ed-haltepunkt); }
 
   .probe-rechts { display: flex; flex-direction: column; gap: var(--a3); padding: var(--a3) var(--a4); overflow-y: auto; min-height: 0; }
   .probe-reiterleiste { display: flex; gap: 4px; flex: none; }

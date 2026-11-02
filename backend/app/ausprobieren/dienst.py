@@ -2,8 +2,8 @@
 über den Verbund an die Codeschmiede, mit seinem App-Schlüssel der Kellerwolke; die Codeschmiede nimmt nur Apps auf
 ihrer Erlaubnisliste an und lässt den Code in ihrer Sandbox laufen (ohne Netz, nur lesend, Grenzen). Was sie kann,
 sagt sie selbst (Sprachen, bei PHP die Fassungen, ob aufgezeichnet wird). Zurück kommt die Aufzeichnung ihres Debuggers
-(Ausgabe, Fehler und je Schritt Zeile, Aufrufstapel und Speicher); Sprachen ohne Aufzeichnung (PHP) laufen nur und
-bringen Ausgabe, Hinweise und Fehler mit Zeile. Für den Editor nennt sie je PHP-Fassung die eingebauten Funktionen
+(Ausgabe, Fehler und je Schritt Zeile, Aufrufstapel und Speicher), bei PHP in der gewählten Fassung; Sprachen ohne
+Aufzeichnung laufen nur und bringen Ausgabe, Hinweise und Fehler mit Zeile. Für den Editor nennt sie je PHP-Fassung die eingebauten Funktionen
 (WIKI-52). Geht es gerade nicht, ist das ein Zustand mit Grund, kein Fehler."""
 
 from __future__ import annotations
@@ -90,7 +90,8 @@ class Ausprobieren:
                 return Probelauf(grund=f"Die Sandbox der Codeschmiede kann {sprache} nicht ausführen")
             if angebot[sprache].aufzeichnen:
                 antwort = await self._verbund().anfrage("POST", adresse, "/api/v1/sandbox/aufzeichnen",
-                                                        json={"code": code, "sprache": sprache, "eingabe": eingabe})
+                                                        json={"code": code, "sprache": sprache, "eingabe": eingabe,
+                                                              **({"fassung": fassung} if fassung else {})})
                 return Probelauf(aufzeichnung=antwort.json())
             antwort = await self._verbund().anfrage("POST", adresse, "/api/v1/sandbox/ausfuehren",
                                                     json={"code": code, "sprache": sprache, "fassung": fassung})
