@@ -31,6 +31,20 @@ Nachschlag (Oberfläche: Ebene Ausprobieren, Editor, Ausgabe, Debugger)
 - Editor und Debugger der Oberfläche: die Bausteine der Codeschmiede (`EditorBereich`, `DebuggerBereich`) wandern als
   gemeinsame Bausteine in `appkern-oberflaeche`, statt sie zu kopieren; Codeschmiede und Nachschlag nutzen dieselben.
 
+## Schnitt der gemeinsamen Bausteine (Schritt 3)
+
+- Eigener Eingang `appkern-oberflaeche/code` (Ordner `oberflaeche/code/` im Appkern): `EditorBereich`,
+  `DebuggerBereich`, `Speicherbild`, `DebugSitzung`, die Steuerung des Debuggers und die Typen der Aufzeichnung. Apps
+  ohne Code laden kein CodeMirror, weil der Haupteingang davon nichts weiß.
+- Farben nur aus den Marken: das Schema des Editors steht als Abschnitt "Editor" (`--ed-*`) in `marken.css`, dazu die
+  Farben des Speicherbilds; alles Übrige nutzt die bekannten Marken (`--akzent`, `--text-2`, `--rand`,
+  `--schrift-code`, ...). Die Bausteine bringen ihren Stil selbst mit und hängen an keiner Klasse einer App.
+- `DebugSitzung` kennt keine Schnittstelle: wer sie startet, gibt die Funktion mit, die einen Lauf aufzeichnet
+  (Codeschmiede: Aufgabe mit Eingabe, Nachschlag: `POST /api/v1/ausprobieren`).
+- Sprachen des Editors: Python, JavaScript, PHP, HTML, CSS, SQL, Markdown.
+- Codeschmiede stellt um: Thema am `<html>` als `hell`/`dunkel` wie der Appkern, lädt `marken.css` und ordnet an einer
+  Stelle die Marken ihren eigenen Farben und Schriften zu; ihre Kopien von Editor, Debugger und Speicherbild entfallen.
+
 ## Reihenfolge des Baus
 
 1. Codeschmiede: Schnittstelle für Apps (Anmeldung mit App-Schlüssel über den Appkern, Erlaubnisliste, Grenzen), Tests,
