@@ -22,7 +22,7 @@ from zoneinfo import ZoneInfo
 from pydantic import BaseModel, Field
 
 from appkern.app.begleiter import Begleiter
-from appkern.auftraege import Art, AuftragFehler, Auftraege, Kontext
+from appkern.auftraege import Art, AuftragFehler, Auftraege, Herkunft, Kontext
 from appkern.auftraege.modelle import Auftrag
 from appkern.datenbank import Datenbank
 from appkern.kellerwolke import Kellerwolke
@@ -114,7 +114,8 @@ class Sammlungen(Begleiter):
         self._kw, self._fenster, self._uhr = kellerwolke, fenster, uhr
         self._wecker: asyncio.Task | None = None
         auftraege.anmelden(Art(name=ART, titel="Sammlung bearbeiten", arbeit=self._arbeit, eingabe=SammlungsEingabe,
-                               fortsetzbar=True, nach_neustart="fortsetzen", hoechstens=1))
+                               fortsetzbar=True, nach_neustart="fortsetzen", hoechstens=1,
+                               herkunft=lambda e: Herkunft(titel="Zum Thema", ziel=f"themen/{e['thema']}")))   # WIKI-50
         auftraege.zurueckstellen_wenn(self.zurueckstellen)
 
     async def starten(self) -> None:

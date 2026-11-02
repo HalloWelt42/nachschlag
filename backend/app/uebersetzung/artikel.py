@@ -16,7 +16,7 @@ from lxml import html as lhtml
 from pydantic import BaseModel, Field
 
 from appkern.app.begleiter import Begleiter
-from appkern.auftraege import Art, AuftragFehler, Auftraege, Kontext
+from appkern.auftraege import Art, AuftragFehler, Auftraege, Herkunft, Kontext
 from appkern.auftraege.modelle import Phase
 from appkern.datenbank import Datenbank
 from appkern.leitstelle import Leitstelle, LeitstellenFehler, Nachricht, antwortform, gerade, json_lesen
@@ -59,6 +59,11 @@ CREATE TABLE artikeluebersetzungen (
 class ArtikelEingabe(BaseModel):
     buch: str = Field(min_length=1, max_length=300)
     pfad: str = Field(min_length=1, max_length=2000)
+
+
+def herkunft(eingabe: dict) -> Herkunft:
+    """Woher ein Auftrag kommt (WIKI-50): der Artikel, der übersetzt wird."""
+    return Herkunft(titel="Zum Artikel", ziel=f"lesen/{eingabe['buch']}/{eingabe['pfad']}")
 
 
 class Codekommentar(BaseModel):
@@ -121,7 +126,7 @@ class Artikeluebersetzer(Begleiter):
         self._db, self._auftraege, self._bib, self._leser = db, auftraege, bibliothek, leser
         self._leitstelle, self._modell = leitstelle, modell
         auftraege.anmelden(Art(name=ART, titel="Artikel übersetzen", arbeit=self._arbeit, eingabe=ArtikelEingabe, phasen=PHASEN,
-                               fortsetzbar=True, nach_neustart="fortsetzen", hoechstens=1))
+                               fortsetzbar=True, nach_neustart="fortsetzen", hoechstens=1, herkunft=herkunft))
 
     async def starten(self) -> None:
         await self._db.einrichten("nachschlag_artikeluebersetzung", STUFEN)

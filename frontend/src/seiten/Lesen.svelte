@@ -100,13 +100,15 @@
   // Lesegröße dieses Buchs auf diesem Gerät (WIKI-29) als Zoom des Lesebereichs, auch in der Originalseite
   const zoom = $derived(buch ? groesseFuer(buch.name) / 100 : 1);
 
-  // Ohne Buch im Weg: die Startseite des Hauptbuchs
+  // Ohne Buch im Weg: die Startseite des Hauptbuchs; mit Buch, aber ohne Seite (lesen/<buch>, etwa der Verweis eines
+  // Auftrags, WIKI-50): die Startseite dieses Buchs
   $effect(() => {
-    if (buchKennung) return;
+    if (buchKennung && pfad) return;
+    const kennung = buchKennung;
     untrack(async () => {
       await bibliothekLaden();
-      const haupt = hauptbuch();
-      if (haupt) gehe(lesenZiel(haupt.kennung, haupt.startseite), true);
+      const ziel = kennung ? buchVon(kennung) : hauptbuch();
+      if (ziel) gehe(lesenZiel(ziel.kennung, ziel.startseite), true);
     });
   });
 

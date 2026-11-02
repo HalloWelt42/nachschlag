@@ -164,6 +164,9 @@ async def test_auftrag_uebersetzt_legt_ab_und_kennzeichnet(db):
         assert len(leitstelle.aufrufe) == 1                              # ein Teil, ein Aufruf
         await u.anstossen(BUCH.kennung, ARTIKEL.pfad, "Probe")           # liegt ab: kein neuer Auftrag
         assert len(leitstelle.aufrufe) == 1
+        # woher der erledigte Auftrag kommt (WIKI-50): ein Verweis auf den Artikel
+        herkunft = (await auftraege.liste()).eintraege[0].herkunft
+        assert (herkunft.titel, herkunft.ziel) == ("Zum Artikel", f"lesen/{BUCH.kennung}/{ARTIKEL.pfad}")
     finally:
         await auftraege.stoppen()
 

@@ -24,7 +24,7 @@ from pydantic import BaseModel, Field
 
 from appkern.app.begleiter import Begleiter
 from appkern.app.geruest import Verbindung
-from appkern.auftraege import Art, AuftragFehler, Auftraege, Kontext
+from appkern.auftraege import Art, AuftragFehler, Auftraege, Herkunft, Kontext
 from appkern.auftraege.modelle import Phase
 
 from ..bibliothek import Bibliothek
@@ -126,7 +126,8 @@ class Indexauftraege(Begleiter):
         self._pruefung: asyncio.Task | None = None
         self._kontakt = 0.0                         # wann sich der Index-Dienst zuletzt gemeldet hat (monotonic)
         auftraege.anmelden(Art(name=ART, titel="Eigener Index", arbeit=self._arbeit, eingabe=IndexEingabe, phasen=PHASEN,
-                               fortsetzbar=True, nach_neustart="fortsetzen", hoechstens=1))   # der Mac baut einen nach dem anderen
+                               fortsetzbar=True, nach_neustart="fortsetzen", hoechstens=1,   # der Mac baut einen nach dem anderen
+                               herkunft=lambda e: Herkunft(titel="Zum Buch", ziel=f"lesen/{e['buch']}")))   # WIKI-50
 
     def schluessel_passt(self, kopf: str) -> bool | None:
         """Ob der Kopf Authorization den Schlüssel des Index-Dienstes trägt; None, wenn keiner eingestellt ist."""
