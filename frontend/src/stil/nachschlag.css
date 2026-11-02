@@ -589,8 +589,9 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 
 /* ----- Notizen (Entwürfe notizen.html, telefon-themen.html): Markierungen im Text, Leiste an der Auswahl, Blatt ----- */
 .artikel-text mark.notiz { background: color-mix(in srgb, var(--akzent-flaeche) 26%, transparent); color: inherit; border-radius: 2px; padding: 0 1px; cursor: pointer; }
-.artikel-text .notiz-marke { display: inline-grid; place-items: center; width: 22px; height: 22px; margin: 0 2px; border-radius: var(--r1); vertical-align: 2px;
-                             font-size: var(--marke); background: var(--akzent-flaeche); color: var(--auf-akzent); cursor: pointer; }
+/* die Marke einer Notiz mit Text: das Symbol trägt die Farbe, ohne Fläche (WIKI-55); die Fläche zum Tippen bleibt */
+.artikel-text .notiz-marke { display: inline-grid; place-items: center; width: 22px; height: 22px; margin: 0 2px; vertical-align: -2px;
+                             font-size: 1em; color: var(--akzent); cursor: pointer; }
 .werkzeuge .knopf .zahl { font-family: var(--schrift-zahl); font-size: var(--marke); color: var(--text-3); }
 .auswahl-leiste { position: fixed; z-index: 45; transform: translateY(-100%); display: flex; gap: 2px; padding: 6px; border-radius: 14px; background: var(--text);
                   box-shadow: 0 8px 24px color-mix(in srgb, var(--schattenfarbe) 30%, transparent); }
