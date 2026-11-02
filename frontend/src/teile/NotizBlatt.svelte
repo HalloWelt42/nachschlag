@@ -44,7 +44,8 @@
   });
 </script>
 
-<svelte:window onkeydown={(e) => e.key === "Escape" && fertig()} />
+<!-- Escape schließt das Blatt, außer die Bildansicht darüber hat es schon für sich genommen -->
+<svelte:window onkeydown={(e) => e.key === "Escape" && !e.defaultPrevented && fertig()} />
 <svelte:document onclick={daneben} />
 <div class="notizblatt" bind:this={blattEl} role="dialog" aria-label={anStelle ? "Notiz zur Stelle" : "Notiz zum Artikel"}>
   <div class="blatt-griff"></div>
