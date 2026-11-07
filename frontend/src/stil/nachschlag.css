@@ -1369,6 +1369,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .anl-kacheln { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: var(--a3); }
 .anl-kacheln.gross { grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
 .anl-kacheln.text { grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); }
+.anl-kacheln .hoch .kachel-bild { height: auto; aspect-ratio: 4 / 3; }   /* Bilder der Quelle sind 4:3: ganz zeigen, nichts abschneiden */
 .anl-empfohlen { color: var(--warn); }
 .anl-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 @media (max-width: 900px) { .anl-g-kopf { grid-template-columns: minmax(0, 1fr); } .anl-g-kopf > img { width: 100%; max-width: 360px; } }
