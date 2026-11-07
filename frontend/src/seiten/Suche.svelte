@@ -269,7 +269,7 @@
       {#if besteStelle}
         {@const st = besteStelle}
         <div class="beste-stelle">
-          <span class="etikett"><i class="fa-solid fa-wand-magic-sparkles"></i>Beste Stelle</span>
+          <span class="fund-etikett"><i class="fa-solid fa-wand-magic-sparkles"></i>Beste Stelle</span>
           <span class="ort"><b>{st.titel}</b>{st.abschnitt ? ` · ${st.abschnitt}` : ""}</span>
           <blockquote>{@html st.ausschnitt}</blockquote>
           <div class="knopfreihe"><button class="knopf primaer" onclick={() => oeffnen(st)}><i class="fa-solid fa-arrow-down"></i>Zur Stelle</button></div>
@@ -330,7 +330,7 @@
         <h2>{vorschau.titel}</h2>
         <p>{vorschau.einleitung}</p>
         {#if vorschau.abschnitte.length}
-          <div class="etikett"><i class="fa-solid fa-list"></i>Abschnitte</div>
+          <div class="fund-etikett"><i class="fa-solid fa-list"></i>Abschnitte</div>
           <div class="abschnitte">
             {#each vorschau.abschnitte.filter((a) => a.ebene === 2) as a (a.anker)}
               <button class:treff={a.titel === t.abschnitt} onclick={() => lesen(t.buch, t.pfad, { frage }, a.anker)}>

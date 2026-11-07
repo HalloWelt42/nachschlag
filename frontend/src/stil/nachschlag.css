@@ -171,18 +171,18 @@
                        inset 3px 0 0 var(--petrol); padding: 4px 6px 4px 10px; margin-left: -10px; border-radius: 0; }
 
 /* Über diesen Artikel: Quelle und Verweise nur auf Wunsch */
-.ueber { clear: both; margin: var(--a6) 0 var(--a5); font-size: var(--klein); color: var(--nebentext); }
-.ueber summary { display: inline-flex; align-items: center; gap: var(--a2); cursor: pointer; list-style: none; padding: 6px 12px; border-radius: var(--r2);
+.artikel-ueber { clear: both; margin: var(--a6) 0 var(--a5); font-size: var(--klein); color: var(--nebentext); }
+.artikel-ueber summary { display: inline-flex; align-items: center; gap: var(--a2); cursor: pointer; list-style: none; padding: 6px 12px; border-radius: var(--r2);
                  background: var(--flaeche-2); color: var(--text-2); }
-.ueber summary::-webkit-details-marker { display: none; }
-.ueber summary span { color: var(--text-3); }
-.ueber summary span::before { content: "·"; margin-right: var(--a2); }
-.ueber dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px var(--a4); margin: var(--a3) 0 0; padding: var(--a3) var(--a4);
+.artikel-ueber summary::-webkit-details-marker { display: none; }
+.artikel-ueber summary span { color: var(--text-3); }
+.artikel-ueber summary span::before { content: "·"; margin-right: var(--a2); }
+.artikel-ueber dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px var(--a4); margin: var(--a3) 0 0; padding: var(--a3) var(--a4);
             border-radius: var(--r3); background: var(--flaeche-2); line-height: 1.5; }
-.ueber dt { color: var(--text-3); }
-.ueber dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
-.ueber dd a { color: var(--verweis); }
-.ueber ul { margin: 0; padding-left: 1.2em; }
+.artikel-ueber dt { color: var(--text-3); }
+.artikel-ueber dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.artikel-ueber dd a { color: var(--verweis); }
+.artikel-ueber ul { margin: 0; padding-left: 1.2em; }
 
 /* Originalansicht: die Seite des Buchs unverändert, abgeschirmt */
 /* Ausnahme: Originalseiten setzen weißes Papier voraus, auch im dunklen Thema */
@@ -274,7 +274,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .grosssuche { position: relative; width: min(100%, 760px); max-width: none; text-align: left; }
 .grosssuche .suchfeld { height: 58px; padding: 0 10px 0 18px; font-size: calc(var(--gross) + 2px); border-radius: var(--r3); box-shadow: var(--schatten); gap: var(--a3); }
 .grosssuche .suchfeld > i { font-size: 18px; }
-.etikett { font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.fund-etikett { font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; display: flex; align-items: center; gap: 6px; }
 .stoebern { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: var(--a4); }
 .buecher { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: var(--a4); }
 .faehigkeit { font-size: var(--marke); padding: 2px 8px; border-radius: var(--r1); background: var(--flaeche-2); color: var(--text-2); display: inline-flex; gap: 5px; align-items: center; }
@@ -301,7 +301,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .filtergruppe button .zahl { margin-left: auto; font-family: var(--schrift-zahl); color: var(--text-3); font-size: var(--marke); }
 .ergebnisse { padding: var(--a4) var(--a5) var(--a6); display: flex; flex-direction: column; gap: var(--a3); max-width: 1100px; }
 .beste-stelle { padding: var(--a4); background: var(--flaeche); box-shadow: var(--schatten), inset 3px 0 0 var(--petrol); border-radius: 0; display: flex; flex-direction: column; gap: var(--a2); }
-.beste-stelle .etikett i { color: var(--petrol); }
+.beste-stelle .fund-etikett i { color: var(--petrol); }
 .beste-stelle .ort { font-size: var(--klein); color: var(--text-2); }
 .beste-stelle .ort b { color: var(--text); font-size: var(--titel); }
 .beste-stelle blockquote { margin: 0; font-size: calc(var(--gross) + 2px); line-height: 1.6; }
@@ -372,6 +372,8 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .notiz-bild-weg.scharf { background: var(--gefahr); color: var(--auf-farbe); }
 .notiz-bildleiste { display: flex; gap: 4px; align-items: center; }
 .notiz-bildleiste img { width: 44px; height: 44px; border-radius: var(--r1); }
+/* Bild lädt nicht: leere Kachel statt des Dateinamens, der über die 44 px hinausliefe */
+.notiz-bildleiste img.fehlt { background: var(--flaeche); font-size: 0; color: transparent; }
 .notiz-bildleiste .zahl { font-size: var(--marke); color: var(--text-3); }
 /* Codeansicht (WIKI-30): Knopf am Codeblock (nur Telefon) und Ansicht über den ganzen Schirm */
 .code-rahmen { position: relative; }

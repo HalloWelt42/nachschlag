@@ -98,7 +98,7 @@
           <button class="heute-karte" onclick={() => heute && lesen(heute.buch, heute.pfad)}>
             {#if heute.bild}<img src={heute.bild} alt="" />{/if}
             <span class="heute-text">
-              <span class="etikett"><i class="fa-solid fa-sun"></i>Für heute</span>
+              <span class="fund-etikett"><i class="fa-solid fa-sun"></i>Für heute</span>
               <span class="t">{heute.titel}</span>
               {#if heute.einleitung}<span class="auszug">{heute.einleitung}</span>{/if}
               <span class="grund"><i class="fa-solid fa-layer-group"></i>{heute.grund}</span>
@@ -187,7 +187,7 @@
           {#each mitLesedesign as b (b.kennung)}
             {@const f = funde[b.kennung]}
             <Kachel art="text" titel={f?.titel ?? "sucht ..."} untertitel={b.titel}>
-              {#snippet vorsatz()}<span class="etikett"><i class="fa-solid fa-dice"></i>Zufallsfund</span>{/snippet}
+              {#snippet vorsatz()}<span class="fund-etikett"><i class="fa-solid fa-dice"></i>Zufallsfund</span>{/snippet}
               {#snippet ecke()}<Sprachmarke kuerzel={b.sprache} />{/snippet}
               {#if f?.einleitung}<span class="auszug">{f.einleitung}</span>{/if}
               {#snippet fuss()}

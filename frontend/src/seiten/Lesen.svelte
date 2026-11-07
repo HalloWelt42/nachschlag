@@ -1099,7 +1099,7 @@
               {/each}
             </section>
           {/if}
-          <details class="ueber">
+          <details class="artikel-ueber">
             <summary><i class="fa-solid fa-circle-info"></i>Über diesen Artikel<span>Quelle, Verweise</span></summary>
             <dl>
               <dt>Quelle</dt><dd>{buch ? bezeichnung(buch) : artikel.buch}{buch ? `, Stand ${datum(buch.stand)}` : ""}</dd>

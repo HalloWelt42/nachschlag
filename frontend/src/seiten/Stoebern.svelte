@@ -173,7 +173,7 @@
             <div class="zufall-gross" class:laedt={zieht} class:ohne-bild={!f.bild}>
               {#if f.bild}<div class="bildflaeche"><img src={f.bild} alt="" /></div>{/if}
               <div class="koerper">
-                <span class="etikett"><i class="fa-solid fa-dice"></i>Zufallsfund</span>
+                <span class="fund-etikett"><i class="fa-solid fa-dice"></i>Zufallsfund</span>
                 <span class="t">{f.titel}</span>
                 {#if f.auszug}<p>{f.auszug}</p>{/if}
                 <div class="zufall-knoepfe">
@@ -186,11 +186,11 @@
               </div>
             </div>
           {:else}
-            <div class="zufall-gross laedt"><div class="bildflaeche"><i class="fa-solid fa-dice"></i></div><div class="koerper"><span class="etikett">Zieht einen Fund ...</span></div></div>
+            <div class="zufall-gross laedt"><div class="bildflaeche"><i class="fa-solid fa-dice"></i></div><div class="koerper"><span class="fund-etikett">Zieht einen Fund ...</span></div></div>
           {/if}
           {#if stoebern.eben.length}
             <div class="eben">
-              <span class="etikett"><i class="fa-solid fa-clock-rotate-left"></i>Eben gesehen</span>
+              <span class="fund-etikett"><i class="fa-solid fa-clock-rotate-left"></i>Eben gesehen</span>
               <div class="liste">
                 {#each stoebern.eben as f (f.pfad)}
                   <button class="liste-ziel kompakt" onclick={() => lesen(f.buch, f.pfad)}>

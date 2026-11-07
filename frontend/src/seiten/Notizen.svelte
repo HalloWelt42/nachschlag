@@ -98,7 +98,8 @@
                 {#if n.bilder.length}
                   <!-- Bilder der Notiz (WIKI-51): die ersten als kleine Leiste, groß in der Notiz selbst -->
                   <div class="notiz-bildleiste">
-                    {#each n.bilder.slice(0, 4) as b (b.id)}<img src={notizBildAdresse(n.id, b.id)} alt={b.name} loading="lazy" />{/each}
+                    {#each n.bilder.slice(0, 4) as b (b.id)}<img src={notizBildAdresse(n.id, b.id)} alt={b.name} loading="lazy"
+                      onerror={(e) => e.currentTarget.classList.add("fehlt")} />{/each}
                     {#if n.bilder.length > 4}<span class="zahl">+{n.bilder.length - 4}</span>{/if}
                   </div>
                 {/if}
