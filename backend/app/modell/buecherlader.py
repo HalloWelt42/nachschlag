@@ -35,10 +35,29 @@ class Verzeichnisbuch(BaseModel):
     varianten: list[Variante]
 
 
+Sortierung = Literal["titel", "neueste", "groesste", "kleinste"]
+
+
+class Katalogfilter(BaseModel):
+    """Was im Katalog gezeigt wird (WIKI-61). Ausgabe und Größe gelten je Ausgabe: ein Buch zeigt nur die passenden."""
+    suche: str = Field("", description="Wort in Titel, Name oder Beschreibung")
+    bereich: str = Field("", description="nur dieser Bereich, etwa wikipedia")
+    sprache: str = Field("", description="nur diese Sprache (de, en, mul); leer: alle gewählten")
+    ausgabe: Literal["", "maxi", "nopic", "mini", "einzeln"] = Field(
+        "", description="mit Bildern, ohne Bilder, klein, oder Bücher mit nur einer Ausgabe; leer: alle")
+    groesse_bis: int = Field(0, ge=0, description="höchstens so viele Bytes; 0: jede Größe")
+    bibliothek: Literal["", "da", "nicht_da", "neuer_da"] = Field(
+        "", description="in der eigenen Bibliothek, nicht da, oder es gibt eine neuere Fassung; leer: alle")
+    nur_neu: bool = Field(False, description="nur, was seit dem letzten Durchgang neu ist")
+    nur_abonniert: bool = Field(False, description="nur abonnierte Ausgaben")
+    sortierung: Sortierung = Field("titel", description="Neues steht immer vorn, danach so sortiert")
+
+
 class Verzeichnisseite(BaseModel):
     eintraege: list[Verzeichnisbuch]
     gesamt: int = Field(description="Zahl der Bücher, die zur Abfrage passen")
     bereiche: list[str] = Field(description="alle Bereiche des Verzeichnisses in den gewählten Sprachen (für den Filter)")
+    sprachen: list[str] = Field(default_factory=list, description="die Sprachen, die es im Verzeichnis gibt (für den Filter)")
 
 
 class Durchgang(BaseModel):

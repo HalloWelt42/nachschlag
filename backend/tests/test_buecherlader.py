@@ -20,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 import buch as probebuch  # noqa: E402
 
 from app.buecherlader import Buecherlader, LaderFehler, Regeln  # noqa: E402
+from app.modell.buecherlader import Katalogfilter  # noqa: E402
 from app.buecherlader.bibliotheksliste import Bibliotheksliste  # noqa: E402
 from app.buecherlader.katalog import eintraege_aus  # noqa: E402
 from app.buecherlader.verzeichnis import basis_und_ausgabe, dateien_aus, neueste, ordner_aus, zerlegen  # noqa: E402
@@ -181,10 +182,10 @@ async def test_durchgang_erstaufnahme_und_neues(umgebung):
     stand = await lader.stand()
     assert stand.letzter_durchgang.neue_buecher == 1 and stand.letzter_durchgang.neue_fassungen == 1
     assert stand.neu_ungesehen == 2
-    seite = await lader.verzeichnis(nur_neu=True)
+    seite = await lader.verzeichnis(Katalogfilter(nur_neu=True))
     assert [b.basis for b in seite.eintraege] == ["andere_en_all", "noch_de_all"]
     andere = seite.eintraege[0]
-    assert [(v.ausgabe, v.neu) for v in andere.varianten] == [("maxi", "fassung"), ("nopic", "")]
+    assert [(v.ausgabe, v.neu) for v in andere.varianten] == [("maxi", "fassung")]      # nur die neue Ausgabe
     alle = await lader.verzeichnis()
     probe = next(b for b in alle.eintraege if b.basis == "probe_de_all")
     assert probe.titel == "Probelexikon" and probe.varianten[0].zustand == "neuer_da" and alle.bereiche == ["probe"]
@@ -314,3 +315,23 @@ async def test_einstellung_mit_stand_folgt_der_juengsten_fassung(tmp_path: Path)
     assert await bib.juengste_fassung("probe_de_all_2026-01") == "probe_de_all_2026-10"
     assert await bib.juengste_fassung("gibt_es_nicht_2026-01") == "gibt_es_nicht_2026-01"
     assert await bib.juengste_fassung("ohne_stand") == "ohne_stand"
+
+
+async def test_katalogfilter(umgebung):
+    """Sprache, Ausgabe, Größe, Stand zur Bibliothek und Sortierung (WIKI-61)."""
+    lader, auftraege, server, *_ = umgebung
+    await lader.durchsehen("probe")
+    await fertig(auftraege)
+    alle = await lader.verzeichnis()
+    assert alle.sprachen == ["de", "en"] and alle.gesamt == 3
+    englisch = await lader.verzeichnis(Katalogfilter(sprache="en"))
+    assert [b.basis for b in englisch.eintraege] == ["andere_en_all"]
+    ohne_bilder = await lader.verzeichnis(Katalogfilter(ausgabe="nopic"))
+    assert [[v.ausgabe for v in b.varianten] for b in ohne_bilder.eintraege] == [["nopic"]]   # nur die passende Ausgabe
+    assert {b.basis for b in (await lader.verzeichnis(Katalogfilter(ausgabe="einzeln"))).eintraege} == {"probe_de_all", "neues_de_all"}
+    da = await lader.verzeichnis(Katalogfilter(bibliothek="da"))
+    assert [b.basis for b in da.eintraege] == ["probe_de_all"] and da.eintraege[0].varianten[0].zustand == "neuer_da"
+    assert [b.basis for b in (await lader.verzeichnis(Katalogfilter(bibliothek="neuer_da"))).eintraege] == ["probe_de_all"]
+    assert (await lader.verzeichnis(Katalogfilter(groesse_bis=1))).gesamt == 0
+    neueste = await lader.verzeichnis(Katalogfilter(sortierung="neueste"))
+    assert neueste.eintraege[-1].basis == "andere_en_all"                 # 2026-09 hinter 2026-10

@@ -7,7 +7,7 @@
   import { datum, zahl } from "../lib/bibliothek.svelte";
   import { AUSGABE, groesse, lader, laderLaden, monat, ZUSTAND } from "../lib/buecherlader.svelte";
   import { abbestellen, abonnieren, durchsichtStarten, neuesGesehen, verzeichnisHolen } from "../lib/schnittstelle";
-  import type { Variante, Verzeichnisbuch } from "../lib/typen";
+  import type { Katalogfilter, Variante, Verzeichnisbuch } from "../lib/typen";
   import Ladebalken from "./Ladebalken.svelte";
   import Sprachmarke from "./Sprachmarke.svelte";
 
@@ -15,12 +15,22 @@
   const KUERZEL: Record<string, string> = { de: "deu", en: "eng", mul: "mul" };
   const SPRACHE: Record<string, string> = { de: "Deutsch", en: "Englisch", mul: "Mehrsprachige" };
 
-  let suche = $state("");
-  let bereich = $state("");
-  let nurNeu = $state(false);
-  let nurAbonniert = $state(false);
+  const GB = 1024 ** 3;
+  const AUSGABEN = [{ wert: "", titel: "Alle Ausgaben" }, { wert: "maxi", titel: "Mit Bildern" }, { wert: "nopic", titel: "Ohne Bilder" },
+                    { wert: "mini", titel: "Klein" }, { wert: "einzeln", titel: "Nur eine Ausgabe" }];
+  const GROESSEN = [{ wert: "0", titel: "Jede Größe" }, { wert: String(100 * 1024 ** 2), titel: "Bis 100 MB" },
+                    { wert: String(GB), titel: "Bis 1 GB" }, { wert: String(10 * GB), titel: "Bis 10 GB" },
+                    { wert: String(50 * GB), titel: "Bis 50 GB" }];
+  const BIBLIOTHEK = [{ wert: "", titel: "Ob da oder nicht" }, { wert: "da", titel: "In meiner Bibliothek" },
+                      { wert: "nicht_da", titel: "Nicht in der Bibliothek" }, { wert: "neuer_da", titel: "Neuere Fassung da" }];
+  const SORTIERUNGEN = [{ wert: "titel", titel: "Nach Titel" }, { wert: "neueste", titel: "Neueste zuerst" },
+                        { wert: "groesste", titel: "Größte zuerst" }, { wert: "kleinste", titel: "Kleinste zuerst" }];
+
+  let filter = $state<Katalogfilter>({ suche: "", bereich: "", sprache: "", ausgabe: "", groesse_bis: 0, bibliothek: "",
+                                       nur_neu: false, nur_abonniert: false, sortierung: "titel" });
   let buecher = $state.raw<Verzeichnisbuch[]>([]);
   let bereiche = $state.raw<string[]>([]);
+  let sprachen = $state.raw<string[]>([]);
   let gesamt = $state(0);
   let laedt = $state(false);
   let fehler = $state("");
@@ -32,7 +42,7 @@
   const neu = $derived(durchgang && !durchgang.erstaufnahme ? durchgang.neue_buecher + durchgang.neue_fassungen : 0);
 
   onMount(() => {
-    nurNeu = (stand?.neu_ungesehen ?? 0) > 0;          // mit Ungesehenem zuerst das Neue
+    filter.nur_neu = (stand?.neu_ungesehen ?? 0) > 0;  // mit Ungesehenem zuerst das Neue
     void laderLaden().then(() => {
       if (lader.stand?.neu_ungesehen) void neuesGesehen().then(() => laderLaden(true));
     });
@@ -43,12 +53,12 @@
     const mein = ++zaehler;
     laedt = true;
     try {
-      const s = await verzeichnisHolen({ suche, bereich, nur_neu: nurNeu, nur_abonniert: nurAbonniert,
-                                         versatz: weiter ? buecher.length : 0, grenze: ANZAHL });
+      const s = await verzeichnisHolen($state.snapshot(filter), weiter ? buecher.length : 0, ANZAHL);
       if (mein !== zaehler) return;
       buecher = weiter ? [...buecher, ...s.eintraege] : s.eintraege;
       gesamt = s.gesamt;
       bereiche = s.bereiche;
+      sprachen = s.sprachen;
       fehler = nachladefehler = "";
     } catch (f) {
       if (mein === zaehler && weiter) nachladefehler = seitenFehler(f);
@@ -61,7 +71,7 @@
   // Neu laden, wenn Filter wechseln (die Suche wartet kurz aufs Tippen) oder der Stand des Bücherladers neu kam
   let warten: ReturnType<typeof setTimeout> | undefined;
   $effect(() => {
-    void [suche, bereich, nurNeu, nurAbonniert, lader.version];
+    void [JSON.stringify(filter), lader.version];
     clearTimeout(warten);
     warten = setTimeout(() => untrack(() => void laden()), 200);
     return () => clearTimeout(warten);
@@ -89,10 +99,24 @@
   {#snippet kopf()}
   <div class="katalog-filter">
     <label class="suchfeld katalog-suche"><i class="fa-solid fa-magnifying-glass"></i>
-      <input type="search" bind:value={suche} placeholder="Im Katalog suchen" aria-label="Im Katalog suchen" /></label>
-    <Auswahl wert={bereich} symbol="fa-folder" titel="Bereich" optionen={bereichwahl} onwahl={(w: string) => (bereich = w)} />
-    <button class="chip wahl" class:an={nurNeu} onclick={() => (nurNeu = !nurNeu)}><i class="fa-solid fa-star"></i>Nur neue{#if neu} ({neu}){/if}</button>
-    <button class="chip wahl" class:an={nurAbonniert} onclick={() => (nurAbonniert = !nurAbonniert)}><i class="fa-solid fa-bell"></i>Nur abonnierte</button>
+      <input type="search" bind:value={filter.suche} placeholder="Im Katalog suchen" aria-label="Im Katalog suchen" /></label>
+    {#if sprachen.length > 1}
+      <div class="segment" role="radiogroup" aria-label="Sprache">
+        <button class:aktiv={!filter.sprache} onclick={() => (filter.sprache = "")}>Alle Sprachen</button>
+        {#each sprachen as s (s)}<button class:aktiv={filter.sprache === s} onclick={() => (filter.sprache = s)}>{SPRACHE[s] ?? s}</button>{/each}
+      </div>
+    {/if}
+    <Auswahl wert={filter.bereich} symbol="fa-folder" titel="Bereich" optionen={bereichwahl} onwahl={(w: string) => (filter.bereich = w)} />
+    <Auswahl wert={filter.ausgabe} symbol="fa-images" titel="Ausgabe" optionen={AUSGABEN}
+             onwahl={(w: string) => (filter.ausgabe = w as Katalogfilter["ausgabe"])} />
+    <Auswahl wert={String(filter.groesse_bis)} symbol="fa-weight-hanging" titel="Größe" optionen={GROESSEN}
+             onwahl={(w: string) => (filter.groesse_bis = Number(w))} />
+    <Auswahl wert={filter.bibliothek} symbol="fa-swatchbook" titel="Bibliothek" optionen={BIBLIOTHEK}
+             onwahl={(w: string) => (filter.bibliothek = w as Katalogfilter["bibliothek"])} />
+    <Auswahl wert={filter.sortierung} symbol="fa-arrow-down-wide-short" titel="Sortierung" optionen={SORTIERUNGEN}
+             onwahl={(w: string) => (filter.sortierung = w as Katalogfilter["sortierung"])} />
+    <button class="chip wahl" class:an={filter.nur_neu} onclick={() => (filter.nur_neu = !filter.nur_neu)}><i class="fa-solid fa-star"></i>Nur neue{#if neu} ({neu}){/if}</button>
+    <button class="chip wahl" class:an={filter.nur_abonniert} onclick={() => (filter.nur_abonniert = !filter.nur_abonniert)}><i class="fa-solid fa-bell"></i>Nur abonnierte</button>
     {#if stand}
       <span class="hinweis">{stand.regeln.sprachen.map((s) => SPRACHE[s] ?? s).join(", ")}; andere Sprachen ausgeblendet
         (<a href="/einstellungen/buecherlader" onclick={(e) => { e.preventDefault(); gehe("einstellungen/buecherlader"); }}>Einstellungen</a>)</span>

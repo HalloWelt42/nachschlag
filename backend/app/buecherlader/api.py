@@ -4,13 +4,15 @@ abonnieren und abbestellen, auf eine neue Fassung umschalten und zurück. Durchs
 
 from __future__ import annotations
 
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from appkern.app import Geruest
 from appkern.auftraege import Auftrag
 
-from ..modell.buecherlader import Laderstand, Verzeichnisseite
+from ..modell.buecherlader import Katalogfilter, Laderstand, Verzeichnisseite
 from .dienst import Buecherlader, LaderFehler
 
 
@@ -31,14 +33,11 @@ def router(geruest: Geruest, lader: Buecherlader) -> APIRouter:
         return await lader.stand()
 
     @r.get("/verzeichnis", response_model=Verzeichnisseite, summary="Bücher des Verzeichnisses")
-    async def verzeichnis(suche: str = Query("", description="Wort in Titel, Name oder Beschreibung"),
-                          bereich: str = Query("", description="nur dieser Bereich, etwa wikipedia"),
-                          nur_neu: bool = Query(False, description="nur, was seit dem letzten Durchgang neu ist"),
-                          nur_abonniert: bool = Query(False, description="nur Bücher mit einer abonnierten Ausgabe"),
-                          grenze: int = Query(50, ge=1, le=200), versatz: int = Query(0, ge=0)) -> Verzeichnisseite:
-        """Nur die Sprachen aus den Einstellungen; Neues zuerst, sonst nach Titel."""
-        return await lader.verzeichnis(suche=suche, bereich=bereich, nur_neu=nur_neu, nur_abonniert=nur_abonniert,
-                                       grenze=grenze, versatz=versatz)
+    async def verzeichnis(f: Annotated[Katalogfilter, Query()], grenze: int = Query(50, ge=1, le=200),
+                          versatz: int = Query(0, ge=0)) -> Verzeichnisseite:
+        """Nur die Sprachen aus den Einstellungen, gefiltert (Sprache, Bereich, Ausgabe, Größe, Stand zur eigenen
+        Bibliothek, neu, abonniert); Neues zuerst, sonst nach der gewählten Sortierung."""
+        return await lader.verzeichnis(f, grenze=grenze, versatz=versatz)
 
     @r.post("/durchsicht", response_model=Auftrag, summary="Verzeichnis jetzt durchsehen")
     async def durchsehen(von: str = Depends(geruest.wer)) -> Auftrag:

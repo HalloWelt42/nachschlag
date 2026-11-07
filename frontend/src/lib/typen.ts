@@ -196,7 +196,20 @@ export interface Verzeichnisbuch {
   varianten: Variante[];
 }
 
-export interface Verzeichnisseite { eintraege: Verzeichnisbuch[]; gesamt: number; bereiche: string[] }
+export interface Verzeichnisseite { eintraege: Verzeichnisbuch[]; gesamt: number; bereiche: string[]; sprachen: string[] }
+
+/** Filter des Katalogs (WIKI-61); Ausgabe und Größe gelten je Ausgabe. */
+export interface Katalogfilter {
+  suche: string;
+  bereich: string;
+  sprache: string;                                           // de, en, mul; leer: alle gewählten
+  ausgabe: "" | "maxi" | "nopic" | "mini" | "einzeln";
+  groesse_bis: number;                                       // Bytes; 0: jede Größe
+  bibliothek: "" | "da" | "nicht_da" | "neuer_da";
+  nur_neu: boolean;
+  nur_abonniert: boolean;
+  sortierung: "titel" | "neueste" | "groesste" | "kleinste";
+}
 
 export interface Durchgang {
   begonnen: string;

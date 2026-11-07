@@ -35,8 +35,8 @@ from appkern.auftraege import Art, AuftragFehler, Auftraege, Herkunft, Kontext, 
 from appkern.auftraege.modelle import Auftrag
 from appkern.datenbank import Datenbank
 
-from ..modell.buecherlader import (Abo, Durchgang, Ladefortschritt, Laderstand, Platz, Regeln as Regelanzeige, Rueckfall,
-                                   Variante, Verzeichnisbuch, Verzeichnisseite, Zustand)
+from ..modell.buecherlader import (Abo, Durchgang, Katalogfilter, Ladefortschritt, Laderstand, Platz, Regeln as Regelanzeige,
+                                   Rueckfall, Variante, Verzeichnisbuch, Verzeichnisseite, Zustand)
 from ..zeitfenster import ZONE, nachts
 from .ablage import Ablage, Lokal
 from .bestand import Bestand, Buchzeile, Wechsel, jetzt
@@ -572,9 +572,10 @@ class Buecherlader(Begleiter):
         return Ladefortschritt(auftrag=a.id, zustand=a.zustand, fortschritt=a.fortschritt, schritt=a.schritt,
                                zurueckgestellt=a.zurueckgestellt)
 
-    async def verzeichnis(self, *, suche: str = "", bereich: str = "", nur_neu: bool = False, nur_abonniert: bool = False,
-                          grenze: int = 50, versatz: int = 0) -> Verzeichnisseite:
-        """Die Bücher des Verzeichnisses in den gewählten Sprachen, je Buch mit seinen Ausgaben, seitenweise."""
+    async def verzeichnis(self, f: Katalogfilter | None = None, *, grenze: int = 50, versatz: int = 0) -> Verzeichnisseite:
+        """Die Bücher des Verzeichnisses in den gewählten Sprachen, je Buch mit seinen Ausgaben, gefiltert und
+        seitenweise (WIKI-61)."""
+        f = f or Katalogfilter()
         r = self._regeln()
         zeilen = await self._bestand.buecher(set(r.sprachen))
         letzter = await self._bestand.letzter_durchgang()
@@ -599,12 +600,37 @@ class Buecherlader(Begleiter):
                                            titel=erste.titel or basis, beschreibung=erste.beschreibung,
                                            eintraege=max(z.eintraege for z in teile), varianten=varianten))
         bereiche = sorted({b.ordner for b in buecher})
-        frage = suche.strip().lower()
-        passend = [b for b in buecher
-                   if (not frage or frage in f"{b.titel} {b.basis} {b.beschreibung}".lower())
-                   and (not bereich or b.ordner == bereich)
-                   and (not nur_neu or any(v.neu for v in b.varianten))
-                   and (not nur_abonniert or any(v.abonniert for v in b.varianten))]
-        passend.sort(key=lambda b: (not any(v.neu for v in b.varianten), b.titel.lower(), b.basis))
+        sprachen = sorted({b.sprache for b in buecher})
+        passend = [g for b in buecher if (g := self._gefiltert(b, f))]
+        passend.sort(key=self._ordnung(f))
         grenze = max(1, min(grenze, 200))
-        return Verzeichnisseite(eintraege=passend[versatz:versatz + grenze], gesamt=len(passend), bereiche=bereiche)
+        return Verzeichnisseite(eintraege=passend[versatz:versatz + grenze], gesamt=len(passend), bereiche=bereiche,
+                                sprachen=sprachen)
+
+    @staticmethod
+    def _gefiltert(b: Verzeichnisbuch, f: Katalogfilter) -> Verzeichnisbuch | None:
+        """Das Buch mit den Ausgaben, die zum Filter passen; keine passt: None."""
+        frage = f.suche.strip().lower()
+        if (frage and frage not in f"{b.titel} {b.basis} {b.beschreibung}".lower()) or (f.bereich and b.ordner != f.bereich) \
+                or (f.sprache and b.sprache != f.sprache) or (f.ausgabe == "einzeln" and len(b.varianten) > 1):
+            return None
+        bibliothek = {"da": lambda v: bool(v.lokal_stand), "nicht_da": lambda v: not v.lokal_stand and v.zustand != "laedt",
+                      "neuer_da": lambda v: v.zustand in ("neuer_da", "wartet_auf_umschalten")}.get(f.bibliothek)
+        varianten = [v for v in b.varianten
+                     if (f.ausgabe in ("", "einzeln") or v.ausgabe == f.ausgabe) and (not f.groesse_bis or v.groesse <= f.groesse_bis)
+                     and (not f.nur_neu or v.neu) and (not f.nur_abonniert or v.abonniert) and (bibliothek is None or bibliothek(v))]
+        return b.model_copy(update={"varianten": varianten}) if varianten else None
+
+    @staticmethod
+    def _ordnung(f: Katalogfilter) -> Callable[[Verzeichnisbuch], tuple]:
+        """Neues vorn, dann nach der gewählten Sortierung (bei Größe zählt die größte bzw. kleinste Ausgabe)."""
+        def schluessel(b: Verzeichnisbuch) -> tuple:
+            vorn = not any(v.neu for v in b.varianten)
+            if f.sortierung == "neueste":
+                return vorn, -int(max(v.stand for v in b.varianten).replace("-", "")), b.titel.lower()   # JJJJMM
+            if f.sortierung == "groesste":
+                return vorn, -max(v.groesse for v in b.varianten), b.titel.lower()
+            if f.sortierung == "kleinste":
+                return vorn, min(v.groesse for v in b.varianten), b.titel.lower()
+            return vorn, b.titel.lower(), b.basis
+        return schluessel
