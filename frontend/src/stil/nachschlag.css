@@ -1193,6 +1193,8 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .katkarte .u { font-size: var(--klein); color: var(--text-2); }
 .katkarte .werte-k { display: flex; flex-wrap: wrap; gap: 4px var(--a3); font-size: var(--klein); color: var(--text-3); }
 .katkarte .werte-k .zahl, .ausgabe-zeile .zahl { font-family: var(--schrift-zahl); color: var(--text-2); }
+.katkarte .angaben-k { display: flex; flex-wrap: wrap; gap: 4px 6px; }
+.schlagwort-k { font-size: var(--marke); padding: 2px 8px; border-radius: var(--r1); background: var(--flaeche-2); color: var(--text-3); }
 .datei-k { font-family: var(--schrift-code); font-size: var(--marke); color: var(--text-3); overflow-wrap: anywhere; }
 .ausgabe-liste { display: flex; flex-direction: column; border-top: 1px solid var(--rand); margin-top: auto; }
 .ausgabe-zeile { display: grid; grid-template-columns: minmax(0, 1.2fr) auto auto; grid-template-areas: "name groesse knopf" "zustand stand knopf";
@@ -1213,7 +1215,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .lade-kopf h2 i { color: var(--text-3); }
 .lade-kopf .neben { font-size: var(--klein); color: var(--text-3); min-width: 0; overflow-wrap: anywhere; }
 .lade-kopf .rechts { margin-left: auto; display: flex; flex-wrap: wrap; gap: var(--a2); }
-.kennzahlen-reihe { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--a2) var(--a4); }
+.kennzahlen-reihe { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--a2) var(--a4); }
 @media (max-width: 700px) { .kennzahlen-reihe { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .unter-zeile { font-size: var(--klein); color: var(--text-3); display: flex; align-items: center; gap: var(--a2); flex-wrap: wrap; }
 .unter-zeile.warn { color: var(--warn); }
@@ -1261,3 +1263,24 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .buch-gross .buch-laden { grid-column: 2 / -1; }
 @media (max-width: 900px) { .buch-gross .buch-laden { grid-column: 1 / -1; } }
 .platz-f .ladebalken { margin-top: 4px; }
+
+/* Quellen des Bücherladers (WIKI-62) */
+.quellen-liste { display: flex; flex-direction: column; gap: 6px; }
+.quelle-zeile { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 260px) auto; gap: var(--a2) var(--a3); align-items: center;
+                padding: var(--a2) var(--a3); background: var(--flaeche-2); font-size: var(--klein); }
+.quelle-zeile.aus { color: var(--text-3); }
+.quelle-zeile.vorschlag-q { grid-template-columns: minmax(0, 1fr) auto; }
+.quelle-name { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px var(--a2); min-width: 0; }
+.quelle-name code { font-family: var(--schrift-code); font-size: var(--marke); color: var(--text-3); overflow-wrap: anywhere; }
+.art-q { font-size: var(--marke); padding: 1px 7px; border-radius: var(--r1); background: var(--flaeche); color: var(--text-2); }
+.quelle-stand { color: var(--text-3); min-width: 0; overflow-wrap: anywhere; display: inline-flex; gap: 6px; align-items: baseline; }
+.quelle-stand.warn { color: var(--warn); }
+.quelle-knoepfe { display: flex; gap: 4px; }
+.quelle-neu { display: flex; flex-wrap: wrap; gap: var(--a2); align-items: center; }
+.quelle-neu .eingabe { flex: 1 1 260px; min-width: 0; }
+.quelle-neu .quelle-name-feld { flex: 0 1 200px; }
+@media (max-width: 900px) {
+  .quelle-zeile { grid-template-columns: auto minmax(0, 1fr); }
+  .quelle-zeile .quelle-stand, .quelle-zeile .quelle-knoepfe { grid-column: 2; }
+  .kennzahlen-reihe { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}

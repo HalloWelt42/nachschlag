@@ -40,19 +40,12 @@ class AppEinstellungen(Grundeinstellungen):
                                             "verborgenen Ordner .laden und .neu und beim Umschalten).")
 
     # --- Bücherlader (WIKI-57): Verzeichnis durchsehen, Neues melden, Abos laden --------------------------------------
-    verzeichnis_adresse: str = Field("https://ftp.uni-erlangen.de/kiwix/zim/", title="Verzeichnis der Bücher",
-                                     json_schema_extra=BUECHERLADER,
-                                     description="Adresse des Verzeichnisses mit einem Unterordner je Bereich (Seiten, wie "
-                                                 "sie ein Webserver für Ordner ausgibt). Von hier lädt der Bücherlader. "
-                                                 "Leer: kein Bücherlader.")
     pruefsummen_adresse: str = Field("https://download.kiwix.org/zim/", title="Quelle der Prüfsummen",
                                      json_schema_extra=BUECHERLADER,
-                                     description="Hier liegt zu jeder Datei eine Prüfsumme (SHA-256, Endung .sha256), mit "
-                                                 "demselben Pfad wie im Verzeichnis. Ohne Prüfsumme lädt nichts.")
-    katalog_adresse: str = Field("https://opds.library.kiwix.org/catalog/v2", title="Katalog der Bücher",
-                                 json_schema_extra=BUECHERLADER,
-                                 description="Liefert Titel, Beschreibung und Zahl der Artikel zu den Dateien. Leer: das "
-                                             "Verzeichnis zeigt nur die Namen der Dateien.")
+                                     description="Hier liegt zu jeder Datei ihre Ladedatei (.meta4 mit Prüfsumme und Spiegeln) "
+                                                 "oder eine Prüfsumme (.sha256), mit demselben Pfad wie in den Verzeichnissen; "
+                                                 "gilt, wenn die Quelle selbst keine nennt. Ohne Prüfsumme lädt nichts. Die "
+                                                 "Quellen selbst stehen in der Bibliothek unter Fassungen und Laden.")
     sprache_deutsch: bool = Field(True, title="Deutsche Bücher", json_schema_extra=BUECHERLADER,
                                   description="Deutsche Bücher erscheinen im Verzeichnis und werden gemeldet.")
     sprache_englisch: bool = Field(True, title="Englische Bücher", json_schema_extra=BUECHERLADER,

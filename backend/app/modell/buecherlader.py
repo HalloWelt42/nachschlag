@@ -12,6 +12,55 @@ Zustand = Literal["nicht_da", "aktuell", "neuer_da", "laedt", "wartet_auf_umscha
 Neuheit = Literal["", "buch", "fassung"]
 
 
+class Angaben(BaseModel):
+    """Was eine Quelle über ein Buch weiß (WIKI-62), zusammengeführt aus allen Quellen (der Katalog vor dem Verzeichnis).
+    Vorschaubilder fremder Seiten werden nicht übernommen."""
+    titel: str = ""
+    beschreibung: str = ""
+    artikel: int = Field(0, description="Zahl der Artikel; 0: unbekannt")
+    medien: int = Field(0, description="Zahl der Bilder und anderen Medien; 0: unbekannt")
+    autor: str = Field("", description="wer den Inhalt erstellt (etwa Wikipedia, Stack Exchange)")
+    herausgeber: str = Field("", description="wer die ZIM-Datei erstellt (etwa openZIM)")
+    kategorie: str = Field("", description="Kategorie laut Katalog (etwa wikipedia, stack_exchange, other)")
+    schlagworte: list[str] = Field(default_factory=list, description="Schlagworte laut Katalog, ohne die technischen")
+    bilder: bool | None = Field(None, description="mit Bildern; leer: unbekannt")
+    videos: bool | None = Field(None, description="mit Videos; leer: unbekannt")
+    volltext: bool | None = Field(None, description="mit eingebautem Volltextindex; leer: unbekannt")
+    datum: str = Field("", description="Datum der Fassung laut Katalog (JJJJ-MM-TT)")
+
+
+class Quellstand(BaseModel):
+    """Eine Quelle des Bücherladers mit dem Ergebnis ihres letzten Durchgangs."""
+    nr: int
+    art: Literal["verzeichnis", "katalog"]
+    name: str
+    adresse: str
+    an: bool
+    rang: int = Field(description="Reihenfolge beim Laden: kleiner zuerst")
+    zuletzt: str = Field("", description="wann zuletzt durchgesehen (ISO)")
+    funde: int = Field(0, description="Dateien in den gewählten Sprachen beim letzten Durchgang")
+    meldung: str = Field("", description="was beim letzten Durchgang nicht ging")
+
+
+class NeueQuelle(BaseModel):
+    art: Literal["verzeichnis", "katalog"] = Field(description="Verzeichnis eines Spiegels (Ordner je Bereich) oder Katalog")
+    adresse: str = Field(min_length=8, max_length=300, pattern=r"^https?://", description="Adresse, mit / am Ende")
+    name: str = Field("", max_length=80, description="leer: der Rechner aus der Adresse")
+
+
+class QuellAenderung(BaseModel):
+    an: bool | None = None
+    rang: int | None = Field(None, ge=0)
+    name: str | None = Field(None, max_length=80)
+
+
+class Quellvorschlag(BaseModel):
+    """Ein Spiegel aus der offiziellen Ladedatei, der noch keine Quelle ist."""
+    name: str
+    adresse: str
+    land: str = ""
+
+
 class Variante(BaseModel):
     """Eine Ausgabe eines Buchs im Verzeichnis, etwa mit Bildern (maxi), ohne Bilder (nopic) oder klein (mini)."""
     stamm: str = Field(description="Dateiname ohne Stand, etwa wikipedia_de_all_maxi; Kennung für Abos")
@@ -22,6 +71,7 @@ class Variante(BaseModel):
     abonniert: bool
     lokal_stand: str = Field("", description="Stand in der eigenen Bibliothek; leer: nicht da")
     zustand: Zustand
+    quellen: int = Field(0, description="aus so vielen Quellen ladbar (Spiegel und Katalog)")
 
 
 class Verzeichnisbuch(BaseModel):
@@ -32,6 +82,7 @@ class Verzeichnisbuch(BaseModel):
     titel: str = Field(description="aus dem Katalog der Bücher; ohne Katalog der Stamm")
     beschreibung: str = ""
     eintraege: int = Field(0, description="Zahl der Artikel laut Katalog; 0: unbekannt")
+    angaben: Angaben = Field(default_factory=Angaben, description="was die Quellen über das Buch wissen")
     varianten: list[Variante]
 
 
@@ -50,6 +101,7 @@ class Katalogfilter(BaseModel):
         "", description="in der eigenen Bibliothek, nicht da, oder es gibt eine neuere Fassung; leer: alle")
     nur_neu: bool = Field(False, description="nur, was seit dem letzten Durchgang neu ist")
     nur_abonniert: bool = Field(False, description="nur abonnierte Ausgaben")
+    kategorie: str = Field("", description="nur diese Kategorie laut Katalog; leer: alle")
     sortierung: Sortierung = Field("titel", description="Neues steht immer vorn, danach so sortiert")
 
 
@@ -58,6 +110,7 @@ class Verzeichnisseite(BaseModel):
     gesamt: int = Field(description="Zahl der Bücher, die zur Abfrage passen")
     bereiche: list[str] = Field(description="alle Bereiche des Verzeichnisses in den gewählten Sprachen (für den Filter)")
     sprachen: list[str] = Field(default_factory=list, description="die Sprachen, die es im Verzeichnis gibt (für den Filter)")
+    kategorien: list[str] = Field(default_factory=list, description="die Kategorien laut Katalog (für den Filter)")
 
 
 class Durchgang(BaseModel):
@@ -65,6 +118,7 @@ class Durchgang(BaseModel):
     begonnen: str
     beendet: str
     ordner: int = Field(description="durchgesehene Bereiche")
+    quellen: int = Field(1, description="durchgesehene Quellen")
     dateien: int = Field(description="Dateien in den gewählten Sprachen, alle Stände")
     buecher: int = Field(description="Bücher (Stämme) in den gewählten Sprachen")
     neue_buecher: int
@@ -123,7 +177,7 @@ class Regeln(BaseModel):
 
 
 class Laderstand(BaseModel):
-    bereit: bool = Field(description="Verzeichnis eingestellt und Ordner der Bücher beschreibbar")
+    bereit: bool = Field(description="eine Quelle eingeschaltet und Ordner der Bücher beschreibbar")
     grund: str = Field("", description="warum nicht bereit")
     regeln: Regeln
     letzter_durchgang: Durchgang | None = None
@@ -131,3 +185,4 @@ class Laderstand(BaseModel):
     neu_ungesehen: int = Field(description="neue Bücher und Fassungen seit dem letzten Blick in die Liste")
     abos: list[Abo]
     platz: Platz | None = None
+    quellen: list[Quellstand] = Field(default_factory=list)

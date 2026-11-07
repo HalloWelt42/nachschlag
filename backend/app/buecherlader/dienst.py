@@ -35,14 +35,16 @@ from appkern.auftraege import Art, AuftragFehler, Auftraege, Herkunft, Kontext, 
 from appkern.auftraege.modelle import Auftrag
 from appkern.datenbank import Datenbank
 
-from ..modell.buecherlader import (Abo, Durchgang, Katalogfilter, Ladefortschritt, Laderstand, Platz, Regeln as Regelanzeige,
-                                   Rueckfall, Variante, Verzeichnisbuch, Verzeichnisseite, Zustand)
+from ..modell.buecherlader import (Abo, Durchgang, Katalogfilter, Ladefortschritt, Laderstand, NeueQuelle, Platz,
+                                   QuellAenderung, Quellstand, Quellvorschlag, Regeln as Regelanzeige, Rueckfall, Variante,
+                                   Verzeichnisbuch, Verzeichnisseite, Zustand)
 from ..zeitfenster import ZONE, nachts
 from .ablage import Ablage, Lokal
 from .bestand import Bestand, Buchzeile, Wechsel, jetzt
 from .bibliotheksliste import Bibliotheksliste
-from .katalog import KATALOGSPRACHE, Katalogeintrag, eintraege_aus
-from .verzeichnis import AUSGABEN, Datei, basis_und_ausgabe, dateien_aus, ordner_aus
+from .katalog import ladedatei_aus
+from .quellen import Ergebnis, Quelle, quelle_aus, rechnername, vereinigen
+from .verzeichnis import AUSGABEN, basis_und_ausgabe, ordner_aus, zerlegen
 
 logger = logging.getLogger("nachschlag.buecherlader")
 
@@ -55,7 +57,6 @@ STUECK = 1 << 20
 #: so oft prüft das Laden den freien Platz gegen die Reserve
 PLATZ_PRUEFEN = 256 << 20
 PRUEFSUMME_BLOCK = 64 << 20
-BEREICHE_GLEICHZEITIG = 4
 GB = 1024**3
 PHASEN = (Phase(schluessel="laden", titel="Laden", symbol="download"),
           Phase(schluessel="pruefsumme", titel="Prüfsumme", symbol="fingerprint"),
@@ -68,9 +69,7 @@ _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 class Regeln:
     """Die Regeln aus den Einstellungen, bei jedem Gebrauch neu gelesen (Änderungen gelten sofort)."""
     ordner: Path
-    verzeichnis: str
     pruefsummen: str
-    katalog: str
     sprachen: frozenset[str]
     durchsicht: str
     neue_fassung: str
@@ -90,6 +89,10 @@ class LadeEingabe(BaseModel):
 
 class LaderFehler(LookupError):
     """Etwas, das der Nutzer verlangt, geht so nicht (für die Schnittstelle: 409)."""
+
+
+class BezugFehlt(Exception):
+    """Eine Bezugsquelle liefert die Datei gerade nicht; das Laden versucht die nächste (WIKI-62)."""
 
 
 def gb(n: int) -> str:
@@ -164,7 +167,7 @@ class Buecherlader(Begleiter):
         """Was der Zeitplan tut: vorige Fassungen nach der Frist entfernen, Abos nachholen, die zuletzt nicht laden
         konnten (etwa weil der Platz fehlte oder die Regel nur melden hieß), und eine fällige Durchsicht anstoßen."""
         r = self._regeln()
-        if self._grund(r):
+        if await self._grund(r):
             return
         await self._aufraeumen(r)
         await self._abos_pruefen("Zeitplan")
@@ -189,12 +192,11 @@ class Buecherlader(Begleiter):
         return httpx.AsyncClient(transport=self._transport, follow_redirects=True, headers={"User-Agent": "Nachschlag"},
                                  timeout=httpx.Timeout(60, connect=15))
 
-    @staticmethod
-    def _grund(r: Regeln) -> str:
-        if not r.verzeichnis:
-            return "Kein Verzeichnis der Bücher eingestellt (Einstellungen, Bücherlader)"
+    async def _grund(self, r: Regeln) -> str:
         if not Ablage(r.ordner).beschreibbar():
             return f"In den Ordner der Bücher ({r.ordner}) lässt sich nicht schreiben"
+        if not await self._bestand.quellen(nur_an=True):
+            return "Keine Quelle eingeschaltet (Bibliothek, Fassungen und Laden, Quellen)"
         return ""
 
     @staticmethod
@@ -237,80 +239,49 @@ class Buecherlader(Begleiter):
     async def durchsehen(self, von: str) -> Auftrag:
         """Eine Durchsicht jetzt; läuft schon eine, ist es diese."""
         r = self._regeln()
-        if grund := self._grund(r):
+        if grund := await self._grund(r):
             raise LaderFehler(grund)
         offen = await self._offene(DURCHSEHEN)
         return offen[0] if offen else await self._auftraege.einreihen(DURCHSEHEN, von=von)
 
     async def _durchsehen(self, k: Kontext) -> Durchgang:
+        """Alle eingeschalteten Quellen durchsehen und ihre Vereinigungsmenge eintragen (WIKI-62). Eine Quelle, die nicht
+        antwortet, fehlt in diesem Durchgang mit Hinweis; antwortet keine, ist der Durchgang gescheitert."""
         r = self._regeln()
         begonnen, hinweise = jetzt(), []
+        quellen = [quelle_aus(q.nr, q.art, q.name, q.adresse) for q in await self._bestand.quellen(nur_an=True)]
+        ergebnisse: list[tuple[Quelle, Ergebnis]] = []
         async with self._client() as c:
-            await k.fortschritt(None, "Verzeichnis lesen")
-            try:
-                bereiche = ordner_aus(await self._text(c, r.verzeichnis))
-            except httpx.HTTPError as f:
-                raise AuftragFehler(f"Das Verzeichnis antwortet nicht: {f}") from f
-            if not bereiche:
-                raise AuftragFehler("Im Verzeichnis stehen keine Bereiche; stimmt die Adresse?")
-            dateien = await self._bereiche_lesen(k, c, r, bereiche, hinweise)
-            gewaehlt = [d for d in dateien if d.sprache in r.sprachen]
-            katalog = await self._katalog_lesen(k, c, r, hinweise)
-        await k.fortschritt(None, "Eintragen und vergleichen")
+            for i, quelle in enumerate(quellen):
+                async def melden(schritt: str, i: int = i) -> None:
+                    await k.pruefen()
+                    await k.fortschritt(i / len(quellen), f"Quelle {i + 1} von {len(quellen)}: {schritt}")
+                try:
+                    ergebnis = await quelle.durchsehen(c, r.sprachen, melden)
+                except (httpx.HTTPError, ET.ParseError, ValueError) as f:
+                    hinweise.append(f"{quelle.name}: {f}")
+                    await self._bestand.quelle_gelaufen(quelle.nr, 0, str(f))
+                    continue
+                hinweise += ergebnis.hinweise
+                ergebnisse.append((quelle, ergebnis))
+                await self._bestand.quelle_gelaufen(quelle.nr, len(ergebnis.funde), "; ".join(ergebnis.hinweise))
+        if not ergebnisse:
+            raise AuftragFehler("Keine Quelle hat geantwortet: " + "; ".join(hinweise))
+        await k.fortschritt(None, "Vereinigen, eintragen und vergleichen")
+        vereint = vereinigen(ergebnisse)
         durchgang = await self._bestand.durchgang_eintragen(
-            Durchgang(begonnen=begonnen, beendet=jetzt(), ordner=len(bereiche), dateien=len(gewaehlt),
-                      buecher=len({d.stamm for d in gewaehlt}), neue_buecher=0, neue_fassungen=0, erstaufnahme=False,
-                      hinweise=hinweise), gewaehlt, katalog)
+            Durchgang(begonnen=begonnen, beendet=jetzt(), quellen=len(ergebnisse),
+                      ordner=len({v.ordner for v in vereint}), dateien=len(vereint), buecher=len({v.stamm for v in vereint}),
+                      neue_buecher=0, neue_fassungen=0, erstaufnahme=False, hinweise=hinweise), vereint)
         await self._abos_pruefen("Durchsicht")
         return durchgang
-
-    @staticmethod
-    async def _text(c: httpx.AsyncClient, adresse: str) -> str:
-        antwort = await c.get(adresse)
-        antwort.raise_for_status()
-        return antwort.text
-
-    async def _bereiche_lesen(self, k: Kontext, c: httpx.AsyncClient, r: Regeln, bereiche: list[str],
-                              hinweise: list[str]) -> list[Datei]:
-        sperre, fertig = asyncio.Semaphore(BEREICHE_GLEICHZEITIG), 0
-
-        async def bereich(name: str) -> list[Datei]:
-            nonlocal fertig
-            async with sperre:
-                await k.pruefen()
-                try:
-                    html = await self._text(c, urljoin(r.verzeichnis, f"{name}/"))
-                except httpx.HTTPError as f:
-                    hinweise.append(f"Bereich {name}: {f}")
-                    html = ""
-            fertig += 1
-            await k.fortschritt(fertig / len(bereiche), f"Bereich {fertig} von {len(bereiche)}: {name}")
-            return dateien_aus(name, html)
-
-        return [d for teil in await asyncio.gather(*(bereich(b) for b in bereiche)) for d in teil]
-
-    async def _katalog_lesen(self, k: Kontext, c: httpx.AsyncClient, r: Regeln,
-                             hinweise: list[str]) -> dict[str, Katalogeintrag]:
-        katalog: dict[str, Katalogeintrag] = {}
-        if not r.katalog:
-            return katalog
-        for sprache in sorted(r.sprachen):
-            await k.fortschritt(None, f"Titel aus dem Katalog ({sprache})")
-            adresse = f"{r.katalog.rstrip('/')}/entries?lang={KATALOGSPRACHE.get(sprache, sprache)}&count=-1"
-            try:
-                antwort = await c.get(adresse)
-                antwort.raise_for_status()
-                katalog |= eintraege_aus(antwort.content)
-            except (httpx.HTTPError, ET.ParseError) as f:
-                hinweise.append(f"Katalog ({sprache}): {f}")
-        return katalog
 
     # ----- Abos -------------------------------------------------------------------------------------------------------
 
     async def _abos_pruefen(self, von: str, nur: str = "") -> None:
         """Für jedes Abo, das fehlt oder eine neuere Fassung hat, einen Auftrag zum Laden (einmal je Buch)."""
         r = self._regeln()
-        if self._grund(r):
+        if await self._grund(r):
             return
         ablage = Ablage(r.ordner)
         aktive, wartende, ladende = ablage.aktive(), ablage.wartende(), await self._ladende()
@@ -354,15 +325,30 @@ class Buecherlader(Begleiter):
     async def _laden(self, k: Kontext) -> dict:
         e: LadeEingabe = k.eingabe
         r = self._regeln()
-        if grund := self._grund(r):
+        if grund := await self._grund(r):
             raise AuftragFehler(grund)
         ablage = Ablage(r.ordner)
         ablage.laden.mkdir(exist_ok=True)
         teil = ablage.teil(e.datei)
+        name = zerlegen(e.datei)
+        bezuege = await self._bestand.bezuege(e.stamm, name.stand) if name else []
         async with self._client() as c:
             if not k.zwischenstand.get("soll"):
-                await k.merken(soll=await self._pruefsumme(c, r, e))
-            await self._herunterladen(k, c, r, ablage, urljoin(r.verzeichnis, f"{e.ordner}/{e.datei}"), teil)
+                soll, spiegel = await self._pruefsumme(c, r, e, next((b.ladedatei for b in bezuege if b.ladedatei), ""))
+                await k.merken(soll=soll, spiegel=spiegel)
+            adressen = list(dict.fromkeys([b.adresse for b in bezuege] + k.zwischenstand.get("spiegel", [])))
+            if not adressen:
+                raise AuftragFehler(f"Keine Quelle nennt {e.datei} (mehr); Jetzt durchsehen oder eine Quelle einschalten")
+            fehler = []
+            for adresse in adressen:
+                try:
+                    await self._herunterladen(k, c, r, ablage, adresse, teil)
+                    break
+                except BezugFehlt as f:
+                    fehler.append(f"{rechnername(adresse)}: {f}")
+                    logger.info("%s von %s: %s; nächste Bezugsquelle", e.datei, rechnername(adresse), f)
+            else:
+                raise AuftragFehler(f"Keine Bezugsquelle lieferte {e.datei}; Wiederholen setzt fort. " + "; ".join(fehler))
         if not k.zwischenstand.get("geprueft"):
             await self._pruefen(k, teil, k.zwischenstand["soll"])
             await k.merken(geprueft=True)
@@ -376,7 +362,18 @@ class Buecherlader(Begleiter):
         return {"datei": e.datei, "artikel": artikel, "ort": "wartet aufs Umschalten" if wartend else "Bibliothek"}
 
     @staticmethod
-    async def _pruefsumme(c: httpx.AsyncClient, r: Regeln, e: LadeEingabe) -> str:
+    async def _pruefsumme(c: httpx.AsyncClient, r: Regeln, e: LadeEingabe, ladedatei: str) -> tuple[str, list[str]]:
+        """Prüfsumme und weitere Spiegel aus der Ladedatei (meta4) der Quelle, sonst der Quelle der Prüfsummen; geht
+        beides nicht, die Prüfsumme allein (.sha256). Ohne Prüfsumme lädt nichts."""
+        for adresse in dict.fromkeys(filter(None, [ladedatei, urljoin(r.pruefsummen, f"{e.ordner}/{e.datei}.meta4")])):
+            try:
+                antwort = await c.get(adresse)
+                antwort.raise_for_status()
+                l = ladedatei_aus(antwort.content)
+            except (httpx.HTTPError, ET.ParseError):
+                continue
+            if l.sha256:
+                return l.sha256, [a for a, _ in l.spiegel]
         adresse = urljoin(r.pruefsummen, f"{e.ordner}/{e.datei}.sha256")
         try:
             antwort = await c.get(adresse)
@@ -386,17 +383,19 @@ class Buecherlader(Begleiter):
             raise AuftragFehler(f"Keine Prüfsumme für {e.datei} ({f}); ohne Prüfsumme lädt der Bücherlader nicht") from f
         if not _SHA256.match(soll):
             raise AuftragFehler(f"Die Prüfsumme für {e.datei} ist unlesbar; ohne Prüfsumme lädt der Bücherlader nicht")
-        return soll
+        return soll, []
 
     async def _herunterladen(self, k: Kontext, c: httpx.AsyncClient, r: Regeln, ablage: Ablage, adresse: str,
                              teil: Path) -> None:
-        """Fortsetzbar in die angefangene Datei; hält an, sobald der freie Platz unter die Reserve fiele."""
+        """Fortsetzbar in die angefangene Datei (auch von einer anderen Bezugsquelle: gleiche Bytes, die Prüfsumme
+        entscheidet am Ende); hält an, sobald der freie Platz unter die Reserve fiele. `BezugFehlt`: diese Quelle
+        liefert gerade nicht, die nächste ist dran."""
         try:
             kopf = await c.head(adresse)
             kopf.raise_for_status()
             gesamt = int(kopf.headers["content-length"])
         except (httpx.HTTPError, KeyError, ValueError) as f:
-            raise AuftragFehler(f"Die Datei antwortet nicht: {f}") from f
+            raise BezugFehlt(f"antwortet nicht ({f})") from f
         schon = teil.stat().st_size if teil.exists() else 0
         if schon > gesamt:
             teil.unlink()
@@ -405,14 +404,15 @@ class Buecherlader(Begleiter):
             return
         if fehlt := self._platz_fehlt(r, ablage, gesamt - schon):
             raise AuftragFehler(fehlt)
-        await k.fortschritt(schon / gesamt, f"{gb(schon)} von {gb(gesamt)}", phase="laden")
+        quelle = rechnername(adresse)
+        await k.fortschritt(schon / gesamt, f"{gb(schon)} von {gb(gesamt)} · von {quelle}", phase="laden")
         beginn, ab, seit_pruefung = time.monotonic(), schon, 0
         try:
             async with c.stream("GET", adresse, headers={"Range": f"bytes={schon}-"} if schon else {}) as antwort:
                 if antwort.status_code == 200:
                     schon = ab = 0                                 # der Server setzt nicht fort: von vorn
                 elif antwort.status_code != 206:
-                    raise AuftragFehler(f"Die Datei antwortet mit {antwort.status_code}")
+                    raise BezugFehlt(f"antwortet mit {antwort.status_code}")
                 with teil.open("ab" if schon else "wb") as f:
                     async for stueck in antwort.aiter_bytes(STUECK):
                         await asyncio.to_thread(f.write, stueck)
@@ -427,11 +427,11 @@ class Buecherlader(Begleiter):
                                                     f"{gb(r.reserve)}; Wiederholen setzt fort")
                         tempo = (schon - ab) / max(time.monotonic() - beginn, 0.001)
                         await k.fortschritt(schon / gesamt, f"{gb(schon)} von {gb(gesamt)} · {tempo / 1024**2:.0f} MB/s · "
-                                                             f"noch {dauer((gesamt - schon) / max(tempo, 1))}")
+                                                             f"noch {dauer((gesamt - schon) / max(tempo, 1))} · von {quelle}")
         except httpx.HTTPError as f:
-            raise AuftragFehler(f"Laden unterbrochen bei {gb(schon)} von {gb(gesamt)}: {f}; Wiederholen setzt fort") from f
+            raise BezugFehlt(f"unterbrochen bei {gb(schon)} von {gb(gesamt)} ({f})") from f
         if schon != gesamt:
-            raise AuftragFehler(f"Laden unterbrochen bei {gb(schon)} von {gb(gesamt)}; Wiederholen setzt fort")
+            raise BezugFehlt(f"unterbrochen bei {gb(schon)} von {gb(gesamt)}")
 
     @staticmethod
     async def _pruefen(k: Kontext, teil: Path, soll: str) -> None:
@@ -509,6 +509,59 @@ class Buecherlader(Begleiter):
 
     # ----- Stand und Verzeichnis --------------------------------------------------------------------------------------
 
+    # ----- Quellen verwalten (WIKI-62) ---------------------------------------------------------------------------------
+
+    async def quellen(self) -> list[Quellstand]:
+        return await self._bestand.quellen()
+
+    async def quelle_anlegen(self, neu: NeueQuelle) -> list[Quellstand]:
+        """Eine Quelle hinzufügen; ein Verzeichnis wird dabei gelesen, damit eine falsche Adresse gleich auffällt."""
+        adresse = neu.adresse.strip()
+        if neu.art == "verzeichnis":
+            adresse = adresse if adresse.endswith("/") else adresse + "/"
+            async with self._client() as c:
+                try:
+                    antwort = await c.get(adresse)
+                    antwort.raise_for_status()
+                except httpx.HTTPError as f:
+                    raise LaderFehler(f"Die Adresse antwortet nicht: {f}") from f
+            if not ordner_aus(antwort.text):
+                raise LaderFehler("Unter der Adresse steht kein Verzeichnis mit Bereichen (Ordner je Bereich, darin ZIM-Dateien)")
+        try:
+            await self._bestand.quelle_anlegen(neu.art, neu.name.strip() or rechnername(adresse), adresse)
+        except ValueError as f:
+            raise LaderFehler(str(f)) from f
+        return await self._bestand.quellen()
+
+    async def quelle_aendern(self, nr: int, aenderung: QuellAenderung) -> list[Quellstand]:
+        await self._bestand.quelle_aendern(nr, aenderung.model_dump(exclude_none=True))
+        return await self._bestand.quellen()
+
+    async def quelle_entfernen(self, nr: int) -> list[Quellstand]:
+        await self._bestand.quelle_entfernen(nr)
+        return await self._bestand.quellen()
+
+    async def vorschlaege(self) -> list[Quellvorschlag]:
+        """Spiegel aus der Ladedatei eines bekannten Buchs, die noch keine Quelle sind (Adresse bis zum Bereich)."""
+        r = self._regeln()
+        z = next(iter(await self._bestand.buecher(set(r.sprachen))), None)
+        if z is None:
+            return []
+        async with self._client() as c:
+            try:
+                antwort = await c.get(urljoin(r.pruefsummen, f"{z.ordner}/{z.datei}.meta4"))
+                antwort.raise_for_status()
+                spiegel = ladedatei_aus(antwort.content).spiegel
+            except (httpx.HTTPError, ET.ParseError):
+                return []
+        bekannt = {q.adresse for q in await self._bestand.quellen()}
+        aus = []
+        for adresse, land in spiegel:
+            basis = adresse.removesuffix(f"{z.ordner}/{z.datei}")
+            if basis != adresse and basis not in bekannt and all(v.adresse != basis for v in aus):
+                aus.append(Quellvorschlag(name=rechnername(basis), adresse=basis, land=land))
+        return aus
+
     async def gesehen(self) -> None:
         """Die Neuigkeiten des letzten Durchgangs sind angesehen."""
         letzter = await self._bestand.letzter_durchgang()
@@ -517,7 +570,7 @@ class Buecherlader(Begleiter):
 
     async def stand(self) -> Laderstand:
         r = self._regeln()
-        grund = self._grund(r)
+        grund = await self._grund(r)
         letzter = await self._bestand.letzter_durchgang()
         abos: list[Abo] = []
         platz = None
@@ -535,7 +588,7 @@ class Buecherlader(Begleiter):
         return Laderstand(
             bereit=not grund, grund=grund, letzter_durchgang=letzter[1] if letzter else None,
             naechster_durchgang=self._naechste(letzter[1], r).isoformat(timespec="minutes") if letzter else "",
-            neu_ungesehen=neu, abos=abos, platz=platz,
+            neu_ungesehen=neu, abos=abos, platz=platz, quellen=await self._bestand.quellen(),
             regeln=Regelanzeige(sprachen=sorted(r.sprachen), durchsicht=r.durchsicht, neue_fassung=r.neue_fassung,
                                 laden_wann=r.laden_wann, vorige_tage=r.vorige_tage))
 
@@ -595,24 +648,28 @@ class Buecherlader(Begleiter):
                 stamm=z.stamm, ausgabe=basis_und_ausgabe(z.stamm)[1], stand=z.stand, groesse=z.groesse,
                 neu="buch" if nr and z.zuerst == nr else "fassung" if nr and z.stand_zuerst == nr else "",
                 abonniert=z.stamm in abos, lokal_stand=aktive[z.stamm].stand if z.stamm in aktive else "",
-                zustand=zustand_aus(z, aktive.get(z.stamm), wartende.get(z.stamm), z.stamm in ladende)) for z in teile]
+                zustand=zustand_aus(z, aktive.get(z.stamm), wartende.get(z.stamm), z.stamm in ladende),
+                quellen=z.bezuege) for z in teile]
             buecher.append(Verzeichnisbuch(basis=basis, ordner=erste.ordner, sprache=erste.sprache,
                                            titel=erste.titel or basis, beschreibung=erste.beschreibung,
-                                           eintraege=max(z.eintraege for z in teile), varianten=varianten))
+                                           eintraege=max(z.eintraege for z in teile), angaben=erste.angaben_lesen(),
+                                           varianten=varianten))
         bereiche = sorted({b.ordner for b in buecher})
         sprachen = sorted({b.sprache for b in buecher})
+        kategorien = sorted({b.angaben.kategorie for b in buecher if b.angaben.kategorie})
         passend = [g for b in buecher if (g := self._gefiltert(b, f))]
         passend.sort(key=self._ordnung(f))
         grenze = max(1, min(grenze, 200))
         return Verzeichnisseite(eintraege=passend[versatz:versatz + grenze], gesamt=len(passend), bereiche=bereiche,
-                                sprachen=sprachen)
+                                sprachen=sprachen, kategorien=kategorien)
 
     @staticmethod
     def _gefiltert(b: Verzeichnisbuch, f: Katalogfilter) -> Verzeichnisbuch | None:
         """Das Buch mit den Ausgaben, die zum Filter passen; keine passt: None."""
         frage = f.suche.strip().lower()
-        if (frage and frage not in f"{b.titel} {b.basis} {b.beschreibung}".lower()) or (f.bereich and b.ordner != f.bereich) \
-                or (f.sprache and b.sprache != f.sprache) or (f.ausgabe == "einzeln" and len(b.varianten) > 1):
+        text = f"{b.titel} {b.basis} {b.beschreibung} {b.angaben.autor} {' '.join(b.angaben.schlagworte)}".lower()
+        if (frage and frage not in text) or (f.bereich and b.ordner != f.bereich) or (f.sprache and b.sprache != f.sprache) \
+                or (f.kategorie and b.angaben.kategorie != f.kategorie) or (f.ausgabe == "einzeln" and len(b.varianten) > 1):
             return None
         bibliothek = {"da": lambda v: bool(v.lokal_stand), "nicht_da": lambda v: not v.lokal_stand and v.zustand != "laedt",
                       "neuer_da": lambda v: v.zustand in ("neuer_da", "wartet_auf_umschalten")}.get(f.bibliothek)

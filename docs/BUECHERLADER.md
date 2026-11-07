@@ -31,8 +31,9 @@ der Bücher schreibt. Alles, was länger läuft, ist ein Auftrag des Appkerns (S
 
 | Datei | Aufgabe |
 |---|---|
-| `verzeichnis.py` | Verzeichnisseiten lesen: Bereiche, Dateien, Stamm, Sprache und Stand aus dem Namen (reine Funktionen) |
-| `katalog.py` | Titel und Beschreibung aus dem Katalog, über den Dateinamen im Verweis zugeordnet |
+| `verzeichnis.py` | Verzeichnisseiten aller Spiegel lesen (Apache, lighttpd, nginx): Bereiche, Dateien, Stamm, Sprache, Stand |
+| `katalog.py` | Katalog lesen (Bücher mit Angaben und Ladedatei) und Ladedateien (meta4: Prüfsumme, Spiegel) |
+| `quellen.py` | Schnittstelle Quelle (Verzeichnis, Katalog) und die Vereinigungsmenge aller Quellen mit Bezugsquellen |
 | `bestand.py` | Datenbank: Bücher und Fassungen mit dem Durchgang, in dem sie zuerst auftauchten, Durchgänge, Abos, Wechsel |
 | `ablage.py` | Dateien im Ordner der Bücher: Bibliothek, `.laden/` (angefangen), `.neu/` (wartet aufs Umschalten) |
 | `bibliotheksliste.py` | `library.xml` für einen Bücherserver neben Nachschlag nachziehen (wahlweise) |
@@ -41,12 +42,27 @@ der Bücher schreibt. Alles, was länger läuft, ist ein Auftrag des Appkerns (S
 
 Ein Stamm ist der Dateiname ohne Stand (`wikipedia_de_all_maxi`): ein Buch in einer Ausgabe. Abos gelten je Stamm.
 
+## Quellen (WIKI-62)
+
+Quellen stehen als Liste im Bücherlader (Bibliothek, Fassungen und Laden): an oder aus, Reihenfolge, hinzufügen,
+entfernen, Vorschläge aus der Spiegelliste der offiziellen Ladedatei. Erste Quellen: der Katalog der Bücher und die
+Spiegel der Uni Erlangen, von dotsrc.org (Uni Aalborg), des Academic Computer Club Umeå und von NLUUG. Jede Durchsicht
+liest alle eingeschalteten; eine, die nicht antwortet, fehlt mit Hinweis. Bittet ein Spiegel um Geduld (429, 503),
+wartet der Lader und fragt erneut.
+
+Vereinigung: je Buch und Stand ein Eintrag mit den Bezugsquellen aller Quellen, die die Datei haben, und den
+zusammengeführten Angaben (Katalog vor Verzeichnis; Titel, Beschreibung, Artikel, Medien, Autor, Herausgeber,
+Kategorie, Schlagworte, Bilder, Videos, Volltextindex, Datum; keine fremden Vorschaubilder).
+
 ## Ablauf beim Laden
 
-1. Prüfsumme (SHA-256) holen; ohne Prüfsumme lädt nichts.
+1. Prüfsumme (SHA-256) und weitere Spiegel aus der Ladedatei holen, sonst aus der Quelle der Prüfsummen; ohne Prüfsumme
+   lädt nichts.
 2. Reserve und Grenze prüfen; passt die Datei nicht, wird sie gemeldet statt geladen. Der Zeitplan (alle 15 Minuten)
    holt das nach, sobald Platz ist.
-3. Laden in `.laden/`, fortsetzbar über Bereichsanfragen; alle 256 MB wird der freie Platz gegen die Reserve geprüft.
+3. Laden in `.laden/`, fortsetzbar über Bereichsanfragen, von der ersten Bezugsquelle in der Reihenfolge der Quellen;
+   liefert sie nicht, setzt die nächste an derselben Stelle fort. Alle 256 MB wird der freie Platz gegen die Reserve
+   geprüft.
 4. Prüfsumme rechnen; stimmt sie nicht, wird die Datei gelöscht.
 5. Datei öffnen und zählen.
 6. Ablegen: ein neues Buch direkt in die Bibliothek (und in die Liste), eine neue Fassung nach `.neu/`.

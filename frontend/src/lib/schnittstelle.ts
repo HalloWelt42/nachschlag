@@ -1,6 +1,7 @@
 // Alle Abrufe der Oberfläche an einer Stelle (über `hole` der Schale: Anmeldung, Fehler, gemeinsame Abrufe).
 import { hole } from "appkern-oberflaeche";
-import type { Abschnitt, Artikel, AutorenSeite, AutorSeite, Bibliotheksstand, FragenSeite, Katalogfilter, Laderstand, SchlagwortSeite, Sortierung,
+import type { Abschnitt, Artikel, AutorenSeite, AutorSeite, Bibliotheksstand, FragenSeite, Katalogfilter, Laderstand, Quellstand,
+              Quellvorschlag, SchlagwortSeite, Sortierung,
               Suchergebnis, Steckbrief, Verzeichnisseite, Vorschlag } from "./typen";
 
 function pfadTeil(pfad: string): string {
@@ -128,3 +129,12 @@ export const abbestellen = (stamm: string) => ohneInhalt(`/abo/${encodeURICompon
 export const bestandAbonnieren = () => hole<{ anzahl: number }>(`${LADER}/abo/bestand`, { method: "POST" });
 export const umschalten = (stamm: string) => ohneInhalt(`/umschalten/${encodeURIComponent(stamm)}`, "POST");
 export const zurueckSchalten = (stamm: string) => ohneInhalt(`/zurueck/${encodeURIComponent(stamm)}`, "POST");
+
+// --- Quellen des Bücherladers (WIKI-62) ---
+const json = (method: string, daten: unknown) => ({ method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(daten) });
+export const quelleAnlegen = (art: Quellstand["art"], adresse: string, name = "") =>
+  hole<Quellstand[]>(`${LADER}/quellen`, json("POST", { art, adresse, name }));
+export const quelleAendern = (nr: number, aenderung: { an?: boolean; rang?: number; name?: string }) =>
+  hole<Quellstand[]>(`${LADER}/quellen/${nr}`, json("PATCH", aenderung));
+export const quelleEntfernen = (nr: number) => hole<Quellstand[]>(`${LADER}/quellen/${nr}`, { method: "DELETE" });
+export const quellvorschlaegeHolen = () => hole<Quellvorschlag[]>(`${LADER}/quellen/vorschlaege`);

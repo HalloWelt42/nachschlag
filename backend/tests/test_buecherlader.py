@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 import buch as probebuch  # noqa: E402
 
 from app.buecherlader import Buecherlader, LaderFehler, Regeln  # noqa: E402
-from app.modell.buecherlader import Katalogfilter  # noqa: E402
+from app.modell.buecherlader import Katalogfilter, NeueQuelle  # noqa: E402
 from app.buecherlader.bibliotheksliste import Bibliotheksliste  # noqa: E402
 from app.buecherlader.katalog import eintraege_aus  # noqa: E402
 from app.buecherlader.verzeichnis import basis_und_ausgabe, dateien_aus, neueste, ordner_aus, zerlegen  # noqa: E402
@@ -56,16 +56,56 @@ def test_verzeichnisseite_lesen():
     assert basis_und_ausgabe("devdocs_en_php") == ("devdocs_en_php", "")
 
 
-FEED = """<?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2005/Atom">
-<entry><title>Probelexikon</title><summary>Buch für die Tests</summary><articleCount>9</articleCount>
-<link rel="http://opds-spec.org/acquisition/open-access" type="application/x-zim"
+FEED = """<?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/terms/">
+<entry><title>Probelexikon</title><summary>Buch für die Tests</summary><articleCount>9</articleCount><mediaCount>2</mediaCount>
+<tags>lexikon;tiere;_category:wikipedia;_pictures:yes;_videos:no;_ftindex:yes</tags>
+<author><name>Tests</name></author><publisher><name>openZIM</name></publisher><dc:issued>2026-10-02T00:00:00Z</dc:issued>
+<link rel="http://opds-spec.org/acquisition/open-access" type="application/x-zim" length="4096"
       href="https://lb.test/zim/probe/probe_de_all_2026-10.zim.meta4"/></entry>
 <entry><title>Ohne Datei</title></entry></feed>"""
 
 
-def test_katalog_ordnet_ueber_den_dateinamen_zu():
-    k = eintraege_aus(FEED)
-    assert list(k) == ["probe_de_all"] and k["probe_de_all"].titel == "Probelexikon" and k["probe_de_all"].eintraege == 9
+def test_katalog_mit_angaben():
+    [e] = eintraege_aus(FEED)
+    assert (e.ordner, e.stamm, e.stand, e.groesse) == ("probe", "probe_de_all", "2026-10", 4096)
+    a = e.angaben
+    assert (a.titel, a.artikel, a.medien, a.autor, a.herausgeber, a.kategorie) == ("Probelexikon", 9, 2, "Tests", "openZIM", "wikipedia")
+    assert a.schlagworte == ["lexikon", "tiere"] and a.bilder is True and a.videos is False and a.volltext is True
+    assert a.datum == "2026-10-02"
+
+
+def test_verzeichnisse_aller_spiegel():
+    """Apache als Text, lighttpd mit span und GiB, nginx als Text (WIKI-62)."""
+    lighttpd = ('<tr><td class="link"><span href="wikivoyage/" title="wikivoyage">wikivoyage/</span></td><td class="size">-</td></tr>'
+                '<tr><td class="link"><span href="w_de_all_maxi_2026-10.zim">w_de_all_maxi_2026-10.zim</span></td>'
+                '<td class="size">1.2 GiB</td><td class="date">2026-10-13 07:09:58</td></tr>')
+    nginx = ('<a href="../">../</a>\n<a href="wikivoyage/">wikivoyage/</a>   01-Nov-2026 17:05  -\n'
+             '<a href="w_de_all_maxi_2026-10.zim">w_de_all_maxi_2026-10.zim</a>   13-Oct-2026 01:09   1G\n')
+    for html in (lighttpd, nginx):
+        assert ordner_aus(html) == ["wikivoyage"]
+        [d] = dateien_aus("wikivoyage", html)
+        assert d.stamm == "w_de_all_maxi" and d.groesse in (int(1.2 * 1024**3), 1024**3)
+
+
+def test_vereinigung_und_ladedatei():
+    from app.buecherlader.katalog import ladedatei_aus
+    from app.buecherlader.quellen import Ergebnis, Fund, Katalogquelle, Verzeichnisquelle, vereinigen
+    from app.modell.buecherlader import Angaben
+    k, s1, s2 = Katalogquelle(1, "K", "http://k"), Verzeichnisquelle(2, "S1", "http://s1/"), Verzeichnisquelle(3, "S2", "http://s2/")
+    f = lambda adresse, groesse, angaben=None, stand="2026-10": Fund("p", f"p_de_all_{stand}.zim", "p_de_all", "de", stand,  # noqa: E731
+                                                                     groesse, adresse, "", angaben)
+    vereint = vereinigen([(s1, Ergebnis([f("http://s1/p", 1000), f("http://s1/alt", 900, stand="2026-01")])),
+                          (k, Ergebnis([f("http://k/p", 1234, Angaben(titel="P", kategorie="x"))])),
+                          (s2, Ergebnis([f("http://s2/p", 0)]))])
+    neu = next(v for v in vereint if v.stand == "2026-10")
+    assert [b.quelle for b in neu.bezuege] == [1, 2, 3] and neu.groesse == 1234 and neu.angaben.titel == "P"
+    assert len(vereint) == 2                                       # der ältere Stand nur aus einer Quelle
+    meta4 = """<metalink xmlns="urn:ietf:params:xml:ns:metalink"><file name="p.zim">
+      <hash type="sha-256">""" + "a" * 64 + """</hash>
+      <url location="se" priority="2">https://s2/p_de_all_2026-10.zim</url><url location="de" priority="1">https://s1/p_de_all_2026-10.zim</url>
+    </file></metalink>"""
+    l = ladedatei_aus(meta4)
+    assert l.sha256 == "a" * 64 and l.spiegel == [("https://s1/p_de_all_2026-10.zim", "de"), ("https://s2/p_de_all_2026-10.zim", "se")]
 
 
 class Server:
@@ -131,7 +171,7 @@ async def umgebung(tmp_path: Path):
     server.anbieten("probe", probebuch.bauen(quelle, "probe_de_all_2026-10"))
     server.anbieten("probe", probebuch.bauen(quelle, "neues_de_all_2026-10"))
     server.listen("probe", ["fremd_fr_all_2026-10.zim", "andere_en_all_maxi_2026-09.zim", "andere_en_all_nopic_2026-09.zim"])
-    werte = dict(ordner=buecher, verzeichnis=VERZEICHNIS, pruefsummen=SUMMEN, katalog=KATALOG,
+    werte = dict(ordner=buecher, pruefsummen=SUMMEN,
                  sprachen=frozenset({"de", "en"}), durchsicht="woechentlich", neue_fassung="laden", laden_wann="immer",
                  fenster=(22, 7), reserve=0, hoechstens=0, vorige_tage=14, liste=buecher / "library.xml")
     db = await Datenbank(tmp_path / "l.sqlite").oeffnen()
@@ -150,6 +190,10 @@ async def umgebung(tmp_path: Path):
                         zeitplan=False, in_gebrauch=in_gebrauch)
     await lader.starten()
     await auftraege.starten()
+    for q in await lader.quellen():                               # statt der echten Spiegel die nachgestellten (WIKI-62)
+        await lader.quelle_entfernen(q.nr)
+    await lader.quelle_anlegen(NeueQuelle(art="katalog", adresse=KATALOG, name="Katalog"))
+    await lader.quelle_anlegen(NeueQuelle(art="verzeichnis", adresse=VERZEICHNIS, name="Spiegel"))
     lader.fundus = fundus                                          # für die Tests: was der Fundus noch liest
     yield lader, auftraege, server, werte, buecher, uhr, hand
     await auftraege.stoppen()
@@ -189,6 +233,9 @@ async def test_durchgang_erstaufnahme_und_neues(umgebung):
     alle = await lader.verzeichnis()
     probe = next(b for b in alle.eintraege if b.basis == "probe_de_all")
     assert probe.titel == "Probelexikon" and probe.varianten[0].zustand == "neuer_da" and alle.bereiche == ["probe"]
+    assert probe.varianten[0].quellen == 2 and probe.angaben.kategorie == "wikipedia" and alle.kategorien == ["wikipedia"]
+    assert [(q.name, q.funde > 0) for q in await lader.quellen()] == [("Katalog", True), ("Spiegel", True)]
+    assert (await lader.verzeichnis(Katalogfilter(suche="tiere"))).eintraege[0].basis == "probe_de_all"   # Schlagwort
     await lader.gesehen()
     assert (await lader.stand()).neu_ungesehen == 0
 
@@ -335,3 +382,14 @@ async def test_katalogfilter(umgebung):
     assert (await lader.verzeichnis(Katalogfilter(groesse_bis=1))).gesamt == 0
     neueste = await lader.verzeichnis(Katalogfilter(sortierung="neueste"))
     assert neueste.eintraege[-1].basis == "andere_en_all"                 # 2026-09 hinter 2026-10
+
+
+async def test_spiegel_bittet_um_geduld(monkeypatch):
+    """429 mit Retry-After: warten und erneut fragen (WIKI-62)."""
+    from app.buecherlader import quellen
+    antworten = iter([httpx.Response(429, headers={"retry-after": "0"}), httpx.Response(503), httpx.Response(200, text="da")])
+    async def schlafen(_s):
+        return None
+    monkeypatch.setattr(quellen.asyncio, "sleep", schlafen)
+    async with httpx.AsyncClient(transport=httpx.MockTransport(lambda _r: next(antworten))) as c:
+        assert await quellen._text(c, "http://s/") == "da"

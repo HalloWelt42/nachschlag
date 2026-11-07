@@ -148,8 +148,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     def laderregeln() -> Laderregeln:
         s = e()
         return Laderregeln(
-            ordner=Path(s.buecher_ordner), verzeichnis=s.verzeichnis_adresse.strip(),
-            pruefsummen=s.pruefsummen_adresse.strip(), katalog=s.katalog_adresse.strip(),
+            ordner=Path(s.buecher_ordner), pruefsummen=s.pruefsummen_adresse.strip(),
             sprachen=frozenset(k for k, an in (("de", s.sprache_deutsch), ("en", s.sprache_englisch),
                                                ("mul", s.sprache_mehrsprachig)) if an),
             durchsicht=s.durchsicht, neue_fassung=s.neue_fassung, laden_wann=s.laden_wann,

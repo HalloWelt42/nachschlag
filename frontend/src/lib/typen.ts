@@ -175,6 +175,36 @@ export interface Beleg { nummer: number; text: string; url: string }
 /** Wie ein Buch des Verzeichnisses zur eigenen Bibliothek steht. */
 export type Laderzustand = "nicht_da" | "aktuell" | "neuer_da" | "laedt" | "wartet_auf_umschalten";
 
+/** Was die Quellen über ein Buch wissen (WIKI-62). */
+export interface Angaben {
+  titel: string;
+  beschreibung: string;
+  artikel: number;
+  medien: number;
+  autor: string;
+  herausgeber: string;
+  kategorie: string;
+  schlagworte: string[];
+  bilder: boolean | null;
+  videos: boolean | null;
+  volltext: boolean | null;
+  datum: string;
+}
+
+export interface Quellstand {
+  nr: number;
+  art: "verzeichnis" | "katalog";
+  name: string;
+  adresse: string;
+  an: boolean;
+  rang: number;
+  zuletzt: string;
+  funde: number;
+  meldung: string;
+}
+
+export interface Quellvorschlag { name: string; adresse: string; land: string }
+
 export interface Variante {
   stamm: string;
   ausgabe: string;                   // maxi, nopic, mini; leer bei nur einer Ausgabe
@@ -184,6 +214,7 @@ export interface Variante {
   abonniert: boolean;
   lokal_stand: string;
   zustand: Laderzustand;
+  quellen: number;                   // aus so vielen Quellen ladbar
 }
 
 export interface Verzeichnisbuch {
@@ -193,10 +224,11 @@ export interface Verzeichnisbuch {
   titel: string;
   beschreibung: string;
   eintraege: number;
+  angaben: Angaben;
   varianten: Variante[];
 }
 
-export interface Verzeichnisseite { eintraege: Verzeichnisbuch[]; gesamt: number; bereiche: string[]; sprachen: string[] }
+export interface Verzeichnisseite { eintraege: Verzeichnisbuch[]; gesamt: number; bereiche: string[]; sprachen: string[]; kategorien: string[] }
 
 /** Filter des Katalogs (WIKI-61); Ausgabe und Größe gelten je Ausgabe. */
 export interface Katalogfilter {
@@ -208,6 +240,7 @@ export interface Katalogfilter {
   bibliothek: "" | "da" | "nicht_da" | "neuer_da";
   nur_neu: boolean;
   nur_abonniert: boolean;
+  kategorie: string;                                         // laut Katalog; leer: alle
   sortierung: "titel" | "neueste" | "groesste" | "kleinste";
 }
 
@@ -215,6 +248,7 @@ export interface Durchgang {
   begonnen: string;
   beendet: string;
   ordner: number;
+  quellen: number;
   dateien: number;
   buecher: number;
   neue_buecher: number;
@@ -256,4 +290,5 @@ export interface Laderstand {
   neu_ungesehen: number;
   abos: Abo[];
   platz: Platz | null;
+  quellen: Quellstand[];
 }

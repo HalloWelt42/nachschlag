@@ -27,10 +27,11 @@
                         { wert: "groesste", titel: "Größte zuerst" }, { wert: "kleinste", titel: "Kleinste zuerst" }];
 
   let filter = $state<Katalogfilter>({ suche: "", bereich: "", sprache: "", ausgabe: "", groesse_bis: 0, bibliothek: "",
-                                       nur_neu: false, nur_abonniert: false, sortierung: "titel" });
+                                       nur_neu: false, nur_abonniert: false, kategorie: "", sortierung: "titel" });
   let buecher = $state.raw<Verzeichnisbuch[]>([]);
   let bereiche = $state.raw<string[]>([]);
   let sprachen = $state.raw<string[]>([]);
+  let kategorien = $state.raw<string[]>([]);
   let gesamt = $state(0);
   let laedt = $state(false);
   let fehler = $state("");
@@ -59,6 +60,7 @@
       gesamt = s.gesamt;
       bereiche = s.bereiche;
       sprachen = s.sprachen;
+      kategorien = s.kategorien;
       fehler = nachladefehler = "";
     } catch (f) {
       if (mein === zaehler && weiter) nachladefehler = seitenFehler(f);
@@ -90,6 +92,7 @@
     }
   }
 
+  const kategoriewahl = $derived([{ wert: "", titel: "Alle Kategorien" }, ...kategorien.map((k) => ({ wert: k, titel: k.replace(/_/g, " ") }))]);
   const bereichwahl = $derived([{ wert: "", titel: "Alle Bereiche" }, ...bereiche.map((b) => ({ wert: b, titel: b.replace(/_/g, " ") }))]);
   const karteKlasse = (b: Verzeichnisbuch) => b.varianten.some((v) => v.zustand === "laedt") ? "laedt" : b.varianten.some((v) => v.abonniert) ? "abo" : "";
   const zustandText = (v: Variante) => v.zustand === "neuer_da" || v.zustand === "aktuell" ? `${ZUSTAND[v.zustand].text}, bei dir ${monat(v.lokal_stand)}` : ZUSTAND[v.zustand].text;
@@ -107,6 +110,9 @@
       </div>
     {/if}
     <Auswahl wert={filter.bereich} symbol="fa-folder" titel="Bereich" optionen={bereichwahl} onwahl={(w: string) => (filter.bereich = w)} />
+    {#if kategorien.length}
+      <Auswahl wert={filter.kategorie} symbol="fa-tag" titel="Kategorie" optionen={kategoriewahl} onwahl={(w: string) => (filter.kategorie = w)} />
+    {/if}
     <Auswahl wert={filter.ausgabe} symbol="fa-images" titel="Ausgabe" optionen={AUSGABEN}
              onwahl={(w: string) => (filter.ausgabe = w as Katalogfilter["ausgabe"])} />
     <Auswahl wert={String(filter.groesse_bis)} symbol="fa-weight-hanging" titel="Größe" optionen={GROESSEN}
@@ -145,6 +151,7 @@
 
   <div class="katalog-gitter">
     {#each buecher as b (b.basis)}
+      {@const a = b.angaben}
       <div class="katkarte {karteKlasse(b)}" data-karte>
         <div class="kopf-k">
           <span class="sym"><i class="fa-solid fa-book"></i></span>
@@ -154,13 +161,28 @@
           </div>
           <Sprachmarke kuerzel={KUERZEL[b.sprache] ?? b.sprache} />
         </div>
-        {#if b.eintraege}<div class="werte-k"><span><span class="zahl">{zahl(b.eintraege)}</span> Artikel</span><span class="datei-k">{b.basis}</span></div>{/if}
+        <div class="werte-k">
+          {#if a.artikel}<span><span class="zahl">{zahl(a.artikel)}</span> Artikel</span>{/if}
+          {#if a.medien}<span><span class="zahl">{zahl(a.medien)}</span> Medien</span>{/if}
+          {#if a.autor}<span title="Wer den Inhalt erstellt">von {a.autor}</span>{/if}
+          {#if a.herausgeber && a.herausgeber !== a.autor}<span title="Wer die Datei erstellt">Datei: {a.herausgeber}</span>{/if}
+          <span class="datei-k">{b.basis}</span>
+        </div>
+        {#if a.kategorie || a.schlagworte.length || a.bilder !== null || a.volltext !== null}
+          <div class="angaben-k">
+            {#if a.kategorie}<span class="faehigkeit"><i class="fa-solid fa-tag"></i>{a.kategorie.replace(/_/g, " ")}</span>{/if}
+            {#if a.volltext}<span class="faehigkeit an"><i class="fa-solid fa-magnifying-glass"></i>Volltextindex</span>{/if}
+            {#if a.bilder}<span class="faehigkeit an"><i class="fa-solid fa-image"></i>Bilder</span>{/if}
+            {#if a.videos}<span class="faehigkeit an"><i class="fa-solid fa-film"></i>Videos</span>{/if}
+            {#each a.schlagworte.slice(0, 6) as s (s)}<span class="schlagwort-k">{s}</span>{/each}
+          </div>
+        {/if}
         <div class="ausgabe-liste" data-fuss>
           {#each b.varianten as v (v.stamm)}
             <div class="ausgabe-zeile">
               <span class="name-a">{AUSGABE[v.ausgabe] ?? v.ausgabe}{#if v.neu}<span class="neu-fassung">{v.neu === "buch" ? "neu" : "neue Fassung"}</span>{/if}</span>
               <span class="zahl">{groesse(v.groesse)}</span>
-              <span class="stand-a">Stand {monat(v.stand)}</span>
+              <span class="stand-a" title="aus so vielen Quellen ladbar">Stand {monat(v.stand)}{v.quellen > 1 ? ` · ${v.quellen} Quellen` : ""}</span>
               <span class="zustand-a {ZUSTAND[v.zustand].klasse}"><i class="fa-solid {ZUSTAND[v.zustand].symbol}"></i>{zustandText(v)}</span>
               {#if stand?.bereit}
                 {#if v.abonniert}

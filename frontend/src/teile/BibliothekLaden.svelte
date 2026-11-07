@@ -6,6 +6,7 @@
   import { datum, zahl } from "../lib/bibliothek.svelte";
   import { groesse, lader, laderLaden, monat } from "../lib/buecherlader.svelte";
   import { abbestellen, durchsichtStarten, umschalten, zurueckSchalten } from "../lib/schnittstelle";
+  import BibliothekQuellen from "./BibliothekQuellen.svelte";
   import Ladebalken from "./Ladebalken.svelte";
 
   const DURCHSICHT: Record<string, string> = { taeglich: "täglich", woechentlich: "wöchentlich", monatlich: "monatlich" };
@@ -57,6 +58,7 @@
           <div class="kennzahl"><span class="k">Zuletzt</span><span class="w text">{wann(d.begonnen)}</span></div>
           <div class="kennzahl"><span class="k">Nächste</span><span class="w text">{stand.naechster_durchgang ? wann(stand.naechster_durchgang) : "gleich"}</span></div>
           <div class="kennzahl"><span class="k">Bücher</span><span class="w">{zahl(d.buecher)}</span></div>
+          <div class="kennzahl"><span class="k">Quellen</span><span class="w">{d.quellen}</span></div>
           <div class="kennzahl"><span class="k">Neu</span><span class="w">{d.erstaufnahme ? "-" : `${d.neue_buecher} / ${d.neue_fassungen}`}</span></div>
         </div>
         {#if !d.erstaufnahme}<div class="unter-zeile">Neu heißt: neue Bücher / neue Fassungen seit der Durchsicht davor.</div>{/if}
@@ -137,6 +139,8 @@
       {/if}
     </section>
   {/if}
+
+  {#if stand}<BibliothekQuellen />{/if}
 
   <div class="unter-zeile">Regeln (Sprachen, wie oft, laden oder melden, wann, Reserve, wie lange die vorige bleibt) stehen unter
     <a href="/einstellungen/buecherlader" onclick={(e) => { e.preventDefault(); gehe("einstellungen/buecherlader"); }}>Einstellungen, Bücherlader</a>.</div>

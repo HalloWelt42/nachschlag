@@ -12,7 +12,8 @@ from pydantic import BaseModel, Field
 from appkern.app import Geruest
 from appkern.auftraege import Auftrag
 
-from ..modell.buecherlader import Katalogfilter, Laderstand, Verzeichnisseite
+from ..modell.buecherlader import (Katalogfilter, Laderstand, NeueQuelle, QuellAenderung, Quellstand, Quellvorschlag,
+                                   Verzeichnisseite)
 from .dienst import Buecherlader, LaderFehler
 
 
@@ -84,5 +85,37 @@ def router(geruest: Geruest, lader: Buecherlader) -> APIRouter:
             await lader.zurueck(stamm)
         except LaderFehler as f:
             raise konflikt(f)
+
+    # ----- Quellen (WIKI-62) ----------------------------------------------------------------------------------------
+
+    @r.get("/quellen", response_model=list[Quellstand], summary="Quellen des Bücherladers")
+    async def quellen() -> list[Quellstand]:
+        """Verzeichnisse von Spiegeln und Kataloge, in der Reihenfolge, in der das Laden sie versucht, mit dem Ergebnis
+        ihres letzten Durchgangs."""
+        return await lader.quellen()
+
+    @r.post("/quellen", response_model=list[Quellstand], status_code=201, summary="Quelle hinzufügen")
+    async def quelle_anlegen(neu: NeueQuelle) -> list[Quellstand]:
+        """Ein Verzeichnis wird dabei einmal gelesen; steht dort kein Verzeichnis mit Bereichen, kommt 409."""
+        try:
+            return await lader.quelle_anlegen(neu)
+        except LaderFehler as f:
+            raise konflikt(f)
+
+    @r.patch("/quellen/{nr}", response_model=list[Quellstand], summary="Quelle ein- oder ausschalten, umsortieren")
+    async def quelle_aendern(nr: int, aenderung: QuellAenderung) -> list[Quellstand]:
+        try:
+            return await lader.quelle_aendern(nr, aenderung)
+        except LookupError as f:
+            raise HTTPException(status_code=404, detail=str(f))
+
+    @r.delete("/quellen/{nr}", response_model=list[Quellstand], summary="Quelle entfernen")
+    async def quelle_entfernen(nr: int) -> list[Quellstand]:
+        return await lader.quelle_entfernen(nr)
+
+    @r.get("/quellen/vorschlaege", response_model=list[Quellvorschlag], summary="Spiegel, die noch keine Quelle sind")
+    async def vorschlaege() -> list[Quellvorschlag]:
+        """Aus der offiziellen Ladedatei eines bekannten Buchs: die Spiegel mit Land, die noch fehlen."""
+        return await lader.vorschlaege()
 
     return r
