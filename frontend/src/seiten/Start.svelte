@@ -13,6 +13,7 @@
   import { STARTANSICHTEN, startansicht, startansichtMerken } from "../lib/ansicht.svelte";
   import { themaHolen } from "../lib/themen.svelte";
   import { Auswahl } from "appkern-oberflaeche";
+  import { ART_SYMBOL } from "../lib/arten";
   import type { Art, Buch } from "../lib/typen";
   import { lesen } from "../lib/ziele";
   import { gehe } from "appkern-oberflaeche";
@@ -26,8 +27,7 @@
 
   interface Fund { buch: Buch; pfad: string; titel: string; einleitung: string }
 
-  const SYMBOL: Record<Art, string> = { enzyklopaedie: "fa-book", dokumentation: "fa-code", frage_antwort: "fa-comments",
-                                       webseite: "fa-globe", sonstiges: "fa-box-archive" };
+  const SYMBOL = ART_SYMBOL;
 
   let funde = $state<Record<string, Fund | null>>({});
   const REIHE = 6;                       // Artikel des Themas unter dem Artikel für heute

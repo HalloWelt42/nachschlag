@@ -27,7 +27,9 @@
   import Lesegroesse from "../teile/Lesegroesse.svelte";
   import { groesseFuer } from "../lib/lesegroesse.svelte";
   import Kachel from "../teile/Kachel.svelte";
+  import Anleitung from "../teile/Anleitung.svelte";
   import Fragekarte from "../teile/Fragekarte.svelte";
+  import Geraeteseite from "../teile/Geraeteseite.svelte";
   import Codeansicht from "../teile/Codeansicht.svelte";
   import { ausprobierstand, beispieleHolen, beispielLoeschen, codeSprache, type Beispiel, type Codesprache,
            type Probe } from "../lib/ausprobieren";
@@ -1043,6 +1045,12 @@
         {/each}
       </div>
     </div>
+  {:else if artikel.darstellung === "anleitung" && artikel.anleitung && !original}
+    <!-- Anleitung (iFixit, WIKI-64): Lesen oder Werkstatt -->
+    <Anleitung {artikel} />
+  {:else if (artikel.darstellung === "geraet" || artikel.darstellung === "anleitungen") && artikel.geraet && !original}
+    <!-- Gerät, Kategorie oder Startseite eines Anleitungsbuchs (WIKI-64) -->
+    <Geraeteseite {artikel} />
   {:else if zeigeOriginal}
     <!-- ohne Skripte, mit Herkunft der App: Stile und Bilder laden mit dem Lesezugang, die Seite kann nichts in der App tun -->
     <iframe class="original" class:mit-inhalt={geraet.mobil} src={artikel.original} title="Originalseite: {artikel.titel}"

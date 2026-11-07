@@ -6,15 +6,13 @@
   import { bibliothek, datum, zahl } from "../lib/bibliothek.svelte";
   import { groesse, lader, laderLaden, monat, ZUSTAND } from "../lib/buecherlader.svelte";
   import { abbestellen, abonnieren, bestandAbonnieren } from "../lib/schnittstelle";
-  import type { Art, Buch } from "../lib/typen";
+  import { ART_NAME, ART_SYMBOL } from "../lib/arten";
+  import type { Buch } from "../lib/typen";
   import { lesen } from "../lib/ziele";
   import Ladebalken from "./Ladebalken.svelte";
   import Sprachmarke from "./Sprachmarke.svelte";
 
-  const SYMBOL: Record<Art, string> = { enzyklopaedie: "fa-book", dokumentation: "fa-code", frage_antwort: "fa-comments",
-                                       webseite: "fa-globe", sonstiges: "fa-box-archive" };
-  const ART: Record<Art, string> = { enzyklopaedie: "Nachschlagewerk", dokumentation: "Dokumentation", frage_antwort: "Frage und Antwort",
-                                    webseite: "Webseite", sonstiges: "unbekannte Art" };
+  const SYMBOL = ART_SYMBOL, ART = ART_NAME;
 
   /** Stamm einer Datei (Kennung ohne Stand), wie ihn der Bücherlader für Abos führt. */
   const stamm = (b: Buch) => b.kennung.replace(/_\d{4}-\d{2}$/, "");

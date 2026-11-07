@@ -173,6 +173,15 @@ export function lesestandMelden(stand: { buch: string; pfad: string; titel: stri
   return meldung;
 }
 
+/** Wo das Lesen einer Seite zuletzt stand (die Werkstatt einer Anleitung merkt sich so den Schritt, WIKI-64). */
+export async function lesestandHolen(buch: string, pfad: string): Promise<Verlaufseintrag | null> {
+  try {
+    return await hole<Verlaufseintrag | null>(`/meins/verlauf/lesestand?${new URLSearchParams({ buch, pfad })}`);
+  } catch {
+    return null;                                       // ohne Stand beginnt die Werkstatt vorn
+  }
+}
+
 export async function gesuchtMelden(frage: string, treffer: number): Promise<void> {
   try {
     await hole("/meins/verlauf/suche", { method: "POST", ...json({ frage, treffer }) });

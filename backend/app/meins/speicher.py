@@ -222,6 +222,13 @@ class Meins(Begleiter):
         return [Verlaufseintrag(**{k: z[k] for k in Verlaufseintrag.model_fields if k in z},
                                 buch=await self._kennung_von(z["buch_name"]) if z["buch_name"] else "") for z in zeilen]
 
+    async def lesestand_von(self, konto: str, buch: str, pfad: str) -> Verlaufseintrag | None:
+        """Der Lesestand einer Seite (etwa der Schritt einer Anleitung in der Werkstatt, WIKI-64); `buch` ist die Kennung,
+        gilt über Fassungen hinweg (Name)."""
+        z = await self._db.zeile("SELECT * FROM verlauf WHERE konto=? AND art='artikel' AND buch_name=? AND pfad=?",
+                                 (konto, await self._name_von(buch), pfad))
+        return Verlaufseintrag(**{k: z[k] for k in Verlaufseintrag.model_fields if k in z}, buch=buch) if z else None
+
     async def gelesen(self, konto: str, buch: str, pfad: str) -> bool:
         """Hat das Konto die Seite schon geöffnet (steht sie im Verlauf)? `buch` ist die Kennung."""
         return await self._db.zeile("SELECT 1 AS ja FROM verlauf WHERE konto=? AND art='artikel' AND buch_name=? AND pfad=?",

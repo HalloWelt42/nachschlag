@@ -104,6 +104,11 @@ def router(geruest: Geruest, meins: Meins, bilder: Notizbilder) -> APIRouter:
         """Gelesenes und Gesuchtes, jüngstes zuerst, seitenweise."""
         return await meins.verlauf(konto.id, anzahl, ab, art)
 
+    @r.get("/verlauf/lesestand", response_model=Verlaufseintrag | None)
+    async def lesestand_von(buch: str, pfad: str, konto: Konto = geruest.mensch) -> Verlaufseintrag | None:
+        """Wo das Lesen einer Seite zuletzt stand (Abschnitt, Anteil); keiner: null."""
+        return await meins.lesestand_von(konto.id, buch, pfad)
+
     @r.put("/verlauf/lesestand", status_code=204)
     async def lesestand(stand: Lesestand, konto: Konto = geruest.mensch) -> Response:
         await meins.lesestand(konto.id, stand)

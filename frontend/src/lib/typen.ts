@@ -1,6 +1,6 @@
 // Was die Schnittstelle von Nachschlag liefert (Spiegel der Modelle in backend/app/modell).
 
-export type Art = "enzyklopaedie" | "dokumentation" | "frage_antwort" | "webseite" | "sonstiges";
+export type Art = "enzyklopaedie" | "dokumentation" | "frage_antwort" | "anleitung" | "webseite" | "sonstiges";
 
 export interface Faehigkeiten {
   titelindex: boolean;
@@ -88,7 +88,7 @@ export interface Artikel {
   angefragt: string;
   anker: string;
   titel: string;
-  darstellung: "lesedesign" | "uebersicht" | "original";
+  darstellung: "lesedesign" | "uebersicht" | "original" | "anleitung" | "geraet" | "anleitungen";
   baustein: string;
   html: string;
   einleitung: string;
@@ -109,6 +109,8 @@ export interface Artikel {
   fragen: Fragekarte[];
   zurueck: string;
   weiter: string;
+  anleitung: Anleitungsangaben | null;    // Anleitung oder Zerlegung (iFixit, WIKI-64)
+  geraet: Geraeteangaben | null;          // Gerät, Kategorie oder Startseite (iFixit, WIKI-64)
 }
 
 export type Weg = "bedeutung" | "index";
@@ -292,3 +294,26 @@ export interface Laderstand {
   platz: Platz | null;
   quellen: Quellstand[];
 }
+
+// --- Anleitungen (iFixit, WIKI-64): Spiegel von backend/app/modell/anleitung.py ---
+export interface Anleitungszeile { stufe: number; marke: "" | "hinweis" | "vorsicht" | "erinnerung"; farbe: string; text: string }
+export interface Anleitungsschritt { nr: number; titel: string; bilder: string[]; zeilen: Anleitungszeile[] }
+export interface Werkzeug { name: string; bild: string }
+export interface Anleitungsangaben {
+  art: "anleitung" | "zerlegung";
+  sprache: string;
+  autor: string;
+  schwierigkeit: number;           // 1 bis 5; 0 unbekannt
+  schwierigkeit_text: string;
+  zeit: string;
+  zeit_von: number | null;
+  zeit_bis: number | null;
+  einleitung: string;
+  hauptbild: string;
+  werkzeuge: Werkzeug[];
+  teile: Werkzeug[];
+  schritte: Anleitungsschritt[];
+  abschluss: string;
+}
+export interface Geraeteeintrag { pfad: string; titel: string; kurz: string; bild: string; empfohlen: boolean }
+export interface Geraeteangaben { kurz: string; bild: string; unterkategorien: Geraeteeintrag[]; anleitungen: Geraeteeintrag[]; werkzeuge: string[] }
