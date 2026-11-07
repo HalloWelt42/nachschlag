@@ -158,17 +158,22 @@ class Geraet:
         pfad = eintrag.pfad
 
         def eintraege(xpath: str, titel_xpath: str) -> list[Geraeteeintrag]:
-            aus, gesehen = [], set()
+            """Jedes Ziel einmal; hervorgehobene Anleitungen stehen meist auch in der Liste, deren kurzer Titel das
+            Bauteil nennt."""
+            aus: dict[str, Geraeteeintrag] = {}
             for a in doc.xpath(xpath):
                 ziel = h.ziel_im_buch(pfad, a.get("href") or "")
-                if ziel in gesehen or not wege.gibt_es(buch.kennung, ziel):
+                titel = _text(_eins(a, titel_xpath)) or _text(a)
+                hervor = "entry" in (a.get("class") or "").split()
+                if ziel in aus:
+                    if not hervor:
+                        aus[ziel].bauteil = titel
                     continue
-                gesehen.add(ziel)
-                kurz = _text(_eins(a, ".//p"))
-                aus.append(Geraeteeintrag(pfad=ziel, titel=_text(_eins(a, titel_xpath)) or _text(a), kurz=kurz,
-                                          bild=_bild(wege, buch, pfad, _eins(a, ".//img")),
-                                          empfohlen="entry" in (a.get("class") or "").split()))
-            return aus
+                if not wege.gibt_es(buch.kennung, ziel):
+                    continue
+                aus[ziel] = Geraeteeintrag(pfad=ziel, titel=titel, kurz=_text(_eins(a, ".//p")), empfohlen=hervor,
+                                           bild=_bild(wege, buch, pfad, _eins(a, ".//img")), bauteil=titel)
+            return list(aus.values())
 
         werkzeuge = list(dict.fromkeys(t for t in (_text(x) for x in doc.xpath('//*[contains(@class,"deviceToolsList")]//*[@itemprop="name" or contains(@class,"title")]')) if t))
         beschreibung = _eins(doc, '//*[contains(@class,"wikiRenderedText")]')

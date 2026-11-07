@@ -13,7 +13,7 @@ import hashlib
 import math
 import re
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from libzim.reader import Archive
@@ -21,6 +21,7 @@ from lxml import html as lhtml
 
 from ..bausteine import Wege, baustein_fuer
 from ..bibliothek import Eintrag
+from ..modell.anleitung import Anleitungsangaben, Geraeteangaben
 from ..modell.artikel import FrageAngaben
 from ..modell.buch import Buch
 from . import schema
@@ -43,6 +44,8 @@ class Zeile:
     einleitung: str
     text: str
     frage: FrageAngaben | None = None
+    anleitung: Anleitungsangaben | None = None
+    geraet: Geraeteangaben | None = None
     abdruck: str = ""
     aus_vorlage: int | None = None
 
@@ -65,6 +68,8 @@ class Vorlage:
     def __init__(self, pfad: Path) -> None:
         self.pfad = pfad
         self.v = schema.lesen(pfad)
+        vorhanden = {z[0] for z in self.v.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        self.tabellen = [t for t in METADATEN if t in vorhanden]   # ein älterer Index kennt nicht alle Metadaten
 
     @classmethod
     def oeffnen(cls, pfad: Path | None, ziel: Path) -> Vorlage | None:
@@ -88,10 +93,9 @@ class Vorlage:
         """War die Seite schon in der vorigen Fassung gelesen und nicht im Index (etwa keine Frage)?"""
         return self.v.execute("SELECT 1 FROM ohne_seite WHERE pfad=? AND abdruck=?", (pfad, abdruck)).fetchone() is not None
 
-    def metadaten(self, nr: int) -> tuple[list, list, list]:
-        return (self.v.execute("SELECT stimmen, antworten, akzeptiert, gefragt, gewicht FROM fragen WHERE nr=?", (nr,)).fetchall(),
-                self.v.execute("SELECT wort FROM schlagwoerter WHERE nr=?", (nr,)).fetchall(),
-                self.v.execute("SELECT schluessel, autor, art, stimmen, datum, akzeptiert FROM beitraege WHERE nr=?", (nr,)).fetchall())
+    def metadaten(self, nr: int) -> dict[str, list]:
+        """Je Tabelle der Metadaten die Zeilen der Seite (ohne ihre Nummer)."""
+        return {t: self.v.execute(f"SELECT {', '.join(METADATEN[t])} FROM {t} WHERE nr=?", (nr,)).fetchall() for t in self.tabellen}
 
     def schliessen(self) -> None:
         self.v.close()
@@ -120,7 +124,23 @@ def _text(html: str) -> str:
     return " ".join(wurzel.text_content().split())[:TEXT_HOECHSTENS]
 
 
-METADATEN = ("fragen", "schlagwoerter", "beitraege")
+#: Metadaten je Seite: Tabelle und ihre Spalten neben `nr`. Eine Liste für Schreiben, Ersetzen und Übernehmen.
+METADATEN: dict[str, tuple[str, ...]] = {
+    "fragen": ("stimmen", "antworten", "akzeptiert", "gefragt", "gewicht"),
+    "schlagwoerter": ("wort",),
+    "beitraege": ("schluessel", "autor", "art", "stimmen", "datum", "akzeptiert"),
+    "anleitungen": ("art", "sprache", "schwierigkeit", "schwierigkeit_text", "zeit", "zeit_von", "zeit_bis", "schritte", "bild"),
+    "werkzeuge": ("wort",),
+    "geraete": ("bild", "kurz"),
+    "geraet_kind": ("kind",),
+    "geraet_anleitung": ("anleitung", "bauteil", "empfohlen"),
+}
+
+
+def _zeilen_schreiben(v, tabelle: str, nr: int, zeilen: list) -> None:
+    spalten = ("nr", *METADATEN[tabelle])
+    v.executemany(f"INSERT OR IGNORE INTO {tabelle} ({', '.join(spalten)}) VALUES ({', '.join('?' * len(spalten))})",
+                  [(nr, *z) for z in zeilen])
 
 
 def _schreiben(v, zeilen: list[Zeile], naechste: int, ohne: list[tuple[str, str]] = (),
@@ -134,15 +154,20 @@ def _schreiben(v, zeilen: list[Zeile], naechste: int, ohne: list[tuple[str, str]
             if alt:   # nach einem Abbruch schon geschrieben: nicht doppelt in Volltext und Metadaten
                 v.execute("INSERT INTO volltext(volltext, rowid, titel, name, rubrik, einleitung, text) VALUES('delete',?,?,?,?,?,?)",
                           (alt["nr"], alt["titel"], alt["name"], alt["rubrik"], alt["einleitung"], alt["text"]))
-                for tabelle in ("seiten", *METADATEN):
+                for tabelle in ("seiten", *METADATEN):   # seiten zuerst, Metadaten über dieselbe Nummer
                     v.execute(f"DELETE FROM {tabelle} WHERE nr=?", (alt["nr"],))
             nr = v.execute("INSERT INTO seiten (pfad, titel, name, rubrik, einleitung, text, abdruck) VALUES (?,?,?,?,?,?,?)",
                            (z.pfad, *z.volltext(), z.abdruck)).lastrowid
             v.execute("INSERT INTO volltext(rowid, titel, name, rubrik, einleitung, text) VALUES (?,?,?,?,?,?)", (nr, *z.volltext()))
+            if z.aus_vorlage is not None and vorlage is not None:
+                for tabelle, metadaten in vorlage.metadaten(z.aus_vorlage).items():
+                    _zeilen_schreiben(v, tabelle, nr, metadaten)
             if z.frage:
                 _frage_schreiben(v, nr, z.frage)
-            elif z.aus_vorlage is not None and vorlage is not None:
-                _metadaten_uebernehmen(v, nr, vorlage.metadaten(z.aus_vorlage))
+            if z.anleitung:
+                _anleitung_schreiben(v, nr, z.anleitung)
+            if z.geraet:
+                _geraet_schreiben(v, nr, z.geraet)
         schema.angabe_setzen(v, "naechste", str(naechste))
 
 
@@ -157,18 +182,23 @@ def _frage_schreiben(v, nr: int, f: FrageAngaben) -> None:
                    for b in f.beitraege if b.autor])
 
 
-def _metadaten_uebernehmen(v, nr: int, metadaten: tuple[list, list, list]) -> None:
-    """Fragen, Schlagwörter und Beiträge einer unveränderten Seite aus der Vorlage, unter der neuen Nummer."""
-    fragen, woerter, beitraege = metadaten
-    v.executemany("INSERT INTO fragen (nr, stimmen, antworten, akzeptiert, gefragt, gewicht) VALUES (?,?,?,?,?,?)",
-                  [(nr, *f) for f in fragen])
-    v.executemany("INSERT OR IGNORE INTO schlagwoerter (wort, nr) VALUES (?,?)", [(w[0], nr) for w in woerter])
-    v.executemany("INSERT INTO beitraege (nr, schluessel, autor, art, stimmen, datum, akzeptiert) VALUES (?,?,?,?,?,?,?)",
-                  [(nr, *b) for b in beitraege])
+def _anleitung_schreiben(v, nr: int, a: Anleitungsangaben) -> None:
+    bild = a.hauptbild or next((s.bilder[0] for s in a.schritte if s.bilder), "")
+    _zeilen_schreiben(v, "anleitungen", nr, [(a.art, a.sprache, a.schwierigkeit, a.schwierigkeit_text, a.zeit, a.zeit_von,
+                                              a.zeit_bis, len(a.schritte), bild)])
+    _zeilen_schreiben(v, "werkzeuge", nr, [(w.name,) for w in a.werkzeuge])
+
+
+def _geraet_schreiben(v, nr: int, g: Geraeteangaben) -> None:
+    """Geräteseite, Kategorie oder Startseite: Bild, Kurztext, Unterkategorien und Anleitungen (Bauteil = Titel dort)."""
+    _zeilen_schreiben(v, "geraete", nr, [(g.bild, g.kurz)])
+    _zeilen_schreiben(v, "geraet_kind", nr, [(e.pfad,) for e in g.unterkategorien])
+    _zeilen_schreiben(v, "geraet_anleitung", nr, [(e.pfad, e.bauteil or e.titel, int(e.empfohlen)) for e in g.anleitungen])
 
 
 def _register_verdichten(v) -> None:
-    """Register aus den Metadaten: je Schlagwort Fragen und Stimmen, je Autor Beiträge, Stimmen und Zeitraum."""
+    """Register aus den Metadaten: je Schlagwort Fragen und Stimmen, je Autor Beiträge, Stimmen und Zeitraum, je Werkzeug
+    und Sprache die Anleitungen, die es brauchen."""
     with v:
         v.execute("DELETE FROM register_schlagwoerter")
         v.execute("INSERT INTO register_schlagwoerter (wort, fragen, stimmen) SELECT s.wort, COUNT(*), COALESCE(SUM(f.stimmen), 0) "
@@ -178,6 +208,9 @@ def _register_verdichten(v) -> None:
                   "SELECT schluessel, MAX(autor), COUNT(*), SUM(art = 'frage'), SUM(art = 'antwort'), SUM(akzeptiert), "
                   "COALESCE(SUM(stimmen), 0), COALESCE(MIN(NULLIF(datum, '')), ''), COALESCE(MAX(NULLIF(datum, '')), '') "
                   "FROM beitraege GROUP BY schluessel")
+        v.execute("DELETE FROM register_werkzeuge")
+        v.execute("INSERT INTO register_werkzeuge (wort, sprache, anleitungen) SELECT w.wort, a.sprache, COUNT(*) "
+                  "FROM werkzeuge w JOIN anleitungen a ON a.nr = w.nr GROUP BY w.wort, a.sprache")
 
 
 def _buch_lesbar(archiv: Archive) -> bool:
@@ -212,8 +245,11 @@ def _aufbereiten(archiv: Archive, buch: Buch, wege: Wege, e, mime: str, inhalt: 
         return None
     if buch.art == "frage_antwort" and fertig.frage is None:
         return None                                     # Fragenlisten, Konten, Schlagwortseiten: nur die Fragen zählen
+    if buch.art == "anleitung" and fertig.anleitung is None and fertig.geraet is None:
+        return None                                     # Benutzerseiten, Infoseiten: nur Anleitungen und Geräte zählen
     name = fertig.titel if fertig.titelart == "code" else ""
-    return Zeile(e.path, fertig.titel, name, fertig.rubrik, fertig.einleitung, _text(fertig.html), fertig.frage, abdruck=ab)
+    return Zeile(e.path, fertig.titel, name, fertig.rubrik, fertig.einleitung, _text(fertig.html), fertig.frage,
+                 fertig.anleitung, fertig.geraet, abdruck=ab)
 
 
 def bauen(archiv: Archive, buch: Buch, wege: Wege, ziel: Path, melden: Callable[[Stand], None] | None = None,
@@ -221,6 +257,7 @@ def bauen(archiv: Archive, buch: Buch, wege: Wege, ziel: Path, melden: Callable[
     """Baut (oder setzt fort) den Index in `ziel`. Lesefehler der Datei (etwa Netz weg) brechen ab, ohne den Stand zu
     verlieren; der Aufrufer versucht es später erneut. `abbrechen` hält nach dem nächsten Stapel an. `vorlage`: Index der
     vorigen Fassung desselben Buchs; Unverändertes kommt von dort."""
+    wege = replace(wege, medien=lambda _buch, pfad: pfad)      # Bilder im Index als Pfad im Buch, gültig über Fassungen
     v = schema.oeffnen(ziel)
     quelle = Vorlage.oeffnen(vorlage, ziel)
     if schema.angabe(v, "fassung") != str(schema.FASSUNG):     # Index aus einer anderen Fassung des Schemas: neu bauen

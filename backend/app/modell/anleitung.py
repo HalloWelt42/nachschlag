@@ -50,12 +50,14 @@ class Anleitungsangaben(BaseModel):
 
 
 class Geraeteeintrag(BaseModel):
-    """Eine Anleitung auf einer Geräteseite; ihr Titel dort nennt das Bauteil (Akku, Rückkamera)."""
+    """Eine Unterkategorie oder Anleitung auf einer Geräteseite."""
     pfad: str
     titel: str
     kurz: str = ""
     bild: str = ""
     empfohlen: bool = False
+    bauteil: str = Field("", description="Anleitung: das Bauteil, wie die Geräteseite sie einordnet (Akku, Rückkamera); "
+                                         "der Titel in ihrer Liste, sonst der hervorgehobene Titel")
 
 
 class Geraeteangaben(BaseModel):

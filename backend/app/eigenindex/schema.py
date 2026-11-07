@@ -10,7 +10,13 @@ verdichtet, damit Listen über Millionen Fragen sofort antworten.
 
 Abdruck (WIKI-58): je Seite eine kurze Prüfsumme ihres Rohinhalts in der ZIM-Datei; Seiten, die gelesen, aber nicht in den
 Index genommen wurden (etwa Konten und Listen einer Frage-Antwort-Seite), stehen mit ihrem Abdruck in `ohne_seite`. So
-übernimmt der Index einer neuen Fassung alles Unveränderte aus dem Index der vorigen, statt es neu aufzubereiten."""
+übernimmt der Index einer neuen Fassung alles Unveränderte aus dem Index der vorigen, statt es neu aufzubereiten.
+
+Anleitungen (iFixit, WIKI-64): je Anleitung Art, Sprache, Schwierigkeit, Zeit, Schritte und Bild (`anleitungen`), ihre
+Werkzeuge (`werkzeuge`, verdichtet im Register je Sprache); je Geräteseite Bild und Kurztext (`geraete`), die Pfade ihrer
+Unterkategorien (`geraet_kind`, daraus der Baum) und Anleitungen mit dem Bauteil, wie die Geräteseite es nennt
+(`geraet_anleitung`). Alle Metadaten hängen an der Nummer ihrer Seite (`nr`), Titel und Pfad stehen in `seiten`.
+Bilder stehen als Pfad im Buch, damit sie über Fassungen hinweg gelten."""
 
 from __future__ import annotations
 
@@ -51,6 +57,19 @@ CREATE TABLE IF NOT EXISTS register_autoren (
   antworten INTEGER NOT NULL, akzeptiert INTEGER NOT NULL, stimmen INTEGER NOT NULL, von TEXT NOT NULL, bis TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS register_autoren_beitraege ON register_autoren (beitraege DESC);
 CREATE INDEX IF NOT EXISTS register_autoren_name ON register_autoren (autor COLLATE NOCASE);
+CREATE TABLE IF NOT EXISTS anleitungen (
+  nr INTEGER PRIMARY KEY, art TEXT NOT NULL, sprache TEXT NOT NULL, schwierigkeit INTEGER NOT NULL, schwierigkeit_text TEXT NOT NULL,
+  zeit TEXT NOT NULL, zeit_von INTEGER, zeit_bis INTEGER, schritte INTEGER NOT NULL, bild TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS anleitungen_sprache ON anleitungen (sprache, art);
+CREATE TABLE IF NOT EXISTS werkzeuge (wort TEXT NOT NULL, nr INTEGER NOT NULL, PRIMARY KEY (wort, nr)) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS werkzeuge_nr ON werkzeuge (nr);
+CREATE TABLE IF NOT EXISTS geraete (nr INTEGER PRIMARY KEY, bild TEXT NOT NULL, kurz TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS geraet_kind (nr INTEGER NOT NULL, kind TEXT NOT NULL, PRIMARY KEY (nr, kind)) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS geraet_kind_kind ON geraet_kind (kind);
+CREATE TABLE IF NOT EXISTS geraet_anleitung (nr INTEGER NOT NULL, anleitung TEXT NOT NULL, bauteil TEXT NOT NULL, empfohlen INTEGER NOT NULL,
+  PRIMARY KEY (nr, anleitung)) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS geraet_anleitung_anleitung ON geraet_anleitung (anleitung);
+CREATE TABLE IF NOT EXISTS register_werkzeuge (wort TEXT NOT NULL, sprache TEXT NOT NULL, anleitungen INTEGER NOT NULL, PRIMARY KEY (wort, sprache));
 INSERT OR IGNORE INTO angaben (schluessel, wert) VALUES ('fassung', '{FASSUNG}');
 """
 

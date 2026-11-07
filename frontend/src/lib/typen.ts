@@ -315,5 +315,5 @@ export interface Anleitungsangaben {
   schritte: Anleitungsschritt[];
   abschluss: string;
 }
-export interface Geraeteeintrag { pfad: string; titel: string; kurz: string; bild: string; empfohlen: boolean }
+export interface Geraeteeintrag { pfad: string; titel: string; kurz: string; bild: string; empfohlen: boolean; bauteil: string }
 export interface Geraeteangaben { kurz: string; bild: string; unterkategorien: Geraeteeintrag[]; anleitungen: Geraeteeintrag[]; werkzeuge: string[] }

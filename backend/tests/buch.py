@@ -310,7 +310,7 @@ DISPLAY_EN = _anleitung("Probephone Display Replacement", [
     schwierigkeit=4, zeit="1 - 2 Stunden", werkzeuge=("Spudger", "Suction Cup", "Heat Gun"))
 ZERLEGUNG = _anleitung("Probephone Teardown", [[("level-0", "Wir öffnen das Gerät und sehen uns das Innere an, Schicht für Schicht.")]],
                        "Wir zerlegen das Probephone und zeigen, was darin steckt und wie es gebaut ist.", zerlegung=True)
-GERAET = ('<html lang="fr"><body><div id="banner"><div class="banner-content"><img class="banner-small-photo" src="../images/g.png">'
+GERAET = ('<html lang="fr"><body><div id="banner"><div class="banner-content"><div class="banner-small-photo"><img src="../images/g.png"></div>'
           '<h1 class="banner-title">Probephone</h1><p class="banner-blurb">Ein Telefon für die Tests, gebaut 2026.</p></div></div>'
           '<div class="highlight-guides"><div class="entry-container"><a href="../Anleitung/Probephone+Akku+tauschen/1" class="entry">'
           '<img src="../images/s1a.png"><div class="entry-text"><h4>Probephone Akku tauschen</h4><p>Den Akku tauschen</p></div></a></div></div>'

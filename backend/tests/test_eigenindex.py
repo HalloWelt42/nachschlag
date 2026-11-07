@@ -320,7 +320,13 @@ def _inhalt(pfad: Path) -> dict[str, list]:
         return {"seiten": v.execute("SELECT pfad, titel, name, rubrik, einleitung, text, abdruck FROM seiten ORDER BY pfad").fetchall(),
                 "schlagwoerter": v.execute("SELECT * FROM register_schlagwoerter ORDER BY wort").fetchall(),
                 "autoren": v.execute("SELECT * FROM register_autoren ORDER BY schluessel").fetchall(),
-                "ohne": v.execute("SELECT * FROM ohne_seite ORDER BY pfad").fetchall()}
+                "ohne": v.execute("SELECT * FROM ohne_seite ORDER BY pfad").fetchall(),
+                "register_werkzeuge": v.execute("SELECT * FROM register_werkzeuge ORDER BY wort, sprache").fetchall(),
+                # Metadaten über den Pfad ihrer Seite (die Nummern sind je Index andere)
+                **{t: v.execute(f"SELECT s.pfad, {', '.join('m.' + s for s in spalten)} FROM {t} m JOIN seiten s ON s.nr = m.nr "
+                                f"ORDER BY 1, 2, 3").fetchall() if len(spalten) > 1 else
+                   v.execute(f"SELECT s.pfad, m.{spalten[0]} FROM {t} m JOIN seiten s ON s.nr = m.nr ORDER BY 1, 2").fetchall()
+                   for t, spalten in aufbau.METADATEN.items()}}
     finally:
         v.close()
 
