@@ -21,6 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 import buch as probebuch  # noqa: E402
 
 from app.buecherlader import Buecherlader, LaderFehler, Regeln  # noqa: E402
+from app.zeitfenster import ZONE  # noqa: E402
 from app.modell.buecherlader import Katalogfilter, NeueQuelle, QuellAenderung  # noqa: E402
 from app.buecherlader.bibliotheksliste import Bibliotheksliste  # noqa: E402
 from app.buecherlader.katalog import eintraege_aus  # noqa: E402
@@ -263,7 +264,8 @@ async def test_abo_laedt_wartet_schaltet_um_und_raeumt_auf(umgebung):
     await lader.umschalten("probe_de_all")
     [abo] = (await lader.stand()).abos
     assert abo.zustand == "aktuell" and abo.rueckfall.kennung == "probe_de_all_2026-01"
-    assert abo.rueckfall.entfernt_ab == "2026-11-21"
+    frist = (datetime.now(timezone.utc) + timedelta(days=14)).astimezone(ZONE).date().isoformat()   # Umschalten nimmt die echte Uhr
+    assert abo.rueckfall.entfernt_ab == frist
     assert "probe_de_all_2026-10.zim" in (buecher / "library.xml").read_text()
 
     await lader.zurueck("probe_de_all")
