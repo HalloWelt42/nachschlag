@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import json
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -20,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 import buch as probebuch  # noqa: E402
 
 from app.buecherlader import Buecherlader, LaderFehler, Regeln  # noqa: E402
-from app.modell.buecherlader import Katalogfilter, NeueQuelle  # noqa: E402
+from app.modell.buecherlader import Katalogfilter, NeueQuelle, QuellAenderung  # noqa: E402
 from app.buecherlader.bibliotheksliste import Bibliotheksliste  # noqa: E402
 from app.buecherlader.katalog import eintraege_aus  # noqa: E402
 from app.buecherlader.verzeichnis import basis_und_ausgabe, dateien_aus, neueste, ordner_aus, zerlegen  # noqa: E402
@@ -116,6 +117,7 @@ class Server:
         self.summen: dict[str, str] = {}
         self.bereiche: list[tuple[str, str]] = []    # (Bereich/Datei, Größe in der Liste)
         self.fortgesetzt: list[str] = []
+        self.mit_ladedatei = False                   # Ladedateien (meta4) bei der Quelle der Prüfsummen
         self.quelle = quelle
 
     def anbieten(self, bereich: str, datei: Path, falsche_summe: bool = False) -> None:
@@ -136,6 +138,13 @@ class Server:
         if url.startswith(VERZEICHNIS) and url.endswith("/"):
             bereich = url[len(VERZEICHNIS):-1]
             return httpx.Response(200, text=seite(*(zeile(p.split("/")[1], g) for p, g in self.bereiche if p.startswith(bereich + "/"))))
+        if url.startswith(SUMMEN) and url.endswith(".meta4") and self.mit_ladedatei:
+            pfad = url[len(SUMMEN):-len(".meta4")]
+            if pfad not in self.summen:
+                return httpx.Response(404)
+            return httpx.Response(200, text='<metalink xmlns="urn:ietf:params:xml:ns:metalink"><file name="x">'
+                                            f'<hash type="sha-256">{self.summen[pfad]}</hash>'
+                                            f'<url location="de" priority="1">{VERZEICHNIS}{pfad}</url></file></metalink>')
         if url.startswith(SUMMEN) and url.endswith(".sha256"):
             pfad = url[len(SUMMEN):-len(".sha256")]
             return httpx.Response(200, text=f"{self.summen[pfad]}  {pfad.split('/')[1]}\n") if pfad in self.summen else httpx.Response(404)
@@ -393,3 +402,27 @@ async def test_spiegel_bittet_um_geduld(monkeypatch):
     monkeypatch.setattr(quellen.asyncio, "sleep", schlafen)
     async with httpx.AsyncClient(transport=httpx.MockTransport(lambda _r: next(antworten))) as c:
         assert await quellen._text(c, "http://s/") == "da"
+
+
+async def test_laden_ohne_bezugsquellen_ueber_die_ladedatei(umgebung):
+    """Ein Auftrag aus der Zeit vor den Quellen (keine Bezugsquellen in der Datenbank): Prüfsumme und Spiegel kommen aus
+    der Ladedatei der Quelle der Prüfsummen (WIKI-62)."""
+    lader, auftraege, server, werte, buecher, *_ = umgebung
+    await lader.durchsehen("probe")
+    await fertig(auftraege)
+    for q in await lader.quellen():                                # keine Quelle nennt die Datei mehr
+        await lader.quelle_aendern(q.nr, QuellAenderung(an=False))
+    await lader.quelle_aendern((await lader.quellen())[0].nr, QuellAenderung(an=True))   # bereit, aber ohne Bezug
+    await lader._bestand._db.ausfuehren("DELETE FROM buecherlader_bezug")
+    server.mit_ladedatei = True
+    # der Auftrag kennt aus seinem ersten Lauf nur die Prüfsumme (so standen die Aufträge beim Umstieg auf die Quellen)
+    werte["laden_wann"] = "nachts"
+    auftraege.zurueckstellen_wenn(lader.zurueckstellen)
+    a = await auftraege.einreihen("buch_laden", {"stamm": "neues_de_all", "ordner": "probe", "datei": "neues_de_all_2026-10.zim"})
+    soll = server.summen["probe/neues_de_all_2026-10.zim"]
+    await lader._bestand._db.ausfuehren("UPDATE auftrag SET zwischenstand=? WHERE id=?", (json.dumps({"soll": soll}), a.id))
+    werte["laden_wann"] = "immer"
+    auftraege.wecken()
+    [a] = await fertig(auftraege, "buch_laden")
+    assert a.zustand == "fertig", a.fehler
+    assert (buecher / "neues_de_all_2026-10.zim").is_file()

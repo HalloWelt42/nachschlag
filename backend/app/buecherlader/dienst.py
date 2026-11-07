@@ -333,9 +333,11 @@ class Buecherlader(Begleiter):
         name = zerlegen(e.datei)
         bezuege = await self._bestand.bezuege(e.stamm, name.stand) if name else []
         async with self._client() as c:
-            if not k.zwischenstand.get("soll"):
+            # Prüfsumme und Spiegel der Ladedatei, solange einer fehlt (auch ein Auftrag aus der Zeit vor den Quellen,
+            # der nur die Prüfsumme kennt und noch keine Bezugsquellen hat)
+            if not k.zwischenstand.get("soll") or "spiegel" not in k.zwischenstand:
                 soll, spiegel = await self._pruefsumme(c, r, e, next((b.ladedatei for b in bezuege if b.ladedatei), ""))
-                await k.merken(soll=soll, spiegel=spiegel)
+                await k.merken(soll=k.zwischenstand.get("soll") or soll, spiegel=spiegel)
             adressen = list(dict.fromkeys([b.adresse for b in bezuege] + k.zwischenstand.get("spiegel", [])))
             if not adressen:
                 raise AuftragFehler(f"Keine Quelle nennt {e.datei} (mehr); Jetzt durchsehen oder eine Quelle einschalten")
