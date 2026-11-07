@@ -46,7 +46,7 @@
   }
 </script>
 
-<div class="bibliothek">
+<div class="bibliothek bib-oben">
   <div class="ordnerzeile">
     <i class="fa-solid fa-folder-open"></i>
     <span>Bücher aus <code>{lader.stand?.platz?.ordner ?? "dem Ordner der Bibliothek"}</code>; neue Dateien erscheinen von selbst.</span>

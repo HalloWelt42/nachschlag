@@ -33,7 +33,7 @@
   const wann = (iso: string) => `${datum(iso.slice(0, 10))}, ${iso.slice(11, 16)} Uhr`;
 </script>
 
-<div class="katalog-seite">
+<div class="katalog-seite bib-oben">
   {#if fehler}<div class="fehlertext">{fehler}</div>{/if}
   {#if stand && !stand.bereit}
     <div class="fundband"><i class="fa-solid fa-circle-info"></i><span>Bücherlader aus: {stand.grund}</span>

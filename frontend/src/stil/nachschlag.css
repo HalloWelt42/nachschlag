@@ -1144,6 +1144,8 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .bib-seite { --bib-rand: 16px; }
 .mobil .bib-seite { --bib-rand: 0px; }
 .bib-reiter { padding: 0 var(--a5) var(--a2); }
+/* Abstand oben nur bei Reitern ohne stehenden Kopf; der Katalog hat seinen Seitenkopf mit eigenem Abstand (WIKI-63) */
+.bib-oben { padding-top: var(--a4); }
 .bib-reiter .neu-fassung { margin-left: 6px; }
 .bibliothek { display: flex; flex-direction: column; gap: var(--a4); max-width: 1180px; padding-bottom: var(--a6); }
 .bibliothek .fundband, .katalog-seite .fundband { margin: 0; flex-wrap: wrap; }

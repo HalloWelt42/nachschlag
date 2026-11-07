@@ -38,7 +38,7 @@
       Fassungen und Laden{#if ladend}<span class="reiter-punkt" title="lädt"></span>{/if}{#if wartend}<span class="neu-fassung"
         title="neue Fassungen warten aufs Umschalten">{wartend}</span>{/if}</button>
   </div>
-  <div class="rollfeld" style="padding-top: var(--a4)">
+  <div class="rollfeld">
     {#if lader.meldung}<div class="fehlertext">{lader.meldung}</div>{/if}
     {#if reiter === "katalog"}
       <BibliothekKatalog />
