@@ -17,6 +17,8 @@ from appkern.verbund import VerbundFehler
 from .api import router
 from .artikel import Artikelleser
 from .bibliothek import Bibliothek
+from .buecherlader import Buecherlader, Regeln as Laderregeln
+from .buecherlader.api import router as buecherlader_router
 from .eigenindex.ablage import Eigenindizes
 from .eigenindex.api import router as indexdienst_router
 from .eigenindex.auftrag import Indexauftraege
@@ -136,12 +138,31 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
                             lambda: (e().nachts_von, e().nachts_bis))
     geruest.begleiter_anmelden(sammlungen)
 
+    # Bücherlader (WIKI-57): Verzeichnis durchsehen, Neues melden, Abos laden; schreibt als Einziger in den Ordner der Bücher
+    def laderregeln() -> Laderregeln:
+        s = e()
+        return Laderregeln(
+            ordner=Path(s.buecher_ordner), verzeichnis=s.verzeichnis_adresse.strip(),
+            pruefsummen=s.pruefsummen_adresse.strip(), katalog=s.katalog_adresse.strip(),
+            sprachen=frozenset(k for k, an in (("de", s.sprache_deutsch), ("en", s.sprache_englisch),
+                                               ("mul", s.sprache_mehrsprachig)) if an),
+            durchsicht=s.durchsicht, neue_fassung=s.neue_fassung, laden_wann=s.laden_wann,
+            fenster=(s.nachts_von, s.nachts_bis), reserve=int(s.reserve_gb * 1024**3),
+            hoechstens=int(s.buecher_hoechstens_gb * 1024**3), vorige_tage=s.vorige_tage,
+            liste=Path(s.bibliotheksliste) if s.bibliotheksliste.strip() else None)
+
+    lader = Buecherlader(geruest.db, geruest.auftraege, laderregeln, quellen.von_hand_aktiv, transport=transport)
+    geruest.begleiter_anmelden(lader)
+    # eine Regel zum Zurückstellen für alle Dienste: Sammlungen warten auf die Nacht, Laden mit "nur nachts" auch
+    geruest.auftraege.zurueckstellen_wenn(lambda a: sammlungen.zurueckstellen(a) or lader.zurueckstellen(a))
+
     app = geruest.fastapi()
     app.state.geruest = geruest
     app.state.bibliothek = bibliothek
     app.state.indexauftraege = indexauftraege
     app.include_router(router(geruest, bibliothek, leser, suche, quellen))
     app.include_router(quellenarchiv_router(geruest, quellen))
+    app.include_router(buecherlader_router(geruest, lader))
     app.include_router(sammlung_router(geruest, sammlungen, stimmen))
     app.include_router(ausprobieren_router(geruest, Ausprobieren(lambda: geruest.verbund, lambda: e().codeschmiede_adresse)))
     notizbilder = Notizbilder(meins, lambda: geruest.kellerwolke)

@@ -79,6 +79,10 @@ class Quellenarchiv(Begleiter):
         buecher = [b for b in (await self.stand()).buecher if nutzbar(b)]
         return sorted(buecher, key=lambda b: b.archiv is not None)
 
+    async def von_hand_aktiv(self, kennung: str) -> bool:
+        """Hat jemand diese Quelle von Hand aktiv gesetzt (etwa eine vorige Fassung, die bleiben soll)?"""
+        return (await self._entscheidungen()).get(kennung, (None, False))[0] == "aktiv"
+
     async def setzen(self, kennung: str, zustand: Zustand | None, mitnutzen: bool | None) -> Buch:
         """`zustand`: archiv, aktiv oder None (wie von selbst); `mitnutzen` None lässt es, wie es ist."""
         await self._bib.buch(kennung)                           # BuchFehlt, wenn es die Quelle nicht gibt

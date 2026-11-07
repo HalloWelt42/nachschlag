@@ -17,7 +17,6 @@ import re
 from collections.abc import Callable
 from datetime import datetime, timezone
 from typing import Any, Literal
-from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, Field
 
@@ -33,6 +32,7 @@ from ..bibliothek import Bibliothek, BuchFehlt, EintragFehlt
 from ..modell.themen import Thema, Themeneintrag
 from ..themen import Themen
 from ..uebersetzung.anweisungen import html_sprache
+from ..zeitfenster import ZONE, nachts
 from ..uebersetzung.artikel import Artikeluebersetzer, braucht_uebersetzung
 from ..vorlesen import NichtBereit, Sprechdienst
 from .texte import HOECHSTENS_ZEICHEN, KARTENFORM, LERNFRAGEN, TEXTFORM, UEBERBLICK, ZUSAMMENFASSUNG, lesetext
@@ -44,7 +44,6 @@ ART = "sammlungsarbeit"
 Arbeit = Literal["uebersetzen", "vertonen", "zusammenfassen", "lernfragen"]
 TITEL: dict[str, str] = {"uebersetzen": "Übersetzen", "vertonen": "Vertonen", "zusammenfassen": "Zusammenfassen",
                          "lernfragen": "Lernfragen"}
-ZONE = ZoneInfo("Europe/Berlin")
 WECKER_S = 60
 NACHSEHEN_S = 3.0
 
@@ -97,12 +96,6 @@ def ordnername(titel: str) -> str:
     return re.sub(r"\s+", " ", re.sub(r"[/\\:\x00-\x1f]", " ", titel)).strip() or "Sammlung"
 
 
-def nachts(jetzt: datetime, von: int, bis: int) -> bool:
-    """Liegt die Stunde im Nachtfenster (über Mitternacht: 22 bis 7)?"""
-    h = jetzt.hour
-    return (von <= h or h < bis) if von > bis else (von <= h < bis)
-
-
 class Sammlungen(Begleiter):
     def __init__(self, db: Datenbank, auftraege: Auftraege, themen: Themen, bibliothek: Bibliothek, leser: Artikelleser,
                  artikel: Artikeluebersetzer, sprechdienst_fuer: Callable[[str], Sprechdienst],
@@ -116,7 +109,6 @@ class Sammlungen(Begleiter):
         auftraege.anmelden(Art(name=ART, titel="Sammlung bearbeiten", arbeit=self._arbeit, eingabe=SammlungsEingabe,
                                fortsetzbar=True, nach_neustart="fortsetzen", hoechstens=1,
                                herkunft=lambda e: Herkunft(titel="Zum Thema", ziel=f"themen/{e['thema']}")))   # WIKI-50
-        auftraege.zurueckstellen_wenn(self.zurueckstellen)
 
     async def starten(self) -> None:
         await self._db.einrichten("nachschlag_sammlungen", STUFEN)

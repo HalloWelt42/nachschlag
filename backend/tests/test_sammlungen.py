@@ -133,6 +133,7 @@ async def dienst(db, uhr=lambda: datetime(2026, 11, 2, 12, 0, tzinfo=ZONE)):
     kw, ls, sprecher = Kellerwolke(), Leitstelle(), Sprecher()
     s = Sammlungen(db, auftraege, Themen(), Bib(), Leser(), Artikel_(), lambda stimme: sprecher, lambda: ls, lambda: TEXTMODELL,
                    lambda: kw, lambda: (22, 7), uhr=uhr)
+    auftraege.zurueckstellen_wenn(s.zurueckstellen)          # in der App verbindet main.py die Regeln aller Dienste
     await s.starten()
     await auftraege.starten()
     return s, auftraege, kw, ls, sprecher

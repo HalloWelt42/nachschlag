@@ -13,6 +13,12 @@ BIBLIOTHEK = {"gruppe": "Bibliothek"}
 SUCHE = {"gruppe": "Suche"}
 VORLESEN = {"gruppe": "Vorlesen"}
 UEBER_NACHT = {"gruppe": "Über Nacht"}
+BUECHERLADER = {"gruppe": "Bücherlader"}
+
+#: Wie oft der Bücherlader das Verzeichnis durchsieht (WIKI-57)
+DURCHSICHT = {"taeglich": "täglich", "woechentlich": "wöchentlich", "monatlich": "monatlich"}
+NEUE_FASSUNG = {"laden": "laden und prüfen", "melden": "nur melden"}
+LADEN_WANN = {"immer": "immer", "nachts": "nur nachts (Fenster unter Über Nacht)"}
 
 #: Vorgabe für Übersetzung und Korrektur. Das Modell wählt immer die App, nie die Leitstelle (LS-19): jede Textanfrage
 #: nennt es, eine leere Einstellung gilt als diese Vorgabe.
@@ -30,7 +36,54 @@ class AppEinstellungen(Grundeinstellungen):
     # --- Bibliothek -------------------------------------------------------------------------------------------------
     buecher_ordner: str = Field("/buecher", title="Ordner der ZIM-Libs", json_schema_extra=BIBLIOTHEK,
                                 description="Jede ZIM-Datei in diesem Ordner ist eine Quelle; neue Dateien erscheinen von selbst. "
-                                            "Nachschlag liest nur.")
+                                            "Nachschlag liest nur; hinein schreibt allein der Bücherlader (in die "
+                                            "verborgenen Ordner .laden und .neu und beim Umschalten).")
+
+    # --- Bücherlader (WIKI-57): Verzeichnis durchsehen, Neues melden, Abos laden --------------------------------------
+    verzeichnis_adresse: str = Field("https://ftp.uni-erlangen.de/kiwix/zim/", title="Verzeichnis der Bücher",
+                                     json_schema_extra=BUECHERLADER,
+                                     description="Adresse des Verzeichnisses mit einem Unterordner je Bereich (Seiten, wie "
+                                                 "sie ein Webserver für Ordner ausgibt). Von hier lädt der Bücherlader. "
+                                                 "Leer: kein Bücherlader.")
+    pruefsummen_adresse: str = Field("https://download.kiwix.org/zim/", title="Quelle der Prüfsummen",
+                                     json_schema_extra=BUECHERLADER,
+                                     description="Hier liegt zu jeder Datei eine Prüfsumme (SHA-256, Endung .sha256), mit "
+                                                 "demselben Pfad wie im Verzeichnis. Ohne Prüfsumme lädt nichts.")
+    katalog_adresse: str = Field("https://opds.library.kiwix.org/catalog/v2", title="Katalog der Bücher",
+                                 json_schema_extra=BUECHERLADER,
+                                 description="Liefert Titel, Beschreibung und Zahl der Artikel zu den Dateien. Leer: das "
+                                             "Verzeichnis zeigt nur die Namen der Dateien.")
+    sprache_deutsch: bool = Field(True, title="Deutsche Bücher", json_schema_extra=BUECHERLADER,
+                                  description="Deutsche Bücher erscheinen im Verzeichnis und werden gemeldet.")
+    sprache_englisch: bool = Field(True, title="Englische Bücher", json_schema_extra=BUECHERLADER,
+                                   description="Englische Bücher erscheinen im Verzeichnis und werden gemeldet.")
+    sprache_mehrsprachig: bool = Field(False, title="Mehrsprachige Bücher", json_schema_extra=BUECHERLADER,
+                                       description="Bücher in mehreren Sprachen (etwa Vorträge mit Untertiteln).")
+    durchsicht: Literal["taeglich", "woechentlich", "monatlich"] = Field(
+        "woechentlich", title="Verzeichnis durchsehen", json_schema_extra={**BUECHERLADER, "beschriftungen": DURCHSICHT},
+        description="So oft geht der Bücherlader das ganze Verzeichnis durch, meldet Neues und lädt neuere Fassungen "
+                    "abonnierter Bücher.")
+    neue_fassung: Literal["laden", "melden"] = Field(
+        "laden", title="Neue Fassung eines Abos", json_schema_extra={**BUECHERLADER, "beschriftungen": NEUE_FASSUNG},
+        description="Laden holt und prüft sie von selbst; umgeschaltet wird in beiden Fällen erst, wenn du es bestätigst.")
+    laden_wann: Literal["immer", "nachts"] = Field(
+        "immer", title="Laden wann", json_schema_extra={**BUECHERLADER, "beschriftungen": LADEN_WANN},
+        description="Ein Buch nach dem anderen, fortsetzbar nach einem Abbruch.")
+    reserve_gb: float = Field(200, ge=0, title="Immer frei halten", json_schema_extra={**BUECHERLADER, "schritt": 10, "einheit": "GB"},
+                              description="So viel bleibt auf dem Datenträger der Bücher immer frei. Passt eine Datei "
+                                          "nicht, wird sie gemeldet statt geladen; fällt der freie Platz beim Laden darunter, "
+                                          "hält das Laden an.")
+    buecher_hoechstens_gb: float = Field(0, ge=0, title="Platz für Bücher höchstens",
+                                         json_schema_extra={**BUECHERLADER, "schritt": 50, "einheit": "GB"},
+                                         description="Grenze für alle Bücher zusammen, auch angefangene. 0: keine Grenze, "
+                                                     "nur die Reserve.")
+    vorige_tage: int = Field(14, ge=0, le=365, title="Vorige Fassung behalten",
+                             json_schema_extra={**BUECHERLADER, "einheit": "Tage"},
+                             description="Nach dem Umschalten bleibt die vorige Fassung so lange als Rückfall, danach wird "
+                                         "sie gelöscht; nie, wenn du sie von Hand wieder aktiv gesetzt hast.")
+    bibliotheksliste: str = Field("", title="Liste für den Bücherserver", json_schema_extra=BUECHERLADER,
+                                  description="Pfad einer library.xml, die ein Bücherserver neben Nachschlag liest; der "
+                                              "Bücherlader trägt Bücher dort ein und aus. Leer: keine Liste.")
 
     # --- Vorlesen (WIKI-43): über den Sprechdienst der Leitstelle ------------------------------------------------------
     sprechdienst: str = Field("klangwerk-sprechen", title="Sprechdienst", json_schema_extra=VORLESEN,
