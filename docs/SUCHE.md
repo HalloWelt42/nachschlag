@@ -63,6 +63,16 @@ fehlenden Feldern (Schlagwörter, Stimmen, Autoren, Rubriken).
     Frage in der Rangfolge (logarithmisch), die Trefferkarte zeigt Stimmen, Antworten mit Haken und Schlagwörter.
     Bücher über einer einstellbaren Größe (Vorgabe 5 GB) bekommen ihren Index nicht von selbst: Stack Overflow
     (115 GB, 30 Mio. Seiten) braucht auf dem Mac viele Stunden und mehrere hundert GB.
+    **Umgesetzt für Anleitungen (iFixit, WIKI-64):** je Anleitung Art (Anleitung, Zerlegung), Sprache (aus dem Text,
+    die Seiten nennen keine verlässliche), Schwierigkeit, Zeitaufwand in Minuten, Zahl der Schritte, Bild und Werkzeuge;
+    je Geräteseite Bild, Kurztext, Unterkategorien und Anleitungen mit Bauteil (der Titel in ihrer Liste). Daraus beim
+    Bau der Baum (`register_einordnung`: je Anleitung jede Geräteseite darüber) und das Register der Werkzeuge je
+    Sprache. Benutzer- und Infoseiten bleiben draußen. Die Startseite des Buchs ist "Anleitungen finden": ohne Filter
+    die Kategorien der Quelle, mit Filtern die Treffer (Art, Sprache, vorerst Deutsch, Schwierigkeit, Zeit, Ich habe,
+    Gerät mit ganzem Ast, Bauteil, Reihenfolge), alles in der Adresse. Ich habe: die eigenen Werkzeuge stehen in Meins
+    (auf allen Geräten); dann zählen nur Anleitungen, für die sie reichen, die übrigen auf Wunsch mit den fehlenden.
+    Geräte- und Anleitungsseiten zeigen ihre Einordnung (Startseite, Kategorien, Gerät, Bauteil) mit Sprung in die
+    Suche dieses Asts.
 12. **Sichtbarkeit:** Jeder Aufbau läuft als Auftrag des Appkerns (Seite Aufträge, Fußleiste) mit Was, Fortschritt,
     bisheriger Dauer und Restzeit. Eine neue Fassung eines Buchs bekommt einen eigenen Index; Seiten mit gleichem
     Rohinhalt (Abdruck) kommen aus dem Index der vorigen, aufbereitet wird nur Neues und Geändertes (WIKI-58). Der alte
