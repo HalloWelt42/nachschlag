@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Gerät (iFixit)</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Geräteseite (WIKI-64): Kopf mit Bild, Name, Kurzbeschreibung und Kennzahlen; darunter alle Anleitungen des Geräts als
+       Kacheln (empfohlene vorn, mit Marke), filterbar nach Bauteil; die Werkzeuge, die die Anleitungen brauchen; die
+       Beschreibung des Geräts als Steckbrief-Text. Inhalt echt aus ifixit_de_all_2026-03 (Device/iPad_7_Wi-Fi). -->
+  <body class="va">
+    <div class="fenster-voll">
+      <div data-teil="kopf"></div>
+      <div></div>
+      <div class="geruest">
+        <div data-teil="nav:artikel"></div>
+        <section class="artikelseite">
+          <div class="artikel-kopf">
+            <div class="pfad"><i class="fa-solid fa-screwdriver-wrench"></i><b>iFixit</b><i class="fa-solid fa-chevron-right"></i><a href="ifixit-anleitungen.html">Geräte</a><i class="fa-solid fa-chevron-right"></i>Tablet</div>
+            <h1 id="titel"></h1>
+            <div class="werkzeuge">
+              <button class="knopf"><i class="fa-solid fa-bookmark"></i><span class="wort">Merken</span></button>
+              <button class="knopf"><i class="fa-solid fa-layer-group"></i><span class="wort">Thema</span></button>
+              <div class="rechts"><button class="rund" title="Original"><i class="fa-solid fa-file-code"></i></button></div>
+            </div>
+          </div>
+          <div class="rollfeld">
+            <div class="ifx-geraet">
+              <div class="ifx-g-kopf">
+                <img id="bild" alt="" />
+                <div>
+                  <p class="ifx-g-kurz" id="kurz"></p>
+                  <div class="kennzahlen-reihe">
+                    <div class="kennzahl"><span class="k">Anleitungen</span><span class="w" id="zahl"></span></div>
+                    <div class="kennzahl"><span class="k">auf Deutsch</span><span class="w" id="deutsch"></span></div>
+                    <div class="kennzahl"><span class="k">Schwierigkeit</span><span class="w text">meist Schwierig</span></div>
+                    <div class="kennzahl"><span class="k">Zeit</span><span class="w text">1 - 2 Stunden</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="ifx-g-abschnitt">
+                <h2><i class="fa-solid fa-list-check"></i>Anleitungen</h2>
+                <div class="katalog-filter">
+                  <span class="chip wahl an">Alle</span><span class="chip wahl">Akku</span><span class="chip wahl">Display</span><span class="chip wahl">Kamera</span>
+                  <span class="chip wahl">Lautsprecher</span><span class="chip wahl">Antenne</span><span class="chip wahl">Logic Board</span>
+                  <span class="hinweis">Bauteile aus den Titeln der Anleitungen</span>
+                </div>
+                <div class="ifx-kacheln" id="anleitungen"></div>
+              </div>
+              <div class="ifx-g-abschnitt">
+                <h2><i class="fa-solid fa-toolbox"></i>Werkzeuge für dieses Gerät</h2>
+                <div class="ifx-chips" id="werkzeuge"></div>
+              </div>
+              <div class="ifx-g-abschnitt">
+                <h2><i class="fa-solid fa-circle-info"></i>Über das Gerät</h2>
+                <p class="ifx-g-text" id="beschreibung"></p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div data-teil="fuss"></div>
+    </div>
+    <script src="beispiel/ifixit/daten.js"></script>
+    <script src="beispiel/ifixit/zeichnen.js"></script>
+    <script>
+      const g = ifx.D.geraet;
+      document.getElementById("titel").textContent = g.titel;
+      document.getElementById("bild").src = g.bild;
+      document.getElementById("kurz").textContent = g.kurz;
+      document.getElementById("zahl").textContent = g.anleitungen.length;
+      document.getElementById("deutsch").textContent = g.anleitungen.length;
+      document.getElementById("beschreibung").textContent = g.beschreibung.replace(/^Wallpaper.*?Hintergrund und Identifikation /, "") + " ...";
+      document.getElementById("werkzeuge").innerHTML = [...new Set(g.werkzeuge.filter(Boolean))].map((w) => `<span class="faehigkeit"><i class="fa-solid fa-screwdriver-wrench"></i>${ifx.esc(w)}</span>`).join("");
+      document.getElementById("anleitungen").innerHTML = g.anleitungen.map((x) =>
+        `<a class="ifx-kachel" href="${x.titel === "Rückkamera" ? "ifixit-anleitung.html" : "#"}">${x.bild ? `<img src="${x.bild}" alt="">` : ""}` +
+        `<span class="t">${x.empfohlen ? '<i class="fa-solid fa-award" title="empfohlen"></i>' : ""}${ifx.esc(x.titel)}</span>` +
+        `${x.kurz && x.kurz !== x.titel ? `<span class="u">${ifx.esc(x.kurz)}</span>` : ""}</a>`).join("");
+    </script>
+    <script src="mockup.js"></script>
+  </body>
+</html>

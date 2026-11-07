@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Anleitung lesen (iFixit)</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Baustein Anleitung (iFixit, WIKI-64) im Grunddesign der Artikelansicht A: links die Schritte als Inhalt mit Lesestand,
+       rechts der Steckbrief (Schwierigkeit, Zeit, Schritte, Autor, Werkzeuge, Ersatzteile). Jeder Schritt: großes Bild,
+       weitere Bilder darunter, rechts die Zeilen mit Farbpunkt (gehört zur Markierung im Bild) oder Marke (Hinweis,
+       Vorsicht, Erinnerung). Umschalten auf Werkstatt oben rechts. Inhalt echt aus ifixit_de_all_2026-03. -->
+  <body class="va">
+    <div class="fenster-voll">
+      <div data-teil="kopf"></div>
+      <div></div>
+      <div class="geruest">
+        <div data-teil="nav:artikel"></div>
+        <section class="artikelseite">
+          <div class="artikel-kopf">
+            <div class="pfad"><i class="fa-solid fa-screwdriver-wrench"></i><b>iFixit</b><i class="fa-solid fa-chevron-right"></i><a href="ifixit-geraet.html">iPad 7 Wi-Fi</a><i class="fa-solid fa-chevron-right"></i>Anleitung</div>
+            <h1 id="titel"></h1>
+            <div class="werkzeuge">
+              <button class="knopf" title="Merken"><i class="fa-solid fa-bookmark"></i><span class="wort">Merken</span></button>
+              <button class="knopf" title="Notiz"><i class="fa-solid fa-note-sticky"></i><span class="wort">Notiz</span></button>
+              <button class="knopf" title="Vorlesen"><i class="fa-solid fa-volume-high"></i><span class="wort">Vorlesen</span></button>
+              <button class="knopf" title="Zu einem Thema legen"><i class="fa-solid fa-layer-group"></i><span class="wort">Thema</span></button>
+              <div class="rechts">
+                <span class="segment"><span class="aktiv"><i class="fa-solid fa-book-open"></i> Lesen</span><a href="ifixit-werkstatt.html"><i class="fa-solid fa-screwdriver-wrench"></i> Werkstatt</a></span>
+                <button class="rund" title="Original"><i class="fa-solid fa-file-code"></i></button>
+                <button class="rund" title="Lesegröße"><i class="fa-solid fa-text-height"></i></button>
+              </div>
+            </div>
+          </div>
+          <div class="rollfeld">
+            <div class="lesen">
+              <nav class="inhalt">
+                <div class="inhalt-titel">50 Schritte</div>
+                <ol id="inhalt"></ol>
+                <div class="lesestand"><span style="width: 6%"></span></div>
+                <div class="lesestand-text">Schritt 3 von 50</div>
+              </nav>
+              <article class="artikel ifx-artikel">
+                <aside class="steckbrief">
+                  <div class="steckbrief-kopf">Anleitung</div>
+                  <figure class="steckbrief-bild"><img id="hauptbild" alt="" /></figure>
+                  <dl class="steckbrief-werte">
+                    <dt>Schwierigkeit</dt><dd id="schwierigkeit"></dd>
+                    <dt>Zeit</dt><dd id="zeit"></dd>
+                    <dt>Schritte</dt><dd id="zahl"></dd>
+                    <dt>Gerät</dt><dd><a class="wl" href="ifixit-geraet.html">iPad 7 Wi-Fi</a></dd>
+                    <dt>Von</dt><dd id="autor"></dd>
+                  </dl>
+                  <div class="steckbrief-gruppe">Werkzeuge</div>
+                  <ul class="ifx-werkzeuge" id="werkzeuge"></ul>
+                  <div class="steckbrief-gruppe">Ersatzteile</div>
+                  <ul class="ifx-werkzeuge" id="teile"></ul>
+                  <div style="height: var(--a3)"></div>
+                </aside>
+                <p class="ifx-einleitung" id="einleitung"></p>
+                <div id="schritte"></div>
+                <p class="gekuerzt"><i class="fa-solid fa-scissors"></i>Im Entwurf gekürzt: Schritte 9 bis 50 sehen genauso aus.</p>
+                <section class="ifx-abschluss"><h2><i class="fa-solid fa-flag-checkered"></i>Abschluss</h2><p id="abschluss"></p></section>
+                <details class="ueber">
+                  <summary><i class="fa-solid fa-circle-info"></i>Über diese Seite<span>Quelle, Lizenz</span></summary>
+                  <dl><dt>Quelle</dt><dd>iFixit in German (ifixit_de_all, 2026-03)</dd><dt>Lizenz</dt><dd>CC BY-NC-SA, Autor wie genannt</dd></dl>
+                </details>
+              </article>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div data-teil="fuss"></div>
+    </div>
+    <script src="beispiel/ifixit/daten.js"></script>
+    <script src="beispiel/ifixit/zeichnen.js"></script>
+    <script>
+      const a = ifx.D.anleitung;
+      document.getElementById("titel").textContent = a.titel;
+      document.getElementById("hauptbild").src = a.hauptbild;
+      document.getElementById("schwierigkeit").innerHTML = ifx.stufe(a.schwierigkeit) + " " + a.werte.Schwierigkeitsgrad;
+      document.getElementById("zeit").textContent = a.werte.Zeitaufwand;
+      document.getElementById("zahl").textContent = a.werte.Schritte;
+      document.getElementById("autor").textContent = a.autor;
+      document.getElementById("einleitung").textContent = a.einleitung;
+      document.getElementById("abschluss").textContent = a.abschluss;
+      ifx.werkzeuge(document.getElementById("werkzeuge"), a.werkzeuge);
+      ifx.werkzeuge(document.getElementById("teile"), a.teile);
+      ifx.schritte(document.getElementById("schritte"), 1, 8);
+      document.getElementById("inhalt").innerHTML = a.schritte.slice(0, 14).map((s) => {
+        const t = s.titel || (s.zeilen[0]?.text ?? "").split(/[.:]/)[0].slice(0, 40);
+        return `<li class="${s.nr < 3 ? "gelesen" : s.nr === 3 ? "aktiv" : ""}"><a href="#schritt-${s.nr}"><span class="nr">${s.nr}</span>${ifx.esc(t)}</a></li>`;
+      }).join("") + `<li><a href="#"><span class="nr">...</span>bis 50</a></li>`;
+    </script>
+    <script src="mockup.js"></script>
+  </body>
+</html>

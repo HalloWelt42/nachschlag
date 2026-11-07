@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Anleitungen finden (iFixit)</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Anleitungen finden (WIKI-64): Startseite des Buchs und Ziel der Suche darin. Oben stehend Suche und Filter: Sprache
+       (vorerst nur Deutsch, Englisch zuschaltbar), Art (Anleitung, Zerlegung, Gerät), Schwierigkeit, Zeit, "Ich habe"
+       (Werkzeuge, die man besitzt: zeigt nur Anleitungen, für die sie reichen), Sortierung. Links die Geräte als
+       Liste mit Zahl, rechts die Treffer mit Schwierigkeit, Zeit, Schritten und Werkzeugen. Zahlen aus der Stichprobe
+       (1.500 Anleitungen, 19 % deutsch, hochgerechnet rund 10.900 deutsche Anleitungen); Liste echt (deutsche Beispiele). -->
+  <body class="va">
+    <div class="fenster-voll">
+      <div data-teil="kopf"></div>
+      <div></div>
+      <div class="geruest">
+        <div data-teil="nav:start"></div>
+        <section class="artikelseite">
+          <div class="rollfeld" style="padding: 0">
+            <header class="ifx-suchkopf">
+              <div class="ifx-titelzeile"><h1><i class="fa-solid fa-screwdriver-wrench"></i>iFixit</h1>
+                <span class="blass">Reparaturanleitungen · rund 10.900 auf Deutsch · 45.788 Geräte</span></div>
+              <div class="katalog-filter">
+                <label class="suchfeld katalog-suche"><i class="fa-solid fa-magnifying-glass"></i><input value="Akku" aria-label="Suchen" placeholder="Gerät, Bauteil oder Fehler" /></label>
+                <span class="segment"><span class="aktiv">Anleitungen</span><span>Zerlegungen</span><span>Geräte</span></span>
+                <span class="segment"><span class="aktiv">Deutsch</span><span>auch Englisch</span></span>
+              </div>
+              <div class="katalog-filter">
+                <span class="ifx-filtertitel">Schwierigkeit</span>
+                <span class="segment ifx-schw"><span class="aktiv">alle</span><span>sehr einfach</span><span>einfach</span><span>mittel</span><span>schwierig</span><span>sehr schwierig</span></span>
+                <span class="chip wahl"><i class="fa-regular fa-clock"></i>bis 1 Stunde<i class="fa-solid fa-chevron-down"></i></span>
+                <span class="chip wahl an"><i class="fa-solid fa-toolbox"></i>Ich habe: Spudger, Pinzette, PH00, Plektrum<i class="fa-solid fa-chevron-down"></i></span>
+                <span class="chip wahl"><i class="fa-solid fa-arrow-down-wide-short"></i>Passendste zuerst<i class="fa-solid fa-chevron-down"></i></span>
+              </div>
+            </header>
+            <div class="ifx-treffer-seite">
+              <aside class="ifx-facetten">
+                <div class="inhalt-titel">Geräte</div>
+                <ul id="geraete"></ul>
+                <div class="inhalt-titel" style="margin-top: var(--a4)">Bauteil</div>
+                <ul><li class="an"><span>Akku</span><b>212</b></li><li><span>Display</span><b>164</b></li><li><span>Kamera</span><b>97</b></li>
+                  <li><span>Logic Board</span><b>61</b></li><li><span>Lautsprecher</span><b>48</b></li></ul>
+              </aside>
+              <div>
+                <div class="ifx-trefferzahl"><b>212</b> Anleitungen auf Deutsch zu <b>Akku</b>, für die deine Werkzeuge reichen · <span class="blass">weitere 140 brauchen mehr</span></div>
+                <div class="ifx-liste" id="liste"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div data-teil="fuss"></div>
+    </div>
+    <script src="beispiel/ifixit/daten.js"></script>
+    <script src="beispiel/ifixit/zeichnen.js"></script>
+    <script>
+      const STUFE = { "Sehr einfach": 1, "Einfach": 2, "Mittel": 3, "Schwierig": 4, "Sehr schwierig": 5 };
+      const liste = ifx.D.liste.filter((x) => STUFE[x.schwierigkeit]);
+      const geraet = (t) => (t.match(/^(iPad( Mini| Air| Pro)?( \d+)?|iPhone \w+|iMac[^"]*?"|MacBook Pro|Google Pixel \w+|Nintendo Switch\w*|Microsoft Surface Pro \w+|Framework Laptop \d+|PlayStation Portal|Motorola Moto G\w*|Huawei P\d+ \w+|iPod \w+)/) || [""])[0];
+      const zahl = {};
+      liste.forEach((x) => { const g = geraet(x.titel); if (g) zahl[g] = (zahl[g] || 0) + 1; });
+      document.getElementById("geraete").innerHTML = Object.entries(zahl).sort((a, b) => b[1] - a[1]).slice(0, 12)
+        .map(([g, n]) => `<li><span>${ifx.esc(g)}</span><b>${n}</b></li>`).join("");
+      document.getElementById("liste").innerHTML = liste.slice(0, 18).map((x) =>
+        `<a class="ifx-zeile-liste" href="${x.titel.startsWith("iPad 7 Rückkamera") ? "ifixit-anleitung.html" : "#"}">` +
+        `<span class="t">${ifx.esc(x.titel)}</span>` +
+        `<span class="w">${ifx.stufe("difficulty-" + STUFE[x.schwierigkeit])}<span>${ifx.esc(x.schwierigkeit)}</span></span>` +
+        `<span class="w"><i class="fa-regular fa-clock"></i>${ifx.esc(x.zeit)}</span>` +
+        `<span class="w"><i class="fa-solid fa-list-ol"></i>${x.schritte} Schritte</span>` +
+        `<span class="ifx-chips">${x.werkzeuge.slice(0, 3).map((w) => `<span class="faehigkeit">${ifx.esc(w)}</span>`).join("")}</span></a>`).join("");
+    </script>
+    <script src="mockup.js"></script>
+  </body>
+</html>

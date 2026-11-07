@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="de" data-theme="dunkel" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Anleitung in der Werkstatt (iFixit)</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Werkstatt (WIKI-64): ein Schritt füllt die Seite, für die Arbeit am Gerät. Links groß das Bild (die weiteren Bilder
+       darunter zum Wechseln), rechts die Zeilen in großer Schrift, darüber die Leiste aller Schritte mit dem Stand, unten
+       Zurück und Weiter (auch Pfeiltasten und Leertaste). Der Schritt wird gemerkt, auf allen Geräten. Dunkel gezeigt:
+       am Arbeitsplatz blendet es weniger. Inhalt echt aus ifixit_de_all_2026-03 (Schritt 2 von 50). -->
+  <body class="va">
+    <div class="fenster-voll">
+      <div data-teil="kopf"></div>
+      <div></div>
+      <div class="geruest">
+        <div data-teil="nav:artikel"></div>
+        <section class="artikelseite">
+          <div class="artikel-kopf">
+            <div class="pfad"><i class="fa-solid fa-screwdriver-wrench"></i><b>iFixit</b><i class="fa-solid fa-chevron-right"></i><a href="ifixit-geraet.html">iPad 7 Wi-Fi</a><i class="fa-solid fa-chevron-right"></i>Anleitung</div>
+            <h1 id="titel"></h1>
+            <div class="werkzeuge">
+              <span class="ifx-kopfwerte"><span id="schwierigkeit"></span><span><i class="fa-regular fa-clock"></i><span id="zeit"></span></span>
+                <span><i class="fa-solid fa-toolbox"></i><a href="#" id="werkzeugzahl"></a></span></span>
+              <div class="rechts">
+                <span class="segment"><a href="ifixit-anleitung.html"><i class="fa-solid fa-book-open"></i> Lesen</a><span class="aktiv"><i class="fa-solid fa-screwdriver-wrench"></i> Werkstatt</span></span>
+                <button class="rund" title="Vollbild"><i class="fa-solid fa-expand"></i></button>
+              </div>
+            </div>
+          </div>
+          <div class="ifx-leiste" id="leiste" title="Alle Schritte: gefüllt erledigt, umrandet der aktuelle"></div>
+          <div class="rollfeld">
+            <div class="ifx-werkstatt" id="werkstatt"></div>
+          </div>
+          <div class="ifx-steuer">
+            <button class="knopf gross"><i class="fa-solid fa-arrow-left"></i>Zurück</button>
+            <span class="ifx-stand"><b>Schritt 2</b> von 50 · <span class="blass">gemerkt um 21:14, auf allen Geräten</span></span>
+            <span class="ifx-taste"><kbd>←</kbd><kbd>→</kbd> oder <kbd>Leertaste</kbd></span>
+            <button class="knopf haupt gross">Weiter<i class="fa-solid fa-arrow-right"></i></button>
+          </div>
+        </section>
+      </div>
+      <div data-teil="fuss"></div>
+    </div>
+    <script src="beispiel/ifixit/daten.js"></script>
+    <script src="beispiel/ifixit/zeichnen.js"></script>
+    <script>
+      const a = ifx.D.anleitung, nr = 2, s = a.schritte[nr - 1];
+      document.getElementById("titel").textContent = a.titel;
+      document.getElementById("schwierigkeit").innerHTML = ifx.stufe(a.schwierigkeit) + " " + a.werte.Schwierigkeitsgrad;
+      document.getElementById("zeit").textContent = a.werte.Zeitaufwand;
+      document.getElementById("werkzeugzahl").textContent = a.werkzeuge.length + " Werkzeuge";
+      document.getElementById("leiste").innerHTML = a.schritte.map((x) => `<span class="${x.nr < nr ? "fertig" : x.nr === nr ? "jetzt" : ""}" title="Schritt ${x.nr}"></span>`).join("");
+      document.getElementById("werkstatt").innerHTML =
+        `<div class="ifx-w-bild"><img src="${s.bilder[0]}" alt=""><div class="ifx-vorschau">${s.bilder.map((b, i) => `<img class="${i ? "" : "an"}" src="${b}" alt="">`).join("")}</div></div>` +
+        `<div class="ifx-w-text"><div class="ifx-w-nr">Schritt ${nr}<span>von 50</span></div><ul class="ifx-zeilen">${s.zeilen.map(ifx.zeile).join("")}</ul>` +
+        `<div class="ifx-w-naechster"><span class="blass">Als Nächstes</span>${ifx.esc(a.schritte[nr].zeilen[0].text.slice(0, 120))} ...</div></div>`;
+    </script>
+    <script src="mockup.js"></script>
+  </body>
+</html>

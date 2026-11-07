@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="de" data-theme="dunkel" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Anleitung am Telefon (iFixit)</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Telefon (WIKI-64): links die Werkstatt (ein Schritt, Bild oben, Zeilen darunter, unten Zurück und Weiter, Wischen
+       wechselt den Schritt), rechts der Kopf der Anleitung beim Öffnen (Schwierigkeit, Zeit, Werkzeuge zum Abhaken,
+       dann "Loslegen"). Inhalt echt aus ifixit_de_all_2026-03. -->
+  <body style="background: var(--hg)">
+    <div class="telefone">
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:41</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf">
+          <button class="rund still" title="Zurück"><i class="fa-solid fa-chevron-left"></i></button>
+          <h1>Schritt 2 <span class="blass">von 50</span></h1>
+          <button class="rund still" title="Alle Schritte"><i class="fa-solid fa-list-ol"></i></button>
+        </div>
+        <div class="t-inhalt"><div class="ifx-leiste t" id="leiste"></div><div id="schritt" class="ifx-t-schritt"></div></div>
+        <div class="ifx-t-steuer">
+          <button class="knopf gross"><i class="fa-solid fa-arrow-left"></i></button>
+          <span class="blass">wischen oder tippen</span>
+          <button class="knopf haupt gross">Weiter<i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+      </div></div>
+
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>9:40</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf">
+          <button class="rund still" title="Zurück"><i class="fa-solid fa-chevron-left"></i></button>
+          <h1 id="titel"></h1>
+        </div>
+        <div class="t-inhalt">
+          <img id="hauptbild" class="ifx-t-haupt" alt="" />
+          <div class="ifx-kopfwerte t"><span id="schwierigkeit"></span><span><i class="fa-regular fa-clock"></i><span id="zeit"></span></span><span><i class="fa-solid fa-list-ol"></i>50 Schritte</span></div>
+          <h2 class="ifx-t-h2">Werkzeuge bereitlegen</h2>
+          <ul class="ifx-abhaken" id="werkzeuge"></ul>
+        </div>
+        <div class="ifx-t-steuer"><button class="knopf haupt gross" style="flex: 1"><i class="fa-solid fa-screwdriver-wrench"></i>Loslegen in der Werkstatt</button></div>
+      </div></div>
+    </div>
+    <script src="beispiel/ifixit/daten.js"></script>
+    <script src="beispiel/ifixit/zeichnen.js"></script>
+    <script>
+      const a = ifx.D.anleitung, s = a.schritte[1];
+      document.getElementById("leiste").innerHTML = a.schritte.map((x) => `<span class="${x.nr < 2 ? "fertig" : x.nr === 2 ? "jetzt" : ""}"></span>`).join("");
+      document.getElementById("schritt").innerHTML = `<img src="${s.bilder[0]}" alt=""><div class="ifx-vorschau">${s.bilder.map((b, i) => `<img class="${i ? "" : "an"}" src="${b}" alt="">`).join("")}</div><ul class="ifx-zeilen">${s.zeilen.map(ifx.zeile).join("")}</ul>`;
+      document.getElementById("titel").textContent = a.titel;
+      document.getElementById("hauptbild").src = a.hauptbild;
+      document.getElementById("schwierigkeit").innerHTML = ifx.stufe(a.schwierigkeit) + " " + a.werte.Schwierigkeitsgrad;
+      document.getElementById("zeit").textContent = a.werte.Zeitaufwand;
+      document.getElementById("werkzeuge").innerHTML = a.werkzeuge.slice(0, 9).map((w, i) => `<li class="${i < 3 ? "da" : ""}"><i class="fa-${i < 3 ? "solid fa-square-check" : "regular fa-square"}"></i>${ifx.esc(w.name)}</li>`).join("");
+    </script>
+    <script src="mockup.js"></script>
+  </body>
+</html>
