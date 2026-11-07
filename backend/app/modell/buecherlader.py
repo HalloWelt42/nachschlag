@@ -58,6 +58,7 @@ class Rueckfall(BaseModel):
     """Die vorige Fassung nach dem Umschalten, bis sie entfernt wird."""
     kennung: str
     entfernt_ab: str = Field(description="Datum, ab dem sie entfernt wird (JJJJ-MM-TT)")
+    bleibt: str = Field("", description="warum sie nach der Frist noch da ist (etwa: die Bedeutungssuche liest sie noch ein)")
 
 
 class Ladefortschritt(BaseModel):

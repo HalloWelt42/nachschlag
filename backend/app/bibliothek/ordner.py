@@ -28,6 +28,8 @@ ERZEUGER: tuple[tuple[str, Art], ...] = (("mwoffliner", "enzyklopaedie"), ("devd
 QUELLEN: tuple[tuple[str, Art], ...] = (("php.net/manual", "dokumentation"),)
 #: Arten mit eigenem Lesedesign (wächst mit den Bausteinen)
 MIT_LESEDESIGN: set[Art] = {"enzyklopaedie", "dokumentation", "frage_antwort"}
+#: Stand am Ende eines Dateinamens (`_2026-10`); davor steht das Buch in seiner Ausgabe
+STAND = re.compile(r"_\d{4}-\d{2}$")
 UMLEITUNG_HTML = re.compile(rb"""<meta[^>]+http-equiv=["']refresh["'][^>]+URL=['"]?\.?/?([^'">]+)""", re.I)
 
 
@@ -212,6 +214,14 @@ class Bibliothek:
             return (await self.buch(kennung)).name
         except BuchFehlt:
             return kennung.rsplit("_", 1)[0]
+
+    async def juengste_fassung(self, kennung: str) -> str:
+        """Die jüngste Datei desselben Buchs in derselben Ausgabe (gleicher Dateiname bis auf den Stand, WIKI-58): nach
+        dem Umschalten auf eine neue Fassung gilt eine Einstellung mit der alten Kennung so für die neue. Gibt es keine,
+        bleibt es die Kennung."""
+        stamm = STAND.sub("", kennung)
+        passende = [b.kennung for b in (await self.stand()).buecher if STAND.sub("", b.kennung) == stamm]
+        return max(passende, default=kennung) if stamm != kennung else kennung
 
     async def kennung_von(self, name: str) -> str:
         """Kennung der jüngsten Datei zu einem Namen (nach einer neuen Fassung die neue); keine: leer."""

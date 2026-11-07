@@ -72,7 +72,11 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     eigen = Eigenindizes(lambda: e().eigenindex_ordner)
     quellen = Quellenarchiv(geruest.db, bibliothek)           # Archiv der Quellen (WIKI-46)
     geruest.begleiter_anmelden(quellen)
-    suche = Suche(bibliothek, bedeutung, lambda: e().bedeutung_warten_s, lambda: e().bedeutung_buch,
+    async def bedeutungsbuch() -> str:
+        """Die Quelle der Bedeutungssuche in ihrer jüngsten Fassung (die Einstellung nennt eine Datei mit Stand)."""
+        return await bibliothek.juengste_fassung(e().bedeutung_buch) if e().bedeutung_buch else ""
+
+    suche = Suche(bibliothek, bedeutung, lambda: e().bedeutung_warten_s, bedeutungsbuch,
                   lambda buch, pfad: "", eigen, nutzbare=quellen.nutzbare)
     indexauftraege = Indexauftraege(eigen, bibliothek, geruest.auftraege, lambda: e().indexdienst_schluessel.get_secret_value(),
                                     lambda: ARTEN_JE_STUFE[e().eigene_indizes], lambda: e().eigenindex_hoechstens_gb,
@@ -153,8 +157,18 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
             hoechstens=int(s.buecher_hoechstens_gb * 1024**3), vorige_tage=s.vorige_tage,
             liste=Path(s.bibliotheksliste) if s.bibliotheksliste.strip() else None)
 
+    async def fundus_dateien() -> set[str] | None:
+        """Dateien, die der Fundus noch einliest (WIKI-58): ohne Fundus keine; antwortet er nicht, unbekannt."""
+        if not e().fundus_adresse.strip():
+            return set()
+        try:
+            antwort = await geruest.verbund.anfrage("GET", e().fundus_adresse, "/api/v1/quellenstand/dateien")
+            return set(antwort.json().get("dateien", []))
+        except (VerbundFehler, ValueError):
+            return None
+
     lader = Buecherlader(geruest.db, geruest.auftraege, laderregeln, quellen.von_hand_aktiv,
-                         transport=lader_transport or transport)
+                         transport=lader_transport or transport, in_gebrauch=fundus_dateien)
     geruest.begleiter_anmelden(lader)
     # eine Regel zum Zurückstellen für alle Dienste: Sammlungen warten auf die Nacht, Laden mit "nur nachts" auch
     geruest.auftraege.zurueckstellen_wenn(lambda a: sammlungen.zurueckstellen(a) or lader.zurueckstellen(a))

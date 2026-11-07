@@ -219,7 +219,7 @@ async def test_schnittstelle_schuetzt_und_setzt_fort(pi):
     await app.state.indexauftraege.fehlende_einreihen()
     auftrag = (await _laeuft(c))["id"]
     abholung = await _abholen(mac)
-    assert abholung == {"auftrag": auftrag, "buch": DOKU, "da": 0}
+    assert abholung == {"auftrag": auftrag, "buch": DOKU, "da": 0, "vorlage": ""}         # keine frühere Fassung
     weg = f"/api/v1/indexdienst/{auftrag}"
     assert (await mac.put(f"{weg}/datei", params={"ab": 0, "gesamt": 10}, content=b"abcd")).json() == {"da": 4}
     assert (await mac.put(f"{weg}/datei", params={"ab": 2, "gesamt": 10}, content=b"xx")).status_code == 409
@@ -310,3 +310,85 @@ async def test_korrektor_fragt_das_modell_nur_wenn_erlaubt(tmp_path):
     v = await k.korrigieren("Rotfuhcs", [], mit_modell=True)
     assert (v.vorschlag, v.quelle) == ("Rotfuchs", "modell")
     assert Leitstelle.modelle == [TEXTMODELL]                                 # das Modell wählt die App (LS-19)
+
+
+# ----- Neue Fassung: Unverändertes übernehmen (WIKI-58) ------------------------------------------------------------------
+
+def _inhalt(pfad: Path) -> dict[str, list]:
+    v = sqlite3.connect(pfad)
+    try:
+        return {"seiten": v.execute("SELECT pfad, titel, name, rubrik, einleitung, text, abdruck FROM seiten ORDER BY pfad").fetchall(),
+                "schlagwoerter": v.execute("SELECT * FROM register_schlagwoerter ORDER BY wort").fetchall(),
+                "autoren": v.execute("SELECT * FROM register_autoren ORDER BY schluessel").fetchall(),
+                "ohne": v.execute("SELECT * FROM ohne_seite ORDER BY pfad").fetchall()}
+    finally:
+        v.close()
+
+
+def test_neue_fassung_uebernimmt_unveraendertes(tmp_path):
+    ordner = tmp_path / "b"
+    probebuch.bauen_qa(ordner, "probeqa_en_all_2026-07")
+    probebuch.bauen_qa(ordner, "probeqa_en_all_2026-10")             # gleicher Inhalt, neuer Stand
+    alt = tmp_path / "ix" / schema.dateiname("probeqa_en_all_2026-07")
+    alt.parent.mkdir()
+    erst = _bauen(ordner, "probeqa_en_all_2026-07", alt)
+    assert erst.fertig and erst.uebernommen == 0 and _inhalt(alt)["ohne"]   # Listen und Konten: gelesen, nicht im Index
+
+    neu = tmp_path / "ix" / schema.dateiname("probeqa_en_all_2026-10")
+    stand = _bauen(ordner, "probeqa_en_all_2026-10", neu, vorlage=alt)
+    assert stand.fertig and stand.seiten == erst.seiten and stand.uebernommen == stand.seiten
+    assert _inhalt(neu) == _inhalt(alt)                                 # Seiten, Metadaten und Register wie neu gebaut
+    assert abfrage.suchen(neu, "vim")[1] == abfrage.suchen(alt, "vim")[1]
+
+    # eine geänderte Seite (anderer Abdruck in der Vorlage) wird neu aufbereitet, der Rest übernommen
+    v = sqlite3.connect(alt)
+    geaendert = v.execute("SELECT pfad FROM seiten LIMIT 1").fetchone()[0]
+    v.execute("UPDATE seiten SET abdruck = 'anders' WHERE pfad = ?", (geaendert,))
+    v.commit()
+    v.close()
+    gemischt = tmp_path / "ix" / "gemischt.sqlite"
+    stand = _bauen(ordner, "probeqa_en_all_2026-10", gemischt, vorlage=alt)
+    assert stand.uebernommen == stand.seiten - 1 and _inhalt(gemischt) == _inhalt(neu)
+    # keine taugliche Vorlage (sie selbst, fehlt, halb gebaut): alles neu, ohne Fehler
+    assert _bauen(ordner, "probeqa_en_all_2026-10", tmp_path / "ix" / "frei.sqlite", vorlage=tmp_path / "fehlt.sqlite").uebernommen == 0
+
+
+def test_vorgaenger_ist_der_juengste_geltende_fruehere(buecher, tmp_path):
+    gueltig = tmp_path / "vorlage.sqlite"
+    _bauen(buecher, DOKU, gueltig)
+    for name in ("x_en_all_2026-01", "x_en_all_2026-12", "xy_en_all_2026-03"):
+        (tmp_path / schema.dateiname(name)).write_bytes(gueltig.read_bytes())
+    (tmp_path / schema.dateiname("x_en_all_2026-05")).write_text("kaputt")       # gilt nicht
+    ablage = Eigenindizes(lambda: str(tmp_path))
+    assert ablage.vorgaenger("x_en_all_2026-10") == "x_en_all_2026-01"
+    assert ablage.vorgaenger("x_en_all_2026-01") == "" and ablage.vorgaenger("ohne_stand") == ""
+
+
+async def test_mac_holt_die_vorlage_beim_pi(pi, buecher, tmp_path):
+    c, app = pi
+    (tmp_path / "pi").mkdir()
+    vorige = tmp_path / "pi" / schema.dateiname("probedoku_en_php_2026-01")
+    _bauen(buecher, DOKU, vorige)                                       # Index einer früheren Fassung liegt auf dem Pi
+    assert await app.state.indexauftraege.fehlende_einreihen() == [DOKU]
+    await _laeuft(c)
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://pi.test", headers=SCHLUESSEL) as mac:
+        abholung = await _abholen(mac)
+        assert abholung["vorlage"] == "probedoku_en_php_2026-01"
+        antwort = await mac.get(f"/api/v1/indexdienst/{abholung['auftrag']}/vorlage")
+        assert antwort.status_code == 200 and antwort.content == vorige.read_bytes()
+
+    halt = threading.Event()
+    mac = httpx.Client(transport=Bruecke(app, asyncio.get_running_loop()), base_url="http://pi.test", headers=SCHLUESSEL)
+    faden = threading.Thread(target=Arbeiter(mac, buecher, tmp_path / "mac", ruhe_s=0.05).laufen, args=(halt,), daemon=True)
+    faden.start()
+    try:
+        fertig = await _beendet(c)
+    finally:
+        halt.set()
+        await asyncio.to_thread(faden.join, 10)
+    assert fertig["zustand"] == "fertig", fertig
+    v = schema.lesen(tmp_path / "pi" / schema.dateiname(DOKU))
+    try:
+        assert int(schema.angabe(v, "uebernommen")) == v.execute("SELECT COUNT(*) FROM seiten").fetchone()[0] > 0
+    finally:
+        v.close()

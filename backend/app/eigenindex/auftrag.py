@@ -49,6 +49,7 @@ class Macstand(BaseModel):
     erledigt: int = Field(0, ge=0)
     gesamt: int = Field(0, ge=0)
     seiten: int = Field(0, ge=0)
+    uebernommen: int = Field(0, ge=0, description="davon unverändert aus dem Index der vorigen Fassung (WIKI-58)")
     meldung: str = Field("", max_length=300)
 
 
@@ -63,6 +64,8 @@ class Abholung(BaseModel):
     auftrag: str
     buch: str
     da: int = Field(description="Bytes der Indexdatei, die schon hier sind (Übertragung setzt dort fort)")
+    vorlage: str = Field("", description="Kennung des Index der vorigen Fassung desselben Buchs (WIKI-58): Unverändertes "
+                                         "wird daraus übernommen; leer: keiner")
 
 
 class IndexEingabe(BaseModel):
@@ -205,8 +208,14 @@ class Indexauftraege(Begleiter):
             if kanal.fertig is None and not kanal.fehler:
                 kanal.zuletzt = time.monotonic()
                 teil = self.teil(kanal.buch)
-                return Abholung(auftrag=auftrag_id, buch=kanal.buch, da=teil.stat().st_size if teil.exists() else 0)
+                return Abholung(auftrag=auftrag_id, buch=kanal.buch, da=teil.stat().st_size if teil.exists() else 0,
+                                vorlage=self._ablage.vorgaenger(kanal.buch))
         return None
+
+    def vorlage(self, auftrag_id: str) -> Path | None:
+        """Die Datei des Index der vorigen Fassung zum Buch eines laufenden Auftrags (für den Mac, der sie nicht hat)."""
+        kennung = self._ablage.vorgaenger(self._kanal(auftrag_id).buch)
+        return self._ablage.datei(kennung) if kennung else None
 
     def _kanal(self, auftrag_id: str) -> _Kanal:
         kanal = self._kanaele.get(auftrag_id)
@@ -286,7 +295,8 @@ class Indexauftraege(Begleiter):
                                 phase="holen")
         elif kanal.stand:
             s = kanal.stand
-            schritt = s.meldung or f"{_zahl(s.erledigt)} von {_zahl(s.gesamt)} Einträgen, {_zahl(s.seiten)} Seiten"
+            schritt = s.meldung or (f"{_zahl(s.erledigt)} von {_zahl(s.gesamt)} Einträgen, {_zahl(s.seiten)} Seiten"
+                                    + (f", davon {_zahl(s.uebernommen)} aus der vorigen Fassung" if s.uebernommen else ""))
             await k.fortschritt(s.erledigt / s.gesamt if s.gesamt else None, schritt, phase="bauen")
         else:
             await k.fortschritt(None, "der Mac beginnt", phase="bauen")

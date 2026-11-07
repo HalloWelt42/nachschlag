@@ -6,10 +6,15 @@ bleiben. Der Stand des Aufbaus steht in der Datei selbst: so setzt ein abgebroch
 
 Metadaten je Inhaltsart (Punkt 11): Frage und Antwort hat je Frage Stimmen, Antworten, Haken und Datum (fragen), ihre
 Schlagwörter und die Beiträge mit Autor (beitraege). Die Register (Punkt 10) werden am Ende des Aufbaus daraus
-verdichtet, damit Listen über Millionen Fragen sofort antworten."""
+verdichtet, damit Listen über Millionen Fragen sofort antworten.
+
+Abdruck (WIKI-58): je Seite eine kurze Prüfsumme ihres Rohinhalts in der ZIM-Datei; Seiten, die gelesen, aber nicht in den
+Index genommen wurden (etwa Konten und Listen einer Frage-Antwort-Seite), stehen mit ihrem Abdruck in `ohne_seite`. So
+übernimmt der Index einer neuen Fassung alles Unveränderte aus dem Index der vorigen, statt es neu aufzubereiten."""
 
 from __future__ import annotations
 
+import hashlib
 import sqlite3
 from pathlib import Path
 
@@ -21,7 +26,9 @@ PRAGMA journal_mode = WAL;
 CREATE TABLE IF NOT EXISTS angaben (schluessel TEXT PRIMARY KEY, wert TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS seiten (
   nr INTEGER PRIMARY KEY, pfad TEXT NOT NULL UNIQUE, titel TEXT NOT NULL, name TEXT NOT NULL DEFAULT '',
-  rubrik TEXT NOT NULL DEFAULT '', einleitung TEXT NOT NULL DEFAULT '', text TEXT NOT NULL DEFAULT '');
+  rubrik TEXT NOT NULL DEFAULT '', einleitung TEXT NOT NULL DEFAULT '', text TEXT NOT NULL DEFAULT '',
+  abdruck TEXT NOT NULL DEFAULT '');
+CREATE TABLE IF NOT EXISTS ohne_seite (pfad TEXT PRIMARY KEY, abdruck TEXT NOT NULL) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS seiten_name ON seiten (name COLLATE NOCASE);
 CREATE INDEX IF NOT EXISTS seiten_titel ON seiten (titel COLLATE NOCASE);
 CREATE VIRTUAL TABLE IF NOT EXISTS volltext USING fts5(
@@ -59,11 +66,23 @@ def autor_schluessel(autor_nr: str, autor: str) -> str:
 
 
 def oeffnen(pfad: Path) -> sqlite3.Connection:
-    """Zum Bauen: legt fehlende Tabellen an."""
+    """Zum Bauen: legt fehlende Tabellen an (auch die Spalte des Abdrucks in einem Index, der vor WIKI-58 begann)."""
     v = sqlite3.connect(pfad)
     v.row_factory = sqlite3.Row
+    if v.execute("SELECT 1 FROM sqlite_master WHERE name='seiten'").fetchone() and not mit_abdruck(v):
+        v.execute("ALTER TABLE seiten ADD COLUMN abdruck TEXT NOT NULL DEFAULT ''")
     v.executescript(SCHEMA)
     return v
+
+
+def mit_abdruck(v: sqlite3.Connection) -> bool:
+    """Trägt der Index Abdrücke (gebaut seit WIKI-58)? Nur dann taugt er als Vorlage für die nächste Fassung."""
+    return any(z[1] == "abdruck" for z in v.execute("PRAGMA table_info(seiten)"))
+
+
+def abdruck(inhalt: bytes) -> str:
+    """Kurze Prüfsumme des Rohinhalts einer Seite (128 Bit reichen, um Gleiches sicher zu erkennen)."""
+    return hashlib.blake2b(inhalt, digest_size=16).hexdigest()
 
 
 def lesen(pfad: Path) -> sqlite3.Connection:

@@ -5,10 +5,14 @@ den Zeitstempel und sieht so einen Austausch von selbst."""
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from pathlib import Path
 
 from . import schema
+
+
+_STAND = re.compile(r"^(?P<stamm>.+)_(?P<stand>\d{4}-\d{2})$")
 
 
 class Eigenindizes:
@@ -43,3 +47,14 @@ class Eigenindizes:
             alt = (zeit, schema.gueltig(pfad))
             self._geprueft[pfad] = alt
         return pfad if alt[1] else None
+
+    def vorgaenger(self, kennung: str) -> str:
+        """Kennung des jüngsten geltenden Index einer früheren Fassung desselben Buchs (gleicher Name, älterer Stand),
+        als Vorlage für den Bau (WIKI-58); keiner: leer. Die Datei des Buchs selbst muss dafür nicht mehr da sein."""
+        m, ordner = _STAND.match(kennung), self._ordner()
+        if not m or not ordner or not Path(ordner).is_dir():
+            return ""
+        frueher = sorted((n["stand"], p.stem) for p in Path(ordner).glob(f"{m['stamm']}_*.sqlite")
+                         if (n := _STAND.match(p.stem)) and n["stamm"] == m["stamm"] and n["stand"] < m["stand"])
+        return next((k for _, k in reversed(frueher) if self.datei(k)), "")
+

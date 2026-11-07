@@ -106,7 +106,7 @@
                 <td>
                   {#if a.rueckfall}
                     <div class="platz-f vorige"><span class="f">{monat(kennung(a.rueckfall.kennung))}</span>
-                      <span class="z">Rückfall, entfernt ab {datum(a.rueckfall.entfernt_ab)}</span>
+                      <span class="z">{a.rueckfall.bleibt ? `Rückfall, bleibt: ${a.rueckfall.bleibt}` : `Rückfall, entfernt ab ${datum(a.rueckfall.entfernt_ab)}`}</span>
                       <button class="knopf still" disabled={!!arbeitet} onclick={() => tun(a.stamm, () => zurueckSchalten(a.stamm))}>
                         <i class="fa-solid fa-rotate-left"></i>Zurück</button></div>
                   {:else}<div class="platz-f ohne"><span class="z">keine</span></div>{/if}

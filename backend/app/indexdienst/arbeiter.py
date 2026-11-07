@@ -116,7 +116,7 @@ class Arbeiter:
         """Ein Auftrag: bauen (oder fortsetzen), hochladen, fertig melden."""
         datei = self._ziel / schema.dateiname(a.buch)
         self._ziel.mkdir(parents=True, exist_ok=True)
-        stand = self._bauen(a, datei, halt)
+        stand = self._bauen(a, datei, halt, self._vorlage(a))
         if stand is None or not stand.fertig:
             return
         self._hochladen(a, datei, halt)
@@ -125,14 +125,39 @@ class Arbeiter:
         summe = datei.with_suffix(".sha256").read_text().strip()
         self._anruf("POST", f"/{a.auftrag}/fertig",
                     json={"pruefsumme": summe, "groesse": datei.stat().st_size, "seiten": stand.seiten}).raise_for_status()
-        logger.info("Index %s übergeben (%d Seiten)", a.buch, stand.seiten)
+        logger.info("Index %s übergeben (%d Seiten, davon %d aus der vorigen Fassung übernommen)", a.buch, stand.seiten,
+                    stand.uebernommen)
 
-    def _bauen(self, a: Abholung, datei: Path, halt: threading.Event) -> aufbau.Stand | None:
+    def _vorlage(self, a: Abholung) -> Path | None:
+        """Der Index der vorigen Fassung (WIKI-58): die eigene Kopie, sonst vom Pi geholt; ohne ihn baut der Dienst
+        alles neu. Ein Fehler beim Holen kostet nur Zeit, nie den Bau."""
+        if not a.vorlage:
+            return None
+        pfad = self._ziel / schema.dateiname(a.vorlage)
+        if schema.gueltig(pfad):
+            return pfad
+        teil = pfad.with_name(pfad.name + ".holen")
+        try:
+            with self._pi.stream("GET", f"/api/v1/indexdienst/{a.auftrag}/vorlage") as antwort:
+                if antwort.status_code != 200:
+                    return None
+                with open(teil, "wb") as f:
+                    for stueck in antwort.iter_bytes(self._stueck):
+                        f.write(stueck)
+            teil.replace(pfad)
+        except (httpx.HTTPError, OSError) as f:
+            logger.info("Vorlage %s nicht geholt (%s); der Index entsteht ganz neu", a.vorlage, f)
+            teil.unlink(missing_ok=True)
+            return None
+        return pfad if schema.gueltig(pfad) else None
+
+    def _bauen(self, a: Abholung, datei: Path, halt: threading.Event, vorlage: Path | None = None) -> aufbau.Stand | None:
         weg = threading.Event()                     # der Pi hat den Auftrag beendet
 
         def melden(s: aufbau.Stand) -> None:
             try:
-                self._melden(a, zustand="laeuft", erledigt=s.erledigt, gesamt=s.gesamt, seiten=s.seiten)
+                self._melden(a, zustand="laeuft", erledigt=s.erledigt, gesamt=s.gesamt, seiten=s.seiten,
+                             uebernommen=s.uebernommen)
             except AuftragWeg:
                 weg.set()
 
@@ -141,7 +166,7 @@ class Arbeiter:
             try:
                 archiv, buch = self._bibliothek.geoeffnet(a.buch)
                 stand = aufbau.bauen(archiv, buch, wege(self._bibliothek), datei, melden=melden,
-                                     abbrechen=lambda: halt.is_set() or weg.is_set())
+                                     abbrechen=lambda: halt.is_set() or weg.is_set(), vorlage=vorlage)
                 return stand
             except (OSError, RuntimeError, BuchFehlt) as f:
                 abstand = self._abstand(versuch)

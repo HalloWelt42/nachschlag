@@ -64,8 +64,9 @@ fehlenden Feldern (Schlagwörter, Stimmen, Autoren, Rubriken).
     Bücher über einer einstellbaren Größe (Vorgabe 5 GB) bekommen ihren Index nicht von selbst: Stack Overflow
     (115 GB, 30 Mio. Seiten) braucht auf dem Mac viele Stunden und mehrere hundert GB.
 12. **Sichtbarkeit:** Jeder Aufbau läuft als Auftrag des Appkerns (Seite Aufträge, Fußleiste) mit Was, Fortschritt,
-    bisheriger Dauer und Restzeit. Eine neue Fassung eines Buchs baut ihren Index neu; der alte gilt, bis der neue
-    fertig ist.
+    bisheriger Dauer und Restzeit. Eine neue Fassung eines Buchs bekommt einen eigenen Index; Seiten mit gleichem
+    Rohinhalt (Abdruck) kommen aus dem Index der vorigen, aufbereitet wird nur Neues und Geändertes (WIKI-58). Der alte
+    gilt, bis der neue fertig ist.
 13. **Sicherung (WIKI-32):** Gesichert wird nur selbst Erzeugtes: die Datenbank und die eigenen Indizes (sie kosten
     Rechenzeit), nicht die Bücher (ZIM, lassen sich neu laden). Die Indizes kommen beim Bau in die zentrale Sicherung
     (Werkzeuge/Sicherungen, quellen.toml), mit einem eigenen Eintrag je Buch.

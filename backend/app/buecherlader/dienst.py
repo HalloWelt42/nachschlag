@@ -39,7 +39,7 @@ from ..modell.buecherlader import (Abo, Durchgang, Ladefortschritt, Laderstand, 
                                    Variante, Verzeichnisbuch, Verzeichnisseite, Zustand)
 from ..zeitfenster import ZONE, nachts
 from .ablage import Ablage, Lokal
-from .bestand import Bestand, Buchzeile, jetzt
+from .bestand import Bestand, Buchzeile, Wechsel, jetzt
 from .bibliotheksliste import Bibliotheksliste
 from .katalog import KATALOGSPRACHE, Katalogeintrag, eintraege_aus
 from .verzeichnis import AUSGABEN, Datei, basis_und_ausgabe, dateien_aus, ordner_aus
@@ -122,11 +122,15 @@ def zustand_aus(neueste: Buchzeile | None, lokal: Lokal | None, wartend: Lokal |
 class Buecherlader(Begleiter):
     def __init__(self, db: Datenbank, auftraege: Auftraege, regeln: Callable[[], Regeln],
                  von_hand_aktiv: Callable[[str], Awaitable[bool]], *, transport: httpx.AsyncBaseTransport | None = None,
-                 uhr: Callable[[], datetime] = lambda: datetime.now(timezone.utc), zeitplan: bool = True) -> None:
+                 uhr: Callable[[], datetime] = lambda: datetime.now(timezone.utc), zeitplan: bool = True,
+                 in_gebrauch: Callable[[], Awaitable[set[str] | None]] | None = None) -> None:
         """`von_hand_aktiv(kennung)`: hat der Nutzer diese Fassung von Hand aktiv gesetzt (Archiv der Quellen)? Dann
-        bleibt sie über die Frist hinaus. `zeitplan`: ohne ihn (Tests) läuft `takt` nur, wenn man ihn ruft."""
+        bleibt sie über die Frist hinaus. `zeitplan`: ohne ihn (Tests) läuft `takt` nur, wenn man ihn ruft.
+        `in_gebrauch()`: Dateinamen, die andere Dienste noch lesen (der Fundus, WIKI-58); None heißt unbekannt (er
+        antwortet nicht), dann wird nichts gelöscht."""
         self._bestand, self._auftraege, self._regeln = Bestand(db), auftraege, regeln
         self._von_hand_aktiv, self._transport, self._uhr, self._mit_zeitplan = von_hand_aktiv, transport, uhr, zeitplan
+        self._in_gebrauch = in_gebrauch
         self._wecker: asyncio.Task | None = None
         auftraege.anmelden(
             Art(name=DURCHSEHEN, titel="Verzeichnis der Bücher durchsehen", arbeit=self._durchsehen, hoechstens=1,
@@ -475,12 +479,28 @@ class Buecherlader(Begleiter):
         await self._liste(r, austragen=f"{w.neu}.zim")
         await self._bestand.wechsel_beenden(w, "zurueck")
 
+    async def _gebraucht(self) -> set[str] | None:
+        return await self._in_gebrauch() if self._in_gebrauch else set()
+
+    async def _bleibt(self, w: Wechsel, r: Regeln, gebraucht: set[str] | None) -> str:
+        """Warum eine vorige Fassung über die Frist hinaus bleibt; leer: sie darf weg."""
+        if await self._von_hand_aktiv(w.alt):
+            return "von Hand wieder aktiv gesetzt"
+        if not (r.ordner / f"{w.neu}.zim").is_file():
+            return "die neue Fassung fehlt"
+        if gebraucht is None:
+            return "die Bedeutungssuche (Fundus) antwortet nicht; gelöscht wird erst, wenn sie die Datei freigibt"
+        if f"{w.alt}.zim" in gebraucht:
+            return "die Bedeutungssuche (Fundus) liest sie noch ein"
+        return ""
+
     async def _aufraeumen(self, r: Regeln) -> None:
         ablage = Ablage(r.ordner)
-        for w in await self._bestand.offene_wechsel():
-            if self._uhr() < datetime.fromisoformat(w.am) + timedelta(days=r.vorige_tage):
-                continue
-            if await self._von_hand_aktiv(w.alt) or not (r.ordner / f"{w.neu}.zim").is_file():
+        faellig = [w for w in await self._bestand.offene_wechsel()
+                   if self._uhr() >= datetime.fromisoformat(w.am) + timedelta(days=r.vorige_tage)]
+        gebraucht = await self._gebraucht() if faellig else set()
+        for w in faellig:
+            if await self._bleibt(w, r, gebraucht):
                 continue
             if ablage.entfernen(w.alt):
                 logger.info("Vorige Fassung %s entfernt (%s Tage nach dem Umschalten)", w.alt, r.vorige_tage)
@@ -522,6 +542,8 @@ class Buecherlader(Begleiter):
     async def _abos(self, r: Regeln, ablage: Ablage) -> list[Abo]:
         aktive, wartende, ladende = ablage.aktive(), ablage.wartende(), await self._ladende()
         wechsel = {w.stamm: w for w in await self._bestand.offene_wechsel()}
+        faellig = [w for w in wechsel.values() if self._uhr() >= datetime.fromisoformat(w.am) + timedelta(days=r.vorige_tage)]
+        gebraucht = await self._gebraucht() if faellig else set()      # nur fragen, wenn eine Frist um ist
         aus = []
         for stamm, seit in sorted((await self._bestand.abos()).items()):
             z = await self._bestand.neueste(stamm)
@@ -533,7 +555,8 @@ class Buecherlader(Begleiter):
             rueckfall = None
             if (w := wechsel.get(stamm)) and (r.ordner / f"{w.alt}.zim").is_file():
                 ab = datetime.fromisoformat(w.am) + timedelta(days=r.vorige_tage)
-                rueckfall = Rueckfall(kennung=w.alt, entfernt_ab=ab.astimezone(ZONE).date().isoformat())
+                bleibt = await self._bleibt(w, r, gebraucht) if w in faellig else ""
+                rueckfall = Rueckfall(kennung=w.alt, entfernt_ab=ab.astimezone(ZONE).date().isoformat(), bleibt=bleibt)
             aus.append(Abo(stamm=stamm, titel=(z.titel if z else "") or stamm, seit=seit,
                            lokal_stand=lokal.stand if lokal else "", neuester_stand=z.stand if z else "",
                            neueste_groesse=z.groesse if z else 0, zustand=zustand,

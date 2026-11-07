@@ -136,15 +136,20 @@ async def umgebung(tmp_path: Path):
     db = await Datenbank(tmp_path / "l.sqlite").oeffnen()
     auftraege = Auftraege(db, [])
     hand: set[str] = set()
+    fundus: dict[str, set[str] | None] = {"dateien": set()}
 
     async def von_hand(kennung: str) -> bool:
         return kennung in hand
 
+    async def in_gebrauch() -> set[str] | None:
+        return fundus["dateien"]
+
     uhr = Uhr()
     lader = Buecherlader(db, auftraege, lambda: Regeln(**werte), von_hand, transport=httpx.MockTransport(server), uhr=uhr,
-                        zeitplan=False)
+                        zeitplan=False, in_gebrauch=in_gebrauch)
     await lader.starten()
     await auftraege.starten()
+    lader.fundus = fundus                                          # für die Tests: was der Fundus noch liest
     yield lader, auftraege, server, werte, buecher, uhr, hand
     await auftraege.stoppen()
     await lader.stoppen()
@@ -216,12 +221,21 @@ async def test_abo_laedt_wartet_schaltet_um_und_raeumt_auf(umgebung):
     uhr.jetzt += timedelta(days=15)
     await lader.takt()
     assert (buecher / "probe_de_all_2026-01.zim").is_file()
+    assert (await lader.stand()).abos[0].rueckfall.bleibt == "von Hand wieder aktiv gesetzt"
     hand.clear()
+    lader.fundus["dateien"] = {"probe_de_all_2026-01.zim"}       # der Fundus liest sie noch ein (WIKI-58)
+    await lader.takt()
+    assert (buecher / "probe_de_all_2026-01.zim").is_file()
+    assert "liest sie noch ein" in (await lader.stand()).abos[0].rueckfall.bleibt
+    lader.fundus["dateien"] = None                               # er antwortet nicht: nichts löschen
+    await lader.takt()
+    assert (buecher / "probe_de_all_2026-01.zim").is_file()
+    lader.fundus["dateien"] = {"probe_de_all_2026-10.zim"}       # er ist auf die neue umgestiegen
     await lader.takt()
     assert not (buecher / "probe_de_all_2026-01.zim").is_file()
     assert (buecher / "probe_de_all_2026-10.zim").is_file() and (await lader.stand()).abos[0].rueckfall is None
-    # der Zeitplan hat nach 15 Tagen auch die nächste Durchsicht angestoßen
-    assert len(await fertig(auftraege, "verzeichnis_durchsehen")) == 2
+    # der Zeitplan hat nach 15 Tagen auch wieder durchgesehen (je Takt höchstens eine Durchsicht zugleich)
+    assert len(await fertig(auftraege, "verzeichnis_durchsehen")) >= 2
 
 
 async def test_neues_buch_direkt_in_die_bibliothek_und_fortsetzen(umgebung):
@@ -289,3 +303,14 @@ def test_bibliotheksliste_ersetzt_und_traegt_aus(tmp_path: Path):
     assert 'name="probe_de_all"' in text and 'language="deu"' in text
     liste.austragen("probe_de_all_2026-10.zim")
     assert "probe_de_all" not in (tmp_path / "library.xml").read_text()
+
+
+async def test_einstellung_mit_stand_folgt_der_juengsten_fassung(tmp_path: Path):
+    """Die Quelle der Bedeutungssuche nennt eine Datei mit Stand; nach dem Umschalten gilt die neue (WIKI-58)."""
+    from app.bibliothek import Bibliothek
+    for name in ("probe_de_all_2026-01", "probe_de_all_2026-10", "probedoku_en_php_2026-12"):
+        probebuch.bauen(tmp_path, name)
+    bib = Bibliothek(lambda: str(tmp_path))
+    assert await bib.juengste_fassung("probe_de_all_2026-01") == "probe_de_all_2026-10"
+    assert await bib.juengste_fassung("gibt_es_nicht_2026-01") == "gibt_es_nicht_2026-01"
+    assert await bib.juengste_fassung("ohne_stand") == "ohne_stand"

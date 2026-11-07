@@ -18,7 +18,14 @@ der Bücher schreibt. Alles, was länger läuft, ist ein Auftrag des Appkerns (S
   währenddessen; dazu wahlweise eine Grenze für alle Bücher.
 - Bücher ohne eigenen Baustein öffnen in der Originalansicht und tragen sichtbar "Eigene Ansicht fehlt" mit dem
   Erzeuger; die Bibliothek fasst oben zusammen, für welche Erzeuger eine Ansicht fehlt.
-- Nur geänderte Artikel neu indexieren und einbetten: eigenes Ticket WIKI-58.
+- Nur geänderte Artikel neu indexieren und einbetten (WIKI-58):
+  - Eigener Index: jede Seite trägt einen Abdruck ihres Rohinhalts. Der Index einer neuen Fassung übernimmt alles mit
+    gleichem Pfad und Abdruck aus dem Index der vorigen (auch Metadaten und übergangene Seiten); aufbereitet wird nur
+    Neues und Geändertes. Der Pi nennt dem Index-Dienst die Vorlage, der Mac nimmt seine Kopie oder holt sie beim Pi.
+  - Bedeutungssuche: der Fundus führt eine neue Fassung als dieselben Dokumente zu und bettet nur geänderte Abschnitte
+    ein. Er meldet unter `/api/v1/quellenstand/dateien`, welche ZIM-Dateien er noch liest; der Bücherlader löscht eine
+    vorige Fassung erst, wenn sie dort fehlt (antwortet der Fundus nicht, bleibt sie).
+  - Die Einstellung "Quelle der Bedeutungssuche" nennt eine Datei mit Stand und gilt nach dem Umschalten für die neue.
 
 ## Teile
 

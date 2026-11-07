@@ -27,9 +27,10 @@ def _rang(platz: int) -> float:
 
 class Suche:
     def __init__(self, bibliothek: Bibliothek, bedeutung: Bedeutung, wartezeit_s: Callable[[], float],
-                 bedeutungsbuch: Callable[[], str], medien: Callable[[str, str], str], eigen: Eigenindizes,
+                 bedeutungsbuch: Callable[[], Awaitable[str]], medien: Callable[[str, str], str], eigen: Eigenindizes,
                  nutzbare: Callable[[], Awaitable[list[Buch]]] | None = None) -> None:
-        """`bedeutungsbuch`: Kennung des Buchs, zu dem die Bedeutungssuche gehört (ihre Treffer zeigen in dieses Buch).
+        """`bedeutungsbuch`: Kennung des Buchs, zu dem die Bedeutungssuche gehört (ihre Treffer zeigen in dieses Buch); nach
+        einer neuen Fassung die neue (WIKI-58).
         `nutzbare`: die Quellen ohne Auswahl (ohne archivierte, die nicht mitgenutzt werden, WIKI-46); sonst alle."""
         self._bib, self._bedeutung, self._warten, self._bedeutungsbuch = bibliothek, bedeutung, wartezeit_s, bedeutungsbuch
         self._medien, self._eigen = medien, eigen
@@ -84,8 +85,9 @@ class Suche:
                      wege: str = "beide") -> Suchergebnis:
         gewaehlt = await self._buecher(buecher or [])
         start = time.perf_counter()
+        buch = await self._bedeutungsbuch()
         mit_bedeutung = wege in ("beide", "bedeutung") and self._bedeutung.angebunden() and (
-            not buecher or self._bedeutungsbuch() in buecher)
+            not buecher or buch in buecher)
         aufgabe = asyncio.create_task(self._bedeutung_suchen(frage, anzahl)) if mit_bedeutung else None
         try:
             index_treffer, gesamt = await self._index(gewaehlt, frage, anzahl) if wege != "bedeutung" else ([], 0)
@@ -110,7 +112,6 @@ class Suche:
         gemischt: dict[tuple[str, str], Treffer] = {}
         for t in index_treffer:
             gemischt[(t.buch, t.pfad)] = t
-        buch = self._bedeutungsbuch()
         beste: Treffer | None = None
         for platz, s in enumerate(stellen, 1):
             schluessel = (buch, s.pfad)

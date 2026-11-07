@@ -8,6 +8,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from .auftrag import Abholung, AuftragWeg, FalscheStelle, Fertigmeldung, Indexauftraege, Macstand
@@ -77,6 +78,16 @@ def router(auftraege: Indexauftraege) -> APIRouter:
                 return Uebertragen(da=await auftraege.anhaengen(auftrag, ab, gesamt, daten))
             except FalscheStelle as f:
                 raise HTTPException(409, str(f)) from f
+
+    @r.get("/{auftrag}/vorlage", response_class=FileResponse, responses={404: {"description": "keine Vorlage"}})
+    async def vorlage(auftrag: str) -> FileResponse:
+        """Der Index der vorigen Fassung desselben Buchs (WIKI-58), für einen Mac, der ihn nicht selbst hat: der Bau
+        übernimmt daraus alles Unveränderte."""
+        with _laufend(auftrag):
+            pfad = auftraege.vorlage(auftrag)
+        if pfad is None:
+            raise HTTPException(404, "Kein Index einer vorigen Fassung")
+        return FileResponse(pfad, media_type="application/octet-stream", filename=pfad.name)
 
     @r.post("/{auftrag}/fertig", status_code=202)
     async def fertig(auftrag: str, eingabe: Fertigmeldung) -> None:

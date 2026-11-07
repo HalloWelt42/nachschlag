@@ -227,7 +227,7 @@ export interface Abo {
   neueste_groesse: number;
   zustand: Laderzustand;
   wartet: string;
-  rueckfall: { kennung: string; entfernt_ab: string } | null;
+  rueckfall: { kennung: string; entfernt_ab: string; bleibt: string } | null;   // bleibt: warum sie nach der Frist noch da ist
   hinweis: string;
   laden: Ladefortschritt | null;
 }

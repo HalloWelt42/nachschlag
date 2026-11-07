@@ -148,7 +148,8 @@ class AppEinstellungen(Grundeinstellungen):
                                  description="Vorsilbe, mit der der Fundus die Artikel dieser Quelle kennzeichnet; dahinter "
                                              "steht der Pfad in der Quelle.")
     bedeutung_buch: str = Field("", title="Quelle der Bedeutungssuche", json_schema_extra=SUCHE,
-                                description="Die Quelle, zu der die Sammlung gehört; ihre Treffer öffnen dort.")
+                                description="Die Quelle, zu der die Sammlung gehört; ihre Treffer öffnen dort. Nach dem "
+                                            "Umschalten auf eine neue Fassung gilt die neue.")
     bedeutung_warten_s: float = Field(1.5, ge=0.2, le=10, title="Warten auf die Bedeutungssuche",
                                       json_schema_extra={**SUCHE, "schritt": 0.1, "einheit": "Sekunden"},
                                       description="Danach kommen die Treffer aus dem Index allein, mit Hinweis.")
