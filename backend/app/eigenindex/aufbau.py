@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import math
 import re
+from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -211,6 +212,33 @@ def _register_verdichten(v) -> None:
         v.execute("DELETE FROM register_werkzeuge")
         v.execute("INSERT INTO register_werkzeuge (wort, sprache, anleitungen) SELECT w.wort, a.sprache, COUNT(*) "
                   "FROM werkzeuge w JOIN anleitungen a ON a.nr = w.nr GROUP BY w.wort, a.sprache")
+        v.execute("DELETE FROM register_einordnung")
+        v.executemany("INSERT OR IGNORE INTO register_einordnung (oben, nr) VALUES (?,?)", _einordnung(v))
+
+
+def _einordnung(v):
+    """Je Anleitung jede Geräteseite darüber: die Geräte, die sie aufführen, und deren Kategorien bis zur Startseite.
+    Der Baum der Quelle ist kein reiner Baum (eine Kategorie kann mehrere Eltern haben, selten auch einen Kreis)."""
+    eltern: dict[str, list[str]] = defaultdict(list)
+    for kind, pfad in v.execute("SELECT k.kind, s.pfad FROM geraet_kind k JOIN seiten s ON s.nr = k.nr"):
+        eltern[kind].append(pfad)
+    ahnen: dict[str, set[str]] = {}
+
+    def darueber(pfad: str) -> set[str]:
+        if pfad not in ahnen:
+            gesehen, offen = {pfad}, [pfad]
+            while offen:
+                for e in eltern.get(offen.pop(), ()):
+                    if e not in gesehen:
+                        gesehen.add(e)
+                        offen.append(e)
+            ahnen[pfad] = gesehen
+        return ahnen[pfad]
+
+    for nr, geraet in v.execute("SELECT a.nr, s.pfad FROM geraet_anleitung g JOIN seiten s ON s.nr = g.nr "
+                                "JOIN seiten a ON a.pfad = g.anleitung").fetchall():
+        for oben in darueber(geraet):
+            yield oben, nr
 
 
 def _buch_lesbar(archiv: Archive) -> bool:
@@ -223,6 +251,14 @@ def _buch_lesbar(archiv: Archive) -> bool:
         return True
     except OSError:
         return False
+
+
+def _startseite(archiv: Archive) -> str:
+    """Pfad der Startseite (Wurzel des Gerätebaums eines Anleitungsbuchs); leer, wenn das Buch keine nennt."""
+    try:
+        return archiv.main_entry.get_item().path if archiv.has_main_entry else ""
+    except (KeyError, RuntimeError):
+        return ""
 
 
 def pruefsumme(pfad: Path) -> str:
@@ -271,6 +307,7 @@ def bauen(archiv: Archive, buch: Buch, wege: Wege, ziel: Path, melden: Callable[
                          int(schema.angabe(v, "uebernommen", "0")))
         with v:
             schema.angabe_setzen(v, "buch", buch.kennung)
+            schema.angabe_setzen(v, "startseite", _startseite(archiv))
             if quelle:
                 schema.angabe_setzen(v, "vorlage", quelle.pfad.name)
         nr = int(schema.angabe(v, "naechste", "0"))

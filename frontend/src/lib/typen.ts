@@ -317,3 +317,24 @@ export interface Anleitungsangaben {
 }
 export interface Geraeteeintrag { pfad: string; titel: string; kurz: string; bild: string; empfohlen: boolean; bauteil: string }
 export interface Geraeteangaben { kurz: string; bild: string; unterkategorien: Geraeteeintrag[]; anleitungen: Geraeteeintrag[]; werkzeuge: string[] }
+
+// --- Anleitungen finden (iFixit, WIKI-64): Filter, Treffer, Facetten, Einordnung im Gerätebaum ---
+export type Suchart = "anleitung" | "zerlegung" | "geraet";
+export type Anleitungsreihenfolge = "passend" | "einfach" | "schnell" | "titel";
+export interface Anleitungsfrage {
+  text: string; art: Suchart; sprachen: string[]; schwierigkeit: number[]; zeit_bis: number | null; werkzeuge: string[];
+  mehr_noetig: boolean; geraet: string; bauteil: string; reihenfolge: Anleitungsreihenfolge; ab: number; anzahl: number;
+}
+export interface Anleitungstreffer {
+  pfad: string; titel: string; art: string; sprache: string; schwierigkeit: number; schwierigkeit_text: string; zeit: string;
+  schritte: number; bild: string; werkzeuge: string[]; fehlt: string[]; geraet: string; bauteil: string;
+}
+export interface Geraetetreffer { pfad: string; titel: string; bild: string; kurz: string; anleitungen: number }
+export interface Facette { wert: string; titel: string; zahl: number }
+export interface Einordnungsschritt { pfad: string; titel: string }
+export interface Anleitungsfunde {
+  index: boolean; anleitungen: Anleitungstreffer[]; geraete: Geraetetreffer[]; gesamt: number; brauchen_mehr: number;
+  unter: Facette[]; bauteile: Facette[]; einordnung: Einordnungsschritt[]; bestand_anleitungen: number; bestand_geraete: number;
+}
+export interface Werkzeugeintrag { wort: string; anleitungen: number }
+export interface Einordnung { weg: Einordnungsschritt[]; bauteil: string }

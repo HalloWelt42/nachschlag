@@ -14,8 +14,10 @@ from appkern.einstellungen import Angebot, Option
 from appkern.leitstelle import LeitstellenFehler
 from appkern.verbund import VerbundFehler
 
+from .anleitungen.api import router as anleitungen_router
+from .anleitungen.dienst import Anleitungen
 from .api import router
-from .artikel import Artikelleser
+from .artikel import Artikelleser, wege
 from .bibliothek import Bibliothek
 from .buecherlader import Buecherlader, Regeln as Laderregeln
 from .buecherlader.api import router as buecherlader_router
@@ -189,6 +191,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     app.include_router(medien_router(geruest, Medien(leser, suche)))
     app.include_router(stoebern_router(geruest, Stoebern(bibliothek, leser, suche, meins.gelesen)))
     app.include_router(register_router(geruest, Register(bibliothek, eigen)))
+    app.include_router(anleitungen_router(geruest, Anleitungen(bibliothek, eigen, wege(bibliothek))))
     app.include_router(uebersetzung_router(geruest, uebersetzer, artikeluebersetzer,
                                            Stellenuebersetzer(lambda: geruest.leitstelle, lambda: e().suchmodell)))
     app.include_router(vorlesen_router(geruest, sprechdienst))     # Vorlesen über die Leitstelle (WIKI-43)

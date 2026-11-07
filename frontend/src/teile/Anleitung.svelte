@@ -7,6 +7,7 @@
   import { onMount, untrack } from "svelte";
   import { lesestandHolen, lesestandMelden, meins, vorliebeSetzen } from "../lib/meins.svelte";
   import type { Anleitungsschritt, Anleitungszeile, Artikel } from "../lib/typen";
+  import Einordnung from "./Einordnung.svelte";
 
   let { artikel }: { artikel: Artikel } = $props();
   const a = $derived(artikel.anleitung!);
@@ -68,7 +69,7 @@
 {#snippet zeilen(liste: Anleitungszeile[])}
   <ul class="anl-zeilen">
     {#each liste as z, i (i)}
-      <li class="anl-zeile stufe-{z.stufe}" class:marke={!!z.marke} data-marke={z.marke || undefined}>
+      <li class="anl-zeile stufe-{z.stufe}" class:mit-marke={!!z.marke} data-marke={z.marke || undefined}>
         {#if z.marke}<i class="fa-solid {MARKE[z.marke].symbol}" title={MARKE[z.marke].wort}></i>
         {:else}<span class="anl-punkt {punkt(z)}" title={z.farbe ? "Markierung im Bild" : undefined}></span>{/if}
         <span>{z.text}</span>
@@ -97,6 +98,7 @@
   <span class="anl-stufe" title="Schwierigkeit {n} von 5">{#each [1, 2, 3, 4, 5] as i (i)}<span class:an={i <= n}></span>{/each}</span>
 {/snippet}
 
+<div class="anl-einordnung-rand"><Einordnung buch={artikel.buch} pfad={artikel.pfad} /></div>
 <div class="anl-kopf">
   <span class="anl-werte">
     {#if a.schwierigkeit}<span>{@render stufe(a.schwierigkeit)}{a.schwierigkeit_text}</span>{/if}

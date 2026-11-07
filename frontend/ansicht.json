@@ -255,6 +255,38 @@
         "nachschlag.leseansicht": "a",
         "nachschlag.startansicht": "a"
       }
+    },
+    {
+      "name": "anleitungen-start",
+      "pfad": "/lesen/ifixit_de_all_2026-03/home/home",
+      "speicher": {
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
+      }
+    },
+    {
+      "name": "anleitungen-suche",
+      "pfad": "/lesen/ifixit_de_all_2026-03/home/home?text=akku&art=anleitung",
+      "speicher": {
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
+      }
+    },
+    {
+      "name": "anleitungen-geraet",
+      "pfad": "/lesen/ifixit_de_all_2026-03/Device/Mac",
+      "speicher": {
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
+      }
+    },
+    {
+      "name": "anleitung",
+      "pfad": "/lesen/ifixit_de_all_2026-03/Anleitung/iPad+7+Rückkamera+tauschen/150975",
+      "speicher": {
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
+      }
     }
   ]
 }

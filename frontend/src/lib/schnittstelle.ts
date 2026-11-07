@@ -1,6 +1,6 @@
 // Alle Abrufe der Oberfläche an einer Stelle (über `hole` der Schale: Anmeldung, Fehler, gemeinsame Abrufe).
 import { hole } from "appkern-oberflaeche";
-import type { Abschnitt, Artikel, AutorenSeite, AutorSeite, Bibliotheksstand, FragenSeite, Katalogfilter, Laderstand, Quellstand,
+import type { Abschnitt, Anleitungsfrage, Anleitungsfunde, Artikel, Einordnung, Werkzeugeintrag, AutorenSeite, AutorSeite, Bibliotheksstand, FragenSeite, Katalogfilter, Laderstand, Quellstand,
               Quellvorschlag, SchlagwortSeite, Sortierung,
               Suchergebnis, Steckbrief, Verzeichnisseite, Vorschlag } from "./typen";
 
@@ -138,3 +138,19 @@ export const quelleAendern = (nr: number, aenderung: { an?: boolean; rang?: numb
   hole<Quellstand[]>(`${LADER}/quellen/${nr}`, json("PATCH", aenderung));
 export const quelleEntfernen = (nr: number) => hole<Quellstand[]>(`${LADER}/quellen/${nr}`, { method: "DELETE" });
 export const quellvorschlaegeHolen = () => hole<Quellvorschlag[]>(`${LADER}/quellen/vorschlaege`);
+
+// --- Anleitungen finden (iFixit, WIKI-64) ---
+export const anleitungenFinden = (buch: string, frage: Anleitungsfrage, signal?: AbortSignal) => {
+  const werte: Record<string, string | number | string[]> = {};
+  for (const [k, w] of Object.entries(frage)) {
+    if (w === null || w === "" || w === false || (Array.isArray(w) && !w.length && k !== "sprachen")) continue;
+    werte[k] = Array.isArray(w) ? w.map(String) : typeof w === "boolean" ? "true" : w;
+  }
+  return hole<Anleitungsfunde>(`/anleitungen/${encodeURIComponent(buch)}?${abfrage(werte)}`, { signal });
+};
+
+export const werkzeugeHolen = (buch: string, sprachen: string[], anfang = "") =>
+  hole<Werkzeugeintrag[]>(`/anleitungen/${encodeURIComponent(buch)}/werkzeuge?${abfrage({ sprachen, anfang })}`);
+
+export const einordnungHolen = (buch: string, pfad: string) =>
+  hole<Einordnung>(`/anleitungen/${encodeURIComponent(buch)}/einordnung?${abfrage({ pfad })}`);

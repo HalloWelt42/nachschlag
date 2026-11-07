@@ -1320,7 +1320,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .anl-punkt.f-red { background: var(--gefahr); } .anl-punkt.f-orange { background: var(--koralle); } .anl-punkt.f-yellow { background: var(--honig); }
 .anl-punkt.f-green { background: var(--gut); } .anl-punkt.f-blue { background: var(--info); } .anl-punkt.f-light_blue { background: var(--himmel); }
 .anl-punkt.f-violet { background: var(--violett); } .anl-punkt.f-pink { background: var(--rose); }
-.anl-zeile.marke { padding: 6px 10px 6px 6px; }
+.anl-zeile.mit-marke { padding: 6px 10px 6px 6px; }
 .anl-zeile[data-marke="hinweis"] { background: color-mix(in srgb, var(--info) 9%, transparent); box-shadow: inset 3px 0 0 var(--info); border-radius: 0; }
 .anl-zeile[data-marke="hinweis"] > i { color: var(--info); }
 .anl-zeile[data-marke="vorsicht"] { background: var(--warn-weich); box-shadow: inset 3px 0 0 var(--warn); border-radius: 0; }
@@ -1372,4 +1372,52 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .anl-kacheln .hoch .kachel-bild { height: auto; aspect-ratio: 4 / 3; }   /* Bilder der Quelle sind 4:3: ganz zeigen, nichts abschneiden */
 .anl-empfohlen { color: var(--warn); }
 .anl-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ----- Anleitungen finden (teile/Anleitungssuche.svelte, Entwurf ifixit-anleitungen.html) ----- */
+.anl-geraet.mit-kopf { padding-top: 0; }   /* der stehende Kopf sitzt bündig oben */
+.anl-titelzeile { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--a2); font-size: var(--klein); color: var(--text-3); }
+.anl-werkzeugwahl { display: flex; flex-direction: column; gap: var(--a2); padding: var(--a3); background: var(--flaeche); border-radius: var(--r2); }
+.anl-werkzeugwahl .suchfeld { max-width: 320px; }
+.anl-werkzeugwahl .anl-chips { max-height: 30vh; overflow-y: auto; }
+.anl-hinweis { margin: 0; display: flex; gap: var(--a2); align-items: baseline; color: var(--text-2); }
+.anl-einordnung { display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--a2); font-size: var(--klein); color: var(--text-3); }
+.anl-einordnung > i { font-size: var(--marke); }
+.anl-einordnung-rand { padding: var(--a2) var(--a5) 0; background: var(--hg); }
+.anl-einordnung-rand:empty { display: none; }
+.anl-einordnung > a:last-child { margin-left: auto; }
+.anl-treffer-seite { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: var(--a5); align-items: start; }
+.anl-treffer-seite > .anl-treffer:only-child { grid-column: 1 / -1; }
+.anl-facetten { display: flex; flex-direction: column; gap: var(--a4); }
+.anl-facetten ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; font-size: var(--klein); }
+.anl-facetten button { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: var(--a2); padding: 5px var(--a2); border: 0;
+                       background: transparent; font: inherit; color: var(--text-2); text-align: left; cursor: pointer; border-radius: var(--r1); }
+.anl-facetten button:hover { background: var(--flaeche); color: var(--text); }
+.anl-facetten button b { font-family: var(--schrift-zahl); font-weight: 400; color: var(--text-3); }
+.anl-facetten li.an button { background: var(--flaeche); color: var(--text); font-weight: 600; box-shadow: inset 3px 0 0 var(--akzent-flaeche); border-radius: 0; }
+.anl-treffer { display: flex; flex-direction: column; gap: var(--a3); min-width: 0; }
+.anl-trefferzahl { font-size: var(--klein); color: var(--text-2); }
+.anl-liste { display: flex; flex-direction: column; gap: 6px; }
+.anl-zeile-liste { display: grid; grid-template-columns: 112px minmax(0, 1fr); grid-template-areas: "b t" "b u" "b w" "b c"; gap: 4px var(--a3);
+                   align-items: center; padding: var(--a2); background: var(--flaeche); border-radius: var(--r2); color: var(--text); text-decoration: none; font-size: var(--klein); }
+.anl-zeile-liste:hover { box-shadow: var(--schatten), 0 0 0 2px var(--akzent-flaeche); }
+.anl-zeile-liste > img, .anl-zeile-liste > .anl-ohne-bild { grid-area: b; width: 112px; aspect-ratio: 4 / 3; object-fit: contain; border-radius: var(--r1); background: var(--mulde);
+                   display: grid; place-items: center; color: var(--text-3); align-self: start; }
+.anl-zeile-liste .t { grid-area: t; font-weight: 600; font-size: var(--gross); overflow-wrap: anywhere; }
+.anl-zeile-liste .u { grid-area: u; color: var(--text-3); }
+.anl-zeile-liste .werte { grid-area: w; display: flex; flex-wrap: wrap; gap: 4px var(--a4); }
+.anl-zeile-liste .w { display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); white-space: nowrap; }
+.anl-zeile-liste .anl-chips { grid-area: c; }
+.anl-sprache { font-size: var(--marke); font-weight: 600; padding: 1px 5px; border-radius: var(--r1); background: var(--flaeche-2); color: var(--text-2); vertical-align: middle; }
+.faehigkeit.fehlt { background: var(--warn-weich); color: var(--warn); }
+@media (max-width: 1100px) {
+  .anl-treffer-seite { grid-template-columns: minmax(0, 1fr); }
+  .anl-facetten ul { flex-direction: row; flex-wrap: wrap; gap: 6px; }
+  .anl-facetten button { width: auto; background: var(--flaeche-2); }
+}
+@media (max-width: 700px) {
+  .anl-geraet .katalog-filter .segment { flex-wrap: wrap; max-width: 100%; }
+  .anl-zeile-liste { grid-template-columns: 72px minmax(0, 1fr); grid-template-areas: "b t" "b u" "w w" "c c"; }
+  .anl-zeile-liste > img, .anl-zeile-liste > .anl-ohne-bild { width: 72px; }
+  .anl-einordnung > a:last-child { margin-left: 0; }
+}
 @media (max-width: 900px) { .anl-g-kopf { grid-template-columns: minmax(0, 1fr); } .anl-g-kopf > img { width: 100%; max-width: 360px; } }

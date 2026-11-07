@@ -98,8 +98,57 @@ def test_index_der_anleitungen_und_neue_fassung(tmp_path):
     assert i["geraet_kind"] == [("Device/Phone", "Device/Probephone"), ("home/home", "Device/Phone")]
     assert ("Device/Probephone", "Anleitung/Probephone+Akku+tauschen/1", "Akku", 1) in i["geraet_anleitung"]
     assert i["geraete"][1] == ("Device/Probephone", "images/g.png", "Ein Telefon für die Tests, gebaut 2026.")
+    v = schema.lesen(alt)
+    oben = {(o, p) for o, p in v.execute("SELECT e.oben, s.pfad FROM register_einordnung e JOIN seiten s ON s.nr = e.nr")}
+    assert ("home/home", "Anleitung/Probephone+Akku+tauschen/1") in oben and ("Device/Phone", "Teardown/Probephone+Teardown/3") in oben
+    assert schema.angabe(v, "startseite") == "home/home"
+    v.close()
 
     probebuch.bauen_anleitungen(ordner, "probefix_de_all_2026-06")
     neu = tmp_path / "ix" / schema.dateiname("probefix_de_all_2026-06")
     stand = _index(ordner, "probefix_de_all_2026-06", neu, vorlage=alt)
     assert stand.uebernommen == stand.seiten == 6 and _inhalt(neu) == i
+
+
+def test_anleitungen_finden_mit_filtern_und_einordnung(tmp_path):
+    from app.anleitungen import abfrage
+    from app.modell.anleitungen import Anleitungsfrage as F
+
+    probebuch.bauen_anleitungen(tmp_path / "b")
+    datei = tmp_path / schema.dateiname(BUCH)
+    _index(tmp_path / "b", BUCH, datei)
+    v = schema.lesen(datei)
+    medien = lambda p: "/m/" + p  # noqa: E731
+    try:
+        f = abfrage.finden(v, F(), medien)                                      # Vorgabe: deutsche Anleitungen
+        assert [a.titel for a in f.anleitungen] == ["Probephone Akku tauschen"] and f.gesamt == 1
+        a = f.anleitungen[0]
+        assert (a.geraet, a.bauteil, a.bild, a.schritte) == ("Probephone", "Akku", "/m/images/haupt.png", 2)
+        assert [(u.wert, u.zahl) for u in f.unter] == [("Device/Phone", 1)] and (f.bestand_anleitungen, f.bestand_geraete) == (1, 2)
+        beide = abfrage.finden(v, F(sprachen=["de", "en"], reihenfolge="einfach"), medien)
+        assert [a.schwierigkeit for a in beide.anleitungen] == [2, 4]
+        assert abfrage.finden(v, F(sprachen=["de", "en"], text="display"), medien).anleitungen[0].sprache == "en"
+        assert abfrage.finden(v, F(sprachen=["de", "en"], zeit_bis=60), medien).gesamt == 1
+        assert abfrage.finden(v, F(sprachen=["de", "en"], schwierigkeit=[4]), medien).anleitungen[0].bauteil == "Display"
+        assert abfrage.finden(v, F(art="zerlegung"), medien).anleitungen[0].pfad == "Teardown/Probephone+Teardown/3"
+        # Ich habe: mit Spudger und Pinzette reicht es für den Akku, nicht für das Display (Saugnapf, Heißluft)
+        ich = F(sprachen=["de", "en"], werkzeuge=["Spudger", "Pinzette"])
+        f = abfrage.finden(v, ich, medien)
+        assert f.gesamt == 1 and f.brauchen_mehr == 1 and f.anleitungen[0].fehlt == []
+        mehr = abfrage.finden(v, ich.model_copy(update={"mehr_noetig": True}), medien)
+        assert mehr.gesamt == 2 and mehr.brauchen_mehr == 1
+        assert {a.titel: a.fehlt for a in mehr.anleitungen}["Probephone Display Replacement"] == ["Heat Gun", "Suction Cup"]
+        # Gerät und Bauteil: ganzer Ast der Kategorie, Bauteil als Facette und Filter
+        ast = abfrage.finden(v, F(sprachen=["de", "en"], geraet="Device/Phone"), medien)
+        assert ast.gesamt == 2 and [s.pfad for s in ast.einordnung] == ["home/home", "Device/Phone"]
+        assert [(u.wert, u.zahl) for u in ast.unter] == [("Device/Probephone", 2)]
+        assert abfrage.finden(v, F(sprachen=["de", "en"], bauteil="Display"), medien).gesamt == 1
+        g = abfrage.finden(v, F(art="geraet"), medien)
+        assert [(x.titel, x.anleitungen, x.bild) for x in g.geraete] == [("Probephone", 2, "/m/images/g.png"), ("Smartphones", 2, "")]
+        assert {x.pfad for x in abfrage.finden(v, F(art="geraet", text="probephone"), medien).geraete} == {"Device/Probephone"}
+        assert [w.wort for w in abfrage.werkzeuge(v, ["de"])] == ["Pinzette", "Spudger"]
+        e = abfrage.einordnung(v, "Anleitung/Probephone+Akku+tauschen/1")
+        assert e.bauteil == "Akku" and [s.titel for s in e.weg] == ["Probefix", "Smartphones", "Probephone"]
+        assert [s.pfad for s in abfrage.einordnung(v, "Device/Probephone").weg] == ["home/home", "Device/Phone"]
+    finally:
+        v.close()

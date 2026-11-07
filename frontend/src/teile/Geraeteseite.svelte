@@ -2,13 +2,15 @@
   // Gerät, Kategorie und Startseite eines Anleitungsbuchs (iFixit, WIKI-64; Entwurf ifixit-geraet.html). Kopf mit Bild,
   // Kurzbeschreibung und Zahlen; eine Kategorie zeigt ihre Unterkategorien als Bildkacheln, ein Gerät seine Anleitungen
   // (empfohlene vorn, mit Marke), dazu die Werkzeuge und die Beschreibung. Auf der Startseite stehen die hervorgehobenen
-  // Kategorien groß mit Bild, die übrigen als Textkacheln (wie in der Quelle). `start`: Inhalt der Startseite davor.
+  // Kategorien groß mit Bild, die übrigen als Textkacheln (wie in der Quelle). `kopf`: stehender Kopf davor (Suche der
+  // Startseite); `statt`: Inhalt an Stelle von Kategorien und Anleitungen (Treffer der Suche).
   import type { Snippet } from "svelte";
   import type { Artikel, Geraeteeintrag } from "../lib/typen";
   import { lesen, lesenZiel } from "../lib/ziele";
+  import Einordnung from "./Einordnung.svelte";
   import Kachel from "./Kachel.svelte";
 
-  let { artikel, start }: { artikel: Artikel; start?: Snippet } = $props();
+  let { artikel, kopf, statt }: { artikel: Artikel; kopf?: Snippet; statt?: Snippet } = $props();
   const g = $derived(artikel.geraet!);
   const hervor = $derived(g.unterkategorien.filter((e) => e.empfohlen && e.bild));
   const uebrige = $derived(g.unterkategorien.filter((e) => !(e.empfohlen && e.bild)));
@@ -17,9 +19,12 @@
 </script>
 
 <div class="rollfeld" style="padding: 0">
-  <div class="anl-geraet">
-    {#if start}{@render start()}{/if}
+  <div class="anl-geraet" class:mit-kopf={!!kopf}>
+    {#if kopf}{@render kopf()}{/if}
+    {#if statt}{@render statt()}
+    {:else}
     {#if artikel.darstellung === "geraet"}
+      <Einordnung buch={artikel.buch} pfad={artikel.pfad} geraet />
       <div class="anl-g-kopf" class:ohne-bild={!g.bild}>
         {#if g.bild}<img src={g.bild} alt="" />{/if}
         <div>
@@ -78,6 +83,7 @@
       </section>
     {:else if artikel.darstellung === "anleitungen" && g.kurz}
       <p class="anl-g-kurz">{g.kurz}</p>
+    {/if}
     {/if}
   </div>
 </div>

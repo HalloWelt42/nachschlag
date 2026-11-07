@@ -29,6 +29,7 @@
   import Kachel from "../teile/Kachel.svelte";
   import Anleitung from "../teile/Anleitung.svelte";
   import Fragekarte from "../teile/Fragekarte.svelte";
+  import Anleitungssuche from "../teile/Anleitungssuche.svelte";
   import Geraeteseite from "../teile/Geraeteseite.svelte";
   import Codeansicht from "../teile/Codeansicht.svelte";
   import { ausprobierstand, beispieleHolen, beispielLoeschen, codeSprache, type Beispiel, type Codesprache,
@@ -1048,8 +1049,11 @@
   {:else if artikel.darstellung === "anleitung" && artikel.anleitung && !original}
     <!-- Anleitung (iFixit, WIKI-64): Lesen oder Werkstatt -->
     <Anleitung {artikel} />
-  {:else if (artikel.darstellung === "geraet" || artikel.darstellung === "anleitungen") && artikel.geraet && !original}
-    <!-- Gerät, Kategorie oder Startseite eines Anleitungsbuchs (WIKI-64) -->
+  {:else if artikel.darstellung === "anleitungen" && artikel.geraet && !original}
+    <!-- Startseite eines Anleitungsbuchs: Anleitungen finden, ohne Filter die Kategorien (WIKI-64) -->
+    <Anleitungssuche {artikel} />
+  {:else if artikel.darstellung === "geraet" && artikel.geraet && !original}
+    <!-- Gerät oder Kategorie eines Anleitungsbuchs (WIKI-64) -->
     <Geraeteseite {artikel} />
   {:else if zeigeOriginal}
     <!-- ohne Skripte, mit Herkunft der App: Stile und Bilder laden mit dem Lesezugang, die Seite kann nichts in der App tun -->
