@@ -170,3 +170,68 @@ export type Sortierung = "stimmen" | "neueste";
 
 /** Ein Einzelnachweis (in der Oberfläche "Beleg", WIKI-31). */
 export interface Beleg { nummer: number; text: string; url: string }
+
+// --- Bücherlader (WIKI-57): Spiegel von backend/app/modell/buecherlader.py ---
+/** Wie ein Buch des Verzeichnisses zur eigenen Bibliothek steht. */
+export type Laderzustand = "nicht_da" | "aktuell" | "neuer_da" | "laedt" | "wartet_auf_umschalten";
+
+export interface Variante {
+  stamm: string;
+  ausgabe: string;                   // maxi, nopic, mini; leer bei nur einer Ausgabe
+  stand: string;                     // JJJJ-MM
+  groesse: number;
+  neu: "" | "buch" | "fassung";
+  abonniert: boolean;
+  lokal_stand: string;
+  zustand: Laderzustand;
+}
+
+export interface Verzeichnisbuch {
+  basis: string;
+  ordner: string;
+  sprache: string;
+  titel: string;
+  beschreibung: string;
+  eintraege: number;
+  varianten: Variante[];
+}
+
+export interface Verzeichnisseite { eintraege: Verzeichnisbuch[]; gesamt: number; bereiche: string[] }
+
+export interface Durchgang {
+  begonnen: string;
+  beendet: string;
+  ordner: number;
+  dateien: number;
+  buecher: number;
+  neue_buecher: number;
+  neue_fassungen: number;
+  erstaufnahme: boolean;
+  hinweise: string[];
+}
+
+export interface Abo {
+  stamm: string;
+  titel: string;
+  seit: string;
+  lokal_stand: string;
+  neuester_stand: string;
+  neueste_groesse: number;
+  zustand: Laderzustand;
+  wartet: string;
+  rueckfall: { kennung: string; entfernt_ab: string } | null;
+  hinweis: string;
+}
+
+export interface Platz { ordner: string; frei: number; gesamt: number; reserve: number; buecher: number; im_laden: number; hoechstens: number }
+
+export interface Laderstand {
+  bereit: boolean;
+  grund: string;
+  regeln: { sprachen: string[]; durchsicht: string; neue_fassung: string; laden_wann: string; vorige_tage: number };
+  letzter_durchgang: Durchgang | null;
+  naechster_durchgang: string;
+  neu_ungesehen: number;
+  abos: Abo[];
+  platz: Platz | null;
+}

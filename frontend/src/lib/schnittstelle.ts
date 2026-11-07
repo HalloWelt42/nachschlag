@@ -1,7 +1,7 @@
 // Alle Abrufe der Oberfläche an einer Stelle (über `hole` der Schale: Anmeldung, Fehler, gemeinsame Abrufe).
 import { hole } from "appkern-oberflaeche";
-import type { Abschnitt, Artikel, AutorenSeite, AutorSeite, Bibliotheksstand, FragenSeite, SchlagwortSeite, Sortierung, Suchergebnis,
-              Steckbrief, Vorschlag } from "./typen";
+import type { Abschnitt, Artikel, AutorenSeite, AutorSeite, Bibliotheksstand, FragenSeite, Laderstand, SchlagwortSeite, Sortierung,
+              Suchergebnis, Steckbrief, Verzeichnisseite, Vorschlag } from "./typen";
 
 function pfadTeil(pfad: string): string {
   return pfad.split("/").map(encodeURIComponent).join("/");
@@ -112,3 +112,19 @@ export const stellenstandHolen = () => hole<{ bereit: boolean; grund: string }>(
 export const stelleUebersetzen = (text: string, ziel: "de" | "en") =>
   hole<Stellenuebersetzung>("/uebersetzung/stelle", { method: "POST", headers: { "Content-Type": "application/json" },
                                                      body: JSON.stringify({ text, ziel }) });
+
+// --- Bücherlader (WIKI-57): Verzeichnis, Neues, Abos, Umschalten ---
+const LADER = "/buecherlader";
+const ohneInhalt = (weg: string, method: string) => hole<void>(`${LADER}${weg}`, { method });
+
+export const laderstandHolen = () => hole<Laderstand>(LADER);
+export const verzeichnisHolen = (f: { suche: string; bereich: string; nur_neu: boolean; nur_abonniert: boolean; versatz: number; grenze: number },
+                                 signal?: AbortSignal) =>
+  hole<Verzeichnisseite>(`${LADER}/verzeichnis?${abfrage({ ...f, nur_neu: String(f.nur_neu), nur_abonniert: String(f.nur_abonniert) })}`, { signal });
+export const durchsichtStarten = () => hole<unknown>(`${LADER}/durchsicht`, { method: "POST" });
+export const neuesGesehen = () => ohneInhalt("/gesehen", "POST");
+export const abonnieren = (stamm: string) => ohneInhalt(`/abo/${encodeURIComponent(stamm)}`, "PUT");
+export const abbestellen = (stamm: string) => ohneInhalt(`/abo/${encodeURIComponent(stamm)}`, "DELETE");
+export const bestandAbonnieren = () => hole<{ anzahl: number }>(`${LADER}/abo/bestand`, { method: "POST" });
+export const umschalten = (stamm: string) => ohneInhalt(`/umschalten/${encodeURIComponent(stamm)}`, "POST");
+export const zurueckSchalten = (stamm: string) => ohneInhalt(`/zurueck/${encodeURIComponent(stamm)}`, "POST");

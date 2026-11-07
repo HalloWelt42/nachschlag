@@ -17,6 +17,7 @@
   import { lesen } from "../lib/ziele";
   import { gehe } from "appkern-oberflaeche";
   import { meins, meinsLaden, verlaufHolen, wann, type Verlaufseintrag } from "../lib/meins.svelte";
+  import { lader } from "../lib/buecherlader.svelte";
 
   const WEITERLESEN = 4;                 // Karten im Entwurf
   const MERKZETTEL = 5;
@@ -204,7 +205,19 @@
 
     <section>
       <div class="abschnitt-kopf"><h2><i class="fa-solid fa-swatchbook"></i>Bibliothek</h2>
-        <span class="neben">{aktive.length} {aktive.length === 1 ? "Quelle" : "Quellen"}</span></div>
+        <span class="neben">{aktive.length} {aktive.length === 1 ? "Quelle" : "Quellen"}</span>
+        <button class="alle" onclick={() => gehe("bibliothek")}>Verwalten</button></div>
+      {#if lader.stand?.neu_ungesehen}
+        <div class="fundband"><i class="fa-solid fa-star"></i>
+          <span>Im Verzeichnis der Bücher ist Neues: {lader.stand.neu_ungesehen} {lader.stand.neu_ungesehen === 1 ? "Buch oder Fassung" : "Bücher und Fassungen"}
+            seit der letzten Durchsicht.</span>
+          <button class="knopf" onclick={() => gehe("bibliothek/katalog")}>Ansehen</button></div>
+      {/if}
+      {#if lader.stand?.abos.some((a) => a.zustand === "wartet_auf_umschalten")}
+        <div class="fundband"><i class="fa-solid fa-right-left"></i>
+          <span>Neue Fassungen sind geladen und geprüft und warten aufs Umschalten.</span>
+          <button class="knopf" onclick={() => gehe("bibliothek/laden")}>Fassungen</button></div>
+      {/if}
       {#if bibliothek.meldung}<div class="fehlertext">{bibliothek.meldung}</div>{/if}
       {#if bibliothek.geladen && !bibliothek.buecher.length && !bibliothek.meldung}
         <p class="leer-hinweis">Im Ordner der ZIM-Libs liegt noch keine ZIM-Datei. Den Ordner nennen die Einstellungen unter Bibliothek.</p>
@@ -218,7 +231,8 @@
               <span class="faehig">
                 {#if b.faehigkeiten.volltext}<span class="faehigkeit an"><i class="fa-solid fa-check"></i>Index</span>{/if}
                 {#if b.faehigkeiten.lesedesign}<span class="faehigkeit an"><i class="fa-solid fa-book-open-reader"></i>Lesedesign</span>
-                {:else}<span class="faehigkeit"><i class="fa-solid fa-file-code"></i>Originalansicht</span>{/if}
+                {:else}<span class="faehigkeit fehlt" title="Für diese Art von Buch ({b.erzeuger || 'Erzeuger unbekannt'}) gibt es noch keine eigene Ansicht; es öffnet in der Originalansicht">
+                  <i class="fa-solid fa-person-digging"></i>Ansicht fehlt</span>{/if}
               </span>
             {/snippet}
           </Kachel>

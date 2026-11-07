@@ -44,4 +44,5 @@ def kellerwolke(request: httpx.Request) -> httpx.Response:
 
 
 daten = Path(os.environ.get("NACHSCHLAG_DATEN") or WURZEL / "daten-probe")
-app = app_bauen(daten, transport=httpx.MockTransport(kellerwolke))
+# der Bücherlader liest das echte Verzeichnis der Bücher (laden nur, was man im Probebetrieb abonniert)
+app = app_bauen(daten, transport=httpx.MockTransport(kellerwolke), lader_transport=httpx.AsyncHTTPTransport())

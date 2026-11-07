@@ -93,7 +93,9 @@ class LaderFehler(LookupError):
 
 
 def gb(n: int) -> str:
-    return f"{n / GB:,.1f} GB".replace(",", "X").replace(".", ",").replace("X", ".")
+    """Bytes für Menschen: ab 1 GB in GB mit einer Stelle, darunter in MB (deutsches Komma, Punkt für Tausender)."""
+    text = f"{n / GB:,.1f} GB" if n >= GB else f"{max(1, round(n / 1024**2)):,} MB"
+    return text.replace(",", "X").replace(".", ",").replace("X", ".")
 
 
 def dauer(sekunden: float) -> str:
@@ -155,11 +157,13 @@ class Buecherlader(Begleiter):
             await asyncio.sleep(WECKER_S)
 
     async def takt(self) -> None:
-        """Was der Zeitplan tut: fällige Durchsicht anstoßen, vorige Fassungen nach der Frist entfernen."""
+        """Was der Zeitplan tut: vorige Fassungen nach der Frist entfernen, Abos nachholen, die zuletzt nicht laden
+        konnten (etwa weil der Platz fehlte oder die Regel nur melden hieß), und eine fällige Durchsicht anstoßen."""
         r = self._regeln()
         if self._grund(r):
             return
         await self._aufraeumen(r)
+        await self._abos_pruefen("Zeitplan")
         letzter = await self._bestand.letzter_durchgang()
         if letzter and self._uhr() < self._naechste(letzter[1], r):
             return

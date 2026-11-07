@@ -55,8 +55,10 @@ from .suche import Suche
 from .suche.bedeutung import FundusBedeutung
 
 
-def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) -> FastAPI:
-    """`transport` nur für Tests (Kellerwolke, Leitstelle und Fundus nachgestellt)."""
+def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
+              lader_transport: httpx.AsyncBaseTransport | None = None) -> FastAPI:
+    """`transport` nur für Tests (Kellerwolke, Leitstelle und Fundus nachgestellt); der Bücherlader nimmt ihn mit, außer
+    `lader_transport` ist gesetzt (der Probebetrieb stellt nur die Kellerwolke nach und liest das echte Verzeichnis)."""
     geruest = Geruest(name="Nachschlag", kennung="nachschlag", rolle="liest jede Quelle der Bibliothek", symbol="fa-book-open", symbolbild="/favicon.svg",
                       farbe="#08758b", fassung=FASSUNG, daten=daten, einstellungen=AppEinstellungen,
                       oberflaeche=WURZEL / "frontend" / "dist", transport=transport,
@@ -151,7 +153,8 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
             hoechstens=int(s.buecher_hoechstens_gb * 1024**3), vorige_tage=s.vorige_tage,
             liste=Path(s.bibliotheksliste) if s.bibliotheksliste.strip() else None)
 
-    lader = Buecherlader(geruest.db, geruest.auftraege, laderregeln, quellen.von_hand_aktiv, transport=transport)
+    lader = Buecherlader(geruest.db, geruest.auftraege, laderregeln, quellen.von_hand_aktiv,
+                         transport=lader_transport or transport)
     geruest.begleiter_anmelden(lader)
     # eine Regel zum Zurückstellen für alle Dienste: Sammlungen warten auf die Nacht, Laden mit "nur nachts" auch
     geruest.auftraege.zurueckstellen_wenn(lambda a: sammlungen.zurueckstellen(a) or lader.zurueckstellen(a))

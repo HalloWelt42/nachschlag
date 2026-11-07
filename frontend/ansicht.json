@@ -231,6 +231,30 @@
         "nachschlag.leseansicht": "a",
         "nachschlag.startansicht": "b"
       }
+    },
+    {
+      "name": "bibliothek",
+      "pfad": "/bibliothek",
+      "speicher": {
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
+      }
+    },
+    {
+      "name": "katalog",
+      "pfad": "/bibliothek/katalog",
+      "speicher": {
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
+      }
+    },
+    {
+      "name": "fassungen",
+      "pfad": "/bibliothek/laden",
+      "speicher": {
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
+      }
     }
   ]
 }
