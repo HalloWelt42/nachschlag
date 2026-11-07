@@ -146,7 +146,7 @@ class Korrektor:
         if not mit_modell or leitstelle is None:
             return Korrektur(frage=frage)
         try:
-            antwort = await leitstelle.chat([Nachricht.system(ANWEISUNG), Nachricht.nutzer(frage)], modell=self._modell() or None,
+            antwort = await leitstelle.chat([Nachricht.system(ANWEISUNG), Nachricht.nutzer(frage)], modell=self._modell(),
                                             titel="Suche korrigieren", prioritaet="hoch", response_format=FORM, temperature=0)
             text = re.sub(r"\s+", " ", gerade(str(json_lesen(antwort.text).get("text", "")))).strip()
         except (LeitstellenFehler, ValueError, AttributeError):

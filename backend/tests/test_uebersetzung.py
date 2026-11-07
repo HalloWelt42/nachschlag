@@ -11,6 +11,7 @@ import pytest
 from appkern.datenbank import Datenbank
 from appkern.leitstelle import NichtErreichbar
 
+from app.einstellungen import TEXTMODELL, AppEinstellungen
 from app.uebersetzung import Uebersetzer, UebersetzungFehlt
 
 
@@ -42,11 +43,11 @@ async def db(tmp_path: Path):
 
 async def test_uebersetzt_einmal_und_merkt(db):
     leitstelle = Leitstelle()
-    u = Uebersetzer(db, lambda: leitstelle, lambda: "")
+    u = Uebersetzer(db, lambda: leitstelle, lambda: TEXTMODELL)
     await u.starten()
     erste = await u.uebersetzen("  Text in die   Zwischenablage kopieren ")
     assert (erste.frage, erste.text, erste.von) == ("Text in die Zwischenablage kopieren", "copy text to the clipboard", "modell")
-    assert leitstelle.aufrufe[0]["prioritaet"] == "hoch" and leitstelle.aufrufe[0]["modell"] is None
+    assert leitstelle.aufrufe[0]["prioritaet"] == "hoch" and leitstelle.aufrufe[0]["modell"] == TEXTMODELL
     assert (await u.uebersetzen("Text in die Zwischenablage kopieren")).text == "copy text to the clipboard"
     assert len(leitstelle.aufrufe) == 1                                        # gemerkt, kein zweiter Aufruf
 
@@ -56,14 +57,14 @@ async def test_uebersetzt_einmal_und_merkt(db):
 
 
 async def test_ohne_leitstelle_ein_grund(db):
-    u = Uebersetzer(db, lambda: None, lambda: "")
+    u = Uebersetzer(db, lambda: None, lambda: TEXTMODELL)
     await u.starten()
     with pytest.raises(UebersetzungFehlt, match="Leitstelle nicht eingerichtet"):
         await u.uebersetzen("Fuchs")
-    weg = Uebersetzer(db, lambda: Leitstelle(fehler=NichtErreichbar("Leitstelle antwortet nicht")), lambda: "")
+    weg = Uebersetzer(db, lambda: Leitstelle(fehler=NichtErreichbar("Leitstelle antwortet nicht")), lambda: TEXTMODELL)
     with pytest.raises(UebersetzungFehlt, match="nicht möglich"):
         await weg.uebersetzen("Fuchs")
-    unlesbar = Uebersetzer(db, lambda: Leitstelle(text="kein json"), lambda: "")
+    unlesbar = Uebersetzer(db, lambda: Leitstelle(text="kein json"), lambda: TEXTMODELL)
     with pytest.raises(UebersetzungFehlt, match="unlesbar"):
         await unlesbar.uebersetzen("Dachs")
 
@@ -72,3 +73,12 @@ async def test_typografie_wird_gerade(db):
     u = Uebersetzer(db, lambda: Leitstelle(text='{"text": "fox ' + chr(0x2013) + ' red"}'), lambda: "qwen")
     await u.starten()
     assert chr(0x2013) not in (await u.uebersetzen("Rotfuchs")).text
+
+
+def test_modell_nie_leer():
+    """Das Modell wählt die App, nie die Leitstelle (LS-19): ohne Angabe die Vorgabe, ein leerer Wert (auch ein früher
+    gespeicherter) gilt als Vorgabe, ein gewähltes bleibt."""
+    assert AppEinstellungen().suchmodell == TEXTMODELL == "qwen/qwen3-next-80b"
+    assert AppEinstellungen(suchmodell="").suchmodell == TEXTMODELL
+    assert AppEinstellungen(suchmodell="  ").suchmodell == TEXTMODELL
+    assert AppEinstellungen(suchmodell="qwen/qwen3.6-35b-a3b").suchmodell == "qwen/qwen3.6-35b-a3b"

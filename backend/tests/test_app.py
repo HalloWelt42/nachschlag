@@ -660,6 +660,16 @@ async def test_spracheingabe_nur_wenn_bereit(nachschlag):
     assert r.status_code == 503
 
 
+async def test_modell_ohne_leeren_eintrag(nachschlag):
+    """Das Modell wählt die App, nie die Leitstelle (LS-19): die Auswahl bietet keinen leeren Eintrag an, ein leerer
+    Wert gilt als Vorgabe."""
+    c, geruest, _ = nachschlag
+    angebot = (await c.get("/api/v1/einstellungen/angebot/suchmodell")).json()
+    assert "" not in [o["wert"] for o in angebot["optionen"]]
+    await geruest.einstellungen.aendern({"suchmodell": ""})
+    assert geruest.einstellungen.stand.suchmodell == "qwen/qwen3-next-80b"
+
+
 async def test_belege_als_daten_und_in_notizen(nachschlag):
     """Recherchemodus (WIKI-31): Einzelnachweise bleiben als Belege erhalten, im Text als unsichtbare Marke an ihrer
     Stelle; eine Notiz speichert Belege und den Artikel im Netz."""

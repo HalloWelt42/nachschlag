@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from appkern.leitstelle import NichtErreichbar
 
+from app.einstellungen import TEXTMODELL
 from app.uebersetzung import Stellenuebersetzer
 
 
@@ -28,19 +29,20 @@ class Leitstelle:
 
 async def test_stelle_ins_deutsche_mit_zeilen():
     ls = Leitstelle('{"text": "// Prüfen, ob ein Tiername länger als 5 Buchstaben ist.\\nif (x) {}"}')
-    u = Stellenuebersetzer(lambda: ls, lambda: "")
+    u = Stellenuebersetzer(lambda: ls, lambda: TEXTMODELL)
     assert u.stand().bereit
     e = await u.uebersetzen("// Check, if any animal name is longer than 5 letters.\nif (x) {}", "de")
     assert e.text == "// Prüfen, ob ein Tiername länger als 5 Buchstaben ist.\nif (x) {}" and e.ziel == "de" and not e.grund
     nachrichten, optionen = ls.aufrufe[0]
     assert "ins Deutsche" in nachrichten[0].inhalt and optionen["prioritaet"] == "hoch"
+    assert optionen["modell"] == TEXTMODELL                                   # das Modell wählt die App (LS-19)
 
 
 async def test_ins_englische_und_ohne_leitstelle_ein_grund():
     ls = Leitstelle('{"text": "fox"}')
-    assert (await Stellenuebersetzer(lambda: ls, lambda: "").uebersetzen("Fuchs", "en")).text == "fox"
+    assert (await Stellenuebersetzer(lambda: ls, lambda: TEXTMODELL).uebersetzen("Fuchs", "en")).text == "fox"
     assert "ins Englische" in ls.aufrufe[0][0][0].inhalt
-    ohne = Stellenuebersetzer(lambda: None, lambda: "")
+    ohne = Stellenuebersetzer(lambda: None, lambda: TEXTMODELL)
     assert not ohne.stand().bereit and "Leitstelle" in (await ohne.uebersetzen("Fuchs", "de")).grund
-    weg = Stellenuebersetzer(lambda: Leitstelle(fehler=NichtErreichbar("schläft")), lambda: "")
+    weg = Stellenuebersetzer(lambda: Leitstelle(fehler=NichtErreichbar("schläft")), lambda: TEXTMODELL)
     assert "nicht möglich" in (await weg.uebersetzen("Fuchs", "de")).grund

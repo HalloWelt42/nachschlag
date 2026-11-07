@@ -222,7 +222,7 @@ class Sammlungen(Begleiter):
         if ls is None:
             raise AuftragFehler("Leitstelle nicht eingerichtet (Einstellungen, Verbindungen)")
         try:
-            antwort = await ls.chat([Nachricht.system(system), Nachricht.nutzer(nutzer)], modell=self._modell() or None,
+            antwort = await ls.chat([Nachricht.system(system), Nachricht.nutzer(nutzer)], modell=self._modell(),
                                     titel="Sammlung bearbeiten", prioritaet="hintergrund", response_format=form, temperature=0.2)
             daten = json_lesen(antwort.text)
         except LeitstellenFehler as f:

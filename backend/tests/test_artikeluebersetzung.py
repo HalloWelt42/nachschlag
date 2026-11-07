@@ -17,6 +17,7 @@ from appkern.auftraege import Auftraege
 from appkern.datenbank import Datenbank
 from appkern.leitstelle import NichtErreichbar
 
+from app.einstellungen import TEXTMODELL
 from app.modell.artikel import Artikel, Steckbrief
 from app.modell.buch import Buch, Faehigkeiten
 from app.uebersetzung.artikel import Artikeluebersetzer
@@ -88,10 +89,12 @@ class Leitstelle:
     def __init__(self, tabelle: dict[str, str], kaputt: bool = False, fehler: Exception | None = None) -> None:
         self.tabelle, self.kaputt, self.fehler = tabelle, kaputt, fehler
         self.aufrufe: list[list[str]] = []
+        self.modelle: list[str | None] = []
 
     async def chat(self, nachrichten, **optionen) -> Antwort:
         stuecke = json.loads(nachrichten[1].inhalt)["stuecke"]
         self.aufrufe.append(stuecke)
+        self.modelle.append(optionen.get("modell"))
         if self.fehler:
             raise self.fehler
         aus = [self.tabelle.get(s, s) for s in stuecke]
@@ -133,7 +136,7 @@ async def db(tmp_path: Path):
 
 async def dienst(db, leitstelle) -> tuple[Artikeluebersetzer, Auftraege]:
     auftraege = Auftraege(db, [])
-    u = Artikeluebersetzer(db, auftraege, Bib(), Leser(), lambda: leitstelle, lambda: "")
+    u = Artikeluebersetzer(db, auftraege, Bib(), Leser(), lambda: leitstelle, lambda: TEXTMODELL)
     await u.starten()
     await auftraege.starten()
     return u, auftraege
@@ -161,6 +164,7 @@ async def test_auftrag_uebersetzt_legt_ab_und_kennzeichnet(db):
         assert [a.titel for a in ue.abschnitte] == ["Beschreibung"] and ue.abschnitte[0].anker == "d"
         assert "<dt>Seit</dt>" in ue.steckbrief.html
         assert (ue.aus, ue.modell, ue.im_original) == ("Englischen", "qwen/qwen3-next-80b", 0)
+        assert set(leitstelle.modelle) == {TEXTMODELL}                         # jede Anfrage nennt das Modell (LS-19)
         assert len(leitstelle.aufrufe) == 1                              # ein Teil, ein Aufruf
         await u.anstossen(BUCH.kennung, ARTIKEL.pfad, "Probe")           # liegt ab: kein neuer Auftrag
         assert len(leitstelle.aufrufe) == 1
@@ -225,7 +229,7 @@ async def test_kommentare_im_code_eigens_uebersetzt_code_bleibt(db):
             return artikel
 
     auftraege = Auftraege(db, [])
-    u = modul.Artikeluebersetzer(db, auftraege, Bib(), EigenerLeser(), lambda: leitstelle, lambda: "")
+    u = modul.Artikeluebersetzer(db, auftraege, Bib(), EigenerLeser(), lambda: leitstelle, lambda: TEXTMODELL)
     await u.starten()
     await auftraege.starten()
     try:

@@ -17,6 +17,7 @@ import pytest
 from appkern.auftraege import Auftraege
 from appkern.datenbank import Datenbank
 
+from app.einstellungen import TEXTMODELL
 from app.modell.artikel import Artikel
 from app.modell.buch import Buch, Faehigkeiten
 from app.modell.themen import Thema, Themeneintrag
@@ -130,7 +131,7 @@ async def db(tmp_path: Path):
 async def dienst(db, uhr=lambda: datetime(2026, 11, 2, 12, 0, tzinfo=ZONE)):
     auftraege = Auftraege(db, [], gleichzeitig=3)
     kw, ls, sprecher = Kellerwolke(), Leitstelle(), Sprecher()
-    s = Sammlungen(db, auftraege, Themen(), Bib(), Leser(), Artikel_(), lambda stimme: sprecher, lambda: ls, lambda: "",
+    s = Sammlungen(db, auftraege, Themen(), Bib(), Leser(), Artikel_(), lambda stimme: sprecher, lambda: ls, lambda: TEXTMODELL,
                    lambda: kw, lambda: (22, 7), uhr=uhr)
     await s.starten()
     await auftraege.starten()
@@ -161,7 +162,7 @@ async def test_zusammenfassen_lernfragen_vertonen_in_die_kellerwolke(db):
         assert kw.dateien[f"{wurzel}/Hören/01 Rotfuchs.opus"][:4] == b"OggS"
         assert sprecher.texte[0] == "Rotfuchs.\nMerkmale\nDer Rotfuchs ist ein Fuchs."      # Code bleibt draußen
         assert {e.arbeit for e in stand.ergebnisse} == {"zusammenfassen", "lernfragen", "vertonen"}
-        assert all(o["prioritaet"] == "hintergrund" for _, o in ls.aufrufe)
+        assert all(o["prioritaet"] == "hintergrund" and o["modell"] == TEXTMODELL for _, o in ls.aufrufe)
         await s.anstossen("k", "Probe", "t1", ["zusammenfassen"], None, "jetzt", "", "opus")    # noch einmal: neue Fassung
         await bis_fertig(s, 3)
     finally:

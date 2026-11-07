@@ -4,7 +4,7 @@ Netz kommen über die Umgebung (`NACHSCHLAG_<FELD>`) oder die Seite Einstellunge
 
 from typing import Literal
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator
 
 from appkern.app import Grundeinstellungen
 from appkern.app.einstellungen import VERBINDUNGEN
@@ -13,6 +13,10 @@ BIBLIOTHEK = {"gruppe": "Bibliothek"}
 SUCHE = {"gruppe": "Suche"}
 VORLESEN = {"gruppe": "Vorlesen"}
 UEBER_NACHT = {"gruppe": "Über Nacht"}
+
+#: Vorgabe für Übersetzung und Korrektur. Das Modell wählt immer die App, nie die Leitstelle (LS-19): jede Textanfrage
+#: nennt es, eine leere Einstellung gilt als diese Vorgabe.
+TEXTMODELL = "qwen/qwen3-next-80b"
 
 #: Welche Bücher einen eigenen Index bekommen (WIKI-17): Stufen in der Reihenfolge des Baus, docs/SUCHE.md
 EIGENE_INDIZES = {"keine": "keine", "handbuecher": "Handbücher", "handbuecher_fragen": "Handbücher, Frage und Antwort",
@@ -53,10 +57,11 @@ class AppEinstellungen(Grundeinstellungen):
                             description="Bis zu dieser Stunde; was dann nicht fertig ist, läuft in der nächsten Nacht weiter.")
 
     # --- Suche ------------------------------------------------------------------------------------------------------
-    suchmodell: str = Field("qwen/qwen3-next-80b", title="Modell für Übersetzung und Korrektur", json_schema_extra=SUCHE,
+    suchmodell: str = Field(TEXTMODELL, title="Modell für Übersetzung und Korrektur", json_schema_extra=SUCHE,
                             description="Übersetzt eine Frage für englische Quellen ins Englische (Fachbegriffe und Code "
                                         "bleiben), Artikel aus anderen Sprachen ins Deutsche und korrigiert Tippfehler, wenn "
-                                        "der Wortschatz der Quellen nichts hergibt. Leer: die Kette der App in der Leitstelle.")
+                                        "der Wortschatz der Quellen nichts hergibt. Jede Anfrage an die Leitstelle nennt dieses "
+                                        "Modell; leer gilt die Vorgabe Qwen 80B.")
     hoerdienst: str = Field("klangwerk-hoeren", title="Hördienst für die Spracheingabe", json_schema_extra=SUCHE,
                             description="Dienst der Leitstelle, der gesprochene Fragen und Notizen verschriftet. Das "
                                         "Mikrofon erscheint nur, wenn die Leitstelle ihn für Nachschlag freigibt.")
@@ -94,3 +99,9 @@ class AppEinstellungen(Grundeinstellungen):
     bedeutung_warten_s: float = Field(1.5, ge=0.2, le=10, title="Warten auf die Bedeutungssuche",
                                       json_schema_extra={**SUCHE, "schritt": 0.1, "einheit": "Sekunden"},
                                       description="Danach kommen die Treffer aus dem Index allein, mit Hinweis.")
+
+    @field_validator("suchmodell", mode="before")
+    @classmethod
+    def _modell_nie_leer(cls, wert: object) -> object:
+        """Leer (auch ein früher gespeicherter leerer Wert) heißt die Vorgabe: ohne Modell lehnt die Leitstelle ab."""
+        return TEXTMODELL if isinstance(wert, str) and not wert.strip() else wert

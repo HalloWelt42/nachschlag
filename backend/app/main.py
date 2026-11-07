@@ -120,7 +120,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None) ->
         return Angebot(optionen=optionen, eigener_wert=False, stand=", ".join(stand))
 
     geruest.einstellungen.anbieten("vorlesestimme", stimmen)
-    geruest.einstellungen.anbieten("suchmodell", geruest.leitstelle_angebot("text", leer="Kette der App"))
+    geruest.einstellungen.anbieten("suchmodell", geruest.leitstelle_angebot("text"))
     geruest.einstellungen.anbieten("fundus_adresse", geruest.verbund.angebot("Fundus", "fundus", lambda: e().fundus_adresse))
     geruest.verbund.anmelden("Fundus", lambda: e().fundus_adresse)
     geruest.verbund.anmelden("Codeschmiede", lambda: e().codeschmiede_adresse)   # Ausprobieren (WIKI-48)

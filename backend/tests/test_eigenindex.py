@@ -293,16 +293,20 @@ def test_korrektur_ueber_den_wortschatz(buecher, tmp_path):
 
 
 async def test_korrektor_fragt_das_modell_nur_wenn_erlaubt(tmp_path):
+    from app.einstellungen import TEXTMODELL
     from app.korrektur import Korrektor
 
     class Leitstelle:
         aufrufe = 0
+        modelle: list = []
 
         async def chat(self, nachrichten, **optionen):
             Leitstelle.aufrufe += 1
+            Leitstelle.modelle.append(optionen.get("modell"))
             return type("Antwort", (), {"text": '{"text": "Rotfuchs"}'})()
 
-    k = Korrektor(lambda buecher: [], lambda: Leitstelle(), lambda: "")
+    k = Korrektor(lambda buecher: [], lambda: Leitstelle(), lambda: TEXTMODELL)
     assert (await k.korrigieren("Rotfuhcs", [])).vorschlag == "" and Leitstelle.aufrufe == 0
     v = await k.korrigieren("Rotfuhcs", [], mit_modell=True)
     assert (v.vorschlag, v.quelle) == ("Rotfuchs", "modell")
+    assert Leitstelle.modelle == [TEXTMODELL]                                 # das Modell wählt die App (LS-19)
