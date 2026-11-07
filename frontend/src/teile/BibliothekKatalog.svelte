@@ -2,7 +2,7 @@
   // Reiter Katalog der Bibliothek (WIKI-57, Entwurf katalog.html): das Verzeichnis der Bücher in den gewählten Sprachen,
   // je Buch seine Ausgaben (mit Bildern, ohne Bilder, klein) mit Stand, Größe, Neuheit und dem Stand zur eigenen
   // Bibliothek; abonnieren je Ausgabe. Neues seit der letzten Durchsicht steht oben; wer den Reiter öffnet, hat es gesehen.
-  import { Auswahl, gehe, Seitenkopf, seitenFehler } from "appkern-oberflaeche";
+  import { Auswahl, gehe, Nachladen, Seitenkopf, seitenFehler } from "appkern-oberflaeche";
   import { onMount, untrack } from "svelte";
   import { datum, zahl } from "../lib/bibliothek.svelte";
   import { AUSGABE, groesse, lader, laderLaden, monat, ZUSTAND } from "../lib/buecherlader.svelte";
@@ -24,6 +24,7 @@
   let gesamt = $state(0);
   let laedt = $state(false);
   let fehler = $state("");
+  let nachladefehler = $state("");
   let arbeitet = $state("");
 
   const stand = $derived(lader.stand);
@@ -48,9 +49,10 @@
       buecher = weiter ? [...buecher, ...s.eintraege] : s.eintraege;
       gesamt = s.gesamt;
       bereiche = s.bereiche;
-      fehler = "";
+      fehler = nachladefehler = "";
     } catch (f) {
-      if (mein === zaehler) fehler = seitenFehler(f);
+      if (mein === zaehler && weiter) nachladefehler = seitenFehler(f);
+      else if (mein === zaehler) fehler = seitenFehler(f);
     } finally {
       if (mein === zaehler) laedt = false;
     }
@@ -152,10 +154,10 @@
       </div>
     {/each}
   </div>
-  {#if buecher.length < gesamt}
-    <button class="knopf katalog-mehr" disabled={laedt} onclick={() => laden(true)}>
-      <i class="fa-solid {laedt ? 'fa-spinner fa-spin' : 'fa-angles-down'}"></i>Mehr laden ({zahl(gesamt - buecher.length)} weitere)</button>
-  {:else if laedt && !buecher.length}
+  {#if buecher.length}
+    <!-- lädt beim Rollen von selbst nach (WIKI-60); der Knopf darin bleibt für die Tastatur -->
+    <Nachladen geladen={buecher.length} {gesamt} {laedt} fehler={nachladefehler} onmehr={() => laden(true)} einheit="Bücher" />
+  {:else if laedt}
     <div class="leer"><i class="fa-solid fa-spinner fa-spin"></i> lädt ...</div>
   {:else if durchgang && !buecher.length}
     <div class="leer">Nichts passt zu diesen Filtern.</div>

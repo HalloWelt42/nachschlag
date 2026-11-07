@@ -825,7 +825,6 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .register-titel { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2) var(--a4); }
 .register-titel h1 { margin: 0; font-size: calc(var(--seitentitel) + 2px); font-weight: 600; overflow-wrap: anywhere; }
 .register-titel .register-werte { flex-basis: 100%; }
-.register-mehr { align-self: center; }
 .schlagwoerter a.register { text-decoration: none; }
 .schlagwoerter a.register:hover { background: color-mix(in srgb, var(--info) 22%, transparent); }
 .beitrag-fuss a.register { color: var(--verweis); }
@@ -1182,7 +1181,6 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .katalog-filter .hinweis { font-size: var(--klein); color: var(--text-3); }
 .katalog-suche { flex: 1 1 260px; max-width: 420px; }
 .katalog-leer { margin: var(--a5) auto; }
-.katalog-mehr { align-self: center; }
 .katalog-gitter { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: var(--a3); }
 .katkarte { display: flex; flex-direction: column; gap: var(--a2); padding: var(--a3) var(--a4); background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten); min-width: 0; }
 .katkarte.abo { box-shadow: var(--schatten), inset 3px 0 0 var(--gut); border-radius: 0; }

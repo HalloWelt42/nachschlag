@@ -2,7 +2,7 @@
   // Register (WIKI-39, docs/SUCHE.md Punkt 10): Schlagwörter und Autoren der Frage-Antwort-Bücher, über alle Bücher oder
   // eines. Wege: /register (Schlagwörter), /register/autoren, /register/schlagwoerter/<wort>, /register/autoren/<buch>/<nr>;
   // das Buch steht in ?buch=. Schlagwörter und Autorennamen in den Fragen führen hierher. Listen seitenweise.
-  import { Auswahl, gehe, geraet, navigation, seitenFehler } from "appkern-oberflaeche";
+  import { Auswahl, gehe, geraet, Nachladen, navigation, seitenFehler } from "appkern-oberflaeche";
   import { onMount, untrack } from "svelte";
   import { bezeichnung, bibliothek, bibliothekLaden, datum, zahl } from "../lib/bibliothek.svelte";
   import { autorenHolen, autorHolen, fragenZumSchlagwort, schlagwoerterHolen } from "../lib/schnittstelle";
@@ -89,8 +89,8 @@
   }
 
   const zeitraum = (a: AutorEintrag) => !a.von ? "" : a.von.slice(0, 4) === a.bis.slice(0, 4) ? a.von.slice(0, 4) : `${a.von.slice(0, 4)} bis ${a.bis.slice(0, 4)}`;
-  const mehr = $derived(ansicht === "schlagwoerter" ? woerter.length < gesamt : ansicht === "autoren" ? autoren.length < gesamt
-                        : ansicht === "schlagwort" ? fragen.length < gesamt : (autor?.beitraege.length ?? 0) < gesamt);
+  const geladen = $derived(ansicht === "schlagwoerter" ? woerter.length : ansicht === "autoren" ? autoren.length
+                           : ansicht === "schlagwort" ? fragen.length : (autor?.beitraege.length ?? 0));
 </script>
 
 <div class="inhalt-stufe" data-schrift="klein">
@@ -189,9 +189,10 @@
         </div>
       {/if}
 
-      {#if mehr}
-        <button class="knopf register-mehr" disabled={laedt} onclick={() => laden(true)}>
-          <i class="fa-solid {laedt ? 'fa-spinner fa-spin' : 'fa-angles-down'}"></i>Mehr laden</button>
+      {#if geladen}
+        <!-- lädt beim Rollen von selbst nach (WIKI-60); der Knopf darin bleibt für die Tastatur -->
+        <Nachladen {geladen} {gesamt} {laedt} onmehr={() => laden(true)}
+                   einheit={ansicht === "schlagwoerter" ? "Schlagwörter" : ansicht === "autoren" ? "Autoren" : ansicht === "schlagwort" ? "Fragen" : "Beiträge"} />
       {:else if laedt}
         <div class="leer"><i class="fa-solid fa-spinner fa-spin"></i> lädt ...</div>
       {/if}
