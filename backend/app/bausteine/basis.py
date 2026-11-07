@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from typing import Protocol
 
 from ..bibliothek import Eintrag
+from ..modell.anleitung import Anleitungsangaben, Geraeteangaben
 from ..modell.artikel import (Abschnitt, Beleg, Darstellung, FrageAngaben, Fragekarte, Gruppe, Kachel, Nachbar, Steckbrief,
                               Verweiszahlen)
 from ..modell.buch import Art, Buch
@@ -50,6 +51,8 @@ class Aufbereitet:
     darstellung: Darstellung | None = None       # nur wenn die Seite anders gezeigt wird als sonst beim Baustein
     frage: FrageAngaben | None = None             # Metadaten einer Frage (Frage und Antwort): Index, Register, Treffer
     belege: list[Beleg] = field(default_factory=list)   # Einzelnachweise (Enzyklopädie), Marken im Text: span.beleg
+    anleitung: Anleitungsangaben | None = None    # Anleitung oder Zerlegung (iFixit, WIKI-64): Lesen, Werkstatt, Index
+    geraet: Geraeteangaben | None = None          # Geräteseite oder Kategorie (iFixit, WIKI-64)
 
 
 class Baustein(Protocol):

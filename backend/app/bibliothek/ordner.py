@@ -26,8 +26,10 @@ ERZEUGER: tuple[tuple[str, Art], ...] = (("mwoffliner", "enzyklopaedie"), ("devd
                                         ("sotoki", "frage_antwort"), ("warc2zim", "webseite"), ("zimit", "webseite"))
 #: Spiegel von Seiten (warc2zim, zimit), deren Inhalt eine bekannte Art ist: die Quelle (Metadatum Source) entscheidet
 QUELLEN: tuple[tuple[str, Art], ...] = (("php.net/manual", "dokumentation"),)
+#: Bücher ohne Angabe Scraper, deren Art die Kategorie in den Schlagworten (Tags `_category:...`) verrät (WIKI-64)
+KATEGORIEN: tuple[tuple[str, Art], ...] = (("ifixit", "anleitung"),)
 #: Arten mit eigenem Lesedesign (wächst mit den Bausteinen)
-MIT_LESEDESIGN: set[Art] = {"enzyklopaedie", "dokumentation", "frage_antwort"}
+MIT_LESEDESIGN: set[Art] = {"enzyklopaedie", "dokumentation", "frage_antwort", "anleitung"}
 #: Stand am Ende eines Dateinamens (`_2026-10`); davor steht das Buch in seiner Ausgabe
 STAND = re.compile(r"_\d{4}-\d{2}$")
 UMLEITUNG_HTML = re.compile(rb"""<meta[^>]+http-equiv=["']refresh["'][^>]+URL=['"]?\.?/?([^'">]+)""", re.I)
@@ -64,8 +66,13 @@ def _angabe(a: Archive, schluessel: str) -> str:
         return ""
 
 
-def art_aus(erzeuger: str, quelle: str = "") -> Art:
-    """Art eines Buchs nach seinem Erzeuger; bei Spiegeln von Seiten nach der Quelle, wenn sie bekannt ist."""
+def art_aus(erzeuger: str, quelle: str = "", schlagworte: str = "") -> Art:
+    """Art eines Buchs nach seinem Erzeuger; bei Spiegeln von Seiten nach der Quelle, wenn sie bekannt ist; ohne beides
+    nach der Kategorie in den Schlagworten (iFixit nennt keinen Erzeuger)."""
+    kategorie = next((t.partition(":")[2].lower() for t in schlagworte.split(";") if t.strip().startswith("_category:")), "")
+    nach_kategorie = next((art for name, art in KATEGORIEN if kategorie == name), None)
+    if nach_kategorie and not erzeuger:
+        return nach_kategorie
     q = quelle.lower()
     gespiegelt = next((art for name, art in QUELLEN if name in q), None)
     if gespiegelt:
@@ -86,7 +93,7 @@ def seiten_aus(a: Archive) -> int:
 
 def buch_aus(kennung: str, a: Archive, groesse: int) -> Buch:
     erzeuger = _angabe(a, "Scraper")
-    art = art_aus(erzeuger, _angabe(a, "Source"))
+    art = art_aus(erzeuger, _angabe(a, "Source"), _angabe(a, "Tags"))
     start = ""
     if a.has_main_entry:
         try:

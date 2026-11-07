@@ -269,3 +269,80 @@ def bauen_qa(ordner: Path, name: str = "probeqa_en_all_2026-10") -> Path:
         c.add_item(_Seite("questions", "Most Popular", FRAGENLISTE))
         c.add_item(_Seite("questions_page=2", "Most Popular", "<html><body><h1>Most Popular</h1></body></html>"))
     return datei
+
+
+# ----- Probebuch Anleitung (Aufbau iFixit, WIKI-64): kein Scraper, Kategorie in den Schlagworten -------------------------
+
+def _anleitung(titel: str, schritte: list[list[tuple[str, str]]], einleitung: str, schwierigkeit: int = 3,
+               zeit: str = "15 - 30 Minuten", werkzeuge: tuple[str, ...] = ("Spudger", "Pinzette"), zerlegung: bool = False) -> str:
+    """Eine Seite wie die Anleitungen der Quelle; jede Zeile ist (Klassen, Text)."""
+    zeilen = lambda z: "".join(f'<li class="{k}"><div class="bullet"></div><p>{t}</p></li>' for k, t in z)  # noqa: E731
+    teile = "".join(
+        f'<li class="step step-wrapper"><div class="row step-container"><div class="stepMedia">'
+        f'<img class="js-step-main-image" src="../../images/s{nr}a.png"></div><div class="step-content">'
+        f'<div class="row step-thumbnails"><img src="../../images/s{nr}a.png"><img src="../../images/s{nr}b.png"></div>'
+        f'<ul class="step-lines">{zeilen(z)}</ul></div></div></li>' for nr, z in enumerate(schritte, 1))
+    werkzeugliste = "".join(f'<li><div class="row attachment-container"><img src="../../images/w.png"><p itemprop="name" class="title">{w}</p></div></li>'
+                            for w in werkzeuge)
+    return (f'<html lang="fr"><body class="user-guide">{"<div class=teardown-image-overlay></div>" if zerlegung else ""}'
+            f'<h1 class="guide-intro-title guide-title">{titel}</h1><div class="guide-author">Geschrieben von: <a href="../../User/1/x">Tester</a></div>'
+            f'<div class="guide-main-image-container"><img src="../../images/haupt.png"></div>'
+            f'<div class="details-item difficulty row difficulty-{schwierigkeit}"><p class="item-title">Schwierigkeitsgrad</p><p class="item-value">Mittel</p></div>'
+            f'<div id="guide-time-required"><div class="details-item row"><p class="item-title">Zeitaufwand</p><p class="item-value">{zeit}</p></div></div>'
+            f'<div class="introduction-container"><h2>Einleitung</h2><div itemprop="description"><p>{einleitung}</p></div></div>'
+            f'<div class="tools-and-parts"><div class="item-list-tools"><ul>{werkzeugliste}</ul></div>'
+            f'<div class="item-list-parts"><ul><li><p itemprop="name">Akku</p></li></ul></div></div>'
+            f'<ol class="steps-container"><section>{teile}</section></ol>'
+            f'<div class="conclusionText"><p>Baue das Gerät in umgekehrter Reihenfolge wieder zusammen.</p></div></body></html>')
+
+
+AKKU = _anleitung("Probephone Akku tauschen", [
+    [("level-0 bullet-line-icon-caution", "Entlade den Akku vor dem Beginn auf unter 25 Prozent, damit er nicht brennt."),
+     ("level-0", "Löse die zwei Schrauben an der Unterseite und hebe die Rückseite mit dem Spudger an.")],
+    [("level-0", "Achte auf die drei Stellen, an denen du nicht hebeln darfst:"),
+     ("level-1", '<span class="bullet_red"></span>Kamera'), ("level-1", '<span class="bullet_yellow"></span>Antenne'),
+     ("level-0 bullet-line-icon-note", "Wenn der Kleber nicht nachgibt, erwärme ihn noch einmal mit dem iOpener.")]],
+    "Diese Anleitung zeigt, wie du den Akku im Probephone tauschst. Du brauchst dafür nur wenig Werkzeug und etwas Geduld.",
+    schwierigkeit=2, zeit="30 Minuten - 1 Stunde")
+DISPLAY_EN = _anleitung("Probephone Display Replacement", [
+    [("level-0", "Remove the two screws at the bottom of the phone and lift the screen with a suction cup.")]],
+    "This guide shows you how to replace the display of the Probephone. It is easy if you have the right tools for it.",
+    schwierigkeit=4, zeit="1 - 2 Stunden", werkzeuge=("Spudger", "Suction Cup", "Heat Gun"))
+ZERLEGUNG = _anleitung("Probephone Teardown", [[("level-0", "Wir öffnen das Gerät und sehen uns das Innere an, Schicht für Schicht.")]],
+                       "Wir zerlegen das Probephone und zeigen, was darin steckt und wie es gebaut ist.", zerlegung=True)
+GERAET = ('<html lang="fr"><body><div id="banner"><div class="banner-content"><img class="banner-small-photo" src="../images/g.png">'
+          '<h1 class="banner-title">Probephone</h1><p class="banner-blurb">Ein Telefon für die Tests, gebaut 2026.</p></div></div>'
+          '<div class="highlight-guides"><div class="entry-container"><a href="../Anleitung/Probephone+Akku+tauschen/1" class="entry">'
+          '<img src="../images/s1a.png"><div class="entry-text"><h4>Probephone Akku tauschen</h4><p>Den Akku tauschen</p></div></a></div></div>'
+          '<div class="js-guide-section"><a href="../Anleitung/Probephone+Akku+tauschen/1"><h4>Akku</h4></a>'
+          '<a href="../Anleitung/Probephone+Display+Replacement/2"><h4>Display</h4></a>'
+          '<a href="../Teardown/Probephone+Teardown/3"><h4>Zerlegung</h4></a></div>'
+          '<div class="deviceToolsList"><p class="title">Spudger</p><p class="title">Pinzette</p></div>'
+          '<div class="wikiRenderedText"><p>Das Probephone ist ein Telefon, das es nur in den Tests gibt.</p></div></body></html>')
+KATEGORIE = ('<html lang="fr"><body><div id="banner"><div class="banner-content"><h1 class="banner-title">Smartphones</h1>'
+             '<p class="banner-blurb">Alle Telefone.</p></div></div><div class="categoryListCell"><a href="../Device/Probephone" class="categoryAnchor">'
+             '<img src="../images/g.png" class="category-image"><h5 class="title"> Probephone</h5></a></div></body></html>')
+START = ('<html lang="fr"><body><div class="featured-categories"><a class="featured-category-item" href="../Device/Phone">'
+         '<p class="featured-category-title">Smartphones</p><img src="../images/g.png"></a></div>'
+         '<div class="sub-categories"><a class="sub-category" href="../Device/Phone"><span class="sub-category-title-text">Smartphones</span></a></div></body></html>')
+
+
+def bauen_anleitungen(ordner: Path, name: str = "probefix_de_all_2026-03") -> Path:
+    ordner.mkdir(parents=True, exist_ok=True)
+    datei = ordner / f"{name}.zim"
+    with Creator(str(datei)).config_indexing(True, "deu") as c:
+        c.set_mainpath("home/home")
+        for schluessel, wert in (("Name", name.rsplit("_", 1)[0]), ("Title", "Probefix"), ("Language", "deu"),
+                                 ("Description", "Anleitungen für die Tests"), ("Date", "2026-03-19"), ("Creator", "iFixit"),
+                                 ("Publisher", "openZIM"), ("Tags", "iFixit;_pictures:yes;_category:iFixit;_videos:yes")):
+            c.add_metadata(schluessel, wert)
+        c.add_item(_Seite("home/home", "Probefix", START))
+        c.add_item(_Seite("Anleitung/Probephone+Akku+tauschen/1", "Probephone Akku tauschen", AKKU))
+        c.add_item(_Seite("Anleitung/Probephone+Display+Replacement/2", "Probephone Display Replacement", DISPLAY_EN))
+        c.add_item(_Seite("Teardown/Probephone+Teardown/3", "Probephone Teardown", ZERLEGUNG))
+        c.add_item(_Seite("Device/Probephone", "Probephone", GERAET))
+        c.add_item(_Seite("Device/Phone", "Smartphones", KATEGORIE))
+        c.add_item(_Seite("User/1/x", "Tester", "<html><body><div class='aboutBox'>Tester</div></body></html>"))
+        for bild in ("haupt", "w", "g", "s1a", "s1b", "s2a", "s2b"):
+            c.add_item(_Seite(f"images/{bild}.png", "", PNG, "image/png", vorne=False))
+    return datei

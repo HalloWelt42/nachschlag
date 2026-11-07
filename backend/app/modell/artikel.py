@@ -6,6 +6,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from .anleitung import Anleitungsangaben, Geraeteangaben
+
 
 class Abschnitt(BaseModel):
     anker: str = Field(description="Kennung im HTML (id), Ziel für Sprünge")
@@ -29,7 +31,8 @@ class Verweiszahlen(BaseModel):
 
 #: Wie eine Seite gezeigt wird: Lesedesign (Text mit Inhalt und Steckbrief), Übersicht (Kacheln mit Bild, etwa die
 #: Startseite eines Buchs) oder die Seite unverändert
-Darstellung = Literal["lesedesign", "uebersicht", "original"]
+#: anleitung, geraet und anleitungen (Startseite: Anleitungen finden) gehören zur Inhaltsart Anleitung (WIKI-64)
+Darstellung = Literal["lesedesign", "uebersicht", "original", "anleitung", "geraet", "anleitungen"]
 
 
 class Nachbar(BaseModel):
@@ -120,3 +123,5 @@ class Artikel(BaseModel):
     fragen: list[Fragekarte] = Field(default_factory=list, description="Fragen einer Fragenliste (nur Darstellung uebersicht)")
     zurueck: str = Field("", description="Pfad der vorigen Seite einer Liste, leer auf der ersten")
     weiter: str = Field("", description="Pfad der nächsten Seite einer Liste, leer auf der letzten")
+    anleitung: Anleitungsangaben | None = Field(None, description="Anleitung oder Zerlegung (Darstellung anleitung)")
+    geraet: Geraeteangaben | None = Field(None, description="Gerät oder Kategorie (Darstellung geraet, anleitungen)")

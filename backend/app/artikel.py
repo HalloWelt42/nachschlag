@@ -55,7 +55,8 @@ class Artikelleser:
                        original=self._wege.original(buch, eintrag.pfad), kacheln=fertig.kacheln,
                        gruppen=fertig.gruppen, rubrik=fertig.rubrik, rubrik_pfad=fertig.rubrik_pfad, nachbarn=fertig.nachbarn, titelart=fertig.titelart,
                        fragen=fertig.fragen, zurueck=fertig.zurueck, weiter=fertig.weiter, belege=fertig.belege,
-                       quelle_url=online_adresse(b, eintrag.pfad), **_verfasser(fertig))
+                       quelle_url=online_adresse(b, eintrag.pfad), anleitung=fertig.anleitung, geraet=fertig.geraet,
+                       **_verfasser(fertig))
 
     async def zufall(self, buch: str) -> str:
         """Pfad eines zufälligen Artikels, der sich lesen lässt. Weiterleitungen sind aufgelöst; eine Sprungseite, deren

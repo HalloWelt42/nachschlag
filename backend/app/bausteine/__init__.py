@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ..bibliothek import Eintrag
 from ..modell.buch import Buch
+from .anleitung import Anleitung, Anleitungsstart, Geraet
 from .basis import Aufbereitet, Baustein, Wege
 from .dokumentation import Dokumentation
 from .enzyklopaedie import Enzyklopaedie
@@ -11,7 +12,8 @@ from .frage_antwort import FrageAntwort
 from .original import Originalansicht
 from .uebersicht import Uebersicht
 
-BAUSTEINE: tuple[Baustein, ...] = (Uebersicht(), Enzyklopaedie(), Dokumentation(), FrageAntwort())
+BAUSTEINE: tuple[Baustein, ...] = (Uebersicht(), Enzyklopaedie(), Dokumentation(), FrageAntwort(), Anleitung(), Geraet(),
+                                   Anleitungsstart())
 RUECKFALL: Baustein = Originalansicht()
 
 

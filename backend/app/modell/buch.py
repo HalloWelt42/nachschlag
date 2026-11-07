@@ -7,7 +7,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 #: Grundstruktur eines Buchs; danach wählt Nachschlag den Baustein (siehe bausteine/)
-Art = Literal["enzyklopaedie", "dokumentation", "frage_antwort", "webseite", "sonstiges"]
+Art = Literal["enzyklopaedie", "dokumentation", "frage_antwort", "anleitung", "webseite", "sonstiges"]
 
 
 class Faehigkeiten(BaseModel):

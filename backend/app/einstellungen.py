@@ -25,11 +25,11 @@ LADEN_WANN = {"immer": "immer", "nachts": "nur nachts (Fenster unter Über Nacht
 TEXTMODELL = "qwen/qwen3-next-80b"
 
 #: Welche Bücher einen eigenen Index bekommen (WIKI-17): Stufen in der Reihenfolge des Baus, docs/SUCHE.md
-EIGENE_INDIZES = {"keine": "keine", "handbuecher": "Handbücher", "handbuecher_fragen": "Handbücher, Frage und Antwort",
-                  "alle": "alle Quellen"}
+EIGENE_INDIZES = {"keine": "keine", "handbuecher": "Handbücher",
+                  "handbuecher_fragen": "Handbücher, Frage und Antwort, Anleitungen", "alle": "alle Quellen"}
 ARTEN_JE_STUFE: dict[str, list[str]] = {
-    "keine": [], "handbuecher": ["dokumentation"], "handbuecher_fragen": ["dokumentation", "frage_antwort"],
-    "alle": ["dokumentation", "frage_antwort", "enzyklopaedie", "webseite", "sonstiges"]}
+    "keine": [], "handbuecher": ["dokumentation"], "handbuecher_fragen": ["dokumentation", "frage_antwort", "anleitung"],
+    "alle": ["dokumentation", "frage_antwort", "anleitung", "enzyklopaedie", "webseite", "sonstiges"]}
 
 
 class AppEinstellungen(Grundeinstellungen):
