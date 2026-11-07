@@ -1219,10 +1219,10 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .unter-zeile.warn { color: var(--warn); }
 .platzbalken { width: 100%; display: flex; flex-direction: column; gap: 6px; }
 .platzbalken .spur { height: 10px; border-radius: 5px; background: var(--mulde); overflow: hidden; display: flex; }
-.platzbalken .zim { background: var(--stahl); color: var(--stahl); }
-.platzbalken .laden { background: var(--info); color: var(--info); }
-.platzbalken .sonst { background: var(--text-3); color: var(--text-3); }
-.platzbalken .reserve { background: var(--warn-weich); color: var(--warn); margin-left: auto; }
+.platzbalken .pb-zim { background: var(--stahl); color: var(--stahl); }
+.platzbalken .pb-laden { background: var(--info); color: var(--info); }
+.platzbalken .pb-sonst { background: var(--text-3); color: var(--text-3); }
+.platzbalken .pb-reserve { background: var(--warn-weich); color: var(--warn); margin-left: auto; }
 .platzbalken .legende { display: flex; flex-wrap: wrap; gap: var(--a2) var(--a4); font-size: var(--marke); color: var(--text-3); }
 .platzbalken .legende span { display: inline-flex; align-items: center; gap: 5px; }
 .platzbalken .legende i { font-size: 9px; background: none; }
@@ -1241,7 +1241,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .platz-f.neu { background: color-mix(in srgb, var(--info) 10%, transparent); box-shadow: inset 3px 0 0 var(--info); border-radius: 0; }
 .platz-f.neu .z { color: var(--info); }
 .platz-f.vorige { background: var(--flaeche); box-shadow: inset 3px 0 0 var(--text-3); border-radius: 0; }
-.platz-f.leer { color: var(--text-3); }
+.platz-f.ohne { color: var(--text-3); }
 @media (max-width: 760px) {
   .fassungen-tabelle, .fassungen-tabelle tbody, .fassungen-tabelle tr, .fassungen-tabelle td { display: block; }
   .fassungen-tabelle thead { display: none; }
@@ -1249,3 +1249,15 @@ button.kachel:disabled { opacity: .6; cursor: default; }
   .fassungen-tabelle tr { margin-bottom: var(--a3); }
   .bib-reiter { padding: 0 var(--a3) var(--a2); }
 }
+
+/* Fortschritt beim Laden eines Buchs (Baustein Ladebalken) */
+.ladebalken { display: flex; flex-direction: column; gap: 4px; width: 100%; min-width: 0; }
+.ladebalken-spur { height: 6px; border-radius: 3px; background: var(--mulde); overflow: hidden; }
+.ladebalken-spur span { display: block; height: 100%; background: var(--info); transition: width .4s; }
+.ladebalken.wartet .ladebalken-spur span { background: var(--text-3); }
+.ladebalken-text { font-size: var(--marke); color: var(--text-2); overflow-wrap: anywhere; }
+.ladebalken-text b { font-family: var(--schrift-zahl); color: var(--info); }
+.ausgabe-zeile .ausgabe-laden { grid-column: 1 / -1; }
+.buch-gross .buch-laden { grid-column: 2 / -1; }
+@media (max-width: 900px) { .buch-gross .buch-laden { grid-column: 1 / -1; } }
+.platz-f .ladebalken { margin-top: 4px; }

@@ -1,4 +1,4 @@
-appkern[web] @ https://github.com/HalloWelt42/appkern/archive/28c16c338116aee5f87b936b5f6c7a9bc149786e.tar.gz
+appkern[web] @ https://github.com/HalloWelt42/appkern/archive/b6f948e6a3886f190de2046d52d26bc0b1eae5b2.tar.gz
 uvicorn[standard]>=0.30
 python-multipart>=0.0.9
 pytest>=8

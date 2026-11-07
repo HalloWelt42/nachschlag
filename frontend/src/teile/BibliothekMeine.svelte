@@ -8,6 +8,7 @@
   import { abbestellen, abonnieren, bestandAbonnieren } from "../lib/schnittstelle";
   import type { Art, Buch } from "../lib/typen";
   import { lesen } from "../lib/ziele";
+  import Ladebalken from "./Ladebalken.svelte";
   import Sprachmarke from "./Sprachmarke.svelte";
 
   const SYMBOL: Record<Art, string> = { enzyklopaedie: "fa-book", dokumentation: "fa-code", frage_antwort: "fa-comments",
@@ -94,6 +95,7 @@
         <div class="kennzahl"><span class="k">Abo</span>
           <span class="w text">{#if abo}{ZUSTAND[abo.zustand].text}{#if abo.zustand === "neuer_da"} ({monat(abo.neuester_stand)}){/if}{:else}kein Abo{/if}</span></div>
       </div>
+      {#if abo?.zustand === "laedt"}<div class="buch-laden"><Ladebalken stamm={abo.stamm} /></div>{/if}
       <div class="faehig">
         {#if b.faehigkeiten.lesedesign}<span class="faehigkeit an"><i class="fa-solid fa-book-open-reader"></i>Eigene Ansicht</span>
         {:else}<span class="faehigkeit fehlt" title="Für diese Art von Buch gibt es noch keinen Baustein; es öffnet in der Originalansicht">

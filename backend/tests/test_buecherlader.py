@@ -249,7 +249,7 @@ async def test_reserve_und_pruefsumme(umgebung):
     await lader.abonnieren("neues_de_all", "probe")
     assert not (await auftraege.liste(art="buch_laden")).eintraege
     abo = next(a for a in (await lader.stand()).abos if a.stamm == "neues_de_all")
-    assert abo.zustand == "nicht_da"
+    assert abo.zustand == "nicht_da" and abo.laden is None
     # beim Laden selbst greift die Reserve auch (etwa wenn sie nach dem Einreihen steigt)
     await auftraege.einreihen("buch_laden", {"stamm": "neues_de_all", "ordner": "probe", "datei": "neues_de_all_2026-10.zim"})
     [a] = await fertig(auftraege, "buch_laden")
@@ -267,8 +267,14 @@ async def test_reserve_und_pruefsumme(umgebung):
 async def test_nur_nachts_stellt_zurueck(umgebung):
     lader, auftraege, server, werte, *_ = umgebung
     werte["laden_wann"] = "nachts"
-    a = await auftraege.einreihen("buch_laden", {"stamm": "x", "ordner": "probe", "datei": "x_de_all_2026-10.zim"})
-    assert lader.zurueckstellen(a) == "lädt nur nachts (22 bis 7 Uhr)"     # 12 Uhr UTC ist 13 Uhr Ortszeit
+    auftraege.zurueckstellen_wenn(lader.zurueckstellen)
+    await lader.durchsehen("probe")
+    await fertig(auftraege, "verzeichnis_durchsehen")
+    await lader.abonnieren("neues_de_all", "probe")
+    [abo] = [a for a in (await lader.stand()).abos if a.stamm == "neues_de_all"]
+    assert abo.zustand == "laedt" and abo.laden.zustand == "wartet"
+    assert abo.laden.zurueckgestellt == "lädt nur nachts (22 bis 7 Uhr)"   # 12 Uhr UTC ist 13 Uhr Ortszeit
+    a = (await auftraege.liste(art="buch_laden")).eintraege[0]
     await auftraege.abbrechen(a.id)
 
 

@@ -6,6 +6,7 @@
   import { datum, zahl } from "../lib/bibliothek.svelte";
   import { groesse, lader, laderLaden, monat } from "../lib/buecherlader.svelte";
   import { abbestellen, durchsichtStarten, umschalten, zurueckSchalten } from "../lib/schnittstelle";
+  import Ladebalken from "./Ladebalken.svelte";
 
   const DURCHSICHT: Record<string, string> = { taeglich: "täglich", woechentlich: "wöchentlich", monatlich: "monatlich" };
   const SPRACHE: Record<string, string> = { de: "Deutsch", en: "Englisch", mul: "Mehrsprachige" };
@@ -72,16 +73,16 @@
         <span class="neben"><code>{platz.ordner}</code></span></div>
       <div class="platzbalken">
         <div class="spur" title="belegt durch Bücher, im Laden, sonst belegt, frei">
-          <span class="zim" style="width: {anteil(platz.buecher)}"></span>
-          <span class="laden" style="width: {anteil(platz.im_laden)}"></span>
-          <span class="sonst" style="width: {anteil(Math.max(0, platz.gesamt - platz.frei - platz.buecher - platz.im_laden))}"></span>
-          <span class="reserve" style="width: {anteil(Math.min(platz.reserve, platz.frei))}"></span>
+          <span class="pb-zim" style="width: {anteil(platz.buecher)}"></span>
+          <span class="pb-laden" style="width: {anteil(platz.im_laden)}"></span>
+          <span class="pb-sonst" style="width: {anteil(Math.max(0, platz.gesamt - platz.frei - platz.buecher - platz.im_laden))}"></span>
+          <span class="pb-reserve" style="width: {anteil(Math.min(platz.reserve, platz.frei))}"></span>
         </div>
         <div class="legende">
-          <span><i class="fa-solid fa-square zim"></i>Bücher {groesse(platz.buecher)}</span>
-          {#if platz.im_laden}<span><i class="fa-solid fa-square laden"></i>im Laden {groesse(platz.im_laden)}</span>{/if}
-          <span><i class="fa-solid fa-square sonst"></i>anderes {groesse(Math.max(0, platz.gesamt - platz.frei - platz.buecher - platz.im_laden))}</span>
-          <span><i class="fa-solid fa-square reserve"></i>Reserve {groesse(platz.reserve)}, bleibt frei</span>
+          <span><i class="fa-solid fa-square pb-zim"></i>Bücher {groesse(platz.buecher)}</span>
+          {#if platz.im_laden}<span><i class="fa-solid fa-square pb-laden"></i>im Laden {groesse(platz.im_laden)}</span>{/if}
+          <span><i class="fa-solid fa-square pb-sonst"></i>anderes {groesse(Math.max(0, platz.gesamt - platz.frei - platz.buecher - platz.im_laden))}</span>
+          <span><i class="fa-solid fa-square pb-reserve"></i>Reserve {groesse(platz.reserve)}, bleibt frei</span>
           <span>frei {groesse(platz.frei)} von {groesse(platz.gesamt)}{platz.hoechstens ? ` · Bücher höchstens ${groesse(platz.hoechstens)}` : ""}</span>
         </div>
       </div>
@@ -108,16 +109,16 @@
                       <span class="z">Rückfall, entfernt ab {datum(a.rueckfall.entfernt_ab)}</span>
                       <button class="knopf still" disabled={!!arbeitet} onclick={() => tun(a.stamm, () => zurueckSchalten(a.stamm))}>
                         <i class="fa-solid fa-rotate-left"></i>Zurück</button></div>
-                  {:else}<div class="platz-f leer"><span class="z">keine</span></div>{/if}
+                  {:else}<div class="platz-f ohne"><span class="z">keine</span></div>{/if}
                 </td>
                 <td>
                   {#if a.lokal_stand}<div class="platz-f aktiv"><span class="f">{monat(a.lokal_stand)}</span><span class="z">aktiv</span></div>
-                  {:else}<div class="platz-f leer"><span class="z">noch nicht da</span></div>{/if}
+                  {:else}<div class="platz-f ohne"><span class="z">noch nicht da</span></div>{/if}
                 </td>
                 <td>
                   {#if a.zustand === "laedt"}
                     <div class="platz-f neu"><span class="f">{monat(a.neuester_stand)}</span><span class="z">lädt ({groesse(a.neueste_groesse)})</span>
-                      <button class="knopf still" onclick={() => gehe("auftraege")}><i class="fa-solid fa-list-ul"></i>Fortschritt</button></div>
+                      <Ladebalken stamm={a.stamm} /></div>
                   {:else if a.zustand === "wartet_auf_umschalten"}
                     <div class="platz-f neu"><span class="f">{monat(kennung(a.wartet))}</span><span class="z">geladen und geprüft</span>
                       <button class="knopf haupt" disabled={!!arbeitet} onclick={() => tun(a.stamm, () => umschalten(a.stamm))}>
@@ -125,7 +126,7 @@
                   {:else if a.zustand === "neuer_da" || a.zustand === "nicht_da"}
                     <div class="platz-f neu"><span class="f">{a.neuester_stand ? monat(a.neuester_stand) : "-"}</span>
                       <span class="z">{a.hinweis || (a.neuester_stand ? `im Verzeichnis, ${groesse(a.neueste_groesse)}` : "noch nicht im Verzeichnis gesehen")}</span></div>
-                  {:else}<div class="platz-f leer"><span class="z">{a.neuester_stand ? "nichts Neueres" : "nicht im Verzeichnis"}</span></div>{/if}
+                  {:else}<div class="platz-f ohne"><span class="z">{a.neuester_stand ? "nichts Neueres" : "nicht im Verzeichnis"}</span></div>{/if}
                 </td>
                 <td><button class="knopf still" disabled={!!arbeitet} title="Keine neuen Fassungen mehr laden; das Buch bleibt"
                             onclick={() => tun(a.stamm, () => abbestellen(a.stamm))}><i class="fa-solid fa-bell-slash"></i>Abo beenden</button></td>

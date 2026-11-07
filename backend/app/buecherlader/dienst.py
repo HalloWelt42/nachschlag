@@ -35,8 +35,8 @@ from appkern.auftraege import Art, AuftragFehler, Auftraege, Herkunft, Kontext, 
 from appkern.auftraege.modelle import Auftrag
 from appkern.datenbank import Datenbank
 
-from ..modell.buecherlader import (Abo, Durchgang, Laderstand, Platz, Regeln as Regelanzeige, Rueckfall, Variante,
-                                   Verzeichnisbuch, Verzeichnisseite, Zustand)
+from ..modell.buecherlader import (Abo, Durchgang, Ladefortschritt, Laderstand, Platz, Regeln as Regelanzeige, Rueckfall,
+                                   Variante, Verzeichnisbuch, Verzeichnisseite, Zustand)
 from ..zeitfenster import ZONE, nachts
 from .ablage import Ablage, Lokal
 from .bestand import Bestand, Buchzeile, jetzt
@@ -538,8 +538,16 @@ class Buecherlader(Begleiter):
                            lokal_stand=lokal.stand if lokal else "", neuester_stand=z.stand if z else "",
                            neueste_groesse=z.groesse if z else 0, zustand=zustand,
                            wartet=wartend.kennung if zustand == "wartet_auf_umschalten" and wartend else "",
-                           rueckfall=rueckfall, hinweis=hinweis))
+                           rueckfall=rueckfall, hinweis=hinweis,
+                           laden=self._ladefortschritt(ladende.get(stamm))))
         return aus
+
+    @staticmethod
+    def _ladefortschritt(a: Auftrag | None) -> Ladefortschritt | None:
+        if a is None or a.zustand not in ("wartet", "laeuft"):
+            return None
+        return Ladefortschritt(auftrag=a.id, zustand=a.zustand, fortschritt=a.fortschritt, schritt=a.schritt,
+                               zurueckgestellt=a.zurueckgestellt)
 
     async def verzeichnis(self, *, suche: str = "", bereich: str = "", nur_neu: bool = False, nur_abonniert: bool = False,
                           grenze: int = 50, versatz: int = 0) -> Verzeichnisseite:

@@ -60,6 +60,15 @@ class Rueckfall(BaseModel):
     entfernt_ab: str = Field(description="Datum, ab dem sie entfernt wird (JJJJ-MM-TT)")
 
 
+class Ladefortschritt(BaseModel):
+    """Der Auftrag, der ein Buch gerade lädt (live nachgeführt über die Ereignisse der Aufträge)."""
+    auftrag: str
+    zustand: Literal["wartet", "laeuft"]
+    fortschritt: float | None = Field(None, description="0 bis 1; leer: unbestimmt")
+    schritt: str = Field("", description="was gerade geschieht, etwa '12,4 GB von 45,3 GB · 11 MB/s · noch etwa 50 Minuten'")
+    zurueckgestellt: str = Field("", description="warum er noch wartet (etwa nur nachts)")
+
+
 class Abo(BaseModel):
     stamm: str
     titel: str
@@ -71,6 +80,7 @@ class Abo(BaseModel):
     wartet: str = Field("", description="geladene, geprüfte Fassung, die aufs Umschalten wartet (Kennung)")
     rueckfall: Rueckfall | None = None
     hinweis: str = Field("", description="warum eine neuere Fassung nicht lädt (Platz, nur melden)")
+    laden: Ladefortschritt | None = Field(None, description="Stand des Ladens, solange ein Auftrag dafür offen ist")
 
 
 class Platz(BaseModel):

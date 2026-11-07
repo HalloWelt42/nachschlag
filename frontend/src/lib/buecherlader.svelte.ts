@@ -3,11 +3,23 @@
 // Zustand wechselt (Ereignisstrom der Aufträge, kein Abfragen im Takt).
 import { beiAuftrag, seitenFehler } from "appkern-oberflaeche";
 import { laderstandHolen } from "./schnittstelle";
-import type { Laderstand, Laderzustand } from "./typen";
+import type { Ladefortschritt, Laderstand, Laderzustand } from "./typen";
 
 export const ARTEN = new Set(["buch_laden", "verzeichnis_durchsehen"]);
 
 export const lader = $state<{ stand: Laderstand | null; meldung: string; version: number }>({ stand: null, meldung: "", version: 0 });
+
+/** Was gerade lädt, je Stamm: aus dem Stand übernommen und mit jedem Ereignis des Ladeauftrags nachgeführt. */
+export const ladungen = $state<Record<string, Ladefortschritt>>({});
+
+/** Für die Navigation: so viele Bücher laden oder warten aufs Laden; der Anteil des laufenden (null: keins läuft). */
+export function ladeZahl(): number {
+  return Object.keys(ladungen).length;
+}
+export function ladeAnteil(): number | null {
+  const laufend = Object.values(ladungen).find((l) => l.zustand === "laeuft");
+  return laufend ? laufend.fortschritt ?? 0 : null;
+}
 
 let laufend: Promise<void> | null = null;
 
@@ -16,6 +28,8 @@ export function laderLaden(neu = false): Promise<void> {
   laufend = laderstandHolen()
     .then((s) => {
       lader.stand = s;
+      for (const k of Object.keys(ladungen)) delete ladungen[k];
+      for (const a of s.abos) if (a.laden) ladungen[a.stamm] = a.laden;
       lader.meldung = "";
       lader.version += 1;          // Seiten, die mehr zeigen (das Verzeichnis), laden mit
     })
@@ -28,7 +42,17 @@ export function laderLaden(neu = false): Promise<void> {
 
 let zuletzt = new Map<string, string>();
 beiAuftrag((a) => {
-  if (!ARTEN.has(a.art) || zuletzt.get(a.id) === a.zustand) return;
+  if (!ARTEN.has(a.art)) return;
+  const stamm = typeof a.eingabe?.stamm === "string" ? a.eingabe.stamm : "";
+  if (a.art === "buch_laden" && stamm) {
+    if (a.zustand === "wartet" || a.zustand === "laeuft") {
+      ladungen[stamm] = { auftrag: a.id, zustand: a.zustand, fortschritt: a.fortschritt ?? null, schritt: a.schritt,
+                          zurueckgestellt: a.zurueckgestellt ?? "" };
+    } else if (ladungen[stamm]?.auftrag === a.id) {
+      delete ladungen[stamm];
+    }
+  }
+  if (zuletzt.get(a.id) === a.zustand) return;
   if (zuletzt.size > 200) zuletzt = new Map();
   zuletzt.set(a.id, a.zustand);
   void laderLaden(true);

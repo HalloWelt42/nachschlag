@@ -16,7 +16,7 @@
   import Register from "./seiten/Register.svelte";
   import Suchfeld from "./teile/Suchfeld.svelte";
   import { meins } from "./lib/meins.svelte";
-  import { lader, laderLaden } from "./lib/buecherlader.svelte";
+  import { ladeAnteil, ladeZahl, lader, laderLaden } from "./lib/buecherlader.svelte";
 
   // Zahl des Neuen am Menüpunkt Bibliothek: geholt, sobald jemand angemeldet ist
   $effect(() => {
@@ -40,7 +40,9 @@
     { schluessel: "themen", titel: "Themen", symbol: "fa-layer-group", seite: Themen, reiter: true,
       hinweis: "Eigene Sammlungen von Artikeln aus allen Quellen, in Bereichen", zahl: () => themen.liste.length },
     { schluessel: "bibliothek", titel: "Bibliothek", symbol: "fa-swatchbook", seite: Bibliothek, reiter: false,
-      hinweis: "Meine Bücher, der Katalog mit allem Neuen, Fassungen und Laden", zahl: () => lader.stand?.neu_ungesehen ?? 0 },
+      hinweis: "Meine Bücher, der Katalog mit allem Neuen, Fassungen und Laden",
+      // beim Laden: wie viele Bücher laden oder warten, dazu der Balken des laufenden; sonst das Neue im Verzeichnis
+      zahl: () => ladeZahl() || (lader.stand?.neu_ungesehen ?? 0), fortschritt: ladeAnteil },
     { schluessel: "verlauf", titel: "Verlauf", symbol: "fa-clock-rotate-left", seite: Verlauf, reiter: false, hinweis: "Gelesenes und Gesuchtes, auf allen Geräten" },
   ];
 </script>

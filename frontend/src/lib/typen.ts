@@ -210,6 +210,14 @@ export interface Durchgang {
   hinweise: string[];
 }
 
+export interface Ladefortschritt {
+  auftrag: string;
+  zustand: "wartet" | "laeuft";
+  fortschritt: number | null;        // 0 bis 1; null: unbestimmt
+  schritt: string;
+  zurueckgestellt: string;
+}
+
 export interface Abo {
   stamm: string;
   titel: string;
@@ -221,6 +229,7 @@ export interface Abo {
   wartet: string;
   rueckfall: { kennung: string; entfernt_ab: string } | null;
   hinweis: string;
+  laden: Ladefortschritt | null;
 }
 
 export interface Platz { ordner: string; frei: number; gesamt: number; reserve: number; buecher: number; im_laden: number; hoechstens: number }

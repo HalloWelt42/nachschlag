@@ -8,6 +8,7 @@
   import { AUSGABE, groesse, lader, laderLaden, monat, ZUSTAND } from "../lib/buecherlader.svelte";
   import { abbestellen, abonnieren, durchsichtStarten, neuesGesehen, verzeichnisHolen } from "../lib/schnittstelle";
   import type { Variante, Verzeichnisbuch } from "../lib/typen";
+  import Ladebalken from "./Ladebalken.svelte";
   import Sprachmarke from "./Sprachmarke.svelte";
 
   const ANZAHL = 60;
@@ -144,6 +145,7 @@
                           onclick={() => tun(v.stamm, () => abonnieren(v.stamm))}><i class="fa-solid fa-bell"></i>Abonnieren</button>
                 {/if}
               {/if}
+              {#if v.zustand === "laedt"}<div class="ausgabe-laden"><Ladebalken stamm={v.stamm} /></div>{/if}
             </div>
           {/each}
         </div>
