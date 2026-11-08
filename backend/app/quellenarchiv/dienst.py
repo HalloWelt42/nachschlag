@@ -83,6 +83,10 @@ class Quellenarchiv(Begleiter):
         """Hat jemand diese Quelle von Hand aktiv gesetzt (etwa eine vorige Fassung, die bleiben soll)?"""
         return (await self._entscheidungen()).get(kennung, (None, False))[0] == "aktiv"
 
+    async def vergessen(self, kennung: str) -> None:
+        """Die Entscheidung zu einer Quelle, die es nicht mehr gibt (gelöscht, WIKI-77)."""
+        await self._db.ausfuehren("DELETE FROM quellenarchiv WHERE kennung=?", (kennung,))
+
     async def setzen(self, kennung: str, zustand: Zustand | None, mitnutzen: bool | None) -> Buch:
         """`zustand`: archiv, aktiv oder None (wie von selbst); `mitnutzen` None lässt es, wie es ist."""
         await self._bib.buch(kennung)                           # BuchFehlt, wenn es die Quelle nicht gibt

@@ -126,6 +126,9 @@ export const durchsichtStarten = () => hole<unknown>(`${LADER}/durchsicht`, { me
 export const neuesGesehen = () => ohneInhalt("/gesehen", "POST");
 export const abonnieren = (stamm: string) => ohneInhalt(`/abo/${encodeURIComponent(stamm)}`, "PUT");
 export const abbestellen = (stamm: string) => ohneInhalt(`/abo/${encodeURIComponent(stamm)}`, "DELETE");
+/** Ein Buch ganz löschen (WIKI-77): Datei, eigener Index, Archivvermerk; bleibt keine Fassung, endet das Abo. */
+export const buchLoeschen = (kennung: string) =>
+  hole<{ kennung: string; groesse: number; abo_beendet: boolean }>(`${LADER}/buch/${encodeURIComponent(kennung)}`, { method: "DELETE" });
 export const bestandAbonnieren = () => hole<{ anzahl: number }>(`${LADER}/abo/bestand`, { method: "POST" });
 export const umschalten = (stamm: string) => ohneInhalt(`/umschalten/${encodeURIComponent(stamm)}`, "POST");
 export const zurueckSchalten = (stamm: string) => ohneInhalt(`/zurueck/${encodeURIComponent(stamm)}`, "POST");

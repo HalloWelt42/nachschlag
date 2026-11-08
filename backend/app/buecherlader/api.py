@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 from appkern.app import Geruest
 from appkern.auftraege import Auftrag
 
-from ..modell.buecherlader import (Katalogfilter, Laderstand, NeueQuelle, QuellAenderung, Quellstand, Quellvorschlag,
+from ..modell.buecherlader import (Geloescht, Katalogfilter, Laderstand, NeueQuelle, QuellAenderung, Quellstand, Quellvorschlag,
                                    Verzeichnisseite)
 from .dienst import Buecherlader, LaderFehler
 
@@ -64,6 +64,18 @@ def router(geruest: Geruest, lader: Buecherlader) -> APIRouter:
     async def abbestellen(stamm: str) -> None:
         """Lädt es gerade, wird das abgebrochen. Die Bücher in der Bibliothek bleiben."""
         await lader.abbestellen(stamm)
+
+    @r.delete("/buch/{kennung}", response_model=Geloescht, summary="Buch ganz aus der Bibliothek löschen",
+              dependencies=[geruest.mensch])
+    async def loeschen(kennung: str) -> Geloescht:
+        """Löscht die Datei (auch wartend oder angefangen), den eigenen Index und den Vermerk im Archiv; bleibt keine
+        Fassung, endet das Abo. Nur Menschen, nie eine andere App."""
+        try:
+            return await lader.loeschen(kennung)
+        except LaderFehler as f:
+            raise konflikt(f)
+        except LookupError as f:
+            raise HTTPException(status_code=404, detail=str(f))
 
     @r.post("/abo/bestand", response_model=Abonniert, summary="Alle eigenen Bücher abonnieren")
     async def bestand(von: str = Depends(geruest.wer)) -> Abonniert:

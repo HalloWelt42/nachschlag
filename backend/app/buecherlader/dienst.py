@@ -35,7 +35,7 @@ from appkern.auftraege import Art, AuftragFehler, Auftraege, Herkunft, Kontext, 
 from appkern.auftraege.modelle import Auftrag
 from appkern.datenbank import Datenbank
 
-from ..modell.buecherlader import (Abo, Durchgang, Katalogfilter, Ladefortschritt, Laderstand, NeueQuelle, Platz,
+from ..modell.buecherlader import (Abo, Geloescht, Durchgang, Katalogfilter, Ladefortschritt, Laderstand, NeueQuelle, Platz,
                                    QuellAenderung, Quellstand, Quellvorschlag, Regeln as Regelanzeige, Rueckfall, Variante,
                                    Verzeichnisbuch, Verzeichnisseite, Zustand)
 from ..zeitfenster import ZONE, nachts
@@ -126,14 +126,17 @@ class Buecherlader(Begleiter):
     def __init__(self, db: Datenbank, auftraege: Auftraege, regeln: Callable[[], Regeln],
                  von_hand_aktiv: Callable[[str], Awaitable[bool]], *, transport: httpx.AsyncBaseTransport | None = None,
                  uhr: Callable[[], datetime] = lambda: datetime.now(timezone.utc), zeitplan: bool = True,
-                 in_gebrauch: Callable[[], Awaitable[set[str] | None]] | None = None) -> None:
+                 in_gebrauch: Callable[[], Awaitable[set[str] | None]] | None = None,
+                 nach_loeschen: Callable[[str, bool], Awaitable[None]] | None = None) -> None:
         """`von_hand_aktiv(kennung)`: hat der Nutzer diese Fassung von Hand aktiv gesetzt (Archiv der Quellen)? Dann
         bleibt sie über die Frist hinaus. `zeitplan`: ohne ihn (Tests) läuft `takt` nur, wenn man ihn ruft.
         `in_gebrauch()`: Dateinamen, die andere Dienste noch lesen (der Fundus, WIKI-58); None heißt unbekannt (er
-        antwortet nicht), dann wird nichts gelöscht."""
+        antwortet nicht), dann wird nichts gelöscht. `nach_loeschen(kennung, letzte)`: was andere Teile zu einem
+        gelöschten Buch abräumen (Vermerk im Archiv der Quellen; war es die letzte Fassung des Buchs, auch den eigenen
+        Index, sonst bleibt er Vorlage für den Index einer anderen Fassung)."""
         self._bestand, self._auftraege, self._regeln = Bestand(db), auftraege, regeln
         self._von_hand_aktiv, self._transport, self._uhr, self._mit_zeitplan = von_hand_aktiv, transport, uhr, zeitplan
-        self._in_gebrauch = in_gebrauch
+        self._in_gebrauch, self._nach_loeschen = in_gebrauch, nach_loeschen
         self._wecker: asyncio.Task | None = None
         auftraege.anmelden(
             Art(name=DURCHSEHEN, titel="Verzeichnis der Bücher durchsehen", arbeit=self._durchsehen, hoechstens=1,
@@ -327,6 +330,36 @@ class Buecherlader(Begleiter):
         if laedt:
             await self._auftraege.abbrechen(laedt.id)
             Ablage(self._regeln().ordner).teil(laedt.eingabe["datei"]).unlink(missing_ok=True)
+
+    async def loeschen(self, kennung: str) -> Geloescht:
+        """Ein Buch ganz aus der Bibliothek nehmen (kaputt oder nicht gewollt, WIKI-77): die Datei in der Bibliothek,
+        bei den wartenden und angefangenen; ein Ladeauftrag an ihr wird abgebrochen; aus der Liste des Bücherservers;
+        bleibt keine Fassung des Buchs, endet das Abo (sonst lädt es von selbst wieder). Liest der Fundus die Datei
+        gerade ein, bleibt sie (LaderFehler). LookupError: es gibt sie nicht."""
+        r = self._regeln()
+        ablage, datei = Ablage(r.ordner), f"{kennung}.zim"
+        stellen = [p for p in (r.ordner / datei, ablage.neu / datei, ablage.teil(datei)) if p.is_file()]
+        if not stellen:
+            raise LookupError(f"Ein Buch {kennung} liegt nicht in der Bibliothek")
+        if datei in (await self._gebraucht() or set()):
+            raise LaderFehler("Die Bedeutungssuche (Fundus) liest dieses Buch gerade ein; danach lässt es sich löschen")
+        for a in await self._offene(LADEN):
+            if a.eingabe.get("datei") == datei:
+                await self._auftraege.abbrechen(a.id)
+        groesse = sum(p.stat().st_size for p in stellen)
+        for p in stellen:
+            p.unlink(missing_ok=True)
+        await self._liste(r, austragen=datei)
+        name = zerlegen(datei)
+        letzte = not name or not any(b.stamm == name.stamm for b in [*ablage.alle(), *ablage.wartende().values()])
+        abo_beendet = False
+        if name and letzte and name.stamm in await self._bestand.abos():
+            await self._bestand.abbestellen(name.stamm)
+            abo_beendet = True
+        if self._nach_loeschen:
+            await self._nach_loeschen(kennung, letzte)
+        logger.info("Buch %s gelöscht (%s frei%s)", kennung, gb(groesse), ", Abo beendet" if abo_beendet else "")
+        return Geloescht(kennung=kennung, groesse=groesse, abo_beendet=abo_beendet)
 
     # ----- Laden ------------------------------------------------------------------------------------------------------
 

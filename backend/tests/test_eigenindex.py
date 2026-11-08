@@ -403,3 +403,14 @@ async def test_mac_holt_die_vorlage_beim_pi(pi, buecher, tmp_path):
 def test_text_mit_steuerzeichen():
     """Seiten mit Steuerzeichen (vereinzelt in iFixit) halten den Index nicht auf: sie werden zu Leerraum."""
     assert aufbau._text("<p>Akku\x0blösen</p><p>Schritt\x01 2</p>") == "Akku lösen Schritt 2"
+
+
+def test_index_entfernen(buecher, tmp_path):
+    """WIKI-77: der Index eines gelöschten Buchs geht samt Prüfsumme; danach gilt keiner mehr."""
+    eigen = Eigenindizes(lambda: str(tmp_path))
+    ziel = tmp_path / schema.dateiname(DOKU)
+    _bauen(buecher, DOKU, ziel)
+    assert eigen.datei(DOKU) == ziel and ziel.with_suffix(".sha256").is_file()
+    assert eigen.entfernen(DOKU) and eigen.datei(DOKU) is None
+    assert not ziel.exists() and not ziel.with_suffix(".sha256").exists()
+    assert not eigen.entfernen(DOKU)

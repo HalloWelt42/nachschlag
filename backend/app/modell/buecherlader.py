@@ -186,3 +186,10 @@ class Laderstand(BaseModel):
     abos: list[Abo]
     platz: Platz | None = None
     quellen: list[Quellstand] = Field(default_factory=list)
+
+
+class Geloescht(BaseModel):
+    """Ein Buch, das ganz aus der Bibliothek genommen wurde (WIKI-77)."""
+    kennung: str
+    groesse: int = Field(description="so viele Bytes sind frei geworden")
+    abo_beendet: bool = Field(description="das Abo endete mit, weil keine Fassung des Buchs mehr da ist")

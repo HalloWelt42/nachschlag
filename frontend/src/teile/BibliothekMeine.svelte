@@ -1,11 +1,12 @@
 <script lang="ts">
   // Reiter Meine Bücher der Bibliothek (WIKI-57): jede Quelle mit Kennzahlen, Fähigkeiten und Abo. Hat eine Art von Buch
   // noch keinen eigenen Baustein, steht das sichtbar daran ("Eigene Ansicht fehlt", mit dem Erzeuger), und oben fasst ein
-  // Band zusammen, für welche Erzeuger eine Ansicht fehlt: so sieht man, wo noch gebaut werden muss.
-  import { gehe, seitenFehler } from "appkern-oberflaeche";
-  import { bibliothek, datum, zahl } from "../lib/bibliothek.svelte";
+  // Band zusammen, für welche Erzeuger eine Ansicht fehlt: so sieht man, wo noch gebaut werden muss. Jedes Buch lässt
+  // sich ganz löschen (kaputt oder nicht gewollt, WIKI-77), nach einer Rückfrage im Ablauf.
+  import { gehe, Rueckfrage, seitenFehler } from "appkern-oberflaeche";
+  import { bibliothek, bibliothekLaden, datum, zahl } from "../lib/bibliothek.svelte";
   import { groesse, lader, laderLaden, monat, ZUSTAND } from "../lib/buecherlader.svelte";
-  import { abbestellen, abonnieren, bestandAbonnieren } from "../lib/schnittstelle";
+  import { abbestellen, abonnieren, bestandAbonnieren, buchLoeschen } from "../lib/schnittstelle";
   import { ART_NAME, ART_SYMBOL } from "../lib/arten";
   import type { Buch } from "../lib/typen";
   import { lesen } from "../lib/ziele";
@@ -30,6 +31,17 @@
 
   let fehler = $state("");
   let arbeitet = $state("");
+  let loeschen = $state("");                         // Kennung des Buchs, dessen Löschen gerade gefragt wird
+  let gemeldet = $state("");
+
+  async function loeschenBestaetigt(b: Buch) {
+    await tun(b.kennung, async () => {
+      const g = await buchLoeschen(b.kennung);
+      gemeldet = `${b.titel} gelöscht, ${groesse(g.groesse)} frei${g.abo_beendet ? "; das Abo ist beendet" : ""}.`;
+      loeschen = "";
+      await bibliothekLaden(true);
+    });
+  }
   async function tun(schluessel: string, arbeit: () => Promise<unknown>) {
     arbeitet = schluessel;
     try {
@@ -56,6 +68,8 @@
     </span>
   </div>
   {#if fehler}<div class="fehlertext">{fehler}</div>{/if}
+  {#if gemeldet}<div class="fundband"><i class="fa-solid fa-check"></i><span>{gemeldet}</span>
+    <button class="knopf still" title="Meldung schließen" aria-label="Meldung schließen" onclick={() => (gemeldet = "")}><i class="fa-solid fa-xmark"></i></button></div>{/if}
   {#if lader.stand && !lader.stand.bereit}
     <div class="fundband"><i class="fa-solid fa-circle-info"></i><span>Bücherlader aus: {lader.stand.grund}</span>
       <button class="knopf still" onclick={() => gehe("einstellungen/buecherlader")}>Einstellungen</button></div>
@@ -82,7 +96,16 @@
                     onclick={() => tun(b.kennung, () => abonnieren(stamm(b)))}><i class="fa-solid fa-bell"></i>Abonnieren</button>
           {/if}
         {/if}
+        <button class="knopf still" disabled={!!arbeitet} title="Das Buch ganz löschen (Datei, eigener Index)"
+                onclick={() => (loeschen = b.kennung)}><i class="fa-solid fa-trash-can"></i>Löschen</button>
       </div>
+      {#if loeschen === b.kennung}
+        <div class="buch-loeschen">
+          <Rueckfrage frage="{b.titel} ganz löschen?" knopf="Löschen" beschaeftigt={arbeitet === b.kennung}
+                      hinweis="Die Datei ({groesse(b.groesse)}) und ihr eigener Index werden gelöscht; Merkzettel und Notizen bleiben. Ohne weitere Fassung endet das Abo; über den Katalog lässt sich das Buch wieder laden."
+                      onabbrechen={() => (loeschen = "")} onja={() => loeschenBestaetigt(b)} />
+        </div>
+      {/if}
       <div class="beschr">{b.beschreibung || ART[b.art]} · Stand {datum(b.stand)} · {ART[b.art]}
         {#if b.archiv} · im Archiv{b.archiv.grund === "ersetzt" ? ", ersetzt durch eine neuere Fassung" : ""}{/if}</div>
       <div class="kennzahlen">

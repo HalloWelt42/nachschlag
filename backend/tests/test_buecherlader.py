@@ -467,3 +467,32 @@ async def test_kein_doppeltes_laden_und_erledigte_fehler_weg(umgebung):
     noch = await auftraege.einreihen("buch_laden", eingabe)     # noch einmal: liegt schon da, nichts geladen
     await fertig(auftraege, "buch_laden")
     assert (await auftraege.holen(noch.id)).ergebnis["ort"] == "Bibliothek (lag schon da)"
+
+
+async def test_buch_loeschen(umgebung):
+    """WIKI-77: ein Buch ganz löschen. Bleibt keine Fassung, endet das Abo und der Index darf mit; liest der Fundus es
+    gerade ein, bleibt es; ein unbekanntes gibt es nicht."""
+    lader, auftraege, server, werte, buecher, *_ = umgebung
+    geloescht: list[tuple[str, bool]] = []
+
+    async def nach(kennung: str, letzte: bool) -> None:
+        geloescht.append((kennung, letzte))
+
+    lader._nach_loeschen = nach
+    await lader.durchsehen("probe")
+    await fertig(auftraege)
+    await lader.abonnieren("probe_de_all", "probe")               # lädt 2026-10 neben 2026-01 (wartet aufs Umschalten)
+    await fertig(auftraege, "buch_laden")
+    assert (buecher / ".neu" / "probe_de_all_2026-10.zim").is_file()
+    lader.fundus["dateien"] = {"probe_de_all_2026-01.zim"}
+    with pytest.raises(LaderFehler):
+        await lader.loeschen("probe_de_all_2026-01")
+    lader.fundus["dateien"] = set()
+    g = await lader.loeschen("probe_de_all_2026-01")               # die wartende bleibt: Abo bleibt, Index bleibt Vorlage
+    assert not (buecher / "probe_de_all_2026-01.zim").exists() and g.groesse > 0 and not g.abo_beendet
+    assert geloescht == [("probe_de_all_2026-01", False)] and "probe_de_all" in await lader._bestand.abos()
+    g = await lader.loeschen("probe_de_all_2026-10")               # die letzte Fassung: Abo endet, Index darf mit
+    assert g.abo_beendet and geloescht[-1] == ("probe_de_all_2026-10", True)
+    assert "probe_de_all" not in await lader._bestand.abos() and not (buecher / ".neu" / "probe_de_all_2026-10.zim").exists()
+    with pytest.raises(LookupError):
+        await lader.loeschen("probe_de_all_2026-10")

@@ -1175,6 +1175,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .buch-gross .beschr { color: var(--text-2); font-size: var(--klein); }
 .buch-gross .aktionen { grid-row: 1 / span 2; grid-column: 3; display: flex; gap: var(--a2); align-items: flex-start; flex-wrap: wrap; justify-content: flex-end; }
 .buch-gross .kennzahlen { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--a2) var(--a4); grid-column: 2 / -1; padding-top: var(--a2); border-top: 1px solid var(--rand); }
+.buch-gross .buch-loeschen { grid-column: 1 / -1; }   /* Rückfrage zum Löschen über die ganze Karte (WIKI-77) */
 .buch-gross .faehig { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
 .kennzahl { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .kennzahl .k { font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; }

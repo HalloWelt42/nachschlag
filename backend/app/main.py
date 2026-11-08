@@ -168,8 +168,15 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
         except (VerbundFehler, ValueError):
             return None
 
+    async def nach_loeschen(kennung: str, letzte: bool) -> None:
+        """Ein Buch ist gelöscht (WIKI-77): der Vermerk im Archiv geht; der eigene Index nur mit der letzten Fassung
+        (sonst bleibt er Vorlage für den Index einer anderen Fassung, WIKI-58)."""
+        await quellen.vergessen(kennung)
+        if letzte:
+            eigen.entfernen(kennung)
+
     lader = Buecherlader(geruest.db, geruest.auftraege, laderregeln, quellen.von_hand_aktiv,
-                         transport=lader_transport or transport, in_gebrauch=fundus_dateien)
+                         transport=lader_transport or transport, in_gebrauch=fundus_dateien, nach_loeschen=nach_loeschen)
     geruest.begleiter_anmelden(lader)
     # eine Regel zum Zurückstellen für alle Dienste: Sammlungen warten auf die Nacht, Laden mit "nur nachts" auch
     geruest.auftraege.zurueckstellen_wenn(lambda a: sammlungen.zurueckstellen(a) or lader.zurueckstellen(a))

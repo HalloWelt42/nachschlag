@@ -48,6 +48,19 @@ class Eigenindizes:
             self._geprueft[pfad] = alt
         return pfad if alt[1] else None
 
+    def entfernen(self, kennung: str) -> bool:
+        """Den Index eines Buchs löschen (samt Prüfsumme und Nebendateien der Datenbank); war keiner da: False."""
+        pfad = self.pfad(kennung)
+        if pfad is None:
+            return False
+        weg = False
+        for p in (pfad, pfad.with_suffix(".sha256"), Path(f"{pfad}-wal"), Path(f"{pfad}-shm")):
+            if p.is_file():
+                p.unlink()
+                weg = True
+        self._geprueft.pop(pfad, None)
+        return weg
+
     def vorgaenger(self, kennung: str) -> str:
         """Kennung des jüngsten geltenden Index einer früheren Fassung desselben Buchs (gleicher Name, älterer Stand),
         als Vorlage für den Bau (WIKI-58); keiner: leer. Die Datei des Buchs selbst muss dafür nicht mehr da sein."""
