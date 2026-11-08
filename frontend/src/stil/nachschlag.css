@@ -262,16 +262,15 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .abschnitt-kopf .alle { margin-left: auto; font-size: var(--klein); color: var(--akzent); font-weight: 600; background: none; border: 0; cursor: pointer; }
 
 /* ----- Startseite (Variante A) ----- */
-.start-innen { max-width: 1520px; margin: 0 auto; padding: var(--a5) var(--a5) var(--a7); display: flex; flex-direction: column; gap: var(--a6); }
+.start-innen { --start-rand: var(--a5); max-width: 1520px; margin: 0 auto; padding: var(--a5) var(--start-rand) var(--a7); display: flex; flex-direction: column; gap: var(--a6); }
 .abschnitt-kopf { display: flex; align-items: baseline; gap: var(--a3); margin-bottom: var(--a3); }
 .abschnitt-kopf h2 { margin: 0; font-size: var(--titel); font-weight: 600; display: flex; align-items: center; gap: var(--a2); }
 .abschnitt-kopf h2 i { color: var(--text-3); font-size: .9em; }
 .abschnitt-kopf .neben { color: var(--text-3); font-size: var(--klein); }
-.suchmitte { display: flex; flex-direction: column; align-items: center; gap: var(--a3); padding: var(--a6) 0 var(--a2); text-align: center; }
-.suchmitte h1 { margin: 0; font-size: calc(var(--seitentitel) + 4px); font-weight: 600; }
+.suchmitte { display: flex; flex-direction: column; align-items: center; gap: var(--a2); text-align: center; }
+.such-titel { margin: var(--a5) 0 calc(-1 * var(--a4)); text-align: center; font-size: calc(var(--seitentitel) + 4px); font-weight: 600; }
 .suchmitte .unter { color: var(--text-2); font-size: var(--klein); }
 .suchmitte .unter .zahl { font-family: var(--schrift-zahl); }
-.mobil .suchmitte { padding-top: var(--a2); }   /* am Telefon ohne Überschrift: das Suchfeld oben, keine Lücke (WIKI-67) */
 .grosssuche { position: relative; width: min(100%, 760px); max-width: none; text-align: left; }
 .grosssuche .suchfeld { height: 58px; padding: 0 10px 0 18px; font-size: calc(var(--gross) + 2px); border-radius: var(--r3); box-shadow: var(--schatten); gap: var(--a3); }
 .grosssuche .suchfeld > i { font-size: 18px; }
@@ -944,7 +943,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
   .antwort { padding: var(--a2) var(--a3); }
   /* Code am Telefon umbrechen statt seitlich zu wischen (Nutzer: keine seitliche Rollerei) */
   .beispiel pre, .artikel-text pre.codeblock, .signatur { white-space: pre-wrap; overflow-wrap: anywhere; }
-  .start-innen { padding-inline: 0; }          /* den Seitenrand am Telefon gibt die Schale, nur einmal */
+  .start-innen { --start-rand: 0px; }          /* den Seitenrand am Telefon gibt die Schale, nur einmal */
   .treffer .marken { margin-left: 0; }
   .notizblatt { left: 0; right: 0; bottom: 0; width: auto; max-height: 82dvh; border-radius: 18px 18px 0 0;
                 padding: var(--a2) var(--a4) calc(var(--a4) + env(safe-area-inset-bottom)); }

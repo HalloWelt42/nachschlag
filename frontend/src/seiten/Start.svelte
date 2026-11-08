@@ -4,7 +4,7 @@
   // ein Magazin: groß der Artikel für heute aus den eigenen Themen, daneben Weiterlesen und Merkzettel, darunter das
   // Thema als Reihe; die Suche steht dann nur im Kopf. Welche, wählt das Gerät.
   import { onMount } from "svelte";
-  import { geraet, seitenFehler } from "appkern-oberflaeche";
+  import { geraet, seitenFehler, Seitenkopf } from "appkern-oberflaeche";
   import Suchfeld from "../teile/Suchfeld.svelte";
   import Kachel from "../teile/Kachel.svelte";
   import Sprachmarke from "../teile/Sprachmarke.svelte";
@@ -111,14 +111,19 @@
         {/if}
       </section>
     {:else}
-      <div class="suchmitte">
-        {#if !geraet.mobil}<h1>Was möchtest du nachschlagen?</h1>{/if}   <!-- am Telefon zu viel Platz (WIKI-67) -->
-        <Suchfeld gross />
-        {#if bibliothek.buecher.length}
-          <div class="unter">Index über <span class="zahl">{zahl(artikelGesamt)}</span> Artikel in {bibliothek.buecher.filter(nutzbar).length}
-            {bibliothek.buecher.filter(nutzbar).length === 1 ? "Quelle" : "Quellen"}</div>
-        {/if}
-      </div>
+      {#if !geraet.mobil}<h1 class="such-titel">Was möchtest du nachschlagen?</h1>{/if}   <!-- am Telefon zu viel Platz (WIKI-67) -->
+      <!-- das große Suchfeld bleibt beim Rollen stehen, die Überschrift rollt weg (WIKI-70) -->
+      <Seitenkopf rand="var(--start-rand)">
+        {#snippet kopf()}
+          <div class="suchmitte">
+            <Suchfeld gross />
+            {#if bibliothek.buecher.length}
+              <div class="unter">Index über <span class="zahl">{zahl(artikelGesamt)}</span> Artikel in {bibliothek.buecher.filter(nutzbar).length}
+                {bibliothek.buecher.filter(nutzbar).length === 1 ? "Quelle" : "Quellen"}</div>
+            {/if}
+          </div>
+        {/snippet}
+      </Seitenkopf>
     {/if}
 
     {#if weiterlesen.length}
