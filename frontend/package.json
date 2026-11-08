@@ -2,6 +2,7 @@
   "name": "nachschlag-oberflaeche",
   "private": true,
   "version": "0.0.0",
+  "license": "LicenseRef-Nachschlag-NC-1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

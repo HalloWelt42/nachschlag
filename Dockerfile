@@ -14,6 +14,9 @@ RUN cd frontend && npm run build
 
 # --- Backend ------------------------------------------------------------------------------------------------------
 FROM python:3.12-slim
+LABEL org.opencontainers.image.title="Nachschlag" \
+      org.opencontainers.image.source="https://github.com/HalloWelt42/nachschlag" \
+      org.opencontainers.image.licenses="LicenseRef-Nachschlag-NC-1.0"
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 NACHSCHLAG_DATEN=/app/daten HOME=/tmp
 WORKDIR /app
 COPY backend/requirements.txt backend/requirements.txt
