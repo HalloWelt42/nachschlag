@@ -414,3 +414,18 @@ def test_index_entfernen(buecher, tmp_path):
     assert eigen.entfernen(DOKU) and eigen.datei(DOKU) is None
     assert not ziel.exists() and not ziel.with_suffix(".sha256").exists()
     assert not eigen.entfernen(DOKU)
+
+
+
+def test_rueckverweise(buecher, tmp_path):
+    """WIKI-20: der Index merkt sich die Verweise jeder Seite; daraus die Seiten, die auf eine Seite verweisen."""
+    ziel = tmp_path / schema.dateiname("probe_de_all_2026-01")
+    _bauen(buecher, "probe_de_all_2026-01", ziel)
+    liste, gesamt = abfrage.rueckverweise(ziel, "Kreuzfuchs")
+    assert gesamt >= 1 and "Rotfuchs" in [r.pfad for r in liste]
+    assert abfrage.rueckverweise(ziel, "gibt_es_nicht") == ([], 0)
+    v = sqlite3.connect(ziel)                       # ein Index von vorher kennt die Verweise nicht: keine Aussage
+    v.execute("DELETE FROM angaben WHERE schluessel = 'verweise'")
+    v.commit()
+    v.close()
+    assert abfrage.rueckverweise(ziel, "Kreuzfuchs") is None

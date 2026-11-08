@@ -27,7 +27,8 @@ class Pfadschritt(BaseModel):
     """Ein Artikel im Entdeckungspfad und wohin es von ihm aus weitergeht."""
     fund: Fund
     von_hier: list[Nachbar] = Field(description="Verweise im Text, in ihrer Reihenfolge")
-    erwaehnt_in: list[Nachbar] = Field(description="Artikel, die ihn im Text nennen (Volltext des Buchs)")
+    erwaehnt_in: list[Nachbar] = Field(description="Artikel, die auf ihn verweisen (eigener Index) oder ihn im Text nennen (Volltext)")
+    verweist_hierher: bool = Field(False, description="erwaehnt_in sind echte Rückverweise aus dem eigenen Index (WIKI-20)")
     aehnlich: list[Nachbar] = Field(description="ähnlich nach Bedeutung (Fundus); leer, wenn nicht angebunden")
 
 

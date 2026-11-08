@@ -13,6 +13,8 @@ import hashlib
 import math
 import re
 from collections import defaultdict
+from html import unescape
+from urllib.parse import unquote
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -49,6 +51,7 @@ class Zeile:
     frage: FrageAngaben | None = None
     anleitung: Anleitungsangaben | None = None
     geraet: Geraeteangaben | None = None
+    verweise: tuple[str, ...] = ()
     abdruck: str = ""
     aus_vorlage: int | None = None
 
@@ -137,6 +140,7 @@ METADATEN: dict[str, tuple[str, ...]] = {
     "geraete": ("bild", "kurz"),
     "geraet_kind": ("kind",),
     "geraet_anleitung": ("anleitung", "bauteil", "empfohlen"),
+    "verweise": ("ziel",),
 }
 
 
@@ -171,6 +175,8 @@ def _schreiben(v, zeilen: list[Zeile], naechste: int, ohne: list[tuple[str, str]
                 _anleitung_schreiben(v, nr, z.anleitung)
             if z.geraet:
                 _geraet_schreiben(v, nr, z.geraet)
+            if z.verweise:
+                _zeilen_schreiben(v, "verweise", nr, [(ziel,) for ziel in z.verweise if ziel != z.pfad])
         schema.angabe_setzen(v, "naechste", str(naechste))
 
 
@@ -183,6 +189,22 @@ def _frage_schreiben(v, nr: int, f: FrageAngaben) -> None:
     v.executemany("INSERT INTO beitraege (nr, schluessel, autor, art, stimmen, datum, akzeptiert) VALUES (?,?,?,?,?,?,?)",
                   [(nr, schema.autor_schluessel(b.autor_nr, b.autor), b.autor, b.art, b.stimmen, b.datum, int(b.akzeptiert))
                    for b in f.beitraege if b.autor])
+
+
+_HREF = re.compile(r'href="([^"]+)"')
+
+
+def _verweise(html: str, praefix: str) -> tuple[str, ...]:
+    """Die Seiten desselben Buchs, auf die eine aufbereitete Seite verweist (Pfade, ohne Anker, jede einmal). Die
+    Bausteine schreiben solche Verweise auf `wege.artikel`, also auf `praefix` + Pfad."""
+    aus: dict[str, None] = {}
+    for href in _HREF.findall(html):
+        href = unescape(href)
+        if href.startswith(praefix):
+            ziel = unquote(href[len(praefix):].split("#", 1)[0].split("?", 1)[0])
+            if ziel:
+                aus[ziel] = None
+    return tuple(aus)
 
 
 def _anleitung_schreiben(v, nr: int, a: Anleitungsangaben) -> None:
@@ -287,7 +309,7 @@ def _aufbereiten(archiv: Archive, buch: Buch, wege: Wege, e, mime: str, inhalt: 
         return None                                     # Benutzerseiten, Infoseiten: nur Anleitungen und Geräte zählen
     name = fertig.titel if fertig.titelart == "code" else ""
     return Zeile(e.path, fertig.titel, name, fertig.rubrik, fertig.einleitung, _text(fertig.html), fertig.frage,
-                 fertig.anleitung, fertig.geraet, abdruck=ab)
+                 fertig.anleitung, fertig.geraet, verweise=_verweise(fertig.html, wege.artikel(buch.kennung, "")), abdruck=ab)
 
 
 def bauen(archiv: Archive, buch: Buch, wege: Wege, ziel: Path, melden: Callable[[Stand], None] | None = None,
@@ -309,6 +331,8 @@ def bauen(archiv: Archive, buch: Buch, wege: Wege, ziel: Path, melden: Callable[
                          int(schema.angabe(v, "uebernommen", "0")))
         with v:
             schema.angabe_setzen(v, "buch", buch.kennung)
+            if schema.angabe(v, "naechste", "0") == "0":   # neu angefangen: dieser Index kennt die Verweise (WIKI-20)
+                schema.angabe_setzen(v, "verweise", "1")
             schema.angabe_setzen(v, "startseite", _startseite(archiv))
             if quelle:
                 schema.angabe_setzen(v, "vorlage", quelle.pfad.name)

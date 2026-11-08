@@ -56,6 +56,13 @@ class Nachbar(BaseModel):
     titel: str
 
 
+class Rueckverweise(BaseModel):
+    """Seiten, die auf eine Seite verweisen (WIKI-20), aus dem eigenen Index des Buchs."""
+    bekannt: bool = Field(description="falsch: das Buch hat keinen eigenen Index mit Verweisen (dann weiß es das nicht)")
+    gesamt: int = 0
+    seiten: list[Nachbar] = Field(default_factory=list)
+
+
 class Gruppe(BaseModel):
     """Eine Rubrik eines Buchs mit ihren Seiten (Gliederung einer Dokumentation)."""
     titel: str

@@ -157,3 +157,8 @@ export const werkzeugeHolen = (buch: string, sprachen: string[], anfang = "") =>
 
 export const einordnungHolen = (buch: string, pfad: string) =>
   hole<Einordnung>(`/anleitungen/${encodeURIComponent(buch)}/einordnung?${abfrage({ pfad })}`);
+
+// --- Verweist hierher (WIKI-20): Rückverweise aus dem eigenen Index des Buchs ---
+export interface Rueckverweise { bekannt: boolean; gesamt: number; seiten: { pfad: string; titel: string }[] }
+export const rueckverweiseHolen = (buch: string, pfad: string) =>
+  hole<Rueckverweise>(`/rueckverweise/${encodeURIComponent(buch)}?${abfrage({ pfad })}`);

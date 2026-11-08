@@ -1510,3 +1510,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .artikel-kategorien { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: var(--a5) 0; color: var(--text-3); }
 .artikel-kategorien .chip { text-decoration: none; color: var(--text-2); }
 @media (max-width: 700px) { .kat-kategorie { --kat-rand: var(--a3); } }
+
+/* Verweist hierher (WIKI-20) in "Über diesen Artikel": lange Listen in Spalten */
+.artikel-ueber ul.hierher { columns: 2 220px; column-gap: var(--a4); margin: 0; padding-left: 1.2em; }
+.artikel-ueber ul.hierher li { break-inside: avoid; }

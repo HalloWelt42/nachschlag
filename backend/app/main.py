@@ -203,7 +203,8 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     app.state.bibliothek = bibliothek
     app.state.indexauftraege = indexauftraege
     app.include_router(router(geruest, bibliothek, leser, suche, quellen,
-                              suchregeln=lambda: Suchregeln(vorschlaege=e().vorschlaege, an_der_stelle=e().an_der_stelle)))
+                              suchregeln=lambda: Suchregeln(vorschlaege=e().vorschlaege, an_der_stelle=e().an_der_stelle),
+                              eigen=eigen))
     app.include_router(mcp_router(geruest, mcp_werkzeuge(bibliothek, suche, leser)))   # MCP-Werkzeuge für KI (WIKI-78)
     app.include_router(quellenarchiv_router(geruest, quellen))
     app.include_router(buecherlader_router(geruest, lader))
@@ -215,7 +216,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     app.include_router(themen_router(geruest, themen, suche, bibliothek, meins, leser))
     app.include_router(zitieren_router(geruest, bibliothek, leser))
     app.include_router(medien_router(geruest, Medien(leser, suche)))
-    app.include_router(stoebern_router(geruest, Stoebern(bibliothek, leser, suche, meins.gelesen)))
+    app.include_router(stoebern_router(geruest, Stoebern(bibliothek, leser, suche, meins.gelesen, eigen)))
     app.include_router(register_router(geruest, Register(bibliothek, eigen)))
     app.include_router(anleitungen_router(geruest, Anleitungen(bibliothek, eigen, wege(bibliothek))))
     app.include_router(uebersetzung_router(geruest, uebersetzer, artikeluebersetzer,

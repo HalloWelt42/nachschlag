@@ -16,7 +16,10 @@ Anleitungen (iFixit, WIKI-64): je Anleitung Art, Sprache, Schwierigkeit, Zeit, S
 Werkzeuge (`werkzeuge`, verdichtet im Register je Sprache); je Geräteseite Bild und Kurztext (`geraete`), die Pfade ihrer
 Unterkategorien (`geraet_kind`, daraus der Baum) und Anleitungen mit dem Bauteil, wie die Geräteseite es nennt
 (`geraet_anleitung`). Alle Metadaten hängen an der Nummer ihrer Seite (`nr`), Titel und Pfad stehen in `seiten`.
-Bilder stehen als Pfad im Buch, damit sie über Fassungen hinweg gelten. Verdichtet: `register_einordnung` nennt je Anleitung
+Bilder stehen als Pfad im Buch, damit sie über Fassungen hinweg gelten.
+
+Verweise (WIKI-20): je Seite die Pfade der Seiten desselben Buchs, auf die sie verweist (`verweise`); daraus die
+Rückverweise ("verweist hierher"). Ein Index, der sie kennt, trägt die Angabe `verweise` = 1 (ältere nicht). Verdichtet: `register_einordnung` nennt je Anleitung
 jede Geräteseite darüber (Gerät, Kategorie, bis zur Startseite), so filtert ein Knoten des Baums seinen ganzen Ast."""
 
 from __future__ import annotations
@@ -71,6 +74,8 @@ CREATE TABLE IF NOT EXISTS geraet_anleitung (nr INTEGER NOT NULL, anleitung TEXT
   PRIMARY KEY (nr, anleitung)) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS geraet_anleitung_anleitung ON geraet_anleitung (anleitung);
 CREATE TABLE IF NOT EXISTS register_werkzeuge (wort TEXT NOT NULL, sprache TEXT NOT NULL, anleitungen INTEGER NOT NULL, PRIMARY KEY (wort, sprache));
+CREATE TABLE IF NOT EXISTS verweise (nr INTEGER NOT NULL, ziel TEXT NOT NULL, PRIMARY KEY (nr, ziel)) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS verweise_ziel ON verweise (ziel);
 CREATE TABLE IF NOT EXISTS register_einordnung (oben TEXT NOT NULL, nr INTEGER NOT NULL, PRIMARY KEY (oben, nr)) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS register_einordnung_nr ON register_einordnung (nr);
 INSERT OR IGNORE INTO angaben (schluessel, wert) VALUES ('fassung', '{FASSUNG}');

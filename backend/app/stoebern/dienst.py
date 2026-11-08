@@ -18,6 +18,8 @@ from lxml import html as lhtml
 
 from ..artikel import Artikelleser
 from ..bibliothek import Bibliothek
+from ..eigenindex.abfrage import rueckverweise
+from ..eigenindex.ablage import Eigenindizes
 from ..modell.artikel import Artikel
 from ..modell.stoebern import Blatteintrag, Buchseite, Fund, Nachbar, Pfadschritt, Richtung
 from ..suche import Suche
@@ -111,9 +113,10 @@ def buchseite(a: Archive, start: int, richtung: Richtung, anzahl: int, springt: 
 
 class Stoebern:
     def __init__(self, bibliothek: Bibliothek, leser: Artikelleser, suche: Suche,
-                 gelesen: Callable[[str, str, str], Awaitable[bool]]) -> None:
-        """`gelesen(konto, buch, pfad)`: hat das Konto die Seite schon geöffnet (Verlauf)?"""
-        self._bib, self._leser, self._suche, self._gelesen = bibliothek, leser, suche, gelesen
+                 gelesen: Callable[[str, str, str], Awaitable[bool]], eigen: Eigenindizes | None = None) -> None:
+        """`gelesen(konto, buch, pfad)`: hat das Konto die Seite schon geöffnet (Verlauf)? `eigen`: die eigenen
+        Indizes; kennt der des Buchs die Verweise, sind "erwähnt in" echte Rückverweise (WIKI-20)."""
+        self._bib, self._leser, self._suche, self._gelesen, self._eigen = bibliothek, leser, suche, gelesen, eigen
 
     async def fund(self, buch: str, pfad: str) -> Fund:
         return fund_aus(await self._leser.lesen(buch, pfad))
@@ -132,14 +135,20 @@ class Stoebern:
 
     async def schritt(self, buch: str, pfad: str) -> Pfadschritt:
         artikel = await self._leser.lesen(buch, pfad)
-        nennen, aehnlich = await asyncio.gather(self._nennen(artikel), self._aehnlich(artikel))
-        return Pfadschritt(fund=fund_aus(artikel), von_hier=verweise_aus(artikel, SCHRITTE_JE_SPALTE), erwaehnt_in=nennen, aehnlich=aehnlich)
+        (nennen, hierher), aehnlich = await asyncio.gather(self._nennen(artikel), self._aehnlich(artikel))
+        return Pfadschritt(fund=fund_aus(artikel), von_hier=verweise_aus(artikel, SCHRITTE_JE_SPALTE), erwaehnt_in=nennen,
+                           verweist_hierher=hierher, aehnlich=aehnlich)
 
-    async def _nennen(self, artikel: Artikel) -> list[Nachbar]:
-        """Artikel, die den Titel im Text nennen (Volltext des Buchs), ohne den Artikel selbst."""
+    async def _nennen(self, artikel: Artikel) -> tuple[list[Nachbar], bool]:
+        """Seiten, die auf den Artikel verweisen, wenn der eigene Index des Buchs die Verweise kennt (WIKI-20); sonst
+        Artikel, die den Titel im Text nennen (Volltext des Buchs), ohne den Artikel selbst. Dazu, welches von beiden."""
+        if self._eigen and (datei := self._eigen.datei(artikel.buch)):
+            r = await asyncio.to_thread(rueckverweise, datei, artikel.pfad, SCHRITTE_JE_SPALTE)
+            if r is not None:
+                return [Nachbar(pfad=x.pfad, titel=x.titel, hinweis="verweist hierher") for x in r[0]], True
         ergebnis = await self._suche.suchen(artikel.titel, [artikel.buch], SCHRITTE_JE_SPALTE + 1, wege="index")
         return [Nachbar(pfad=t.pfad, titel=t.titel, hinweis=_auszug(html.unescape(_EM.sub("", t.ausschnitt)))[:120])
-                for t in ergebnis.treffer if t.pfad != artikel.pfad][:SCHRITTE_JE_SPALTE]
+                for t in ergebnis.treffer if t.pfad != artikel.pfad][:SCHRITTE_JE_SPALTE], False
 
     async def _aehnlich(self, artikel: Artikel) -> list[Nachbar]:
         """Ähnlich nach Bedeutung über den Fundus (mit der Einleitung als Frage); ohne Anbindung leer."""

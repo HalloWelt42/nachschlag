@@ -4,9 +4,9 @@ Rahmen mit dem Lesezugang der Sitzung (Cookie, gilt nur für diesen Pfad), weil 
 
 from __future__ import annotations
 
-from collections.abc import Callable
-
+import asyncio
 import re
+from collections.abc import Callable
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query
@@ -16,7 +16,9 @@ from appkern.app import Geruest
 
 from .artikel import Artikelleser
 from .bibliothek import Bibliothek, BuchFehlt, EintragFehlt
-from .modell.artikel import Artikel
+from .eigenindex.abfrage import rueckverweise
+from .eigenindex.ablage import Eigenindizes
+from .modell.artikel import Artikel, Nachbar, Rueckverweise
 from .modell.buch import Bibliotheksstand, Buch
 from .modell.suche import Suchergebnis, Suchregeln, Vorschlag
 from .quellenarchiv import Quellenarchiv
@@ -34,7 +36,7 @@ def _fehlt(f: Exception) -> HTTPException:
 
 
 def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche: Suche, quellen: Quellenarchiv,
-           suchregeln: Callable[[], Suchregeln] | None = None) -> APIRouter:
+           suchregeln: Callable[[], Suchregeln] | None = None, eigen: Eigenindizes | None = None) -> APIRouter:
     r = APIRouter(prefix="/api/v1", tags=["nachschlag"])
     pflicht, lesen = [geruest.pflicht], [geruest.lesen]
 
@@ -72,6 +74,16 @@ def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche:
                           anzahl: int = Query(8, ge=1, le=30)) -> list[Vorschlag]:
         """Titel, die mit dem Getippten beginnen oder es enthalten (Titelindex der Bücher)."""
         return await suche.vorschlaege(anfang, buecher, anzahl)
+
+    @r.get("/rueckverweise/{buch}", response_model=Rueckverweise, dependencies=pflicht)
+    async def rueckverweise_von(buch: str, pfad: str, anzahl: int = Query(50, ge=1, le=500)) -> Rueckverweise:
+        """Seiten desselben Buchs, die auf `pfad` verweisen ("verweist hierher"); nur mit einem eigenen Index, der die
+        Verweise kennt, sonst `bekannt` falsch."""
+        datei = eigen.datei(buch) if eigen else None
+        r = await asyncio.to_thread(rueckverweise, datei, pfad, anzahl) if datei else None
+        if r is None:
+            return Rueckverweise(bekannt=False)
+        return Rueckverweise(bekannt=True, gesamt=r[1], seiten=[Nachbar(pfad=x.pfad, titel=x.titel) for x in r[0]])
 
     @r.get("/suche/regeln", response_model=Suchregeln, dependencies=pflicht)
     async def regeln() -> Suchregeln:

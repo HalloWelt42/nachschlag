@@ -20,6 +20,7 @@ export interface Pfadschritt {
   fund: Fund;
   von_hier: Nachbar[];
   erwaehnt_in: Nachbar[];
+  verweist_hierher?: boolean;     // erwaehnt_in sind echte Rückverweise (eigener Index, WIKI-20)
   aehnlich: Nachbar[];
 }
 

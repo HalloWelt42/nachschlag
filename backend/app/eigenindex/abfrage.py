@@ -111,3 +111,24 @@ def _fragezahlen(v: sqlite3.Connection, pfad: str) -> Fragezahlen | None:
         return None
     woerter = [w["wort"] for w in v.execute("SELECT wort FROM schlagwoerter WHERE nr = ?", (z["nr"],))]
     return Fragezahlen(stimmen=z["stimmen"], antworten=z["antworten"], akzeptiert=bool(z["akzeptiert"]), schlagwoerter=woerter)
+
+
+@dataclass
+class Rueckverweis:
+    pfad: str
+    titel: str
+
+
+def rueckverweise(datei: Path, pfad: str, anzahl: int = 50) -> tuple[list[Rueckverweis], int] | None:
+    """Seiten, die auf `pfad` verweisen (nach Titel), und ihre Zahl (WIKI-20); None, wenn dieser Index die Verweise
+    nicht kennt (gebaut, bevor es sie gab): dann weiß er es nicht, statt "keine" zu sagen."""
+    v = schema.lesen(datei)
+    try:
+        if schema.angabe(v, "verweise", "") != "1":
+            return None
+        gesamt = v.execute("SELECT COUNT(*) FROM verweise WHERE ziel = ?", (pfad,)).fetchone()[0]
+        zeilen = v.execute("SELECT s.pfad, s.titel FROM verweise w JOIN seiten s ON s.nr = w.nr WHERE w.ziel = ? "
+                           "ORDER BY s.titel COLLATE NOCASE LIMIT ?", (pfad, anzahl)).fetchall()
+        return [Rueckverweis(z["pfad"], z["titel"]) for z in zeilen], gesamt
+    finally:
+        v.close()

@@ -7,7 +7,7 @@
   import { tick, untrack } from "svelte";
   import { bezeichnung, bibliothek, bibliothekLaden, buch as buchVon, datum, hauptbuch, zahl } from "../lib/bibliothek.svelte";
   import { artikelHolen, artikelstandHolen, artikelUebersetzen, stellenstandHolen, stelleUebersetzen, zufallHolen,
-           type Artikelstand } from "../lib/schnittstelle";
+           rueckverweiseHolen, type Artikelstand, type Rueckverweise } from "../lib/schnittstelle";
   import { deutsch, deutschMerken, uebersetzt } from "../lib/deutsch.svelte";
   import { ANSICHTEN, ansichtMerken, leseansicht } from "../lib/ansicht.svelte";
   import type { Artikel } from "../lib/typen";
@@ -693,6 +693,23 @@
   const STELLE_OBEN_ANTEIL = 0.2;
 
   let blatt = $state<{ notiz: Notiz | null; entwurf: NotizNeu | null; schreiben?: boolean } | null>(null);
+
+  // Verweist hierher (WIKI-20): erst geholt, wenn "Über diesen Artikel" aufgeht; je Artikel einmal
+  let hierher = $state.raw<Rueckverweise | null>(null);
+  let hierherFuer = "";
+  async function rueckverweiseLaden() {
+    if (!artikel) return;
+    const fuer = `${artikel.buch}/${artikel.pfad}`;
+    if (hierherFuer === fuer) return;
+    hierherFuer = fuer;
+    hierher = null;
+    try {
+      const r = await rueckverweiseHolen(artikel.buch, artikel.pfad);
+      if (hierherFuer === fuer) hierher = r;
+    } catch {
+      hierherFuer = "";
+    }
+  }
   // `markiert`: Notizen, deren Markierung die Auswahl berührt (dann entfernt die Leiste, statt doppelt zu markieren)
   let textwahl = $state<{ stelle: Stelle; markiert: Notiz[]; belege: number[]; x: number; y: number; unten: boolean } | null>(null);
   let kopiert = $state<"" | "ja" | "nein">("");
@@ -1133,7 +1150,7 @@
               {/each}
             </section>
           {/if}
-          <details class="artikel-ueber">
+          <details class="artikel-ueber" ontoggle={(e) => (e.currentTarget as HTMLDetailsElement).open && rueckverweiseLaden()}>
             <summary><i class="fa-solid fa-circle-info"></i>Über diesen Artikel<span>Quelle, Verweise</span></summary>
             <dl>
               <dt>Quelle</dt><dd>{buch ? bezeichnung(buch) : artikel.buch}{buch ? `, Stand ${datum(buch.stand)}` : ""}</dd>
@@ -1142,6 +1159,14 @@
               {#if artikel.online.length}
                 <dt>Im Netz</dt>
                 <dd><ul>{#each artikel.online as o}<li><a href={o} target="_blank" rel="noopener noreferrer">{o}</a></li>{/each}</ul></dd>
+              {/if}
+              {#if hierher?.bekannt}
+                <!-- Rückverweise aus dem eigenen Index (WIKI-20) -->
+                <dt>Verweist hierher</dt>
+                <dd>{#if hierher.gesamt}<ul class="hierher">{#each hierher.seiten as s (s.pfad)}<li><a href={"/" + lesenZiel(artikel.buch, s.pfad)}
+                      onclick={(e) => { if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey) { e.preventDefault(); lesen(artikel!.buch, s.pfad); } }}>{s.titel}</a></li>{/each}</ul>
+                    {#if hierher.gesamt > hierher.seiten.length}<span class="blass">und {hierher.gesamt - hierher.seiten.length} weitere</span>{/if}
+                  {:else}keine Seite der Quelle{/if}</dd>
               {/if}
               <dt>Aufbereitet</dt><dd>Baustein {artikel.baustein === "enzyklopaedie" ? "Enzyklopädie" : artikel.baustein}</dd>
               {#if aufDeutsch && ue?.uebersetzung}

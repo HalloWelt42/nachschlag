@@ -225,7 +225,8 @@
             {@const s = stoebern.schritt}
             <div class="schritte-gitter" class:laedt={schrittLaedt}>
               {#each [{ titel: "Verweist von hier", symbol: "fa-arrow-right-from-bracket", liste: s.von_hier, weg: "" },
-                      { titel: "Erwähnt in", symbol: "fa-arrow-right-to-bracket", liste: s.erwaehnt_in, weg: "Index" },
+                      { titel: s.verweist_hierher ? "Verweist hierher" : "Erwähnt in", symbol: "fa-arrow-right-to-bracket",
+                        liste: s.erwaehnt_in, weg: s.verweist_hierher ? "Verweise" : "Index" },
                       { titel: "Ähnlich nach Bedeutung", symbol: "fa-wand-magic-sparkles", liste: s.aehnlich, weg: "Bedeutung" }].filter((sp) => sp.liste.length) as sp (sp.titel)}
                 <div class="schritt-spalte">
                   <h3><i class="fa-solid {sp.symbol}"></i>{sp.titel}{#if sp.weg}<span class="weg">{sp.weg}</span>{/if}</h3>
