@@ -20,12 +20,12 @@ from ..modell.themen import (
 from ..artikel import Artikelleser
 from ..markdownablage import Markdownablage, MarkdownFehler
 from ..modell.meins import Markdownpfad
-from ..bibliothek import Bibliothek, BuchFehlt, EintragFehlt
+from ..bibliothek import Bibliothek
 from ..meins import Meins
 from ..suche import Suche
 from ..zitieren import Form
 from .heute import Heute, artikel_fuer_heute
-from .literatur import Literaturliste, literaturliste
+from .literatur import Literaturliste, fuer_thema
 from .ordnen import Ordnungsvorschlag, ThemenOrdner, Was
 from .speicher import Themen
 
@@ -88,16 +88,7 @@ def router(geruest: Geruest, themen: Themen, suche: Suche, bibliothek: Bibliothe
         """Literaturliste des Themas (WIKI-31) in einer Zitierform (einfach, apa, din, bibtex): je Artikel die
         Quellenangabe, darunter die Belege, die der Recherchemodus mit den Notizen gesammelt hat."""
         t = _da(await themen.thema(konto.id, thema))
-        buecher = {b.kennung: b for b in (await bibliothek.stand()).buecher}
-
-        async def verfasser(buch: str, pfad: str) -> tuple[str, str]:
-            try:
-                a = await leser.lesen(buch, pfad)
-            except (BuchFehlt, EintragFehlt):
-                return "", ""
-            return a.autor, a.datum
-
-        return Literaturliste(form=form, text=await literaturliste(t, buecher, await meins.notizen(konto.id), form, verfasser))
+        return Literaturliste(form=form, text=await fuer_thema(t, bibliothek, leser, await meins.notizen(konto.id), form))
 
     @r.post("/{thema}/markdown", response_model=Markdownpfad)
     async def als_markdown(thema: str, konto: Konto = geruest.mensch) -> Markdownpfad:

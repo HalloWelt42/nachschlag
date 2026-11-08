@@ -1,0 +1,23 @@
+# Mitgelieferte Vorlage (WIKI-45): die Artikel wie in den Büchern, von A bis Z, ohne Umformung (ohne KI).
+titel = "Nachschlagewerk"
+symbol = "fa-book-atlas"
+beschreibung = "Artikel wie in den Büchern, von A bis Z, ohne Umformung"
+untertitel = "Ein Nachschlagewerk"
+
+[aufbau]
+vorn = [{ art = "titelseite" }, { art = "inhalt" }]
+gliederung = "abc"
+innen = [{ art = "originaltext" }, { art = "notizen" }]
+hinten = [{ art = "literatur" }]
+
+[anweisung]
+ton = "sachlich"
+fuer_wen = "erwachsene"
+laenge = "original"
+fragen = 0
+zusatz = ""
+
+[gestaltung]
+schrift = "serifen"
+farbe = "stahl"
+bilder = "im_text"

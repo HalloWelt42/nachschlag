@@ -1,0 +1,23 @@
+# Mitgelieferte Vorlage (WIKI-45): Kapitel mit Einleitung, der ganze Text in einem Ton, Glossar.
+titel = "Sachbuch"
+symbol = "fa-book"
+beschreibung = "Kapitel mit Einleitung, Text in einem Ton, Glossar"
+untertitel = "Ein Sachbuch"
+
+[aufbau]
+vorn = [{ art = "titelseite" }, { art = "inhalt" }]
+gliederung = "kapitel"
+innen = [{ art = "kapiteleinleitung" }, { art = "umgeformt" }, { art = "notizen" }]
+hinten = [{ art = "glossar" }, { art = "literatur" }]
+
+[anweisung]
+ton = "sachlich"
+fuer_wen = "erwachsene"
+laenge = "original"
+fragen = 0
+zusatz = ""
+
+[gestaltung]
+schrift = "serifen"
+farbe = "petrol"
+bilder = "im_text"

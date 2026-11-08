@@ -1,0 +1,23 @@
+# Mitgelieferte Vorlage (WIKI-45): kurze Abschnitte, Auf einen Blick je Artikel, Fragen am Ende jedes Kapitels.
+titel = "Lernheft"
+symbol = "fa-graduation-cap"
+beschreibung = "kurze Abschnitte, Auf einen Blick, Fragen am Kapitelende"
+untertitel = "Ein Lernheft"
+
+[aufbau]
+vorn = [{ art = "titelseite" }, { art = "inhalt" }]
+gliederung = "kapitel"
+innen = [{ art = "kapiteleinleitung" }, { art = "blick" }, { art = "umgeformt" }, { art = "notizen" }, { art = "fragen" }]
+hinten = [{ art = "glossar" }]
+
+[anweisung]
+ton = "sachlich"
+fuer_wen = "erwachsene"
+laenge = "haelfte"
+fragen = 5
+zusatz = "Kurze Abschnitte mit treffenden Zwischenüberschriften; Fachwörter beim ersten Vorkommen in einem Halbsatz erklären."
+
+[gestaltung]
+schrift = "serifen"
+farbe = "petrol"
+bilder = "eins_gross"

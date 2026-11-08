@@ -1,0 +1,23 @@
+# Mitgelieferte Vorlage (WIKI-45): für das Ohr, passt zum Vertonen.
+titel = "Vorlesebuch"
+symbol = "fa-volume-high"
+beschreibung = "für das Ohr: kurze Sätze, Zahlen in Worten, keine Tabellen"
+untertitel = "Ein Vorlesebuch"
+
+[aufbau]
+vorn = [{ art = "titelseite" }, { art = "inhalt" }]
+gliederung = "kapitel"
+innen = [{ art = "kapiteleinleitung" }, { art = "umgeformt" }]
+hinten = []
+
+[anweisung]
+ton = "erzaehlend"
+fuer_wen = "erwachsene"
+laenge = "haelfte"
+fragen = 0
+zusatz = "Für das Ohr: kurze Sätze, Zahlen und Maße in Worten ausschreiben, keine Klammern, keine Abkürzungen, keine Aufzählungen und keine Tabellen."
+
+[gestaltung]
+schrift = "serifen"
+farbe = "honig"
+bilder = "ohne"

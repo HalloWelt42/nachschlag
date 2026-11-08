@@ -6,6 +6,7 @@ selbst stehen in `zitieren`; hier nur die Liste."""
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
@@ -15,6 +16,10 @@ from ..modell.buch import Buch
 from ..modell.meins import Notiz
 from ..modell.themen import Thema, Themeneintrag
 from ..zitieren import Form, Zitierangaben, schluessel, zitierangaben, zitieren
+
+if TYPE_CHECKING:
+    from ..artikel import Artikelleser
+    from ..bibliothek import Bibliothek
 
 #: (Buch, Pfad) -> (Autor, Datum), nur für Quellen, die ihre Verfasser nennen (Frage und Antwort)
 Verfasser = Callable[[str, str], Awaitable[tuple[str, str]]]
@@ -73,3 +78,19 @@ def _frei(kennung: str, vergeben: set[str]) -> str:
         neu, zusatz = f"{kennung}{chr(zusatz)}", zusatz + 1
     vergeben.add(neu)
     return neu
+
+
+async def fuer_thema(thema: Thema, bibliothek: Bibliothek, leser: Artikelleser, notizen: list[Notiz], form: Form) -> str:
+    """Die Literaturliste eines Themas mit den Angaben der Bibliothek (Seite Themen, Als Buch)."""
+    from ..bibliothek import BuchFehlt, EintragFehlt
+
+    buecher = {b.kennung: b for b in (await bibliothek.stand()).buecher}
+
+    async def verfasser(buch: str, pfad: str) -> tuple[str, str]:
+        try:
+            a = await leser.lesen(buch, pfad)
+        except (BuchFehlt, EintragFehlt):
+            return "", ""
+        return a.autor, a.datum
+
+    return await literaturliste(thema, buecher, notizen, form, verfasser)

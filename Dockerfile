@@ -17,7 +17,9 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 NACHSCHLAG_DATEN=/app/daten HOME=/tmp
 WORKDIR /app
 COPY backend/requirements.txt backend/requirements.txt
-RUN apt-get update && apt-get install -y --no-install-recommends git && \
+# Satz der Bücher als PDF (WIKI-45): Pango und HarfBuzz für WeasyPrint, Schriften mit und ohne Serifen (arm64 wie amd64)
+RUN apt-get update && apt-get install -y --no-install-recommends git libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 \
+        fonts-liberation2 fonts-dejavu-core && \
     pip install --no-cache-dir -r backend/requirements.txt && \
     apt-get purge -y git && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 COPY version.json ./

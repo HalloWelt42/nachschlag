@@ -40,6 +40,12 @@ from .kategorien.wikis import wiki
 from bildholer.modelle import Regeln as Bildregeln
 from .markdownablage import Markdownablage
 from .themen.ordnen import ThemenOrdner
+from .themen.literatur import fuer_thema as literatur_fuer_thema
+from .alsbuch.ablage import Buchablage
+from .alsbuch.api import router as alsbuch_router
+from .alsbuch.bilder import Bildquelle
+from .alsbuch.dienst import Buecher
+from .alsbuch.vorlagen import Vorlagen
 from .meins import Meins
 from .stoebern.dienst import buchseite
 from .zeitfenster import ZONE, Nachtfenster, Nachtwecker, nachts
@@ -220,6 +226,16 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
                             lambda: (e().nachts_von, e().nachts_bis))
     geruest.begleiter_anmelden(sammlungen)
 
+    # Als Buch (WIKI-45): ein Thema wird ein Buch (EPUB und PDF) nach einer Vorlage, umgeformt über die Leitstelle
+    async def literatur(konto: str, thema) -> str:
+        return await literatur_fuer_thema(thema, bibliothek, leser, await meins.notizen(konto), "einfach")
+
+    buecher = Buecher(geruest.db, geruest.auftraege, themen, bibliothek, leser, artikeluebersetzer, meins.notizen, literatur,
+                      Vorlagen(lambda: geruest.kellerwolke), Buchablage(lambda: geruest.kellerwolke),
+                      Bildquelle(bibliothek, grossbilder.finden), lambda: geruest.leitstelle, lambda: e().buchmodell, nacht)
+    geruest.begleiter_anmelden(buecher)
+    geruest.einstellungen.anbieten("buchmodell", geruest.leitstelle_angebot("text"))
+
     # Bücherlader (WIKI-57): Verzeichnis durchsehen, Neues melden, Abos laden; schreibt als Einziger in den Ordner der Bücher
     def laderregeln() -> Laderregeln:
         s = e()
@@ -255,7 +271,8 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
                          transport=lader_transport or transport, in_gebrauch=fundus_dateien, nach_loeschen=nach_loeschen)
     geruest.begleiter_anmelden(lader)
     # eine Regel zum Zurückstellen für alle Dienste: Sammlungen warten auf die Nacht, Laden mit "nur nachts" auch
-    geruest.auftraege.zurueckstellen_wenn(lambda a: sammlungen.zurueckstellen(a) or lader.zurueckstellen(a))
+    geruest.auftraege.zurueckstellen_wenn(lambda a: sammlungen.zurueckstellen(a) or lader.zurueckstellen(a)
+                                          or buecher.zurueckstellen(a))
 
     app = geruest.fastapi()
     app.state.geruest = geruest
@@ -276,6 +293,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     app.include_router(themen_router(geruest, themen, suche, bibliothek, meins, leser, markdown,
                                      ThemenOrdner(geruest.auftraege, themen, leser, lambda: geruest.leitstelle, lambda: e().suchmodell)))
     app.include_router(zitieren_router(geruest, bibliothek, leser))
+    app.include_router(alsbuch_router(geruest, buecher))
     app.include_router(medien_router(geruest, Medien(leser, suche, lambda buch, pfad: grossbilder.finden(buch, pfad) is not None)))
     async def themenartikel(konto: str) -> list[tuple[str, str]]:
         """Buch (heutige Fassung) und Pfad jedes Artikels in den Themen des Kontos (Stöbern: nahe an meinen Themen)."""

@@ -16,6 +16,7 @@ UEBER_NACHT = {"gruppe": "Über Nacht"}
 BUECHERLADER = {"gruppe": "Bücherlader"}
 BILDER = {"gruppe": "Bilder"}
 MEINS = {"gruppe": "Meins"}
+ALS_BUCH = {"gruppe": "Als Buch"}
 
 #: Wie oft der Bücherlader das Verzeichnis durchsieht (WIKI-57)
 DURCHSICHT = {"taeglich": "täglich", "woechentlich": "wöchentlich", "monatlich": "monatlich"}
@@ -104,6 +105,12 @@ class AppEinstellungen(Grundeinstellungen):
                                         "(Ortszeit).")
     nachts_bis: int = Field(7, ge=0, le=23, title="Nacht endet um", json_schema_extra={**UEBER_NACHT, "einheit": "Uhr"},
                             description="Bis zu dieser Stunde; was dann nicht fertig ist, läuft in der nächsten Nacht weiter.")
+
+    # --- Als Buch (WIKI-45): ein Thema wird ein Buch, umgeformt über die Leitstelle --------------------------------------
+    buchmodell: str = Field(TEXTMODELL, title="Modell für Bücher", json_schema_extra=ALS_BUCH,
+                            description="Formt die Artikel eines Themas nach der Vorlage um und schreibt Auf einen Blick, "
+                                        "Fragen und Glossar. Die Dauer schätzt Nachschlag aus dem Tempo dieses Modells, das "
+                                        "es nach jedem Buch neu misst; leer gilt die Vorgabe Qwen 80B.")
 
     # --- Suche ------------------------------------------------------------------------------------------------------
     suchmodell: str = Field(TEXTMODELL, title="Modell für Übersetzung und Korrektur", json_schema_extra=SUCHE,
@@ -216,7 +223,7 @@ class AppEinstellungen(Grundeinstellungen):
     bilder_ordner: str = Field("/bilder", title="Ablage der großen Bilder", json_schema_extra=BILDER,
                                description="Hier legt der Bildholer die Bilder ab; Nachschlag liest sie nur.")
 
-    @field_validator("suchmodell", mode="before")
+    @field_validator("suchmodell", "buchmodell", mode="before")
     @classmethod
     def _modell_nie_leer(cls, wert: object) -> object:
         """Leer (auch ein früher gespeicherter leerer Wert) heißt die Vorgabe: ohne Modell lehnt die Leitstelle ab."""

@@ -1,6 +1,7 @@
 """Nachgestellte Ablage der Kellerwolke für die Tests und den Probebetrieb, nur im Speicher: Ordner und Dateien mit
-ihrem Pfad. Sie kann, was Nachschlag braucht (Bilder an Notizen, WIKI-51): Ordner anlegen, Datei schreiben, Knoten
-über den Pfad finden, lesen und löschen; ein gelöschter Ordner nimmt seinen Inhalt mit (wie der Papierkorb)."""
+ihrem Pfad. Sie kann, was Nachschlag braucht (Bilder an Notizen, WIKI-51; Vorlagen und Bücher, WIKI-45): Ordner anlegen,
+Datei schreiben (eine vorhandene bekommt neuen Inhalt unter derselben Kennung), Knoten über den Pfad finden, die Kinder
+eines Ordners aufzählen, lesen und löschen; ein gelöschter Ordner nimmt seinen Inhalt mit (wie der Papierkorb)."""
 
 from __future__ import annotations
 
@@ -29,10 +30,22 @@ class Ablage:
             ziel = json.loads(request.content)["pfad"]
             return self._json(self._finden(ziel) or self._anlegen(ziel, None))
         if pfad == "/api/v1/ablage/datei" and request.method == "PUT":
-            return self._json(self._anlegen(request.url.params["pfad"], request.content))
+            ziel = request.url.params["pfad"]
+            if (vorhanden := self._finden(ziel)) is not None:
+                self.knoten[vorhanden] = (ziel, request.content)
+                return self._json(vorhanden)
+            return self._json(self._anlegen(ziel, request.content))
         if pfad == "/api/v1/ablage/pfad":
             kennung = self._finden(request.url.params["pfad"])
             return self._json(kennung) if kennung else self._fehlt()
+        if (m := re.fullmatch(r"/api/v1/ablage/knoten/([0-9a-f-]+)/kinder", pfad)):
+            if m.group(1) not in self.knoten:
+                return self._fehlt()
+            ordner = self.knoten[m.group(1)][0]
+            kinder = sorted((k for k, (p, _) in self.knoten.items() if p.rsplit("/", 1)[0] == ordner and p != ordner),
+                            key=lambda k: self.knoten[k][0])
+            ab, anzahl = int(request.url.params.get("ab", 0)), int(request.url.params.get("anzahl", 200))
+            return httpx.Response(200, json=[self._angaben(k) for k in kinder[ab:ab + anzahl]])
         if (m := re.fullmatch(r"/api/v1/ablage/knoten/([0-9a-f-]+)(/inhalt)?", pfad)):
             kennung = m.group(1)
             if kennung not in self.knoten:
@@ -52,11 +65,14 @@ class Ablage:
     def _finden(self, pfad: str) -> str | None:
         return next((k for k, (p, _) in self.knoten.items() if p == pfad), None)
 
-    def _json(self, kennung: str) -> httpx.Response:
+    def _angaben(self, kennung: str) -> dict:
         pfad, inhalt = self.knoten[kennung]
-        return httpx.Response(200, json={"id": kennung, "name": pfad.rsplit("/", 1)[-1], "pfad": pfad, "recht": "schreiben",
-                                         "typ": "ordner" if inhalt is None else "datei",
-                                         "erstellt_am": ZEIT, "geaendert_am": ZEIT})
+        return {"id": kennung, "name": pfad.rsplit("/", 1)[-1], "pfad": pfad, "recht": "schreiben",
+                "typ": "ordner" if inhalt is None else "datei", "groesse": None if inhalt is None else len(inhalt),
+                "etag": None if inhalt is None else f"e{hash(inhalt) & 0xffffff:x}", "erstellt_am": ZEIT, "geaendert_am": ZEIT}
+
+    def _json(self, kennung: str) -> httpx.Response:
+        return httpx.Response(200, json=self._angaben(kennung))
 
     @staticmethod
     def _fehlt() -> httpx.Response:

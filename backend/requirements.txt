@@ -10,3 +10,6 @@ numpy>=1.26
 tzdata                       # Nachtfenster in Ortszeit, auch ohne Zeitzonen im Abbild
 lxml>=5
 markdown-it-py>=3,<4        # Übungen (freeCodeCamp) liegen als Markdown im Buch (WIKI-66)
+weasyprint>=66,<67           # Satz als PDF aus demselben XHTML wie das EPUB (WIKI-45); braucht Pango aus dem System
+pypdf>=6,<7                  # Zwei Seiten A5 je Blatt A4 (WIKI-45)
+tomli-w>=1.2,<2              # Vorlagen der Bücher als TOML-Dateien in der Kellerwolke schreiben (WIKI-45)

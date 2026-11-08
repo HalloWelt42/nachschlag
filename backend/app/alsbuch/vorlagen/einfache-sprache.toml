@@ -1,0 +1,23 @@
+# Mitgelieferte Vorlage (WIKI-45): Einfache Sprache mit vielen Bildern.
+titel = "Einfache Sprache"
+symbol = "fa-child-reaching"
+beschreibung = "kurze Sätze, schwere Wörter erklärt, viel Bild"
+untertitel = "In Einfacher Sprache"
+
+[aufbau]
+vorn = [{ art = "titelseite" }, { art = "inhalt" }]
+gliederung = "kapitel"
+innen = [{ art = "blick" }, { art = "umgeformt" }, { art = "notizen" }]
+hinten = [{ art = "glossar" }]
+
+[anweisung]
+ton = "locker"
+fuer_wen = "erwachsene"
+laenge = "haelfte"
+fragen = 0
+zusatz = "Schreibe in Einfacher Sprache: kurze Sätze mit nur einer Aussage, bekannte Wörter, schwere Wörter gleich beim ersten Vorkommen erklären, keine Fremdwörter ohne Erklärung."
+
+[gestaltung]
+schrift = "ohne"
+farbe = "koralle"
+bilder = "im_text"
