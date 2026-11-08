@@ -33,7 +33,21 @@ class Verweiszahlen(BaseModel):
 #: Wie eine Seite gezeigt wird: Lesedesign (Text mit Inhalt und Steckbrief), Übersicht (Kacheln mit Bild, etwa die
 #: Startseite eines Buchs) oder die Seite unverändert
 #: anleitung, geraet und anleitungen (Startseite: Anleitungen finden) gehören zur Inhaltsart Anleitung (WIKI-64)
-Darstellung = Literal["lesedesign", "uebersicht", "original", "anleitung", "geraet", "anleitungen", "uebung", "uebungen"]
+class Kategorieverweis(BaseModel):
+    """Eine Kategorie (oder eine Seite in ihr) eines Buchs mit Kategorien (WIKI-75)."""
+    pfad: str
+    titel: str
+
+
+class Kategorieangaben(BaseModel):
+    """Eine Kategorieseite: ihre Oberkategorien, Unterkategorien und alle Seiten darin (auch die, die die Quelle nur
+    über nachgeladene Teile zeigt)."""
+    ober: list[Kategorieverweis] = Field(default_factory=list)
+    unter: list[Kategorieverweis] = Field(default_factory=list)
+    seiten: list[Kategorieverweis] = Field(default_factory=list)
+
+
+Darstellung = Literal["lesedesign", "uebersicht", "original", "anleitung", "geraet", "anleitungen", "uebung", "uebungen", "kategorie"]
 
 
 class Nachbar(BaseModel):
@@ -128,3 +142,5 @@ class Artikel(BaseModel):
     geraet: Geraeteangaben | None = Field(None, description="Gerät oder Kategorie (Darstellung geraet, anleitungen)")
     uebung: Uebungsangaben | None = Field(None, description="Aufgabe eines Übungsbuchs (Darstellung uebung)")
     kurse: Kursangaben | None = Field(None, description="Kurse eines Übungsbuchs (Darstellung uebungen)")
+    kategorien: list[Kategorieverweis] = Field(default_factory=list, description="Kategorien der Seite, wie das Buch sie nennt (WIKI-75)")
+    kategorie: Kategorieangaben | None = Field(None, description="Eine Kategorieseite (Darstellung kategorie)")

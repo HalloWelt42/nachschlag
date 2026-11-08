@@ -319,6 +319,22 @@
         "nachschlag.leseansicht": "a",
         "nachschlag.startansicht": "a"
       }
+    },
+    {
+      "name": "kategorieseite",
+      "pfad": "/lesen/klexikon_de_all_maxi_2026-11/Kategorie:Tiere_und_Natur",
+      "speicher": {
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
+      }
+    },
+    {
+      "name": "artikel-kategorien",
+      "pfad": "/lesen/klexikon_de_all_maxi_2026-11/Rotfuchs",
+      "speicher": {
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
+      }
     }
   ]
 }

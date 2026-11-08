@@ -88,7 +88,7 @@ export interface Artikel {
   angefragt: string;
   anker: string;
   titel: string;
-  darstellung: "lesedesign" | "uebersicht" | "original" | "anleitung" | "geraet" | "anleitungen" | "uebung" | "uebungen";
+  darstellung: "lesedesign" | "uebersicht" | "original" | "anleitung" | "geraet" | "anleitungen" | "uebung" | "uebungen" | "kategorie";
   baustein: string;
   html: string;
   einleitung: string;
@@ -113,6 +113,8 @@ export interface Artikel {
   geraet: Geraeteangaben | null;          // Gerät, Kategorie oder Startseite (iFixit, WIKI-64)
   uebung?: Uebungsangaben | null;         // Aufgabe eines Übungsbuchs (freeCodeCamp, WIKI-66)
   kurse?: Kursangaben | null;             // Startseite eines Übungsbuchs
+  kategorien?: Kategorieverweis[];        // Kategorien der Seite, wie das Buch sie nennt (WIKI-75)
+  kategorie?: Kategorieangaben | null;    // eine Kategorieseite
 }
 
 export type Weg = "bedeutung" | "index";
@@ -353,3 +355,7 @@ export interface Uebungsangaben {
 export interface Uebungsblock { kennung: string; titel: string; einleitung: string[]; aufgaben: Aufgabenverweis[] }
 export interface Uebungskurs { kennung: string; titel: string; einleitung: string[]; bloecke: Uebungsblock[] }
 export interface Kursangaben { kurse: Uebungskurs[] }
+
+// --- Kategorien in Büchern, die sie mitbringen (WIKI-75) ---
+export interface Kategorieverweis { pfad: string; titel: string }
+export interface Kategorieangaben { ober: Kategorieverweis[]; unter: Kategorieverweis[]; seiten: Kategorieverweis[] }

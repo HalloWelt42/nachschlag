@@ -8,12 +8,13 @@ from .anleitung import Anleitung, Anleitungsstart, Geraet
 from .basis import Aufbereitet, Baustein, Wege
 from .dokumentation import Dokumentation
 from .enzyklopaedie import Enzyklopaedie
+from .kategorie import Kategorie
 from .frage_antwort import FrageAntwort
 from .original import Originalansicht
 from .uebersicht import Uebersicht
 from .uebung import Uebung, Uebungsstart
 
-BAUSTEINE: tuple[Baustein, ...] = (Uebersicht(), Enzyklopaedie(), Dokumentation(), FrageAntwort(), Anleitung(), Geraet(),
+BAUSTEINE: tuple[Baustein, ...] = (Uebersicht(), Kategorie(), Enzyklopaedie(), Dokumentation(), FrageAntwort(), Anleitung(), Geraet(),
                                    Anleitungsstart(), Uebung(), Uebungsstart())
 RUECKFALL: Baustein = Originalansicht()
 

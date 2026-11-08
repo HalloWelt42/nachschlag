@@ -1493,3 +1493,20 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .anl-erf-notiz .zitat { color: var(--text-2); font-style: italic; }
 .anl-erf-bilder { display: flex; flex-wrap: wrap; gap: 6px; }
 .anl-erf-bilder img { width: 96px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r1); }
+
+/* ----- Kategorien eines Buchs (teile/Kategorieseite.svelte, Leiste am Artikel; WIKI-75) ----- */
+.kat-kategorie { --kat-rand: var(--a5); padding: 0 var(--kat-rand) var(--a6); }
+.kat-kopfzeile { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2) var(--a4); }
+.kat-ober { display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--a3); font-size: var(--klein); color: var(--text-3); }
+.kat-ober a { color: var(--akzent); text-decoration: none; }
+.kat-filter { flex: 1; min-width: min(100%, 220px); max-width: 420px; }
+.kat-beschreibung { max-width: 820px; }
+.kat-buchstaben { columns: 3 220px; column-gap: var(--a5); }
+.kat-buchstabe { break-inside: avoid; margin-bottom: var(--a4); }
+.kat-buchstabe h3 { margin: 0 0 4px; font-size: var(--klein); color: var(--text-3); font-family: var(--schrift-zahl); }
+.kat-buchstabe ul { list-style: none; margin: 0; padding: 0; }
+.kat-buchstabe a { display: block; padding: 2px 0; color: var(--text); text-decoration: none; overflow-wrap: anywhere; }
+.kat-buchstabe a:hover { color: var(--akzent); }
+.artikel-kategorien { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: var(--a5) 0; color: var(--text-3); }
+.artikel-kategorien .chip { text-decoration: none; color: var(--text-2); }
+@media (max-width: 700px) { .kat-kategorie { --kat-rand: var(--a3); } }

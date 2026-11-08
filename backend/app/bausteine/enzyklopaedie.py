@@ -16,6 +16,7 @@ from ..modell.artikel import Beleg, Steckbrief
 from ..modell.buch import Buch
 from . import html as h
 from .basis import Aufbereitet, Wege
+from .kategorie import kategorien_der_seite
 
 #: Überschriften der Belegabschnitte (Deutsch und Englisch), ganz aus dem Lesetext genommen
 BELEGE = {"einzelnachweise", "weblinks", "literatur", "anmerkungen", "quellen", "fußnoten", "references", "external links",
@@ -230,6 +231,7 @@ class Enzyklopaedie:
         doc = lhtml.fromstring(eintrag.inhalt.decode("utf-8", "replace"))
         kopf = next(iter(doc.xpath("//h1")), None)
         titel = h.text_von(kopf) if kopf is not None else eintrag.titel
+        kategorien = kategorien_der_seite(doc, buch, eintrag.pfad, wege)   # vor dem Säubern: die Leiste fliegt raus (WIKI-75)
         inhalt = next(iter(doc.xpath("//*[@id='mw-content-text']")), None)
         if inhalt is None:
             inhalt = next(iter(doc.xpath("//body")), doc)
@@ -261,4 +263,5 @@ class Enzyklopaedie:
             steckbrief.html = h.gerade(steckbrief.html)
         rumpf = "".join(h.als_html(k) for k in inhalt)
         return Aufbereitet(titel=titel, html=rumpf, einleitung=" ".join(einleitung)[:1200], abschnitte=abschnitte,
-                           steckbrief=steckbrief, bild=bild, verweise=verweise, online=online, belege=belege)
+                           steckbrief=steckbrief, bild=bild, verweise=verweise, online=online, belege=belege,
+                           kategorien=kategorien)

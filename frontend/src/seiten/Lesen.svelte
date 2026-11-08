@@ -33,6 +33,7 @@
   import Geraeteseite from "../teile/Geraeteseite.svelte";
   import Uebung from "../teile/Uebung.svelte";
   import Uebungen from "../teile/Uebungen.svelte";
+  import Kategorieseite from "../teile/Kategorieseite.svelte";
   import Codeansicht from "../teile/Codeansicht.svelte";
   import { ausprobierstand, beispieleHolen, beispielLoeschen, codeSprache, type Beispiel, type Codesprache,
            type Probe } from "../lib/ausprobieren";
@@ -1060,6 +1061,9 @@
   {:else if artikel.darstellung === "uebungen" && artikel.kurse && !original}
     <!-- Startseite eines Übungsbuchs: Kurse, Blöcke, Aufgaben -->
     <Uebungen {artikel} />
+  {:else if artikel.darstellung === "kategorie" && artikel.kategorie && !original}
+    <!-- Kategorie eines Buchs mit Kategorien (WIKI-75): Ober-, Unterkategorien, alle Seiten -->
+    <Kategorieseite {artikel} />
   {:else if artikel.darstellung === "geraet" && artikel.geraet && !original}
     <!-- Gerät oder Kategorie eines Anleitungsbuchs (WIKI-64) -->
     <Geraeteseite {artikel} />
@@ -1107,6 +1111,16 @@
           {/if}
           <div class="artikel-text" lang={textSprache || undefined} bind:this={text} role="presentation"
                onclick={klick} onkeydown={() => {}}>{@html artikel.html}</div>
+          {#if artikel.kategorien?.length}
+            <!-- Kategorien der Seite, wie das Buch sie nennt (WIKI-75) -->
+            <nav class="artikel-kategorien" aria-label="Kategorien">
+              <i class="fa-solid fa-folder-tree"></i>
+              {#each artikel.kategorien as k (k.pfad)}
+                <a class="chip" href={"/" + lesenZiel(artikel.buch, k.pfad)}
+                   onclick={(e) => { if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey) { e.preventDefault(); lesen(artikel!.buch, k.pfad); } }}>{k.titel}</a>
+              {/each}
+            </nav>
+          {/if}
           {#if artikelNotizen.length}
             <section class="deine-notizen">
               <h2><i class="fa-solid fa-note-sticky"></i>Deine Notizen<span class="zahl">{artikelNotizen.length}</span></h2>

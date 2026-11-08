@@ -13,8 +13,8 @@ from typing import Protocol
 from ..bibliothek import Eintrag
 from ..modell.anleitung import Anleitungsangaben, Geraeteangaben
 from ..modell.uebung import Kursangaben, Uebungsangaben
-from ..modell.artikel import (Abschnitt, Beleg, Darstellung, FrageAngaben, Fragekarte, Gruppe, Kachel, Nachbar, Steckbrief,
-                              Verweiszahlen)
+from ..modell.artikel import (Abschnitt, Beleg, Darstellung, FrageAngaben, Fragekarte, Gruppe, Kachel, Kategorieangaben,
+                              Kategorieverweis, Nachbar, Steckbrief, Verweiszahlen)
 from ..modell.buch import Art, Buch
 
 
@@ -56,6 +56,8 @@ class Aufbereitet:
     geraet: Geraeteangaben | None = None          # Geräteseite oder Kategorie (iFixit, WIKI-64)
     uebung: Uebungsangaben | None = None          # Aufgabe eines Übungsbuchs (freeCodeCamp, WIKI-66)
     kurse: Kursangaben | None = None              # Startseite eines Übungsbuchs: Kurse, Blöcke, Aufgaben
+    kategorien: list[Kategorieverweis] = field(default_factory=list)   # Kategorien der Seite (WIKI-75)
+    kategorie: Kategorieangaben | None = None     # eine Kategorieseite: Ober-, Unterkategorien, Seiten
 
 
 class Baustein(Protocol):

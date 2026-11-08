@@ -422,3 +422,42 @@ def bauen_uebungen(ordner: Path, name: str = "probecamp_de_all_2026-10") -> Path
         c.add_item(_Seite("content/curriculum/index.json", "", json.dumps(gliederung), "application/json", vorne=False))
         c.add_item(_Seite("content/locales/intro.json", "", json.dumps(einfuehrung), "application/json", vorne=False))
     return datei
+
+
+# ----- Probebuch mit Kategorien (mwoffliner 2.x, WIKI-75): Leiste am Artikel, Kategorieseite mit nachgeladenen Teilen ---
+
+def _kategorieleiste(*kategorien: str) -> str:
+    return ('<div id="catlinks" class="catlinks"><div id="mw-normal-catlinks">Kategorien: <ul>'
+            + "".join(f'<li><a href="Kategorie%3A{k}" title="Kategorie:{k}">{k}</a></li>' for k in kategorien)
+            + '</ul></div><div id="mw-hidden-catlinks"><ul><li><a href="Kategorie%3AWartung">Wartung</a></li></ul></div></div>')
+
+
+def _liste(titel: list[str]) -> str:
+    return ('<div class="mw-category"><div class="mw-category-group"><ul>'
+            + "".join(f'<li><a target="_parent" href="{t.replace(":", "%3A")}">{t}</a></li>' for t in titel) + "</ul></div></div>")
+
+
+def bauen_kategorien(ordner: Path, name: str = "probekat_de_all_maxi_2026-11") -> Path:
+    ordner.mkdir(parents=True, exist_ok=True)
+    datei = ordner / f"{name}.zim"
+    artikel = [f"Tier{i:02d}" for i in range(1, 6)]
+    with Creator(str(datei)).config_indexing(True, "deu") as c:
+        c.set_mainpath("Tier01")
+        for schluessel, wert in (("Name", name.rsplit("_", 1)[0]), ("Title", "Probekat"), ("Language", "deu"),
+                                 ("Description", "Lexikon mit Kategorien"), ("Date", "2026-11-01"), ("Scraper", "mwoffliner 2.1.1"),
+                                 ("Creator", "Tests"), ("Publisher", "Tests")):
+            c.add_metadata(schluessel, wert)
+        for t in artikel:
+            c.add_item(_Seite(t, t, f'<html><body><h1>{t}</h1><div id="mw-content-text"><p>{t} ist ein Tier für die Tests, '
+                                    f'mit genug Text für eine Einleitung im Lexikon.</p></div>{_kategorieleiste("Tiere")}</body></html>'))
+        c.add_item(_Seite("Kategorie:Tiere", "Kategorie:Tiere",
+                          '<html><body><h1>Kategorie:Tiere</h1><div id="mw-content-text"><p>Alle Tiere des Buchs.</p>'
+                          '<div class="mw-category-generated"><div id="mw-subcategories">' + _liste(["Kategorie:Füchse"]) + '</div>'
+                          '<div id="mw-pages">' + _liste(artikel[:2]) + '</div></div></div>' + _kategorieleiste("Alles") + "</body></html>"))
+        c.add_item(_Seite("Kategorie:Füchse", "Kategorie:Füchse",
+                          '<html><body><h1>Kategorie:Füchse</h1><div id="mw-content-text"><div class="mw-category-generated">'
+                          '<div id="mw-pages">' + _liste(artikel[4:]) + '</div></div></div>' + _kategorieleiste("Tiere") + "</body></html>"))
+        # die Seiten der Kategorie Tiere in zwei nachgeladenen Teilen (die Kategorieseite zeigt nur die ersten)
+        c.add_item(_Seite("_categories_partials_Kategorie:Tiere_pages_1", "", '<div id="mw-pages">' + _liste(artikel[:3]) + "</div>", vorne=False))
+        c.add_item(_Seite("_categories_partials_Kategorie:Tiere_pages_2", "", '<div id="mw-pages">' + _liste(artikel[3:]) + "</div>", vorne=False))
+    return datei
