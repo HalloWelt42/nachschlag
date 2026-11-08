@@ -36,6 +36,7 @@ from .kategorien.api import router as kategorien_router
 from .kategorien.wikis import wiki
 from bildholer.modelle import Regeln as Bildregeln
 from .markdownablage import Markdownablage
+from .themen.ordnen import ThemenOrdner
 from .meins import Meins
 from .meins.api import inhalt_router as notizbilder_router
 from .meins.api import router as meins_router
@@ -255,7 +256,8 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     notizbilder = Notizbilder(meins, lambda: geruest.kellerwolke)
     app.include_router(meins_router(geruest, meins, notizbilder, markdown))
     app.include_router(notizbilder_router(geruest, notizbilder))                 # Bilder für <img> (Cookie)
-    app.include_router(themen_router(geruest, themen, suche, bibliothek, meins, leser, markdown))
+    app.include_router(themen_router(geruest, themen, suche, bibliothek, meins, leser, markdown,
+                                     ThemenOrdner(geruest.auftraege, themen, leser, lambda: geruest.leitstelle, lambda: e().suchmodell)))
     app.include_router(zitieren_router(geruest, bibliothek, leser))
     app.include_router(medien_router(geruest, Medien(leser, suche, lambda buch, pfad: grossbilder.finden(buch, pfad) is not None)))
     async def themenartikel(konto: str) -> list[tuple[str, str]]:

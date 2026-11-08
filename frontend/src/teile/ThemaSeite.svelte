@@ -3,7 +3,8 @@
   // Suche, Bereiche mit Artikeln als Karten oder Liste. Ziehen ordnet Artikel und Bereiche (am Rechner); in der Liste
   // wählt man den Bereich (überall, auch am Telefon).
   import Buchmarke from "./Buchmarke.svelte";
-  import { Auswahl, geraet, hole, kopieren, navigation, Rueckfrage, seitenFehler } from "appkern-oberflaeche";
+  import { Auswahl, beiAuftrag, geraet, hole, json, kopieren, navigation, Rueckfrage, seitenFehler, type Auftrag } from "appkern-oberflaeche";
+  import { onMount } from "svelte";
   import { RUECKMELDUNG_MS } from "../lib/zitat";
   import { ZITIERFORMEN, zitierform, zitierformMerken } from "../lib/recherche.svelte";
   import { untrack } from "svelte";
@@ -59,6 +60,38 @@
   let bearbeiten = $state<{ titel: string; beschreibung: string; regel: string; regel_buch: string } | null>(null);
   let loeschenFragen = $state(false);
   let neuerBereich = $state<string | null>(null);
+  // Mit KI ordnen (WIKI-25): Auftrag über die Leitstelle, sein Ergebnis ist ein Vorschlag zum Übernehmen oder Verwerfen
+  interface Vorschlag { was: "bereiche" | "einsortieren"; begruendung: string; bereiche: { titel: string; bereich: string; eintraege: string[] }[] }
+  let ordnen = $state<{ auftrag: string; laeuft: boolean; vorschlag: Vorschlag | null; fehler: string }>({ auftrag: "", laeuft: false, vorschlag: null, fehler: "" });
+
+  async function ordnenStarten(was: Vorschlag["was"]) {
+    ordnen = { auftrag: "", laeuft: true, vorschlag: null, fehler: "" };
+    try {
+      ordnen.auftrag = (await hole<Auftrag>(`/meins/themen/${encodeURIComponent(id)}/ordnen`, { method: "POST", ...json({ was }) })).id;
+    } catch (f) {
+      ordnen = { auftrag: "", laeuft: false, vorschlag: null, fehler: seitenFehler(f) };
+    }
+  }
+
+  onMount(() => beiAuftrag(async (a) => {
+    if (a.id !== ordnen.auftrag || !["fertig", "fehler", "abgebrochen"].includes(a.zustand)) return;
+    const stand = await hole<Auftrag>(`/auftraege/${a.id}`);
+    ordnen = { auftrag: "", laeuft: false, vorschlag: stand.zustand === "fertig" ? ((stand.ergebnis?.vorschlag as Vorschlag) ?? null) : null,
+               fehler: stand.zustand === "fertig" ? "" : (stand.fehler ?? "Das Ordnen ist nicht gelungen") };
+  }));
+
+  async function ordnungUebernehmen() {
+    if (!ordnen.vorschlag) return;
+    try {
+      await hole(`/meins/themen/${encodeURIComponent(id)}/ordnen/uebernehmen`, { method: "POST", ...json(ordnen.vorschlag) });
+      ordnen = { auftrag: "", laeuft: false, vorschlag: null, fehler: "" };
+      await laden();
+    } catch (f) {
+      ordnen.fehler = seitenFehler(f);
+    }
+  }
+
+  const eintragTitel = (eintrag: string) => thema?.eintraege.find((x) => x.id === eintrag)?.titel ?? eintrag;
   let umbenennen = $state<{ id: string; titel: string } | null>(null);
   let ziehe = $state<{ art: "eintrag" | "bereich"; id: string } | null>(null);
   let ziel = $state<{ bereich: string; platz: number } | null>(null);
@@ -265,6 +298,16 @@
         </form>
       {:else}
         <button class="knopf" onclick={() => (neuerBereich = "")}><i class="fa-solid fa-folder-plus"></i><span class="wort">Bereich</span></button>
+        {#if thema && thema.eintraege.length > 1}
+          <button class="knopf" disabled={ordnen.laeuft} onclick={() => ordnenStarten("bereiche")}
+                  title="Die KI schlägt Bereiche aus Titeln und Einleitungen der Artikel vor; erst Übernehmen ändert das Thema">
+            <i class="fa-solid {ordnen.laeuft ? 'fa-spinner fa-spin' : 'fa-wand-magic-sparkles'}"></i><span class="wort">Bereiche vorschlagen</span></button>
+        {/if}
+        {#if thema && thema.bereiche.length && thema.eintraege.some((x) => !x.bereich)}
+          <button class="knopf" disabled={ordnen.laeuft} onclick={() => ordnenStarten("einsortieren")}
+                  title="Die KI ordnet Artikel ohne Bereich den vorhandenen Bereichen zu; erst Übernehmen ändert das Thema">
+            <i class="fa-solid fa-arrow-right-to-bracket"></i><span class="wort">Einsortieren lassen</span></button>
+        {/if}
         {#if geraet.mobil && !bearbeiten}<button class="knopf" onclick={bearbeitenBeginnen}><i class="fa-solid fa-pen"></i><span class="wort">Bearbeiten</span></button>{/if}
         <button class="knopf" class:kopiert-ok={literaturKopiert === "ja"} onclick={literaturKopieren}
                 title="Literaturliste in der gewählten Zitierform mit den Belegen aus den Notizen kopieren">
@@ -287,6 +330,21 @@
     </div>
   </div>
   <div class="rollfeld" style="padding: 0">
+    {#if ordnen.fehler}<div class="fehlertext">{ordnen.fehler}</div>{/if}
+    {#if ordnen.vorschlag}
+      <div class="ordnungsvorschlag">
+        <div class="ordnung-kopf"><b><i class="fa-solid fa-wand-magic-sparkles"></i> Vorschlag der KI</b>
+          {#if ordnen.vorschlag.begruendung}<span class="neben">{ordnen.vorschlag.begruendung}</span>{/if}</div>
+        {#each ordnen.vorschlag.bereiche as b (b.titel)}
+          <div class="ordnung-bereich"><b>{b.titel}</b>{#if !b.bereich}<span class="neu">neu</span>{/if}
+            <span class="neben">{b.eintraege.map(eintragTitel).join(", ")}</span></div>
+        {/each}
+        <div class="knopfzeile">
+          <button class="knopf primaer" onclick={ordnungUebernehmen}><i class="fa-solid fa-check"></i>Übernehmen</button>
+          <button class="knopf still" onclick={() => (ordnen.vorschlag = null)}>Verwerfen</button>
+        </div>
+      </div>
+    {/if}
     {#if fehler}<div class="fehlertext">{fehler}</div>{/if}
     {#if angebote.length}
       <div class="vorschlagsband">

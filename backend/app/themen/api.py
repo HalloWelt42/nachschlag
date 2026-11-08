@@ -7,9 +7,11 @@ from datetime import date
 from typing import TypeVar
 
 from fastapi import APIRouter, HTTPException, Query, Response
+from pydantic import BaseModel, Field
 
 from appkern.anmeldung import Konto
 from appkern.app import Geruest
+from appkern.auftraege.modelle import Auftrag
 
 from ..modell.themen import (
     Ablehnung, Angebot, Bereich, BereichAenderung, BereichNeu, EintragNeu, Thema, ThemaAenderung, Themeneintrag, Themenkopf,
@@ -24,6 +26,7 @@ from ..suche import Suche
 from ..zitieren import Form
 from .heute import Heute, artikel_fuer_heute
 from .literatur import Literaturliste, literaturliste
+from .ordnen import Ordnungsvorschlag, ThemenOrdner, Was
 from .speicher import Themen
 
 #: Wie viele Treffer der gespeicherten Suche geholt werden, um daraus neue Angebote zu ziehen
@@ -44,8 +47,12 @@ def _da(wert: T | None, was: str = "Dieses Thema gibt es nicht") -> T:
     return wert
 
 
+class OrdnenWunsch(BaseModel):
+    was: Was = Field(description="bereiche: Bereiche vorschlagen; einsortieren: Artikel ohne Bereich zuordnen")
+
+
 def router(geruest: Geruest, themen: Themen, suche: Suche, bibliothek: Bibliothek, meins: Meins, leser: Artikelleser,
-           markdown: Markdownablage) -> APIRouter:
+           markdown: Markdownablage, ordner: ThemenOrdner) -> APIRouter:
     """`bibliothek`: Namen und Angaben der Quellen (Angebote mit Bekanntem vergleichen, Literaturliste); `meins`: die
     Notizen mit ihren Belegen (Literaturliste); `leser`: Autor und Datum von Fragen (Literaturliste)."""
     name_von: Callable[[str], Awaitable[str]] = bibliothek.name_von
@@ -102,6 +109,20 @@ def router(geruest: Geruest, themen: Themen, suche: Suche, bibliothek: Bibliothe
             return Markdownpfad(pfad=await markdown.thema_ablegen(konto.id, t, liste.text))
         except MarkdownFehler as f:
             raise HTTPException(status_code=503, detail=f.meldung) from f
+
+    @r.post("/{thema}/ordnen", response_model=Auftrag, status_code=201)
+    async def ordnen(thema: str, wunsch: OrdnenWunsch, konto: Konto = geruest.mensch) -> Auftrag:
+        """Mit KI ordnen (WIKI-25): Bereiche vorschlagen oder Artikel ohne Bereich einsortieren lassen. Ein Auftrag über die
+        Leitstelle; sein Ergebnis trägt den Vorschlag (`vorschlag`), am Thema ändert sich noch nichts."""
+        try:
+            return await ordner.starten(konto.id, thema, wunsch.was)
+        except LookupError as f:
+            raise _fehlt() from f
+
+    @r.post("/{thema}/ordnen/uebernehmen", response_model=Thema)
+    async def ordnung_uebernehmen(thema: str, vorschlag: Ordnungsvorschlag, konto: Konto = geruest.mensch) -> Thema:
+        """Einen Vorschlag des Ordnens übernehmen: neue Bereiche anlegen, die Artikel dorthin verschieben."""
+        return _da(await ordner.uebernehmen(konto.id, thema, vorschlag))
 
     @r.patch("/{thema}", response_model=Thema)
     async def aendern(thema: str, aenderung: ThemaAenderung, konto: Konto = geruest.mensch) -> Thema:

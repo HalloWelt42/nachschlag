@@ -1546,3 +1546,10 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .bh-px { font-family: var(--schrift-zahl); color: var(--text-3); }
 .bh-hinweis { display: flex; gap: var(--a2); align-items: baseline; margin: 0; color: var(--text-2); font-size: var(--klein); }
 @media (max-width: 700px) { .bh-zahlen { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Vorschlag der KI beim Ordnen eines Themas (WIKI-25) */
+.ordnungsvorschlag { margin: var(--a3); padding: var(--a3); border-radius: var(--r3); border: 1px solid var(--rand); background: var(--flaeche);
+  display: flex; flex-direction: column; gap: var(--a2); }
+.ordnungsvorschlag .ordnung-kopf { display: flex; gap: var(--a3); align-items: baseline; flex-wrap: wrap; }
+.ordnungsvorschlag .ordnung-bereich { display: flex; gap: var(--a2); align-items: baseline; flex-wrap: wrap; }
+.ordnungsvorschlag .neu { font-size: var(--marke); color: var(--gut); }
