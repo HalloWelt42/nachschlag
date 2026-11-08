@@ -66,6 +66,7 @@ from .fassung import FASSUNG, WURZEL
 from .modell.buch import Art as Buchart
 from .modell.suche import Suchregeln
 from .suche import Suche
+from .suche.anbindung import Bedeutungsanbindung
 from .suche.bedeutung import FundusBedeutung
 
 
@@ -85,14 +86,21 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
                                     gueltig=kategorienschema.gueltig)
     kategorien = Kategorienindex(kategorienablage)
     leser = Artikelleser(bibliothek, kategorien)
-    bedeutung = FundusBedeutung(lambda: geruest.verbund, lambda: e().fundus_adresse, lambda: e().fundus_sammlung,
+    async def buchkennungen() -> list[str]:
+        return [b.kennung for b in (await bibliothek.stand()).buecher]
+
+    # welche Sammlung und welches Buch gelten: gewählt oder von selbst gefunden (WIKI-56)
+    anbindung = Bedeutungsanbindung(lambda: geruest.verbund, lambda: e().fundus_adresse, lambda: e().fundus_sammlung,
+                                    lambda: e().bedeutung_buch, buchkennungen, bibliothek.juengste_fassung)
+    geruest.begleiter_anmelden(anbindung)
+    bedeutung = FundusBedeutung(lambda: geruest.verbund, lambda: e().fundus_adresse, anbindung.sammlung,
                                 lambda: e().fundus_vorsilbe)
     eigen = Eigenindizes(lambda: e().eigenindex_ordner)
     quellen = Quellenarchiv(geruest.db, bibliothek)           # Archiv der Quellen (WIKI-46)
     geruest.begleiter_anmelden(quellen)
     async def bedeutungsbuch() -> str:
         """Die Quelle der Bedeutungssuche in ihrer jüngsten Fassung (die Einstellung nennt eine Datei mit Stand)."""
-        return await bibliothek.juengste_fassung(e().bedeutung_buch) if e().bedeutung_buch else ""
+        return await anbindung.buch()
 
     async def vorgewaehlte_buecher() -> list[str]:
         """Einstellung Bücher in der Suche (Namen, über Fassungen hinweg) als Kennungen der jüngsten Fassung (WIKI-79)."""
@@ -141,6 +149,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
                                  for b in stand.buecher], eigener_wert=False, stand=f"{len(stand.buecher)} Quellen")
 
     geruest.einstellungen.anbieten("bedeutung_buch", buecher)
+    geruest.einstellungen.anbieten("fundus_sammlung", anbindung.angebot)
 
     async def buchnamen() -> Angebot:
         """Bücher in der Suche: je Buch einmal, über den Namen (gilt für jede Fassung)."""
