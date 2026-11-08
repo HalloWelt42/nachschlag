@@ -227,7 +227,7 @@
                 <span class="werte">
                   {#if a.schwierigkeit}<span class="w"><span class="anl-stufe" title="Schwierigkeit {a.schwierigkeit} von 5">{#each [1, 2, 3, 4, 5] as i (i)}<span class:an={i <= a.schwierigkeit}></span>{/each}</span>{a.schwierigkeit_text}</span>{/if}
                   {#if a.zeit}<span class="w"><i class="fa-regular fa-clock"></i>{a.zeit}</span>{/if}
-                  <span class="w"><i class="fa-solid fa-list-ol"></i>{a.schritte} Schritte</span>
+                  <span class="w"><i class="fa-solid fa-list-ol"></i>{a.schritte} {a.schritte === 1 ? "Schritt" : "Schritte"}</span>
                 </span>
                 {#if a.werkzeuge.length}
                   <span class="anl-chips">{#each a.werkzeuge as w (w)}<span class="faehigkeit" class:fehlt={a.fehlt.includes(w)} title={a.fehlt.includes(w) ? "fehlt dir" : undefined}>{w}</span>{/each}</span>
