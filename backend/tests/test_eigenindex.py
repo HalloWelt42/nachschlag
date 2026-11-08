@@ -398,3 +398,8 @@ async def test_mac_holt_die_vorlage_beim_pi(pi, buecher, tmp_path):
         assert int(schema.angabe(v, "uebernommen")) == v.execute("SELECT COUNT(*) FROM seiten").fetchone()[0] > 0
     finally:
         v.close()
+
+
+def test_text_mit_steuerzeichen():
+    """Seiten mit Steuerzeichen (vereinzelt in iFixit) halten den Index nicht auf: sie werden zu Leerraum."""
+    assert aufbau._text("<p>Akku\x0blösen</p><p>Schritt\x01 2</p>") == "Akku lösen Schritt 2"

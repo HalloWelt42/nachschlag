@@ -32,6 +32,8 @@ STAPEL = 400
 #: So viel Text je Seite kommt in den Volltext (lange Seiten tragen ihr Thema vorn)
 TEXT_HOECHSTENS = 20_000
 _SPRUNG = re.compile(rb"http-equiv=[\"']?refresh", re.I)
+#: Steuerzeichen, die XML nicht erlaubt (in Seiten der Quellen vereinzelt vorhanden; lxml weist sie beim Setzen ab)
+_STEUERZEICHEN = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
 
 
 @dataclass
@@ -114,7 +116,7 @@ NICHT_TEXT = {"qa-stimmen", "akz-marke", "beitrag-fuss", "antworten-kopf"}
 def _text(html: str) -> str:
     if not html:
         return ""
-    wurzel = lhtml.fragment_fromstring(html, create_parent="div")
+    wurzel = lhtml.fragment_fromstring(_STEUERZEICHEN.sub(" ", html), create_parent="div")
     for el in list(wurzel.iter()):
         if NICHT_TEXT & set((el.get("class") or "").split()) and el.getparent() is not None:
             el.drop_tree()
