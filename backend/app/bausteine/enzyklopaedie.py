@@ -30,6 +30,11 @@ WEG = ("mw-editsection", "reference", "mw-references-wrap", "navbox", "navbox-st
        "hatnote")                        # Hinweiszeilen wie "... leitet hierher weiter" gehören zur Quelle, nicht zum Text
 #: Medien, die nicht im Buch liegen (Ton und Film werden online abgespielt)
 WEG_TAGS = ("audio", "video", "source", "track")
+#: Selbstdarstellungen einer Quelle am Ende jedes Artikels (Werbung für das Lexikon selbst, kein Lesetext; WIKI-82),
+#: erkannt am Anfang ihres Texts, weil die Quelle sie ohne Klasse setzt
+SELBSTDARSTELLUNG = ("Klexikon.de ist die Wikipedia für Kinder",)
+#: Was am Ende eines Artikels ohne Text noch Inhalt ist (alles andere ohne Text fällt dort weg)
+INHALT = ".//img|.//table|.//math|.//svg|.//figure"
 
 
 def _klassen(el) -> set[str]:
@@ -45,6 +50,26 @@ def _ueberschrift(el) -> tuple[str, int] | None:
         if inner is not None:
             return h.text_von(inner), int(inner.tag[1])
     return None
+
+
+def _selbstdarstellung_entfernen(inhalt) -> None:
+    """Die Selbstdarstellung der Quelle fällt weg, danach am Ende, was nur sie vom Text trennte (Trennlinien, ein leeres
+    Suchfeld, leere Absätze)."""
+    for el in list(inhalt.iter("div")):
+        eltern = el.getparent()
+        if eltern is not None and h.text_von(el).startswith(SELBSTDARSTELLUNG):
+            el.drop_tree()
+            _leeres_ende_entfernen(eltern)
+
+
+def _leeres_ende_entfernen(knoten) -> None:
+    """Am Ende von `knoten`: Trennlinien und was ohne Text und ohne Bild, Tabelle oder Formel ist."""
+    while len(knoten):
+        letztes = knoten[-1]
+        if not (not isinstance(letztes.tag, str) or letztes.tag == "hr"
+                or (letztes.tag in ("p", "div", "br") and not h.text_von(letztes) and not letztes.xpath(INHALT))):
+            return
+        letztes.drop_tree()
 
 
 def _belege_lesen(inhalt) -> list[Beleg]:
@@ -243,6 +268,7 @@ class Enzyklopaedie:
                 continue
             if el.tag in WEG_TAGS or _klassen(el) & set(WEG) or any(k.startswith("ext-phonos") for k in _klassen(el)):
                 el.drop_tree()
+        _selbstdarstellung_entfernen(inhalt)    # vor der Einleitung: Artikel ohne Abschnitte enden sonst mit ihr
         weblinks = _belege_entfernen(inhalt)
         verweise, online = h.verweise_umschreiben(inhalt, buch.kennung, eintrag.pfad, wege)
         online += [v for v in h.online_verweise(weblinks) if v not in online]

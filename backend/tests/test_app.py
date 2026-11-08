@@ -656,6 +656,33 @@ def test_alle_codebloecke_nach_verschachteltem():
     assert [p.text for p in bloecke] == ["a\nb", "c = 1", "d = 2"]
 
 
+def test_selbstdarstellung_der_quelle_faellt_weg():
+    """Das Kinderlexikon setzt ans Ende jedes Artikels Werbung für sich selbst (ohne Klasse), getrennt mit Linien und einem
+    Suchfeld: das alles fällt weg, Text, Galerie und die Lizenzzeile der Quelle bleiben (WIKI-82)."""
+    from app.bausteine import Wege
+    from app.bausteine.enzyklopaedie import Enzyklopaedie
+    from app.bibliothek.ordner import Eintrag
+    from app.modell.buch import Buch, Faehigkeiten
+    buch = Buch(kennung="k", name="k", titel="K", art="enzyklopaedie", eintraege=0, artikel=0, medien=0, groesse=0,
+                faehigkeiten=Faehigkeiten(titelindex=False, volltext=False, bilder=False, lesedesign=True))
+    wege = Wege(artikel=lambda b, p: "", medien=lambda b, p: "", original=lambda b, p: "", gibt_es=lambda b, p: False)
+    werbung = ('<div style="font: 12pt Arial; padding:5px;"><p>Klexikon.de ist die Wikipedia für Kinder zwischen 5 und 15 '
+               'Jahren.</p><p>Das Kinderlexikon ist auf <a href="https://example.org">Spenden</a> angewiesen.</p></div>')
+    seite = ('<html><body><h1>Dachs</h1><div id="mw-content-text"><div class="mw-parser-output">'
+             '<p>Dachse sind Raubtiere. Sie leben in Wäldern und graben Baue mit vielen Gängen.</p>'
+             '<ul class="gallery"><li><div>Ein Dachs im Wald</div></li></ul>'
+             f'<hr><div class="mw-inputbox-centered"><form><input name="search"></form></div><p><br></p><hr>{werbung}</div>'
+             '<div class="zim-footer">Dieser Artikel wurde vom Kinderlexikon herausgegeben.</div></div></body></html>')
+    erg = Enzyklopaedie().aufbereiten(buch, Eintrag(pfad="Dachs", titel="Dachs", mime="text/html",
+                                                    inhalt=seite.encode()), wege)
+    assert "Klexikon.de" not in erg.html and "Spenden" not in erg.html and "<hr>" not in erg.html
+    assert "Raubtiere" in erg.html and "Ein Dachs im Wald" in erg.html and "herausgegeben" in erg.html
+    assert "Klexikon.de" not in erg.einleitung and erg.einleitung.startswith("Dachse sind Raubtiere")
+    ohne = seite.replace(werbung, '<p>Zum Schluss ein Satz, der bleibt, weil er Text ist.</p>')
+    erg = Enzyklopaedie().aufbereiten(buch, Eintrag(pfad="Dachs", titel="Dachs", mime="text/html", inhalt=ohne.encode()), wege)
+    assert "<hr>" in erg.html and "der bleibt" in erg.html        # ohne Selbstdarstellung bleibt alles, wie es war
+
+
 def test_formeln_als_mathml_ohne_ersatzbild():
     """Formeln der Quelle (verstecktes MathML und schwarzes Ersatzbild) werden zu sichtbarem MathML ohne Bild und ohne
     TeX-Quelle; der Text danach bleibt; abgesetzte Formeln stehen in einem eigenen Kasten."""
