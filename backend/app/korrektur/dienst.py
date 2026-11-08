@@ -86,10 +86,7 @@ def _kandidaten(v: sqlite3.Connection, wort: str) -> list[tuple[str, int]]:
 
 
 def _ersatz(verbindungen: list[sqlite3.Connection], w: str) -> str | None:
-    """Das Wort, das 19:53  up 1 day,  7:02, 2 users, load averages: 58.10 43.44 43.60
-USER       TTY      FROM    LOGIN@  IDLE WHAT
-alpha      console  -      Sat12   31:01 -
-alpha      s000     -      18:13    1:32 /Users/alpha/Entwicklung/04_Experiment ersetzen soll, oder None: im Abstand erlaubt, häufig genug, die Häufigkeit mitgewogen."""
+    """Das Wort, das `w` ersetzen soll, oder None: im Abstand erlaubt, häufig genug, die Häufigkeit mitgewogen."""
     selbst = sum(_bekannt(v, w) for v in verbindungen)
     grenze = ABSTAND_LANG if len(w) >= LANG_AB else ABSTAND_KURZ
     mindestens = max(BEKANNT_AB, selbst * HAEUFIGER)

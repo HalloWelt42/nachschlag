@@ -1,17 +1,15 @@
-# Ausrollen auf den Pi mit tools/ausrollen.sh (Ablauf und Prüfungen im Appkern: appkern.werkzeuge.ausrollen).
-# Rechner, Ordner, Adresse, Namen im Zertifikat und Leitstelle gehören dem Haus und stehen nicht im Repo:
-# tools/ausrollen.sh holt sie aus der privaten Wahrheit (handbuch ziel nachschlag --toml) als Ergänzung.
+# Ausrollen auf den Server mit tools/ausrollen.sh (Ablauf und Prüfungen im Appkern: appkern.werkzeuge.ausrollen).
+# Rechner, Ordner, Adresse, Namen im Zertifikat, Leitstelle und das Konto der Kellerwolke gehören dem Betreiber und
+# stehen nicht im Repo: tools/ausrollen.sh bringt sie aus dem privaten Teil als Ergänzung.
 kennung = "nachschlag"
 repo = "https://github.com/HalloWelt42/nachschlag.git"
-# ton: die App nutzt den Tondienst (Tonarbeit auf dem Mac über die Leitstelle); geprüft wird, ob die Leitstelle ihn meldet
+# ton: die App nutzt den Tondienst (Tonarbeit über die Leitstelle); geprüft wird, ob die Leitstelle ihn meldet
 ton = false
-# Symbole freigestellt, auch am Startbildschirm (Nutzer 01.11.2026: "es sollte freigestellt bleiben", bewusst
-# "Überall durchsichtig" gewählt, obwohl iOS durchsichtige Stellen selbst füllt)
+# Symbole freigestellt, auch am Startbildschirm: bewusst überall durchsichtig, obwohl iOS durchsichtige Stellen selbst füllt
 symbole = "durchsichtig"
-# Zugänge besorgt das Ausrollen (HELF-77, Appkern docs/ZUGAENGE.md): der Zugang zur Leitstelle mit genau diesen
-# Fähigkeiten; der Schlüssel geht als feste Einstellung in die .env auf dem Pi, niemand trägt ihn mehr ein
+# Zugänge besorgt das Ausrollen (Appkern docs/ZUGAENGE.md): der Zugang zur Leitstelle mit genau diesen Fähigkeiten; der
+# Schlüssel geht als feste Einstellung in die .env auf dem Server, niemand trägt ihn mehr ein. Das Konto der Kellerwolke,
+# dem die App gehört (kellerwolke = "..."), ergänzt der private Teil; dann besorgt das Ausrollen auch dort den Schlüssel.
 [zugaenge]
 name = "Nachschlag"
 leitstelle = ["text", "uebersetzen", "stimme"]
-# Konto der Kellerwolke, dem die App gehört: das Ausrollen besorgt auch ihren App-Schlüssel dort
-kellerwolke = "admin"

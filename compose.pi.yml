@@ -1,5 +1,6 @@
-# Nachschlag auf dem Pi, Port 8711. Vorne Caddy mit dem Zertifikat der Hausstelle (tools/ausrollen.sh stellt es aus),
-# dahinter die App ohne TLS, nur im eigenen Netz erreichbar. Daten in ./daten.
+# Nachschlag auf einem Server im eigenen Netz (etwa einem Pi), Port 8711, mit Bildholer. Vorne Caddy mit dem Zertifikat
+# einer eigenen Zertifizierungsstelle (tools/ausrollen.sh stellt es aus), dahinter die App ohne TLS, von außen nicht
+# erreichbar. Daten in ./daten. Für den einfachen Start ohne all das: compose.yml.
 services:
   nachschlag:
     build: .
@@ -9,16 +10,18 @@ services:
     user: "1000:1000"
     expose:
       - "8000"
-    # Einstellungen, die nicht ins Repo gehören (etwa Adresse und Schlüssel der Leitstelle), stehen nur auf dem Pi
+    # Einstellungen, die nicht ins Repo gehören (etwa Adresse und Schlüssel der Leitstelle), stehen nur in der .env dort
     env_file:
       - path: .env
         required: false
     environment:
       NACHSCHLAG_DATEN: /app/daten
       NACHSCHLAG_CA_DATEI: /zertifikate/rootCA.pem
-      # erste Einrichtung von anderswo (Lehre 34): der Code liegt im eingebundenen Datenordner, gefunden auf dem Pi
+      # nur Caddy erreicht die App (im eigenen Netz der Container): seine Köpfe mit der Adresse des Aufrufers gelten
+      FORWARDED_ALLOW_IPS: "*"
+      # erste Einrichtung mit Anmeldung von anderswo: der Code liegt im eingebundenen Datenordner, gefunden auf dem Server
       NACHSCHLAG_EINRICHTUNGSCODE_DATEI: /app/daten/einrichtungscode
-      # wo der Code für den Menschen zu finden ist; das Ausrollen setzt rechner:ordner aus der privaten Wahrheit
+      # wo der Code für den Menschen zu finden ist; das Ausrollen setzt rechner:ordner
       NACHSCHLAG_EINRICHTUNGSCODE_ORT: ${EINRICHTUNGSCODE_ORT:-daten/einrichtungscode im Ordner der App}
       # der Bildholer dieser Datei (unten), im eigenen Netz der Container
       NACHSCHLAG_BILDHOLER_ADRESSE: http://bildholer:8000
@@ -31,12 +34,12 @@ services:
       # allein der Bücherlader (WIKI-57: .laden/ und .neu/ darin, Umschalten, Rückfall nach der Frist entfernen,
       # library.xml für den Bücherserver), darum beschreibbar
       - ${BUECHER_ORDNER:-./buecher}:/buecher
-      # eigene Indizes der Bücher (WIKI-17): der Index-Dienst auf dem Mac lädt sie hoch, Nachschlag tauscht sie aus;
+      # eigene Indizes der Bücher (WIKI-17): der Index-Dienst lädt sie hoch, Nachschlag tauscht sie aus;
       # selbst erzeugt und darum in der Sicherung, anders als die Bücher
       - ./eigenindex:/eigenindex
       # große Bilder des Bildholers (WIKI-80): Nachschlag liest nur
       - ./bilder:/bilder:ro
-      # Ortszeit des Pi (sonst UTC)
+      # Ortszeit des Servers (sonst UTC)
       - /etc/localtime:/etc/localtime:ro
 
   # Bildholer (WIKI-80): eigenes Programm im eigenen Container, aus demselben Abbild. Holt große Bilder aus der Bildquelle

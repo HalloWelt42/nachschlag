@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# Einrichten von Nachschlag. Die Schritte der Neueinrichtung mit ihren Proben stehen in docs/handbuch.md.
+# Einrichten von Nachschlag zum Entwickeln (für den Betrieb genügt Docker Compose, siehe README).
 #
-#   ./einrichten.sh                                       Entwicklung am Mac: Python-Umgebung, Pakete und Bau der
+#   ./einrichten.sh                                       Entwicklung: Python-Umgebung, Pakete und Bau der
 #                                                         Oberfläche, Appkern in Oberfläche und Backend auf denselben
 #                                                         Commit, Git-Haken (das Ausrollen prüft mit dieser Umgebung)
-#   ./einrichten.sh --probe --ziel DIR --port-versatz N   Probelauf des Handbuchs: DIR enthält einen Stand der App; daraus
-#                                                         entsteht der Betrieb wie auf dem Pi (compose.pi.yml) mit
+#   ./einrichten.sh --probe --ziel DIR --port-versatz N   Probelauf: DIR enthält einen Stand der App; daraus
+#                                                         entsteht der Betrieb wie auf dem Server (compose.pi.yml) mit
 #                                                         Wegwerfzertifikat, abgeschottet von jeder echten Gegenstelle
 #                                                         (deploy/probelauf.compose.yml), Port um N verschoben und nur an
 #                                                         127.0.0.1
 #   ./einrichten.sh --probe --ziel DIR --abbauen          entfernt alles, was der Probelauf angelegt hat
 #
-# Der Betrieb auf dem Pi entsteht mit tools/ausrollen.sh (deploy/ausrollen.toml).
+# Der Betrieb auf dem Server entsteht mit tools/ausrollen.sh (deploy/ausrollen.toml und der private Teil privat/).
 set -euo pipefail
 HIER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 KENNUNG="nachschlag"
@@ -49,7 +49,7 @@ probe_aufbauen() {
   port=$(( $(grundport "$ziel") + versatz ))
   cd "$ziel"
   mkdir -p daten zertifikate eigenindex bilder bildholer
-  # Wegwerf-Hausstelle in DIR, nie die echte: das Blattzertifikat gilt nur für diesen Rechner
+  # Wegwerf-Zertifizierungsstelle in DIR, nie die echte: das Blattzertifikat gilt nur für diesen Rechner
   # mit dem Namen, den der Vorschaltdienst ohne Servernamen nimmt (Zugriff über die Adresse prüft genau das)
   CAROOT="$ziel/hausstelle" mkcert -cert-file "zertifikate/$KENNUNG.pem" -key-file "zertifikate/$KENNUNG-schluessel.pem" \
     127.0.0.1 localhost "$KENNUNG.local" >/dev/null 2>&1

@@ -13,4 +13,4 @@ markdown-it-py>=3,<4        # Übungen (freeCodeCamp) liegen als Markdown im Buc
 weasyprint>=66,<67           # Satz als PDF aus demselben XHTML wie das EPUB (WIKI-45); braucht Pango aus dem System
 Pillow>=10                   # Bilder der Bücher: WebP als JPEG für jedes Lesegerät (WIKI-45)
 pypdf>=6,<7                  # Zwei Seiten A5 je Blatt A4 (WIKI-45)
-tomli-w>=1.2,<2              # Vorlagen der Bücher als TOML-Dateien in der Kellerwolke schreiben (WIKI-45)
+tomli-w>=1.2,<2              # Vorlagen der Bücher als TOML-Dateien in der Ablage schreiben (WIKI-45)

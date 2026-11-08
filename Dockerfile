@@ -1,4 +1,4 @@
-# Nachschlag im Container (gebaut auf dem Pi von tools/ausrollen.sh).
+# Nachschlag im Container: für alle mit compose.yml, mit Vorschaltdienst und Bildholer mit compose.pi.yml.
 
 # --- Oberfläche bauen ---------------------------------------------------------------------------------------------
 FROM node:22-slim AS oberflaeche
@@ -26,7 +26,9 @@ COPY version.json ./
 COPY backend ./backend
 COPY --from=oberflaeche /bau/frontend/dist ./frontend/dist
 WORKDIR /app/backend
-# TLS macht der Vorschaltdienst (deploy/Caddyfile); er reicht die Adresse des Aufrufers weiter
+# Köpfe eines Vorschaltdienstes (Adresse des Aufrufers, HTTPS) gelten nur von dort, wo FORWARDED_ALLOW_IPS es sagt:
+# ohne Vorschaltdienst von niemandem (sonst gäbe sich jeder als ein anderer Rechner aus); compose.pi.yml, wo Caddy davor
+# steht und die App von außen nicht erreichbar ist, setzt "*"
+ENV FORWARDED_ALLOW_IPS=127.0.0.1
 EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "warning", \
-     "--proxy-headers", "--forwarded-allow-ips", "*"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "warning", "--proxy-headers"]

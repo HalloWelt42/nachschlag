@@ -1,0 +1,21 @@
+# Nachschlag für alle: ein Dienst, ein Ordner mit den Büchern (ZIM-Dateien) und ein Ordner für die Daten.
+#
+#   BUECHER=/pfad/zu/den/zim-dateien docker compose up -d --build
+#
+# danach im Browser http://<rechner>:8711 öffnen; alles Weitere steht in der App unter Einstellungen. Nachschlag beginnt
+# ohne Anmeldung: wer die App erreicht, darf alles. Nur im eigenen Netz betreiben, nie offen ins Internet stellen
+# (README, Abschnitt Ohne Anmeldung). Mit Vorschaltdienst, Zertifikat und Bildholer: compose.pi.yml.
+services:
+  nachschlag:
+    build: .
+    image: nachschlag
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8711}:8000"
+    volumes:
+      # Datenbank, Einstellungen und die Ablage (Notizen als Markdown, Bilder an Notizen, eigene Bücher und Vorlagen)
+      - ./daten:/app/daten
+      # Sicherungen der Datenbank (wöchentlich, höchstens drei; Einstellungen, Sicherung)
+      - ./sicherungen:/app/sicherungen
+      # die Bücher; beschreibbar, damit der Bücherlader (Bibliothek, Laden) neue Bücher und Fassungen ablegen kann
+      - ${BUECHER:-./buecher}:/buecher
