@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="stil.css" />
   </head>
   <!-- Einstellungen mit Reitern (eigene Adresse je Reiter, volle Breite, wie im Appkern). Reiter Bilder: der Bildnachlader
-       ist ein eigenes Programm (Bildholer, Container auf dem Pi); Nachschlag zeigt seinen Stand und stellt ihn ein. Ein Bild alle
+       ist ein eigenes Programm (Bildholer, eigener Container neben Nachschlag); Nachschlag zeigt seinen Stand und stellt ihn ein. Ein Bild alle
        paar Sekunden, in Stufen nach Vorrang, mit Platzgrenze. -->
   <body>
     <div class="fenster-voll">
@@ -57,7 +57,7 @@
                   <button class="schalter an" aria-label="Beim Öffnen sofort laden"></button></div>
                 <div class="feld"><div class="was"><div class="name">Tempo beim Öffnen</div><div class="beschreibung">Gilt nur für den geöffneten Artikel; danach geht es im Hintergrund im gewohnten Abstand weiter.</div></div>
                   <span class="wert-zahl"><button class="knopf"><i class="fa-solid fa-minus"></i></button><b>1</b><button class="knopf"><i class="fa-solid fa-plus"></i></button><span class="einheit">Bild je Sekunde</span></span></div>
-                <div class="feld"><div class="was"><div class="name">Wann laden</div><div class="beschreibung">Nur in Ruhezeiten schont das Heimnetz am Tag.</div></div>
+                <div class="feld"><div class="was"><div class="name">Wann laden</div><div class="beschreibung">Nur in Ruhezeiten schont das eigene Netz am Tag.</div></div>
                   <span class="segment"><span class="aktiv">Immer</span><span>Nur nachts</span><span>Nur wenn niemand liest</span></span></div>
                 <div class="feld"><div class="was"><div class="name">Bei Fehlern der Bildquelle</div><div class="beschreibung">Bei Ablehnung oder zu vielen Anfragen wartet der Bildholer und verdoppelt den Abstand, bis es wieder geht.</div></div>
                   <span class="segment"><span class="aktiv">Warten und langsamer</span><span>Anhalten</span></span></div>
@@ -69,7 +69,7 @@
                   <span class="segment"><span>1.280 px</span><span class="aktiv">1.600 px</span><span>2.048 px</span><span>Original</span></span></div>
                 <div class="feld"><div class="was"><div class="name">Platz höchstens</div><div class="beschreibung">Ist die Grenze erreicht, hält der Bildholer an und meldet es; nichts wird gelöscht.</div></div>
                   <div class="platzbalken">
-                    <span class="wert-zahl"><button class="knopf"><i class="fa-solid fa-minus"></i></button><b>200</b><button class="knopf"><i class="fa-solid fa-plus"></i></button><span class="einheit">GB, frei auf dem Pi 1,3 TB</span></span>
+                    <span class="wert-zahl"><button class="knopf"><i class="fa-solid fa-minus"></i></button><b>200</b><button class="knopf"><i class="fa-solid fa-plus"></i></button><span class="einheit">GB, frei 800 GB</span></span>
                     <span class="spur"><span class="bilder" style="width: 2.7%"></span></span>
                     <span class="legende"><span><i class="fa-solid fa-square" style="color: var(--akzent-flaeche)"></i> Bilder 5,4 GB von 200 GB</span></span>
                   </div></div>
@@ -91,10 +91,10 @@
 
               <div class="karte">
                 <h2><i class="fa-solid fa-plug"></i>Bildholer</h2>
-                <div class="feld"><div class="was"><div class="name">Programm</div><div class="beschreibung">Eigenes Programm als Container auf dem Pi; Nachschlag liest nur seine Ablage.</div></div>
-                  <span class="wert-rechts"><span class="pille gut"><span class="punkt"></span>läuft</span><span class="einheit">Bildholer 0.1.0 · Ablage /mnt/data/nachschlag/bilder</span></span></div>
+                <div class="feld"><div class="was"><div class="name">Programm</div><div class="beschreibung">Eigenes Programm im eigenen Container; Nachschlag liest nur seine Ablage.</div></div>
+                  <span class="wert-rechts"><span class="pille gut"><span class="punkt"></span>läuft</span><span class="einheit">Bildholer 0.1.0 · Ablage /bilder</span></span></div>
                 <div class="feld"><div class="was"><div class="name">Absender bei der Bildquelle</div><div class="beschreibung">Die Bildquelle verlangt eine Kennung mit Kontakt, sonst sperrt sie.</div></div>
-                  <span class="eingabe-schein">Nachschlag-Bildholer/0.1 (privat, Heimnetz)</span></div>
+                  <span class="eingabe-schein">Nachschlag-Bildholer/0.1 (https://github.com/HalloWelt42/nachschlag)</span></div>
               </div>
             </div>
           </div>

@@ -835,7 +835,7 @@ body.bild-offen .leuchtkasten { display: grid; }
 .beispiel .bkopf { display: flex; align-items: center; gap: var(--a2); padding: 8px 12px; font-size: var(--klein); font-weight: 600; background: var(--flaeche-2); }
 .beispiel .bkopf .rechts { margin-left: auto; display: flex; gap: 4px; }
 .beispiel .bkopf .knopf { height: 28px; padding: 0 10px; font-weight: 400; }
-/* Code wie im Editor der Codeschmiede (Nutzer 01.11.2026: "gleiches Theme"): Werte aus Codeschmiede
+/* Code wie im Editor der Codeschmiede (gleiches Farbschema): Werte aus Codeschmiede
    frontend/src/styles/editor.css, klassisches Schema dunkel und hell, JetBrains Mono, Schlüsselwörter fett. Hell folgt
    dem hellen Thema der App, dunkel dem dunklen. In der App eine Datei mit diesen Marken, keine Kopie je Seite. */
 :root, [data-theme="hell"] {
@@ -896,13 +896,13 @@ body.bild-offen .leuchtkasten { display: grid; }
 .fundband.uebersetzt > i { color: var(--tuerkis); }
 .steckbrief .signatur { white-space: normal; }
 
-/* Kästen mit farbigem Streifen links sind ganz kantig, ohne Rundung (Nutzer 01.11.2026). Gilt für jeden Kasten, der
+/* Kästen mit farbigem Streifen links sind ganz kantig, ohne Rundung. Gilt für jeden Kasten, der
    den Streifen über box-shadow inset ...px 0 0 trägt; ein neuer Kasten mit Streifen kommt hier dazu. */
 .vorschlag.gewaehlt, .inhalt li.aktiv > a, .artikel p.fundstelle, .artikel p.liest, .notiz-karte, .thema-eintrag.aktiv,
 .vorschlagsband, .notiz .zitat, .bearbeiten .zitatbox, .buch-gross.neu, .buchseite a.hier, .baum-eintrag.hier, .signatur,
 .mini-inhalt a, .streifen-kasten, .katkarte.abo, .katkarte.laedt, .auftragskarte, .platz-f { border-radius: 0; }
 
-/* Fassungsfilter je Dokumentation (Nutzer 01.11.2026: spielt eine größere Rolle, dauerhaft einstellbar) */
+/* Fassungsfilter je Dokumentation (spielt eine größere Rolle, dauerhaft einstellbar) */
 .fassungswahl { display: inline-flex; align-items: center; gap: 8px; height: var(--knopf-hoehe); padding: 0 12px; border-radius: var(--r2); font-size: var(--klein);
                 background: color-mix(in srgb, var(--violett) 12%, transparent); color: var(--text); cursor: pointer; white-space: nowrap; }
 .fassungswahl > i:first-child { color: var(--violett); }
@@ -916,7 +916,7 @@ body.bild-offen .leuchtkasten { display: grid; }
 .fundband.fassung > i { color: var(--violett); }
 .fundband.fassung + .fundband { margin-top: var(--a2); }
 
-/* Eigene Beispiele über dem Buch (Nutzer 01.11.2026: umschreiben, eigene anfügen, schlechte löschen) */
+/* Eigene Beispiele über dem Buch (umschreiben, eigene anfügen, schlechte löschen) */
 .beispiel.eigen { box-shadow: var(--schatten), inset 3px 0 0 var(--akzent-flaeche); border-radius: 0; }
 .beispiel .eigen-marke { font-size: var(--marke); font-weight: 400; padding: 1px 7px; background: var(--akzent-weich); color: var(--akzent); }
 .ausgeblendet { display: flex; align-items: center; gap: var(--a3); padding: var(--a2) var(--a3); font-size: var(--klein); color: var(--text-3);

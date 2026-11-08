@@ -33,7 +33,7 @@
 
   const leiste = document.createElement("div");
   leiste.className = "mock-leiste";
-  // Ansicht A, B, C umschalten (Nutzer 01.11.2026: in der App frei wählbar); Zustände der Leiste gehen mit
+  // Ansicht A, B, C umschalten (in der App frei wählbar); Zustände der Leiste gehen mit
   const gruppen = [[["artikel-a.html", "A"], ["artikel-b.html", "B"], ["artikel-c.html", "C"]], [["start-a.html", "A"], ["start-b.html", "B"]]];
   const hier = location.pathname.split("/").pop();
   const ansichten = gruppen.find((g) => g.some(([d]) => d === hier)) ?? [];
