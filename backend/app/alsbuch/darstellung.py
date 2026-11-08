@@ -448,7 +448,7 @@ html {{ font-size: {schrift}; }}
 nav.inhaltsverzeichnis {{ break-after: page; }}
 nav.inhaltsverzeichnis a::after {{ content: leader('.') target-counter(attr(href), page); }}
 section.kapitel, section.glossar, section.literatur, section.antworten, section.quellen {{ break-before: page; }}
-section > h1 {{ string-set: kapitel content(); }}
+section > h1, nav.inhaltsverzeichnis > h1 {{ string-set: kapitel content(); }}
 h1, h2, h3 {{ break-after: avoid; }}
 figure, .kasten, .randnotiz, tr {{ break-inside: avoid; }}
 p {{ orphans: 2; widows: 2; }}

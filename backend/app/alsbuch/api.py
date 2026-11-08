@@ -1,6 +1,7 @@
 """Schnittstelle Als Buch (WIKI-45): eigene Bücher je Konto unter /api/v1/meins/buecher (Seite Als Buch, Schätzung,
-Probekapitel, Bauen, Regal, Lesen, Herunterladen, Nachbauen, Löschen) und die Vorlagen unter /api/v1/buchvorlagen
-(gemeinsam für die App; eigene sind Dateien in der Kellerwolke). Nur für Menschen."""
+Probekapitel, Bauen, Regal, Lesen, Nachbauen, Löschen) und die Vorlagen unter /api/v1/buchvorlagen (gemeinsam für die App;
+eigene sind Dateien in der Kellerwolke). Nur für Menschen. Die Dateien zum Herunterladen liegen unter /api/v1/inhalt mit
+dem Lesezugang der Sitzung (Cookie), weil ein Verweis zum Herunterladen keine Köpfe sendet."""
 
 from __future__ import annotations
 
@@ -97,19 +98,6 @@ def router(geruest: Geruest, buecher: Buecher) -> APIRouter:
         except LookupError as f:
             raise _fehlt(f) from f
 
-    @r.get("/meins/buecher/{buch}/datei/{format}", response_class=StreamingResponse,
-           responses={200: {"content": {"application/epub+zip": {}, "application/pdf": {}},
-                            "description": "Die Datei aus der Kellerwolke"}})
-    async def datei(buch: str, format: str, konto: Konto = geruest.mensch) -> StreamingResponse:
-        """Das Buch als EPUB oder PDF zum Herunterladen (aus der Kellerwolke)."""
-        if format not in ("epub", "pdf"):
-            raise HTTPException(status_code=404, detail="Format epub oder pdf")
-        try:
-            name, art, inhalt = await buecher.datei(konto.id, buch, format)
-        except LookupError as f:
-            raise _fehlt(f) from f
-        return StreamingResponse(inhalt, media_type=art, headers={"Content-Disposition": _datei(name)})
-
     @r.post("/meins/buecher/{buch}/nachbauen", response_model=Auftrag, status_code=201)
     async def nachbauen(buch: str, n: Nachbau, konto: Konto = geruest.mensch) -> Auftrag:
         """Ein Buch mit dem heutigen Stand des Themas neu bauen; schon Umgeformtes kommt aus dem Zwischenspeicher, nur
@@ -180,11 +168,36 @@ def router(geruest: Geruest, buecher: Buecher) -> APIRouter:
             raise HTTPException(status_code=409, detail=f.meldung) from f
         return Response(status_code=204)
 
-    @r.get("/buchvorlagen/{kennung}/datei", response_class=Response,
+    return r
+
+
+def inhalt_router(geruest: Geruest, buecher: Buecher) -> APIRouter:
+    """Herunterladen unter /api/v1/inhalt (Cookie des Lesezugangs): Bücher als EPUB oder PDF, Vorlagen als TOML."""
+    r = APIRouter(prefix="/api/v1/inhalt", tags=["bücher"])
+
+    @r.get("/buecher/{buch}/{format}", response_class=StreamingResponse,
+           responses={200: {"content": {"application/epub+zip": {}, "application/pdf": {}},
+                            "description": "Die Datei aus der Kellerwolke"}})
+    async def datei(buch: str, format: str, konto: Konto = geruest.lesen) -> StreamingResponse:
+        """Ein Buch als EPUB oder PDF zum Herunterladen (aus der Kellerwolke)."""
+        if format not in ("epub", "pdf"):
+            raise HTTPException(status_code=404, detail="Format epub oder pdf")
+        try:
+            name, art, inhalt = await buecher.datei(konto.id, buch, format)
+        except LookupError as f:
+            raise _fehlt(f) from f
+        return StreamingResponse(inhalt, media_type=art, headers={"Content-Disposition": _datei(name)})
+
+    @r.get("/buchvorlagen/{kennung}", response_class=Response,
            responses={200: {"content": {"application/toml": {}}, "description": "Die Vorlage als TOML-Datei"}})
-    async def vorlage_datei(kennung: str, konto: Konto = geruest.mensch) -> Response:
+    async def vorlage_datei(kennung: str, konto: Konto = geruest.lesen) -> Response:
         """Eine Vorlage als Datei zum Weitergeben (TOML, wie sie in der Kellerwolke liegt)."""
-        v = await vorlage(kennung, konto)
+        try:
+            v = await buecher.vorlagen.holen(kennung)
+        except VorlagenFehler as f:
+            raise HTTPException(status_code=503, detail=f.meldung) from f
+        if v is None:
+            raise HTTPException(status_code=404, detail="Diese Vorlage gibt es nicht")
         return Response(als_toml(v), media_type="application/toml", headers={"Content-Disposition": _datei(f"{kennung}.toml")})
 
     return r

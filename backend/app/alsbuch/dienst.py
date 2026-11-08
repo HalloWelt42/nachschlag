@@ -48,7 +48,7 @@ from ..uebersetzung.artikel import Artikeluebersetzer, braucht_uebersetzung
 from ..zeitfenster import Nachtfenster
 from . import quelle as quellen
 from .ablage import AblageFehler, Buchablage
-from .bilder import Bilddatei, Bildquelle
+from .bilder import Bilddatei, Bildquelle, fuer_jedes_lesegeraet
 from .darstellung import alle_bilder, epub_seiten, lesen_html, pdf_dokument, stil
 from .dauer import HAUSMESSUNG_ZEICHEN_JE_S, ZEICHEN_JE_SEITE, probe_sekunden, schaetzen
 from .epub import BILDARTEN, Epubangaben, Epubbild, epub_bauen
@@ -70,6 +70,8 @@ ART_PROBE = "buchprobe"
 BILDER_JE_ARTIKEL = 12
 #: so viele Kennzahlen von Artikeln merkt sich der Dienst (Länge, Bilder) für Schätzungen
 KENNZAHLEN_HOECHSTENS = 4_000
+#: so viel vom ersten Absatz zeigt die Vorschau einer Seite
+AUSZUG_ZEICHEN = 240
 #: ein Bau mit weniger Rechenzeit misst das Tempo nicht neu (zu wenig, um etwas zu sagen)
 MESSEN_AB_S = 20.0
 OFFEN = ("wartet", "laeuft")
@@ -119,6 +121,7 @@ class Kennzahlen:
     erstes_stueck: int
     bilder: int
     steckbrief: bool
+    anfang: str
 
 
 @dataclass
@@ -243,7 +246,8 @@ class Buecher(Begleiter):
             if len(self._kennzahlen) >= KENNZAHLEN_HOECHSTENS:
                 self._kennzahlen.clear()
             self._kennzahlen[schl] = Kennzahlen(qs.q.zeichen, sum(len(b.text) for b in erstes[0]) if erstes else 0,
-                                                min(len(qs.q.bilder), BILDER_JE_ARTIKEL), qs.artikel.steckbrief is not None)
+                                                min(len(qs.q.bilder), BILDER_JE_ARTIKEL), qs.artikel.steckbrief is not None,
+                                                qs.q.absaetze[0].text[:AUSZUG_ZEICHEN] if qs.q.absaetze else "")
         return self._kennzahlen[schl]
 
     async def _notizen_je_artikel(self, konto: str) -> dict[tuple[str, str], Notizen]:
@@ -265,12 +269,14 @@ class Buecher(Begleiter):
         im_thema = [notizen.get((x.buch_name, x.pfad), Notizen()) for x in t.eintraege]
         bilder = steckbriefe = 0
         fremd: list[Fremdartikel] = []
-        for x in t.eintraege:
+        auszug: tuple[str, str] = ("", "")
+        for x in sorted(t.eintraege, key=lambda x: (next((b.platz for b in t.bereiche if b.id == x.bereich), 10_000), x.platz)):
             if not x.buch:
                 continue
             if (k := await self._kennzahl(x, False)) is not None:
                 bilder += k.bilder
                 steckbriefe += int(k.steckbrief)
+                auszug = auszug if auszug[1] else (x.titel, k.anfang)
             buch = await self._bib.buch(x.buch)
             if braucht_uebersetzung(buch):
                 fremd.append(Fremdartikel(titel=x.titel, sprache=buch.sprache,
@@ -286,7 +292,8 @@ class Buecher(Begleiter):
         return Buchwahl(thema=t.id, titel=t.titel, artikel=len(t.eintraege), kapitel=kapitel,
                         notizen=sum(len(n.mit_text) for n in im_thema), markierungen=sum(len(n.markierungen) for n in im_thema),
                         bilder=bilder, steckbriefe=steckbriefe, fremd=fremd,
-                        titelbilder=list(dict.fromkeys(x.bild for x in t.eintraege if x.bild))[:8], modell=self._modell(),
+                        titelbilder=list(dict.fromkeys(x.bild for x in t.eintraege if x.bild))[:8], auszug_titel=auszug[0],
+                        auszug=auszug[1], modell=self._modell(),
                         leitstelle=self._ls() is not None, pdf=verfuegbar(), ablage=await self.ablage.ordner(t.titel),
                         letzte=await self._sp.letzte(konto, thema))
 
@@ -632,6 +639,7 @@ class Buecher(Begleiter):
             d = await self._bilder.holen(bild.adresse, gross=bild.adresse in gross)
             if d is None:
                 continue
+            d = await asyncio.to_thread(fuer_jedes_lesegeraet, d)
             name = f"bilder/b{i:03d}.{BILDARTEN[d.art]}"
             namen[bild.adresse], dateien[name] = name, d
         _bildangaben(inhalt, {a: (dateien[n].urheber, dateien[n].lizenz) for a, n in namen.items()})

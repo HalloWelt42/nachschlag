@@ -42,6 +42,7 @@ from .markdownablage import Markdownablage
 from .themen.ordnen import ThemenOrdner
 from .themen.literatur import fuer_thema as literatur_fuer_thema
 from .alsbuch.ablage import Buchablage
+from .alsbuch.api import inhalt_router as buchdateien_router
 from .alsbuch.api import router as alsbuch_router
 from .alsbuch.bilder import Bildquelle
 from .alsbuch.dienst import Buecher
@@ -294,6 +295,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
                                      ThemenOrdner(geruest.auftraege, themen, leser, lambda: geruest.leitstelle, lambda: e().suchmodell)))
     app.include_router(zitieren_router(geruest, bibliothek, leser))
     app.include_router(alsbuch_router(geruest, buecher))
+    app.include_router(buchdateien_router(geruest, buecher))   # Herunterladen (Cookie)
     app.include_router(medien_router(geruest, Medien(leser, suche, lambda buch, pfad: grossbilder.finden(buch, pfad) is not None)))
     async def themenartikel(konto: str) -> list[tuple[str, str]]:
         """Buch (heutige Fassung) und Pfad jedes Artikels in den Themen des Kontos (Stöbern: nahe an meinen Themen)."""

@@ -21,7 +21,7 @@ from appkern.datenbank import Datenbank
 
 from app.alsbuch import quelle as quellen
 from app.alsbuch.ablage import Buchablage
-from app.alsbuch.bilder import Bilddatei
+from app.alsbuch.bilder import Bilddatei, fuer_jedes_lesegeraet
 from app.alsbuch.darstellung import epub_seiten, lesen_html, pdf_dokument, stil
 from app.alsbuch.dauer import HAUSMESSUNG_ZEICHEN_JE_S, schaetzen
 from app.alsbuch.dienst import Buecher
@@ -51,6 +51,7 @@ Fernrohr</figcaption></figure>
 <h2 id="u">Umlaufbahn</h2>
 <p>Für einen Umlauf um die Sonne benötigt der Saturn ungefähr 29 Jahre und 163 Tage.</p>
 <ul><li>Perihel bei 9,04 AE</li><li>Aphel bei 10,12 AE</li></ul>
+<ul><li><div><img src="/api/v1/inhalt/medien/wp_de_2026-01/_assets_/ringe.png"/></div><div>Die Ringe</div></li></ul>
 <table><tr><th>Masse</th><td>95 Erdmassen</td></tr></table>
 </div>"""
 ERFUNDEN = "In einer großen Badewanne würde er deshalb schwimmen."
@@ -97,11 +98,21 @@ def test_quelle_nummeriert_absaetze_mit_bildern_und_teilt_in_stuecke():
                                         unterschrift="Saturn im Fernrohr")]
     assert "Steckbrief" not in " ".join(b.text for b in q.bloecke)              # Steckbrief und Belegmarken bleiben draußen
     assert "<td>95 Erdmassen</td>" in q.bloecke[-1].html
+    assert q.bloecke[5].bilder == [Bild(adresse="/api/v1/inhalt/medien/wp_de_2026-01/_assets_/ringe.png", unterschrift="Die Ringe")]
     assert quellen.stelle_von(q, "ungefähr 29 Jahre\nund 163 Tage") == 3
     stuecke = quellen.stuecke(q, hoechstens=300)
     assert [[b.nr for b in s] for s in stuecke] == [[1, 2], [0, 3, 4, 5]]            # an der Überschrift geteilt
     assert quellen.als_eingabe(stuecke[1]).startswith("## Umlaufbahn\n[3] Für einen Umlauf")
     assert "[4] - Perihel" in quellen.als_eingabe(stuecke[1])
+
+
+def test_webp_wird_jpeg_fuer_jedes_lesegeraet():
+    from PIL import Image
+    puffer = io.BytesIO()
+    Image.new("RGB", (4, 3), (200, 80, 20)).save(puffer, "WEBP")
+    aus = fuer_jedes_lesegeraet(Bilddatei(puffer.getvalue(), "image/webp", "Jemand", "CC0"))
+    assert aus.art == "image/jpeg" and aus.daten[:3] == b"\xff\xd8\xff" and (aus.urheber, aus.lizenz) == ("Jemand", "CC0")
+    assert fuer_jedes_lesegeraet(Bilddatei(PNG, "image/png")).daten == PNG
 
 
 def test_zahlen_in_beiden_schreibweisen():

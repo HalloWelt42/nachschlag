@@ -172,10 +172,16 @@ def lesen(titel: str, html: str, sprache: str = "de") -> Quelltext:
                 anfuegen(Quellblock(art="zitat", text=_text(k), html=xhtml(k, INLINE)))
             elif tag in ("ul", "ol"):
                 zaehler["liste"] += 1
+                galerie = next(k.iter("img"), None) is not None      # Galerie: Bilder mit Unterschrift, keine Punkte
                 for li in k:
-                    if isinstance(li.tag, str) and li.tag == "li" and not _weg(li):
-                        anfuegen(Quellblock(art="punkt", text=_text(li), html=xhtml(li, INLINE), liste=zaehler["liste"],
-                                            geordnet=tag == "ol"))
+                    if not (isinstance(li.tag, str) and li.tag == "li") or _weg(li):
+                        continue
+                    if galerie:
+                        if (img := next(li.iter("img"), None)) is not None:
+                            bild_anhaengen(_bild(img, _text(li)))
+                        continue
+                    anfuegen(Quellblock(art="punkt", text=_text(li), html=xhtml(li, INLINE), liste=zaehler["liste"],
+                                        geordnet=tag == "ol"))
             elif tag == "table":
                 if _text(k):
                     q.bloecke.append(Quellblock(art="tabelle", text=_text(k), html=f"<table>{xhtml(k, TABELLE | INLINE)}</table>"))

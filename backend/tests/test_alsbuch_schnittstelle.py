@@ -34,7 +34,7 @@ async def test_als_buch_ueber_die_schnittstelle(nachschlag):  # noqa: F811
     assert (await c.put("/api/v1/buchvorlagen/beobachtungsheft", json=kopie)).status_code == 422     # Auf einen Blick nicht vorn
     kopie["aufbau"]["vorn"].pop()
     assert (await c.put("/api/v1/buchvorlagen/lernheft", json={**kopie, "kennung": "lernheft"})).status_code == 409
-    datei = await c.get("/api/v1/buchvorlagen/beobachtungsheft/datei")
+    datei = await c.get("/api/v1/inhalt/buchvorlagen/beobachtungsheft")
     assert 'So beobachtest du es' in datei.text and "beobachtungsheft.toml" in datei.headers["content-disposition"]
     assert [v["titel"] for v in (await c.get("/api/v1/buchvorlagen")).json()["vorlagen"]][-1] == "Beobachtungsheft"
     assert (await c.delete("/api/v1/buchvorlagen/beobachtungsheft")).status_code == 204
@@ -58,10 +58,10 @@ async def test_als_buch_ueber_die_schnittstelle(nachschlag):  # noqa: F811
     buch = regal["fertig"][0]
     assert (buch["titel"], buch["vorlage_titel"], buch["artikel"]) == ("Füchse", "Nachschlagewerk", 2)
     assert buch["formate"][0]["pfad"] == "Apps/Nachschlag/Bücher/Füchse/Füchse - Nachschlagewerk.epub"
-    epub = await c.get(f"/api/v1/meins/buecher/{buch['id']}/datei/epub")
+    epub = await c.get(f"/api/v1/inhalt/buecher/{buch['id']}/epub")
     assert epub.headers["content-type"] == "application/epub+zip" and "filename*=UTF-8''F%C3%BCchse" in epub.headers["content-disposition"]
     assert zipfile.ZipFile(io.BytesIO(epub.content)).read("mimetype") == b"application/epub+zip"
-    assert (await c.get(f"/api/v1/meins/buecher/{buch['id']}/datei/pdf")).status_code == 404
+    assert (await c.get(f"/api/v1/inhalt/buecher/{buch['id']}/pdf")).status_code == 404
     lesen = (await c.get(f"/api/v1/meins/buecher/{buch['id']}/lesen")).json()
     assert "Kreuzfuchs" in lesen["html"] and "Quellen und Lizenzen" in lesen["html"]
     assert (await c.get(f"/api/v1/meins/buecher/probe/{t['id']}")).json() is None

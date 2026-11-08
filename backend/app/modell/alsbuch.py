@@ -179,6 +179,8 @@ class Buchwahl(BaseModel):
     steckbriefe: int = Field(description="Artikel mit Steckbrief")
     fremd: list[Fremdartikel] = Field(default_factory=list, description="Artikel in anderer Sprache")
     titelbilder: list[str] = Field(default_factory=list, description="Mögliche Titelbilder (Leitbilder der Artikel)")
+    auszug_titel: str = Field("", description="Titel des ersten Artikels (Vorschau einer Seite)")
+    auszug: str = Field("", description="Anfang seines ersten Absatzes (Vorschau einer Seite)")
     modell: str = Field(description="Modell der Umformung (Einstellung Modell für Bücher)")
     leitstelle: bool = Field(description="Die Leitstelle ist eingerichtet (ohne sie gehen nur Vorlagen ohne KI)")
     pdf: str = Field("", description="Leer: PDF geht; sonst der Grund, warum der Satz als PDF hier nicht geht")
