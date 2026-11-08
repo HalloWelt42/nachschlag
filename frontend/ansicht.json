@@ -287,6 +287,22 @@
         "nachschlag.leseansicht": "a",
         "nachschlag.startansicht": "a"
       }
+    },
+    {
+      "name": "kategorien",
+      "pfad": "/kategorien",
+      "speicher": {
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
+      }
+    },
+    {
+      "name": "kategorie-art",
+      "pfad": "/kategorien/dokumentation",
+      "speicher": {
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
+      }
     }
   ]
 }

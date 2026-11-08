@@ -14,6 +14,7 @@
   import { themaHolen } from "../lib/themen.svelte";
   import { Auswahl } from "appkern-oberflaeche";
   import { ART_SYMBOL } from "../lib/arten";
+  import Buchkachel from "../teile/Buchkachel.svelte";
   import type { Art, Buch } from "../lib/typen";
   import { lesen } from "../lib/ziele";
   import { gehe } from "appkern-oberflaeche";
@@ -224,18 +225,7 @@
       {/if}
       <div class="buecher">
         {#each aktive as b (b.kennung)}
-          <Kachel art="quer" symbol={SYMBOL[b.art]} titel={b.titel} untertitel={`${zahl(b.artikel)} Artikel · Stand ${datum(b.stand)}`}
-                 hinweis="Startseite der Quelle öffnen" ziel={() => lesen(b.kennung, b.startseite)}>
-            {#snippet ecke()}<Sprachmarke kuerzel={b.sprache} />{/snippet}
-            {#snippet fuss()}
-              <span class="faehig">
-                {#if b.faehigkeiten.volltext}<span class="faehigkeit an"><i class="fa-solid fa-check"></i>Index</span>{/if}
-                {#if b.faehigkeiten.lesedesign}<span class="faehigkeit an"><i class="fa-solid fa-book-open-reader"></i>Lesedesign</span>
-                {:else}<span class="faehigkeit fehlt" title="Für diese Art von Buch ({b.erzeuger || 'Erzeuger unbekannt'}) gibt es noch keine eigene Ansicht; es öffnet in der Originalansicht">
-                  <i class="fa-solid fa-person-digging"></i>Ansicht fehlt</span>{/if}
-              </span>
-            {/snippet}
-          </Kachel>
+          <Buchkachel buch={b} />
         {/each}
       </div>
       {#each bibliothek.fehler as f}<div class="fehlertext">{f}</div>{/each}

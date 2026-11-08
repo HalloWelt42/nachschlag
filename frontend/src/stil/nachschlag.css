@@ -277,6 +277,11 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .grosssuche .suchfeld > i { font-size: 18px; }
 .fund-etikett { font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; display: flex; align-items: center; gap: 6px; }
 .stoebern { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: var(--a4); }
+/* ----- Kategorien (seiten/Kategorien.svelte, WIKI-74): Bücher nach Art ----- */
+.kat-seite { display: flex; flex-direction: column; gap: var(--a5); max-width: 1320px; }
+.kat-wahl { display: flex; flex-wrap: wrap; gap: var(--a2); }
+.kat-zahl { font-family: var(--schrift-zahl); opacity: .7; }
+.kat-gruppe h2 { margin: 0 0 var(--a3); font-size: var(--titel); display: flex; gap: var(--a2); align-items: center; }
 .buecher { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: var(--a4); }
 .faehigkeit { font-size: var(--marke); padding: 2px 8px; border-radius: var(--r1); background: var(--flaeche-2); color: var(--text-2); display: inline-flex; gap: 5px; align-items: center; }
 .faehigkeit.an { background: var(--gut-weich); color: var(--gut); }
@@ -1181,7 +1186,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
   .buch-gross { grid-template-columns: 48px minmax(0, 1fr); }
   .buch-gross .sym { width: 48px; height: 48px; font-size: var(--titel); grid-row: auto; }
   .buch-gross .aktionen { grid-row: auto; grid-column: 1 / -1; justify-content: flex-start; }
-  .buch-gross .kennzahlen, .buch-gross .faehig { grid-column: 1 / -1; }
+  .buch-gross .kennzahlen, .buch-gross .faehig, .buch-gross .beschr { grid-column: 1 / -1; }   /* nie in die Symbolspalte (WIKI-74) */
 }
 
 .katalog-seite { max-width: 1240px; display: flex; flex-direction: column; gap: var(--a4); padding-bottom: var(--a6); }
@@ -1419,7 +1424,6 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .anl-symbolwahl button { flex: none; display: inline-flex; align-items: center; justify-content: center; min-height: 28px; min-width: 30px; padding-inline: 8px; }
 .anl-zahlwahl button { font-family: var(--schrift-zahl); }
 .anl-geraet .katalog-filter .segment.anl-symbolwahl { flex-wrap: nowrap; }
-.faehigkeit.fehlt { background: var(--warn-weich); color: var(--warn); }
 @media (max-width: 1100px) {
   .anl-treffer-seite { grid-template-columns: minmax(0, 1fr); }
   .anl-facetten ul { flex-direction: row; flex-wrap: wrap; gap: 6px; }
