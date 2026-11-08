@@ -1,8 +1,8 @@
 # Ausprobieren: Beispielcode ausführen und debuggen (WIKI-48)
 
-Entwurf: `mockups/ausprobieren.html` (abgenommen 02.11.2026: "entwurf passt soweit").
+Entwurf: `mockups/ausprobieren.html` (abgenommen 02.11.2026).
 
-## Entscheidungen (Gespräch 02.11.2026)
+## Entscheidungen (02.11.2026)
 
 - Nur am Rechner; am Telefon gibt es den Knopf nicht.
 - Gearbeitet wird an einer Kopie des Beispiels; das Original im Artikel bleibt unverändert ("Zurücksetzen" holt es
@@ -60,10 +60,9 @@ Nachschlag (Oberfläche: Ebene Ausprobieren, Editor, Ausgabe, Debugger)
 
 ## PHP mit Fassungen (Schritt 5, WIKI-52)
 
-Entscheidungen (Gespräch 02.11.2026): PHP-Fassungen 5.6, 7.4 und 8.0 bis 8.5, je eine als eigenes Abbild der Sandbox;
-der Editor kennt die Funktionen jeder Fassung aus der Sandbox selbst. Nutzer: "zwischen den php-versionen zu wechseln,
-passend zum code. und das im editor ausführenansicht des overlay live zu ändern"; "auch der editor muss dann darauf
-reagieren, z.b. wenns befehle in alten versionen nich tgab".
+Entscheidungen (02.11.2026): PHP-Fassungen 5.6, 7.4 und 8.0 bis 8.5, je eine als eigenes Abbild der Sandbox;
+der Editor kennt die Funktionen jeder Fassung aus der Sandbox selbst. Die Fassung lässt sich passend zum Code in der
+Ansicht zum Ausführen wechseln, und der Editor zeigt, welche Befehle es in einer älteren Fassung nicht gibt.
 
 - Codeschmiede: die Fassungen stehen nur in `sandbox/laufzeiten.py` (Laufzeit `php-8.3`, Abbild
   `codeschmiede-sandbox:php-8.3` aus `sandbox-bilder/php.Dockerfile`). Für Apps: `GET /api/v1/sandbox/sprachen`

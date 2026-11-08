@@ -4,7 +4,7 @@ Der Bücherlader sieht das Verzeichnis der Bücher durch, meldet Neues und lädt
 WIKI-2). Er ist eine eigene Schicht in `backend/app/buecherlader/` und der einzige Teil von Nachschlag, der in den Ordner
 der Bücher schreibt. Alles, was länger läuft, ist ein Auftrag des Appkerns (Seite Aufträge, Fußleiste).
 
-## Entscheidungen (Gespräch am 07.11.2026)
+## Entscheidungen (07.11.2026)
 
 - Quelle ist das Verzeichnis der Dateien (eine Seite je Bereich, wie ein Webserver Ordner zeigt). Titel, Beschreibung
   und Zahl der Artikel kommen wahlweise aus dem Katalog der Bücher.
@@ -21,7 +21,7 @@ der Bücher schreibt. Alles, was länger läuft, ist ein Auftrag des Appkerns (S
 - Nur geänderte Artikel neu indexieren und einbetten (WIKI-58):
   - Eigener Index: jede Seite trägt einen Abdruck ihres Rohinhalts. Der Index einer neuen Fassung übernimmt alles mit
     gleichem Pfad und Abdruck aus dem Index der vorigen (auch Metadaten und übergangene Seiten); aufbereitet wird nur
-    Neues und Geändertes. Der Pi nennt dem Index-Dienst die Vorlage, der Mac nimmt seine Kopie oder holt sie beim Pi.
+    Neues und Geändertes. Nachschlag nennt dem Index-Dienst die Vorlage; der nimmt seine Kopie oder holt sie bei Nachschlag.
   - Bedeutungssuche: der Fundus führt eine neue Fassung als dieselben Dokumente zu und bettet nur geänderte Abschnitte
     ein. Er meldet unter `/api/v1/quellenstand/dateien`, welche ZIM-Dateien er noch liest; der Bücherlader löscht eine
     vorige Fassung erst, wenn sie dort fehlt (antwortet der Fundus nicht, bleibt sie).

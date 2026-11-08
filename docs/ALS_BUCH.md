@@ -53,7 +53,7 @@ markiert, schreibt aber nicht von selbst neu (wie im Entwurf); neu schreiben lä
 
 ## Dauer
 
-Grundlage ist die Hausmessung über die Leitstelle (Qwen3 80B, rund 75 Zeichen je Sekunde). Nach jedem Bau mit
+Grundlage ist ein Richtwert (rund 75 Zeichen je Sekunde, gemessen mit einem großen Sprachmodell über die Leitstelle). Nach jedem Bau mit
 mindestens 20 Sekunden Rechenzeit misst Nachschlag das Tempo des Modells neu und rechnet danach. Was das Modell schreibt,
 folgt aus der Länge des Originals und der gewählten Länge; Kästen, Einleitungen, Fragen und Glossar mit ihrer üblichen
 Länge. Heute Nacht heißt: im Fenster aus den Einstellungen (Über Nacht); reicht eine Nacht nicht, läuft der Rest in

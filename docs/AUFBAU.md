@@ -1,7 +1,7 @@
 # Aufbau von Nachschlag
 
 Nachschlag liest jedes Buch im ZIM-Format aus einem Ordner und macht es durchsuchbar und angenehm lesbar. Der Kern läuft
-allein (nur der Ordner mit den Büchern); weitere Dienste sind Anbindungen, die man zuschaltet. Die freigegebenen
+allein (nur der Ordner mit den Büchern, ohne Anmeldung); weitere Dienste sind Anbindungen, die man zuschaltet. Die freigegebenen
 Entwürfe unter `mockups/` sind der Leitfaden für die Oberfläche.
 
 ## Schichten
@@ -14,7 +14,9 @@ Entwürfe unter `mockups/` sind der Leitfaden für die Oberfläche.
 | Suche | `backend/app/suche/` | Index des Buchs (Volltext und Titel), Bedeutungssuche als Anbindung, Mischen, Rückfall |
 | Als Buch | `backend/app/alsbuch/` | ein Thema als Buch (EPUB und PDF) nach einer Vorlage, umgeformt über die Leitstelle, geprüft gegen das Original (docs/ALS_BUCH.md) |
 | Bücherlader | `backend/app/buecherlader/` | Verzeichnis der Bücher durchsehen, Neues melden, Abos laden, Fassungen umschalten; schreibt als Einziger in den Ordner der Bücher (docs/BUECHERLADER.md) |
-| Schnittstelle | `backend/app/api/` | REST unter `/api/v1`; die Oberfläche nutzt nur diese Wege |
+| Meins und Themen | `backend/app/meins/`, `backend/app/themen/` | Merkzettel, Notizen, Verlauf und Themen je Konto (ohne Anmeldung: der feste Nutzer) |
+| Ablage | `backend/app/markdownablage.py` und die Dienste | Dateien über die Ablage des Appkerns (`geruest.ablage`): Kellerwolke, wenn eingetragen, sonst `ablage/` im Datenordner |
+| Schnittstelle | `backend/app/api.py` und je Bereich `api.py` | REST unter `/api/v1`; die Oberfläche nutzt nur diese Wege |
 | Oberfläche | `frontend/src/` | Svelte in der Schale des Appkerns |
 
 ## Bausteine
@@ -56,8 +58,16 @@ die Oberfläche sagt es.
 | Anbindung | wofür | ohne sie |
 |---|---|---|
 | Fundus | Bedeutungssuche | nur Index |
-| Kellerwolke | Konten, Ablage | ein Nutzer, eigene Datenbank (Betriebsart ohne Anmeldung, Bau 8) |
+| Kellerwolke | Konten (Anmeldung), Ablage der Dateien | ohne Anmeldung ein fester Nutzer für alle Geräte, Ablage im Datenordner (WIKI-11) |
 | Verzeichnis der Bücher | Bücherlader: Neues melden, Abos laden | Bibliothek ohne Katalog und Laden |
 | Leitstelle | Übersetzen (Suche und Artikel, als Auftrag), Korrektur, Spracheingabe (Hördienst), Vorlesen (Sprechdienst), Bücher umformen (als Auftrag) | ausgeblendet; Bücher nur mit Vorlagen ohne KI |
+| Bildholer | große Bilder der Wikis (docs/BILDHOLER.md) | Bilder aus den Büchern |
+| Index-Dienst | eigene Indizes und Kategorien (docs/SUCHE.md) | Index der Datei |
+| Codeschmiede | Beispiele ausprobieren (docs/AUSPROBIEREN.md) | ohne Ausprobieren |
+| Vertonung | eigene Stimmen fürs Vorlesen | Stimmen des Sprechdienstes |
 
-Hausinternes (Adressen, Schlüssel, Ausrollen) gehört nicht in dieses Repo.
+Jede Anbindung ist wahlweise: nicht eingerichtet zeigt die Oberfläche sie weder als fehlend noch als Fehler. Ob man sich
+anmeldet, ist eine eigene Wahl (Einstellungen, Zugang): ab Werk ohne Anmeldung, mit Kellerwolke wahlweise je Konto.
+
+Hausinternes (Adressen, Konten, Ausrollen ins eigene Netz) liegt im privaten Teil `privat/` (eigenes Repo, von Git
+ausgeschlossen), nicht in diesem Repo.
