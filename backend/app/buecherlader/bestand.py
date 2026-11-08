@@ -249,10 +249,11 @@ class Bestand:
 
     # ----- Wechsel ----------------------------------------------------------------------------------------------------
 
-    async def wechsel_eintragen(self, stamm: str, alt: str, neu: str) -> None:
+    async def wechsel_eintragen(self, stamm: str, alt: str, neu: str, am: datetime) -> None:
+        """`am`: wann umgeschaltet wurde, nach der Uhr des Laders (an ihr misst sich die Frist der vorigen Fassung)."""
         await self._db.ausfuehren(
             "INSERT INTO buecherlader_wechsel (stamm, alt, neu, am) VALUES (?,?,?,?) ON CONFLICT(stamm, neu) DO UPDATE SET "
-            "alt=excluded.alt, am=excluded.am, entfernt='', zurueck=''", (stamm, alt, neu, jetzt()))
+            "alt=excluded.alt, am=excluded.am, entfernt='', zurueck=''", (stamm, alt, neu, am.isoformat(timespec="seconds")))
 
     async def offene_wechsel(self) -> list[Wechsel]:
         """Wechsel, deren vorige Fassung noch als Rückfall da ist (weder entfernt noch zurückgenommen)."""

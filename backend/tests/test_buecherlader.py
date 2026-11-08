@@ -264,7 +264,7 @@ async def test_abo_laedt_wartet_schaltet_um_und_raeumt_auf(umgebung):
     await lader.umschalten("probe_de_all")
     [abo] = (await lader.stand()).abos
     assert abo.zustand == "aktuell" and abo.rueckfall.kennung == "probe_de_all_2026-01"
-    frist = (datetime.now(timezone.utc) + timedelta(days=14)).astimezone(ZONE).date().isoformat()   # Umschalten nimmt die echte Uhr
+    frist = (uhr.jetzt + timedelta(days=14)).astimezone(ZONE).date().isoformat()   # die Frist misst sich an der Uhr des Laders
     assert abo.rueckfall.entfernt_ab == frist
     assert "probe_de_all_2026-10.zim" in (buecher / "library.xml").read_text()
 

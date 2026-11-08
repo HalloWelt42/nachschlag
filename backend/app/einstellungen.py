@@ -125,6 +125,11 @@ class AppEinstellungen(Grundeinstellungen):
     eigenindex_ordner: str = Field("/eigenindex", title="Ordner der eigenen Indizes", json_schema_extra=SUCHE,
                                    description="Je Quelle eine Datei. Leer: keine eigenen Indizes. Gehört in die Sicherung "
                                                "(Rechenzeit), anders als die ZIM-Libs.")
+    kategorien_aus_abzuegen: bool = Field(
+        True, title="Kategorien für Wikipedia", json_schema_extra=SUCHE,
+        description="Die Bücher der Wikipedia (und anderer Wikis von Wikimedia) bringen keine Kategorien mit. Der "
+                    "Index-Dienst auf dem Mac lädt dafür die Datenabzüge von Wikimedia (gut 1 GB je Wiki, monatlich neu) "
+                    "und baut je Buch die Kategorien; danach stehen sie am Ende jedes Artikels und als eigene Seiten.")
     indexdienst_schluessel: SecretStr = Field(SecretStr(""), title="Schlüssel des Index-Dienstes", json_schema_extra=SUCHE,
                                               description="Mit diesem Schlüssel holt der Index-Dienst auf dem Mac die "
                                                           "Aufträge hier ab (dort NACHSCHLAG_INDEX_SCHLUESSEL). Leer: "

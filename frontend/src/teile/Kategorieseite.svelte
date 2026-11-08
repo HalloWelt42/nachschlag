@@ -1,7 +1,9 @@
 <script lang="ts">
   // Eine Kategorie eines Buchs mit Kategorien (WIKI-75): Beschreibung, Oberkategorien, Unterkategorien als Kacheln und
   // alle Seiten darin, nach Anfangsbuchstaben gruppiert (wie in der Quelle, aber vollständig), mit Filter im stehenden Kopf.
+  // Kategorien aus der Kategoriendatei (Wikipedia) können riesig sein: die ersten Seiten kommen mit, weitere auf Knopfdruck.
   import { Seitenkopf } from "appkern-oberflaeche";
+  import { kategorieSeitenHolen } from "../lib/schnittstelle";
   import type { Artikel, Kategorieverweis } from "../lib/typen";
   import { lesen, lesenZiel } from "../lib/ziele";
   import Kachel from "./Kachel.svelte";
@@ -9,8 +11,28 @@
   let { artikel }: { artikel: Artikel } = $props();
   const k = $derived(artikel.kategorie!);
   let filter = $state("");
+  let nachgeladen = $state<Kategorieverweis[]>([]);
+  let laedt = $state(false);
+  $effect(() => {
+    void artikel.pfad;
+    nachgeladen = [];
+  });
+  const alle = $derived([...k.seiten, ...nachgeladen]);
+  const gesamt = $derived(Math.max(k.seiten_gesamt ?? 0, alle.length));
+  const fehlen = $derived(gesamt - alle.length);
   const f = $derived(filter.trim().toLowerCase());
-  const seiten = $derived(f ? k.seiten.filter((s) => s.titel.toLowerCase().includes(f)) : k.seiten);
+  const seiten = $derived(f ? alle.filter((s) => s.titel.toLowerCase().includes(f)) : alle);
+  async function weitere() {
+    const letzte = alle.at(-1)?.nr;
+    if (letzte == null || laedt) return;
+    laedt = true;
+    try {
+      nachgeladen = [...nachgeladen, ...(await kategorieSeitenHolen(artikel.buch, artikel.pfad, letzte))];
+    } finally {
+      laedt = false;
+    }
+  }
+  const zahl = (n: number) => n.toLocaleString("de-DE");
   /** Nach dem ersten Buchstaben (Umlaute bei ihrem Grundbuchstaben, Ziffern und Zeichen unter #) */
   const gruppen = $derived.by(() => {
     const je = new Map<string, Kategorieverweis[]>();
@@ -38,9 +60,9 @@
             <span class="kat-ober"><i class="fa-solid fa-turn-up"></i>
               {#each k.ober as o (o.pfad)}<a href={ziel(o.pfad)} onclick={(e) => folgen(e, o.pfad)}>{o.titel}</a>{/each}</span>
           {/if}
-          {#if k.seiten.length > 12}
+          {#if alle.length > 12}
             <label class="suchfeld kat-filter"><i class="fa-solid fa-filter"></i>
-              <input type="search" bind:value={filter} placeholder="In {k.seiten.length} Seiten filtern" aria-label="Seiten filtern" /></label>
+              <input type="search" bind:value={filter} placeholder="In {zahl(alle.length)} {fehlen ? 'geladenen ' : ''}Seiten filtern" aria-label="Seiten filtern" /></label>
           {/if}
         </div>
       {/snippet}
@@ -53,13 +75,14 @@
       <section class="kat-gruppe">
         <h2><i class="fa-solid fa-folder-tree"></i>Unterkategorien<span class="kat-zahl">{k.unter.length}</span></h2>
         <div class="anl-kacheln text">
-          {#each k.unter as u (u.pfad)}<Kachel art="text" titel={u.titel} adresse={ziel(u.pfad)} ziel={() => lesen(artikel.buch, u.pfad)} />{/each}
+          {#each k.unter as u (u.pfad)}<Kachel art="text" titel={u.titel} untertitel={u.anzahl ? `${zahl(u.anzahl)} Seiten` : ""}
+              adresse={ziel(u.pfad)} ziel={() => lesen(artikel.buch, u.pfad)} />{/each}
         </div>
       </section>
     {/if}
-    {#if k.seiten.length}
+    {#if alle.length}
       <section class="kat-gruppe">
-        <h2><i class="fa-solid fa-file-lines"></i>Seiten<span class="kat-zahl">{f ? `${seiten.length} von ${k.seiten.length}` : k.seiten.length}</span></h2>
+        <h2><i class="fa-solid fa-file-lines"></i>Seiten<span class="kat-zahl">{f ? `${zahl(seiten.length)} von ${zahl(alle.length)}` : fehlen ? `${zahl(alle.length)} von ${zahl(gesamt)}` : zahl(alle.length)}</span></h2>
         <div class="kat-buchstaben">
           {#each gruppen as [b, liste] (b)}
             <div class="kat-buchstabe">
@@ -69,6 +92,10 @@
           {/each}
         </div>
         {#if f && !seiten.length}<p class="ueb-leise">Keine Seite passt zu "{filter}".</p>{/if}
+        {#if fehlen > 0}
+          <button class="knopf kat-weitere" onclick={weitere} disabled={laedt}>
+            <i class="fa-solid {laedt ? 'fa-spinner fa-spin' : 'fa-angles-down'}"></i>Weitere Seiten ({zahl(fehlen)} fehlen noch)</button>
+        {/if}
       </section>
     {/if}
   </div>

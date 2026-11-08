@@ -63,6 +63,8 @@ class Abholung(BaseModel):
     """Der laufende Auftrag für den Index-Dienst."""
     auftrag: str
     buch: str
+    sorte: Literal["volltext", "kategorien"] = Field("volltext", description="was der Mac bauen soll: den eigenen Index "
+                                                                             "oder die Kategorien aus den Datenabzügen (WIKI-75)")
     da: int = Field(description="Bytes der Indexdatei, die schon hier sind (Übertragung setzt dort fort)")
     vorlage: str = Field("", description="Kennung des Index der vorigen Fassung desselben Buchs (WIKI-58): Unverändertes "
                                          "wird daraus übernommen; leer: keiner")
@@ -119,16 +121,20 @@ class FalscheStelle(ValueError):
 class Indexauftraege(Begleiter):
     def __init__(self, ablage: Eigenindizes, bibliothek: Bibliothek, auftraege: Auftraege, schluessel: Callable[[], str],
                  arten: Callable[[], list[str]], hoechstens_gb: Callable[[], float] = lambda: float("inf"), *,
-                 takt_s: float = 2.0, still_s: float = STILL_S, nutzbare: Callable[[], Awaitable[list[Buch]]] | None = None) -> None:
-        """`nutzbare`: die Quellen, die einen eigenen Index bekommen dürfen (ohne archivierte, WIKI-46); sonst alle."""
+                 takt_s: float = 2.0, still_s: float = STILL_S, nutzbare: Callable[[], Awaitable[list[Buch]]] | None = None,
+                 sorte: Literal["volltext", "kategorien"] = "volltext", art: str = ART, titel: str = "Eigener Index",
+                 passt: Callable[[Buch], bool] = lambda _b: True) -> None:
+        """`nutzbare`: die Quellen, die einen eigenen Index bekommen dürfen (ohne archivierte, WIKI-46); sonst alle.
+        `sorte`, `art` und `titel`: was gebaut wird (eigener Index oder Kategorien, WIKI-75), als welche Auftragsart und
+        unter welchem Namen; `passt`: welche Bücher diese Sorte bekommen."""
         self._ablage, self._bib, self._auftraege = ablage, bibliothek, auftraege
-        self._nutzbare = nutzbare
+        self._nutzbare, self._sorte, self._art, self._titel, self._passt = nutzbare, sorte, art, titel, passt
         self._schluessel, self._arten, self._takt, self._still = schluessel, arten, takt_s, still_s
         self._hoechstens_gb = hoechstens_gb
         self._kanaele: dict[str, _Kanal] = {}
         self._pruefung: asyncio.Task | None = None
         self._kontakt = 0.0                         # wann sich der Index-Dienst zuletzt gemeldet hat (monotonic)
-        auftraege.anmelden(Art(name=ART, titel="Eigener Index", arbeit=self._arbeit, eingabe=IndexEingabe, phasen=PHASEN,
+        auftraege.anmelden(Art(name=art, titel=titel, arbeit=self._arbeit, eingabe=IndexEingabe, phasen=PHASEN,
                                fortsetzbar=True, nach_neustart="fortsetzen", hoechstens=1,   # der Mac baut einen nach dem anderen
                                herkunft=lambda e: Herkunft(titel="Zum Buch", ziel=f"lesen/{e['buch']}")))   # WIKI-50
 
@@ -186,19 +192,19 @@ class Indexauftraege(Begleiter):
             return []
         arten, grenze = set(self._arten()), self._hoechstens_gb() * 1e9
         quellen = await self._nutzbare() if self._nutzbare else (await self._bib.stand()).buecher
-        buecher = sorted((b for b in quellen if b.art in arten and b.groesse <= grenze),
+        buecher = sorted((b for b in quellen if b.art in arten and b.groesse <= grenze and self._passt(b)),
                          key=lambda b: b.groesse)
         eingereiht = []
         for b in buecher:
             if self._ablage.datei(b.kennung) or await self._hat_auftrag(b.kennung):
                 continue
-            await self._auftraege.einreihen(ART, IndexEingabe(buch=b.kennung), titel=f"Eigener Index: {b.titel}",
+            await self._auftraege.einreihen(self._art, IndexEingabe(buch=b.kennung), titel=f"{self._titel}: {b.titel}",
                                             stapel=b.kennung, von="Nachschlag")
             eingereiht.append(b.kennung)
         return eingereiht
 
     async def _hat_auftrag(self, kennung: str) -> bool:
-        seite = await self._auftraege.liste(art=ART, stapel=kennung, grenze=20)
+        seite = await self._auftraege.liste(art=self._art, stapel=kennung, grenze=20)
         return any(a.zustand != "fertig" for a in seite.eintraege)
 
     # ----- Meldungen des Mac (Schnittstelle in api.py) ---------------------------------------------------------------
@@ -208,9 +214,14 @@ class Indexauftraege(Begleiter):
             if kanal.fertig is None and not kanal.fehler:
                 kanal.zuletzt = time.monotonic()
                 teil = self.teil(kanal.buch)
-                return Abholung(auftrag=auftrag_id, buch=kanal.buch, da=teil.stat().st_size if teil.exists() else 0,
-                                vorlage=self._ablage.vorgaenger(kanal.buch))
+                return Abholung(auftrag=auftrag_id, buch=kanal.buch, sorte=self._sorte,
+                                da=teil.stat().st_size if teil.exists() else 0,
+                                vorlage=self._ablage.vorgaenger(kanal.buch) if self._sorte == "volltext" else "")
         return None
+
+    def kennt(self, auftrag_id: str) -> bool:
+        """Ob der Auftrag zu diesen Aufträgen gehört und gerade läuft."""
+        return auftrag_id in self._kanaele
 
     def vorlage(self, auftrag_id: str) -> Path | None:
         """Die Datei des Index der vorigen Fassung zum Buch eines laufenden Auftrags (für den Mac, der sie nicht hat)."""

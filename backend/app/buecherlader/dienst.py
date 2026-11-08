@@ -512,7 +512,7 @@ class Buecherlader(Begleiter):
             raise LaderFehler("Für dieses Buch wartet keine neue Fassung") from None
         await self._liste(r, eintragen=neu.pfad)
         if alt:
-            await self._bestand.wechsel_eintragen(stamm, alt.kennung, neu.kennung)
+            await self._bestand.wechsel_eintragen(stamm, alt.kennung, neu.kennung, self._uhr())
 
     async def zurueck(self, stamm: str) -> None:
         """Zurück auf die vorige Fassung: die neue wartet wieder aufs Umschalten."""

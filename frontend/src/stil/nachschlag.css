@@ -1500,6 +1500,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .kat-ober { display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--a3); font-size: var(--klein); color: var(--text-3); }
 .kat-ober a { color: var(--akzent); text-decoration: none; }
 .kat-filter { flex: 1; min-width: min(100%, 220px); max-width: 420px; }
+.kat-weitere { margin-top: var(--a4); }
 .kat-beschreibung { max-width: 820px; }
 .kat-buchstaben { columns: 3 220px; column-gap: var(--a5); }
 .kat-buchstabe { break-inside: avoid; margin-bottom: var(--a4); }

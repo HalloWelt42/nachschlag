@@ -5,6 +5,7 @@
 
 import os
 from pathlib import Path
+from typing import get_args
 
 import httpx
 from fastapi import FastAPI
@@ -27,6 +28,10 @@ from .eigenindex.ablage import Eigenindizes
 from .eigenindex.api import router as indexdienst_router
 from .eigenindex.auftrag import Indexauftraege
 from .einstellungen import ARTEN_JE_STUFE, AppEinstellungen
+from .kategorien import schema as kategorienschema
+from .kategorien.abfrage import Kategorienindex
+from .kategorien.api import router as kategorien_router
+from .kategorien.wikis import wiki
 from .meins import Meins
 from .meins.api import inhalt_router as notizbilder_router
 from .meins.api import router as meins_router
@@ -55,6 +60,7 @@ from .themen import Themen
 from .themen.api import router as themen_router
 from .zitieren.api import router as zitieren_router
 from .fassung import FASSUNG, WURZEL
+from .modell.buch import Art as Buchart
 from .modell.suche import Suchregeln
 from .suche import Suche
 from .suche.bedeutung import FundusBedeutung
@@ -71,7 +77,11 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     e = lambda: geruest.einstellungen.stand  # noqa: E731
 
     bibliothek = Bibliothek(lambda: e().buecher_ordner)
-    leser = Artikelleser(bibliothek)
+    # Kategorien aus den Datenabzügen von Wikimedia (WIKI-75): je Buch eine Datei im Unterordner der eigenen Indizes
+    kategorienablage = Eigenindizes(lambda: str(Path(e().eigenindex_ordner) / "kategorien") if e().eigenindex_ordner else "",
+                                    gueltig=kategorienschema.gueltig)
+    kategorien = Kategorienindex(kategorienablage)
+    leser = Artikelleser(bibliothek, kategorien)
     bedeutung = FundusBedeutung(lambda: geruest.verbund, lambda: e().fundus_adresse, lambda: e().fundus_sammlung,
                                 lambda: e().fundus_vorsilbe)
     eigen = Eigenindizes(lambda: e().eigenindex_ordner)
@@ -100,6 +110,12 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     themen = Themen(geruest.db, bibliothek.name_von, bibliothek.kennung_von)
     geruest.begleiter_anmelden(themen)                   # nach Meins: Einträge lesen Lesestand und Notizen von dort
     geruest.begleiter_anmelden(indexauftraege)
+    kategorienauftraege = Indexauftraege(kategorienablage, bibliothek, geruest.auftraege,
+                                         lambda: e().indexdienst_schluessel.get_secret_value(),
+                                         lambda: list(get_args(Buchart)) if e().kategorien_aus_abzuegen else [],
+                                         nutzbare=quellen.nutzbare, sorte="kategorien", art="kategorien", titel="Kategorien",
+                                         passt=lambda b: wiki(b.kennung) is not None)
+    geruest.begleiter_anmelden(kategorienauftraege)
     uebersetzer = Uebersetzer(geruest.db, lambda: geruest.leitstelle, lambda: e().suchmodell)
     geruest.begleiter_anmelden(uebersetzer)
     artikeluebersetzer = Artikeluebersetzer(geruest.db, geruest.auftraege, bibliothek, leser, lambda: geruest.leitstelle,
@@ -225,7 +241,8 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     app.include_router(sprache_router(geruest, lambda: e().hoerdienst))
     app.include_router(korrektur_router(geruest, Korrektor(eigen.alle, lambda: geruest.leitstelle, lambda: e().suchmodell),
                                          an=lambda: e().tippfehler))
-    app.include_router(indexdienst_router(indexauftraege))           # nur mit dem Schlüssel des Index-Dienstes
+    app.include_router(kategorien_router(geruest, kategorien))
+    app.include_router(indexdienst_router([indexauftraege, kategorienauftraege]))   # nur mit dem Schlüssel des Index-Dienstes
     # unter /lesen trägt der Weg Pfade aus Büchern, oft mit Punkt (function.array-map.php): immer eine Seite
     geruest.oberflaeche_ausliefern(app, seiten=["lesen"])
     return app

@@ -37,6 +37,8 @@ class Kategorieverweis(BaseModel):
     """Eine Kategorie (oder eine Seite in ihr) eines Buchs mit Kategorien (WIKI-75)."""
     pfad: str
     titel: str
+    anzahl: int | None = Field(None, description="bei Unterkategorien: so viele Seiten des Buchs stehen direkt darin")
+    nr: int | None = Field(None, description="bei Seiten aus der Kategoriendatei: Stelle in der Ordnung, ab der Weitere kommen")
 
 
 class Kategorieangaben(BaseModel):
@@ -45,6 +47,8 @@ class Kategorieangaben(BaseModel):
     ober: list[Kategorieverweis] = Field(default_factory=list)
     unter: list[Kategorieverweis] = Field(default_factory=list)
     seiten: list[Kategorieverweis] = Field(default_factory=list)
+    seiten_gesamt: int = Field(0, description="so viele Seiten hat die Kategorie; mehr als in seiten: der Rest kommt "
+                                              "seitenweise über /api/v1/kategorien/{buch}/seiten")
 
 
 Darstellung = Literal["lesedesign", "uebersicht", "original", "anleitung", "geraet", "anleitungen", "uebung", "uebungen", "kategorie"]

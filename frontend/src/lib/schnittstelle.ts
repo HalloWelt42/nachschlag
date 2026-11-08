@@ -1,6 +1,6 @@
 // Alle Abrufe der Oberfläche an einer Stelle (über `hole` der Schale: Anmeldung, Fehler, gemeinsame Abrufe).
 import { hole } from "appkern-oberflaeche";
-import type { Abschnitt, Anleitungsfrage, Anleitungsfunde, Artikel, Einordnung, Werkzeugeintrag, AutorenSeite, AutorSeite, Bibliotheksstand, FragenSeite, Katalogfilter, Laderstand, Quellstand,
+import type { Abschnitt, Anleitungsfrage, Kategorieverweis, Anleitungsfunde, Artikel, Einordnung, Werkzeugeintrag, AutorenSeite, AutorSeite, Bibliotheksstand, FragenSeite, Katalogfilter, Laderstand, Quellstand,
               Quellvorschlag, SchlagwortSeite, Sortierung,
               Suchergebnis, Steckbrief, Verzeichnisseite, Vorschlag } from "./typen";
 
@@ -157,6 +157,10 @@ export const werkzeugeHolen = (buch: string, sprachen: string[], anfang = "") =>
 
 export const einordnungHolen = (buch: string, pfad: string) =>
   hole<Einordnung>(`/anleitungen/${encodeURIComponent(buch)}/einordnung?${abfrage({ pfad })}`);
+
+// --- Weitere Seiten einer großen Kategorie aus der Kategoriendatei (WIKI-75), ab der letzten gezeigten ---
+export const kategorieSeitenHolen = (buch: string, kategorie: string, ab: number) =>
+  hole<Kategorieverweis[]>(`/kategorien/${encodeURIComponent(buch)}/seiten?${abfrage({ kategorie, ab })}`);
 
 // --- Verweist hierher (WIKI-20): Rückverweise aus dem eigenen Index des Buchs ---
 export interface Rueckverweise { bekannt: boolean; gesamt: number; seiten: { pfad: string; titel: string }[] }

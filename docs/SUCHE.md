@@ -101,6 +101,16 @@ fehlenden Feldern (Schlagwörter, Stimmen, Autoren, Rubriken).
     Verwaltung). Den Ordner der Indizes nennt Nachschlag in seinen Einstellungen (nie fest im Code); auf dem Pi
     /mnt/data/nachschlag/eigenindex, eingehängt als "Eigene Indizes (Nachschlag)" (01.11.2026, Konto admin, nur lesend).
 
+18. **Kategorien für Wikipedia (WIKI-75):** Die ZIM-Dateien der Wikipedia bringen keine Kategorien mit. Eine zweite
+    Sorte von Aufträgen für den Index-Dienst baut sie je Buch aus den Datenabzügen von Wikimedia (page, linktarget,
+    categorylinks, page_props und die Namen der Namensräume, zusammen gut 1 GB je Wiki). Der Mac lädt sie fortsetzbar
+    nach `<NACHSCHLAG_INDEX_ZIEL>/abzuege/<wiki>/` (am Mac ~/Nachschlag/eigenindex/abzuege), höchstens einmal in 30 Tagen,
+    und bereitet sie zu `<wiki>.sqlite` auf (gemessen 08.11.2026, dewiki: Laden und Aufbereiten etwa 5 Minuten). Daraus
+    entsteht je Buch eine Kategoriendatei mit nur den Kategorien, in denen eine Seite des Buchs steht, und allen darüber;
+    versteckte Wartungskategorien fehlen. Übertragen wird sie wie ein Index in den Unterordner `kategorien` des Ordners der
+    eigenen Indizes (auf dem Pi /mnt/data/nachschlag/eigenindex/kategorien). Ein- und ausschalten: Einstellungen, Suche,
+    "Kategorien für Wikipedia". Große Kategorien zeigt die Kategorieseite seitenweise (2.000 Seiten je Schritt).
+
 ## Reihenfolge des Baus
 
 Jeder Schritt wird einzeln ausgerollt und ist sofort nutzbar.

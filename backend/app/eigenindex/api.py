@@ -34,37 +34,47 @@ def _laufend(auftrag: str) -> Iterator[None]:
         raise HTTPException(410, f"Auftrag {auftrag} läuft nicht (mehr)") from f
 
 
-def router(auftraege: Indexauftraege) -> APIRouter:
+def router(sorten: list[Indexauftraege]) -> APIRouter:
+    """`sorten`: die Aufträge je Sorte (eigener Index, Kategorien); alle mit demselben Schlüssel, der erste meldet
+    die Verbindung in der Fußleiste."""
     def pruefen(authorization: str = Header("")) -> None:
-        passt = auftraege.schluessel_passt(authorization)
+        passt = sorten[0].schluessel_passt(authorization)
         if passt is None:
             raise HTTPException(503, "Kein Schlüssel für den Index-Dienst eingestellt")
         if not passt:
             raise HTTPException(401, "Schlüssel fehlt oder stimmt nicht")
-        auftraege.gemeldet()
+        for s in sorten:
+            s.gemeldet()
+
+    def zu(auftrag: str) -> Indexauftraege:
+        """Die Aufträge, zu denen ein laufender Auftrag gehört; keine: 410 (über `_laufend`)."""
+        auftraege = next((s for s in sorten if s.kennt(auftrag)), None)
+        if auftraege is None:
+            raise AuftragWeg(auftrag)
+        return auftraege
 
     r = APIRouter(prefix="/api/v1/indexdienst", tags=["Index-Dienst"], dependencies=[Depends(pruefen)])
 
     @r.post("/abholen", response_model=Abholung, responses={204: {"description": "kein Auftrag offen"}})
     async def abholen():
         """Der laufende Auftrag, an dem der Index-Dienst arbeiten soll; 204, wenn keiner läuft."""
-        a = auftraege.abholen()
+        a = next((a for s in sorten if (a := s.abholen())), None)
         return a if a else Response(status_code=204)
 
     @r.put("/{auftrag}/stand", status_code=204)
     async def stand(auftrag: str, eingabe: Macstand) -> None:
         with _laufend(auftrag):
-            auftraege.melden(auftrag, eingabe)
+            zu(auftrag).melden(auftrag, eingabe)
 
     @r.post("/{auftrag}/fehler", status_code=204)
     async def fehler(auftrag: str, eingabe: Fehlermeldung) -> None:
         with _laufend(auftrag):
-            auftraege.scheitern(auftrag, eingabe.meldung)
+            zu(auftrag).scheitern(auftrag, eingabe.meldung)
 
     @r.get("/{auftrag}/datei", response_model=Uebertragen)
     async def datei(auftrag: str) -> Uebertragen:
         with _laufend(auftrag):
-            return Uebertragen(da=auftraege.da(auftrag))
+            return Uebertragen(da=zu(auftrag).da(auftrag))
 
     @r.put("/{auftrag}/datei", response_model=Uebertragen)
     async def hochladen(auftrag: str, request: Request, ab: int = Query(ge=0), gesamt: int = Query(ge=0)) -> Uebertragen:
@@ -75,7 +85,7 @@ def router(auftraege: Indexauftraege) -> APIRouter:
             raise HTTPException(413, "Stück zu groß")
         with _laufend(auftrag):
             try:
-                return Uebertragen(da=await auftraege.anhaengen(auftrag, ab, gesamt, daten))
+                return Uebertragen(da=await zu(auftrag).anhaengen(auftrag, ab, gesamt, daten))
             except FalscheStelle as f:
                 raise HTTPException(409, str(f)) from f
 
@@ -84,7 +94,7 @@ def router(auftraege: Indexauftraege) -> APIRouter:
         """Der Index der vorigen Fassung desselben Buchs (WIKI-58), für einen Mac, der ihn nicht selbst hat: der Bau
         übernimmt daraus alles Unveränderte."""
         with _laufend(auftrag):
-            pfad = auftraege.vorlage(auftrag)
+            pfad = zu(auftrag).vorlage(auftrag)
         if pfad is None:
             raise HTTPException(404, "Kein Index einer vorigen Fassung")
         return FileResponse(pfad, media_type="application/octet-stream", filename=pfad.name)
@@ -93,6 +103,6 @@ def router(auftraege: Indexauftraege) -> APIRouter:
     async def fertig(auftrag: str, eingabe: Fertigmeldung) -> None:
         """Die Datei ist vollständig hochgeladen; geprüft und ausgetauscht wird im Auftrag."""
         with _laufend(auftrag):
-            auftraege.fertig(auftrag, eingabe)
+            zu(auftrag).fertig(auftrag, eingabe)
 
     return r

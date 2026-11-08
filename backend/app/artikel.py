@@ -9,6 +9,7 @@ from .bausteine import Wege, baustein_fuer
 from .bausteine.basis import Aufbereitet
 from .bausteine.html import online_adresse
 from .bibliothek import Bibliothek, EintragFehlt
+from .kategorien.abfrage import Kategorienindex
 from .modell.artikel import Artikel
 
 
@@ -39,15 +40,25 @@ def _verfasser(fertig: Aufbereitet) -> dict[str, str]:
 
 
 class Artikelleser:
-    def __init__(self, bibliothek: Bibliothek) -> None:
+    def __init__(self, bibliothek: Bibliothek, kategorien: Kategorienindex | None = None) -> None:
+        """`kategorien`: Kategorien aus den Datenabzügen für Bücher, die keine mitbringen (WIKI-75)."""
         self._bib = bibliothek
         self._wege = wege(bibliothek)
+        self._kategorien = kategorien
 
     async def lesen(self, buch: str, pfad: str) -> Artikel:
         b = await self._bib.buch(buch)
-        eintrag = await self._bib.eintrag(buch, pfad)
+        try:
+            eintrag = await self._bib.eintrag(buch, pfad)
+        except EintragFehlt:
+            seite = await self._kategorieseite(buch, pfad)
+            if seite is None:
+                raise
+            return seite
         baustein = baustein_fuer(b, eintrag)
         fertig = await asyncio.to_thread(baustein.aufbereiten, b, eintrag, self._wege)
+        if not fertig.kategorien and self._kategorien and (fertig.darstellung or baustein.darstellung) == "lesedesign":
+            fertig.kategorien = await self._kategorien.der_seite(buch, eintrag.pfad)
         return Artikel(buch=buch, pfad=eintrag.pfad, angefragt=pfad, anker=eintrag.anker, titel=fertig.titel,
                        darstellung=fertig.darstellung or baustein.darstellung, baustein=baustein.kennung,
                        html=fertig.html, einleitung=fertig.einleitung, abschnitte=fertig.abschnitte,
@@ -58,6 +69,17 @@ class Artikelleser:
                        quelle_url=online_adresse(b, eintrag.pfad), anleitung=fertig.anleitung, geraet=fertig.geraet,
                        uebung=fertig.uebung, kurse=fertig.kurse, kategorien=fertig.kategorien, kategorie=fertig.kategorie,
                        **_verfasser(fertig))
+
+    async def _kategorieseite(self, buch: str, pfad: str) -> Artikel | None:
+        """Eine Kategorie aus der Kategoriendatei (das Buch selbst hat keine Seite dafür); keine solche: None."""
+        gefunden = await self._kategorien.kategorie(buch, pfad) if self._kategorien else None
+        if gefunden is None:
+            return None
+        titel, angaben, anzahl = gefunden
+        rubrik = " · ".join(["Kategorie", *([f"{len(angaben.unter)} Unterkategorien"] if angaben.unter else []),
+                             *([f"{anzahl} Seiten"] if anzahl else [])])
+        return Artikel(buch=buch, pfad=pfad, angefragt=pfad, titel=titel, darstellung="kategorie", baustein="kategorie", original="",
+                       html="", rubrik=rubrik, kategorie=angaben, kategorien=angaben.ober)
 
     async def zufall(self, buch: str) -> str:
         """Pfad eines zufälligen Artikels, der sich lesen lässt. Weiterleitungen sind aufgelöst; eine Sprungseite, deren

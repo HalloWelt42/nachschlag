@@ -357,5 +357,7 @@ export interface Uebungskurs { kennung: string; titel: string; einleitung: strin
 export interface Kursangaben { kurse: Uebungskurs[] }
 
 // --- Kategorien in Büchern, die sie mitbringen (WIKI-75) ---
-export interface Kategorieverweis { pfad: string; titel: string }
-export interface Kategorieangaben { ober: Kategorieverweis[]; unter: Kategorieverweis[]; seiten: Kategorieverweis[] }
+/** anzahl: bei Unterkategorien die Seiten direkt darin; nr: bei Seiten aus der Kategoriendatei die Stelle für Weitere */
+export interface Kategorieverweis { pfad: string; titel: string; anzahl?: number | null; nr?: number | null }
+/** seiten_gesamt: so viele Seiten hat die Kategorie (Kategoriendatei); mehr als geliefert kommen über kategorieSeitenHolen */
+export interface Kategorieangaben { ober: Kategorieverweis[]; unter: Kategorieverweis[]; seiten: Kategorieverweis[]; seiten_gesamt?: number }

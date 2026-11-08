@@ -16,8 +16,9 @@ _STAND = re.compile(r"^(?P<stamm>.+)_(?P<stand>\d{4}-\d{2})$")
 
 
 class Eigenindizes:
-    def __init__(self, ordner: Callable[[], str]) -> None:
-        self._ordner = ordner
+    def __init__(self, ordner: Callable[[], str], gueltig: Callable[[Path], bool] = schema.gueltig) -> None:
+        """`gueltig`: ob eine Datei gilt (fertig und im eigenen Schema); andere Dateiarten (Kategorien) bringen ihre mit."""
+        self._ordner, self._gueltig = ordner, gueltig
         self._geprueft: dict[Path, tuple[int, bool]] = {}
 
     def pfad(self, kennung: str) -> Path | None:
@@ -44,7 +45,7 @@ class Eigenindizes:
             return None
         alt = self._geprueft.get(pfad)
         if alt is None or alt[0] != zeit:
-            alt = (zeit, schema.gueltig(pfad))
+            alt = (zeit, self._gueltig(pfad))
             self._geprueft[pfad] = alt
         return pfad if alt[1] else None
 

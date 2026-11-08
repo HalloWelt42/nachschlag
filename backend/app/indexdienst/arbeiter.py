@@ -6,7 +6,11 @@ Fehlertolerant (der Mac ist ein Laptop mit WLAN):
 - Lesefehler über die Freigabe (Netz weg, Ruhezustand, Netzwechsel): Bau anhalten, "wartet auf Netz" melden, Freigabe
   neu einhängen, mit wachsendem Abstand dort fortsetzen, wo die Indexdatei steht.
 - Pi nicht erreichbar: weiterbauen, später melden; das Hochladen setzt dort fort, wo die Datei auf dem Pi endet.
-- Bricht der Pi den Auftrag ab (410), lässt der Dienst ihn fallen; der halbe Index bleibt für einen neuen Anlauf."""
+- Bricht der Pi den Auftrag ab (410), lässt der Dienst ihn fallen; der halbe Index bleibt für einen neuen Anlauf.
+
+Zwei Sorten von Aufträgen: der eigene Index eines Buchs und seine Kategorien (WIKI-75). Für die Kategorien lädt der Dienst
+die Datenabzüge von Wikimedia in den Ordner `abzuege` neben den Indizes (einmal je Wiki und Monat) und baut daraus die
+Kategoriendatei des Buchs im Unterordner `kategorien`; übertragen wird sie wie ein Index."""
 
 from __future__ import annotations
 
@@ -22,6 +26,10 @@ from ..artikel import wege
 from ..bibliothek import Bibliothek, BuchFehlt
 from ..eigenindex import aufbau, schema
 from ..eigenindex.auftrag import Abholung
+from ..kategorien import aufbau as kategorienbau
+from ..kategorien import schema as kategorienschema
+from ..kategorien.abzug import Abzuege, Fortschritt
+from ..kategorien.wikis import wiki
 
 logger = logging.getLogger("nachschlag.indexdienst")
 
@@ -65,6 +73,7 @@ class Arbeiter:
         self._pi, self._buecher, self._ziel, self._einhaengen = pi, buecher, ziel, einhaengen
         self._abstaende, self._ruhe, self._stueck = abstaende, ruhe_s, stueck
         self._bibliothek = Bibliothek(lambda: str(buecher))
+        self._abzuege = Abzuege(ziel / "abzuege")
 
     def _abstand(self, versuch: int) -> float:
         return self._abstaende[min(versuch, len(self._abstaende) - 1)]
@@ -114,9 +123,14 @@ class Arbeiter:
 
     def erledigen(self, a: Abholung, halt: threading.Event) -> None:
         """Ein Auftrag: bauen (oder fortsetzen), hochladen, fertig melden."""
-        datei = self._ziel / schema.dateiname(a.buch)
-        self._ziel.mkdir(parents=True, exist_ok=True)
-        stand = self._bauen(a, datei, halt, self._vorlage(a))
+        if a.sorte == "kategorien":
+            datei = self._ziel / "kategorien" / kategorienschema.dateiname(a.buch)
+            datei.parent.mkdir(parents=True, exist_ok=True)
+            stand = self._kategorien_bauen(a, datei, halt)
+        else:
+            datei = self._ziel / schema.dateiname(a.buch)
+            self._ziel.mkdir(parents=True, exist_ok=True)
+            stand = self._bauen(a, datei, halt, self._vorlage(a))
         if stand is None or not stand.fertig:
             return
         self._hochladen(a, datei, halt)
@@ -125,8 +139,7 @@ class Arbeiter:
         summe = datei.with_suffix(".sha256").read_text().strip()
         self._anruf("POST", f"/{a.auftrag}/fertig",
                     json={"pruefsumme": summe, "groesse": datei.stat().st_size, "seiten": stand.seiten}).raise_for_status()
-        logger.info("Index %s übergeben (%d Seiten, davon %d aus der vorigen Fassung übernommen)", a.buch, stand.seiten,
-                    stand.uebernommen)
+        logger.info("%s %s übergeben (%d Seiten)", "Kategorien" if a.sorte == "kategorien" else "Index", a.buch, stand.seiten)
 
     def _vorlage(self, a: Abholung) -> Path | None:
         """Der Index der vorigen Fassung (WIKI-58): die eigene Kopie, sonst vom Pi geholt; ohne ihn baut der Dienst
@@ -183,6 +196,58 @@ class Arbeiter:
                 self._anruf("POST", f"/{a.auftrag}/fehler", json={"meldung": (str(f) or type(f).__name__)[:500]})
                 return None
         return None
+
+    def _kategorien_bauen(self, a: Abholung, datei: Path, halt: threading.Event) -> kategorienbau.Stand | None:
+        """Datenabzug des Wikis bereitstellen (laden, aufbereiten), dann die Kategorien des Buchs bauen. Schon gebaut
+        (etwa nach abgebrochener Übertragung): gleich weiter zum Hochladen."""
+        if kategorienschema.gueltig(datei):
+            return kategorienbau.Stand(0, 0, 0, True)
+        name = wiki(a.buch)
+        if name is None:
+            self._anruf("POST", f"/{a.auftrag}/fehler", json={"meldung": f"{a.buch} gehört zu keinem Wiki von Wikimedia"})
+            return None
+        weg = threading.Event()
+
+        def melden(erledigt: int, gesamt: int, seiten: int = 0, meldung: str = "") -> None:
+            try:
+                self._melden(a, zustand="laeuft", erledigt=erledigt, gesamt=gesamt, seiten=seiten, meldung=meldung[:300])
+            except AuftragWeg:
+                weg.set()
+
+        def abbrechen() -> bool:
+            return halt.is_set() or weg.is_set()
+
+        versuch = 0
+        while not abbrechen():
+            try:
+                abzug = self._abzuege.bereit(name, lambda f: melden(f.erledigt, f.gesamt, meldung=self._schritt(f)), abbrechen)
+                if abzug is None:
+                    return None
+                archiv, _buch = self._bibliothek.geoeffnet(a.buch)
+                return kategorienbau.bauen(archiv, a.buch, abzug, datei,
+                                           lambda s: melden(s.erledigt, s.gesamt, s.seiten, "liest die Seiten des Buchs"),
+                                           abbrechen)
+            except (OSError, RuntimeError, BuchFehlt, httpx.HTTPError) as f:
+                abstand = self._abstand(versuch)
+                versuch += 1
+                logger.warning("Kategorien für %s gestört (%s), nächster Versuch in %s s", a.buch, f, abstand)
+                self._melden(a, zustand="wartet_auf_netz", meldung=f"wartet auf Netz, nächster Versuch in {abstand:g} s")
+                self._bibliothek = Bibliothek(lambda: str(self._buecher))
+                if halt.wait(abstand):
+                    return None
+                if self._einhaengen:
+                    self._einhaengen()
+            except Exception as f:   # noqa: BLE001 - ein Fehler geht als Meldung an den Auftrag
+                logger.exception("Kategorien von %s gescheitert", a.buch)
+                self._anruf("POST", f"/{a.auftrag}/fehler", json={"meldung": (str(f) or type(f).__name__)[:500]})
+                return None
+        return None
+
+    @staticmethod
+    def _schritt(f: Fortschritt) -> str:
+        if f.gesamt:
+            return f"Datenabzug: {f.schritt}, {f.erledigt * 100 // f.gesamt} %"
+        return f"Datenabzug: {f.schritt}"
 
     def _hochladen(self, a: Abholung, datei: Path, halt: threading.Event) -> None:
         """In Stücken ab dem Stand auf dem Pi; ein Abbruch (Netz, Neustart) setzt beim nächsten Abholen dort fort."""

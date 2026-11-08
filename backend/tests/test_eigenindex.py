@@ -219,7 +219,7 @@ async def test_schnittstelle_schuetzt_und_setzt_fort(pi):
     await app.state.indexauftraege.fehlende_einreihen()
     auftrag = (await _laeuft(c))["id"]
     abholung = await _abholen(mac)
-    assert abholung == {"auftrag": auftrag, "buch": DOKU, "da": 0, "vorlage": ""}         # keine frühere Fassung
+    assert abholung == {"auftrag": auftrag, "buch": DOKU, "sorte": "volltext", "da": 0, "vorlage": ""}         # keine frühere Fassung
     weg = f"/api/v1/indexdienst/{auftrag}"
     assert (await mac.put(f"{weg}/datei", params={"ab": 0, "gesamt": 10}, content=b"abcd")).json() == {"da": 4}
     assert (await mac.put(f"{weg}/datei", params={"ab": 2, "gesamt": 10}, content=b"xx")).status_code == 409
