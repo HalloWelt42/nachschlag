@@ -86,7 +86,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
         return [k for name in e().suche_buecher if (k := await bibliothek.kennung_von(name))]
 
     suche = Suche(bibliothek, bedeutung, lambda: e().bedeutung_warten_s, bedeutungsbuch,
-                  lambda buch, pfad: "", eigen, nutzbare=quellen.nutzbare, mischung=lambda: e().mischung,
+                  wege(bibliothek).medien, eigen, nutzbare=quellen.nutzbare, mischung=lambda: e().mischung,
                   vorgewaehlt=vorgewaehlte_buecher)
     indexauftraege = Indexauftraege(eigen, bibliothek, geruest.auftraege, lambda: e().indexdienst_schluessel.get_secret_value(),
                                     lambda: ARTEN_JE_STUFE[e().eigene_indizes], lambda: e().eigenindex_hoechstens_gb,

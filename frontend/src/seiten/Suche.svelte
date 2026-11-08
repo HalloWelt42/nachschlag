@@ -293,7 +293,7 @@
           </div>
           {#each st?.ergebnis?.treffer ?? [] as t, ti (t.buch + t.pfad + ti)}
             <button class="treffer" class:gewaehlt={gewaehlt === t} onclick={() => oeffnen(t)} onmouseenter={() => gewaehlt !== t && waehlen(t)}>
-              <span class="ohne-bild"><i class="fa-solid fa-file-lines"></i></span>
+              {#if t.bild}<img src={t.bild} alt="" loading="lazy" />{:else}<span class="ohne-bild"><i class="fa-solid fa-file-lines"></i></span>{/if}
               <span>
                 <span class="zeile1"><span class="t" class:code={istHandbuch(t.buch) && istCode(t.titel)}>{t.titel}</span>
                   {#if t.abschnitt}<span class="treffer-abschnitt">› {t.abschnitt}</span>{/if}

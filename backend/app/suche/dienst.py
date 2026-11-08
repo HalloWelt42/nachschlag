@@ -17,6 +17,7 @@ from ..modell.buch import Buch
 from ..modell.suche import Suchergebnis, Treffer, Vorschlag, Zeiten
 from . import index
 from .bedeutung import Bedeutung, BedeutungFehlt, Fundstelle
+from .bilder import Trefferbilder
 
 RRF_K = 60
 #: Gewichte der beiden Wege je Einstellung Mischung (Index, Bedeutung): der bevorzugte Weg zählt doppelt (WIKI-79)
@@ -40,6 +41,7 @@ class Suche:
         self._bib, self._bedeutung, self._warten, self._bedeutungsbuch = bibliothek, bedeutung, wartezeit_s, bedeutungsbuch
         self._medien, self._eigen = medien, eigen
         self._nutzbare, self._mischung, self._vorgewaehlt = nutzbare, mischung, vorgewaehlt
+        self._bilder = Trefferbilder(bibliothek, medien) if medien else None
 
     async def _buecher(self, auswahl: list[str]) -> list[Buch]:
         """Die gewählten Quellen (auch archivierte, wer sie ausdrücklich wählt), ohne Wahl die aus der Einstellung Bücher
@@ -139,6 +141,9 @@ class Suche:
             if beste is None:
                 beste = gemischt[schluessel].model_copy()
         liste = sorted(gemischt.values(), key=lambda t: t.rang, reverse=True)[:anzahl]
+        if self._bilder is not None:                      # Leitbild je Treffer (WIKI-19), gleichzeitig gelesen
+            for t, bild in zip(liste, await asyncio.gather(*(self._bilder.bild(t.buch, t.pfad) for t in liste)), strict=True):
+                t.bild = t.bild or bild
         return Suchergebnis(frage=frage, treffer=liste, beste_stelle=beste, nur_index=not stellen, hinweis=hinweis,
                             bedeutung_angebunden=self._bedeutung.angebunden(),
                             zeiten=Zeiten(index_ms=index_ms, bedeutung_ms=bedeutung_ms), index_gesamt=gesamt)

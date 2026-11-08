@@ -202,6 +202,8 @@ async def test_suche_nur_im_index(nachschlag):
     assert s["treffer"][0]["pfad"] == "Rotfuchs" and s["treffer"][0]["wege"] == ["index"]
     assert "<em>" in s["treffer"][0]["ausschnitt"]
     assert [t["pfad"] for t in s["treffer"]].count("Rotfuchs") == 1           # Sprungseite Vulpes_vulpes zeigt aufs Ziel
+    rotfuchs = next(t for t in s["treffer"] if t["pfad"] == "Rotfuchs")          # Leitbild des Artikels (WIKI-19)
+    assert rotfuchs["bild"].startswith("/api/v1/inhalt/medien/probe_de_all_2026-01/_assets_/a/fuchs.png")
     assert "Vulpes_vulpes" not in [t["pfad"] for t in s["treffer"]]
 
 
@@ -846,3 +848,12 @@ async def test_archiv_aeltere_fassung_von_hand_und_mitnutzen(nachschlag, tmp_pat
     b = (await c.put("/api/v1/buecher/probe_de_all_2025-06/archiv", json={"zustand": "aktiv"})).json()
     assert b["archiv"] is None
     assert (await c.put("/api/v1/buecher/gibt-es-nicht/archiv", json={})).status_code == 404
+
+
+def test_leitbild_ohne_zeichen():
+    """WIKI-19: das erste Bild, das kein Zeichen ist: kleine Bilder, SVG ohne Größe, Netz und Daten zählen nicht."""
+    from app.suche.bilder import leitbild
+    seite = (b'<img src="data:image/png;base64,xx"><img src="https://x.test/a.jpg" width="300"><img src="flagge.svg">'
+             b'<img src="punkt.png" width="12"><img src="./_assets_/a/fuchs.png" width="220" height="160"><img src="b.png">')
+    assert leitbild(seite) == "./_assets_/a/fuchs.png"
+    assert leitbild(b"<p>ohne Bild</p>") == ""

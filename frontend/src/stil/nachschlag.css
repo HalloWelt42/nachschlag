@@ -313,6 +313,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .treffer { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: var(--a3); padding: var(--a3); border-radius: var(--r3); background: var(--flaeche); box-shadow: var(--schatten);
            cursor: pointer; border: 0; color: var(--text); font: inherit; text-align: left; width: 100%; }
 .treffer:hover, .treffer.gewaehlt { box-shadow: var(--schatten), 0 0 0 2px var(--akzent-flaeche); }
+.treffer > img { width: 56px; height: 48px; object-fit: cover; border-radius: var(--r1); background: var(--mulde); }   /* Leitbild (WIKI-19) */
 .treffer .ohne-bild { width: 56px; height: 48px; border-radius: var(--r1); background: var(--flaeche-2); display: grid; place-items: center; color: var(--text-3); }
 .treffer .ohne-bild i { font-size: 20px; }
 .treffer .zeile1 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px var(--a2); }
