@@ -74,6 +74,14 @@ class Ablage:
         """Je Stamm die jüngste geprüfte Fassung, die aufs Umschalten wartet."""
         return _neueste(_buecher(self.neu))
 
+    def liegt(self, datei: str) -> str:
+        """Wo eine Datei schon fertig liegt: "Bibliothek", "wartet aufs Umschalten" oder leer (noch nicht da)."""
+        if (self.ordner / datei).is_file():
+            return "Bibliothek"
+        if (self.neu / datei).is_file():
+            return "wartet aufs Umschalten"
+        return ""
+
     def teil(self, datei: str) -> Path:
         """Die angefangene Datei beim Laden."""
         return self.laden / datei

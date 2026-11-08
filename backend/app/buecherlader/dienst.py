@@ -137,10 +137,14 @@ class Buecherlader(Begleiter):
         self._wecker: asyncio.Task | None = None
         auftraege.anmelden(
             Art(name=DURCHSEHEN, titel="Verzeichnis der Bücher durchsehen", arbeit=self._durchsehen, hoechstens=1,
-                nach_neustart="fortsetzen", herkunft=lambda _e: Herkunft(titel="Zum Katalog", ziel="bibliothek/katalog")),
+                nach_neustart="fortsetzen", herkunft=lambda _e: Herkunft(titel="Zum Katalog", ziel="bibliothek/katalog"),
+                gegenstand=lambda _e: "verzeichnis"),             # nie zwei Durchsichten zugleich
+            # Gegenstand ist die Datei (WIKI-73): kein zweiter Auftrag an ihr, Wiederholen eines alten liefert den
+            # laufenden, ein fertiger räumt alte Fehler derselben Datei ab
             Art(name=LADEN, titel="Buch laden", arbeit=self._laden, eingabe=LadeEingabe, phasen=PHASEN, fortsetzbar=True,
                 nach_neustart="fortsetzen", hoechstens=1,
-                herkunft=lambda _e: Herkunft(titel="Zu Fassungen und Laden", ziel="bibliothek/laden")))
+                herkunft=lambda _e: Herkunft(titel="Zu Fassungen und Laden", ziel="bibliothek/laden"),
+                gegenstand=lambda e: e["datei"]))
 
     # ----- Lebenszyklus -----------------------------------------------------------------------------------------------
 
@@ -329,9 +333,11 @@ class Buecherlader(Begleiter):
     async def _laden(self, k: Kontext) -> dict:
         e: LadeEingabe = k.eingabe
         r = self._regeln()
+        ablage = Ablage(r.ordner)
+        if ort := ablage.liegt(e.datei):                    # ein anderer Auftrag hat sie schon geladen (WIKI-73)
+            return {"datei": e.datei, "ort": f"{ort} (lag schon da)"}
         if grund := await self._grund(r):
             raise AuftragFehler(grund)
-        ablage = Ablage(r.ordner)
         ablage.laden.mkdir(exist_ok=True)
         teil = ablage.teil(e.datei)
         name = zerlegen(e.datei)

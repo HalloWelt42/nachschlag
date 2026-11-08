@@ -446,3 +446,24 @@ async def test_ungelesene_quelle_macht_die_durchsicht_faellig(umgebung):
     assert all(q.zuletzt for q in await lader.quellen())
     await lader.takt()
     assert len(await fertig(auftraege, "verzeichnis_durchsehen")) == 2          # und dann wieder Ruhe
+
+
+async def test_kein_doppeltes_laden_und_erledigte_fehler_weg(umgebung):
+    """WIKI-73: ein zweiter Auftrag an derselben Datei lädt sie nicht noch einmal (sie liegt schon da), und der fertige
+    räumt den alten Fehler derselben Datei aus der Liste."""
+    lader, auftraege, server, werte, buecher, *_ = umgebung
+    await lader.durchsehen("probe")
+    await fertig(auftraege)
+    eingabe = {"stamm": "neues_de_all", "ordner": "probe", "datei": "neues_de_all_2026-10.zim"}
+    werte["reserve"] = 10**18                                   # erst scheitert er am Platz
+    alt = await auftraege.einreihen("buch_laden", eingabe)
+    await fertig(auftraege, "buch_laden")
+    assert (await auftraege.holen(alt.id)).zustand == "fehler"
+    werte["reserve"] = 0
+    neu = await auftraege.wiederholen(alt.id)
+    await fertig(auftraege, "buch_laden")
+    assert (await auftraege.holen(neu.id)).ergebnis["ort"] == "Bibliothek"
+    assert [a.id for a in (await auftraege.liste(art="buch_laden")).eintraege] == [neu.id]    # der Fehler ist weg
+    noch = await auftraege.einreihen("buch_laden", eingabe)     # noch einmal: liegt schon da, nichts geladen
+    await fertig(auftraege, "buch_laden")
+    assert (await auftraege.holen(noch.id)).ergebnis["ort"] == "Bibliothek (lag schon da)"
