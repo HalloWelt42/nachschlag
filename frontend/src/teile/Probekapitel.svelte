@@ -194,14 +194,14 @@
     </div>
     {#if ansicht === "nebeneinander"}
       <div class="exp-vergleich">
-        <div class="exp-spalte exp-original" bind:this={original}>
+        <div class="exp-spalte exp-original" data-karte bind:this={original}>
           <div class="exp-spaltenkopf"><i class="fa-solid fa-book-open"></i>Original<span class="rechts">{probe.quelle}, {zahl(probe.zeichen_original)} Zeichen{probe.original.length && probe.artikel.zeichen_original > probe.original.reduce((n, o) => n + o.text.length, 0) ? ", gezeigt der Anfang" : ""}</span></div>
           {#each probe.original as o (o.nr)}
             {#if o.ueberschrift}<h3>{o.ueberschrift}</h3>{/if}
             <p class:belegt={leuchtet.includes(o.nr)}><span class="exp-nr-klein">{o.nr}</span>{o.text}</p>
           {/each}
         </div>
-        <div class="exp-spalte">
+        <div class="exp-spalte" data-karte>
           <div class="exp-spaltenkopf"><i class="fa-solid fa-wand-magic-sparkles exp-ki"></i>Im {probe.vorlage_titel}<span class="rechts">{zahl(ergebnisZeichen)} Zeichen, rund {probe.seiten} {probe.seiten === 1 ? "Seite" : "Seiten"} A5</span></div>
           {@render ergebnis(probe)}
         </div>

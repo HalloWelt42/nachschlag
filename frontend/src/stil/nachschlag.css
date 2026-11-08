@@ -1632,7 +1632,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .exp-buch-klein { grid-template-columns: 96px 150px; width: 100%; }
 .exp-titel { position: relative; height: 136px; border-radius: 3px 6px 6px 3px; overflow: hidden; box-shadow: var(--schatten); background: var(--akzent-flaeche);
              color: var(--auf-akzent); font-size: var(--marke); }
-.exp-titel.mit-bild { color: var(--licht); }
+.exp-titel.mit-bild { background: var(--schattenfarbe); color: var(--licht); }      /* das Bild dunkel unterlegt: Titel lesbar */
 .exp-titel::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: color-mix(in srgb, var(--schattenfarbe) 25%, transparent); }
 .exp-titel img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .85; }
 .exp-titel span { position: absolute; left: 8px; right: 6px; bottom: 8px; display: flex; flex-direction: column; gap: 2px;
