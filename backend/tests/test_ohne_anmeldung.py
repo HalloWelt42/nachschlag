@@ -88,3 +88,30 @@ async def test_eigene_vorlagen_im_datenordner(frisch):
     assert (await c.get(f"/api/v1/inhalt/buchvorlagen/{kopie['kennung']}")).status_code == 200
     assert (await c.delete(f"/api/v1/buchvorlagen/{kopie['kennung']}")).status_code == 204
     assert not (ablage / "Vorlagen" / f"{kopie['kennung']}.toml").exists()
+
+
+async def test_als_buch_in_den_datenordner(frisch):
+    """Ein Buch ohne KI entsteht für den festen Nutzer und liegt im Datenordner; Herunterladen und Löschen gehen dort."""
+    import asyncio
+    c, _, ablage = frisch
+    t = (await c.post("/api/v1/meins/themen", json={"titel": "Füchse"})).json()
+    for pfad in ("Rotfuchs", "Kreuzfuchs"):
+        await c.post(f"/api/v1/meins/themen/{t['id']}/eintraege", json={"buch": "probe_de_all_2026-01", "pfad": pfad, "titel": pfad})
+    assert (await c.get(f"/api/v1/meins/buecher/thema/{t['id']}")).json()["ablage"] == "ablage/Bücher/Füchse"
+    auftrag = (await c.post("/api/v1/meins/buecher", json={"thema": t["id"], "vorlage": "nachschlagewerk", "pdf": False,
+                                                            "wann": "jetzt"})).json()
+    for _ in range(300):
+        a = (await c.get(f"/api/v1/auftraege/{auftrag['id']}")).json()
+        if a["zustand"] not in ("wartet", "laeuft"):
+            break
+        await asyncio.sleep(0.02)
+    assert a["zustand"] == "fertig", a.get("fehler")
+    regal = (await c.get("/api/v1/meins/buecher")).json()
+    buch = regal["fertig"][0]
+    assert regal["ablage"] == "ablage/Bücher"
+    datei = ablage / "Bücher" / "Füchse" / "Füchse - Nachschlagewerk.epub"
+    assert datei.is_file()
+    epub = await c.get(f"/api/v1/inhalt/buecher/{buch['id']}/epub")
+    assert epub.status_code == 200 and epub.content == datei.read_bytes()
+    assert (await c.delete(f"/api/v1/meins/buecher/{buch['id']}")).status_code == 204
+    assert not datei.exists()
