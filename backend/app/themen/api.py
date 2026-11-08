@@ -16,6 +16,8 @@ from ..modell.themen import (
     ThemaNeu, Verschieben, Zuordnung,
 )
 from ..artikel import Artikelleser
+from ..markdownablage import Markdownablage, MarkdownFehler
+from ..modell.meins import Markdownpfad
 from ..bibliothek import Bibliothek, BuchFehlt, EintragFehlt
 from ..meins import Meins
 from ..suche import Suche
@@ -42,7 +44,8 @@ def _da(wert: T | None, was: str = "Dieses Thema gibt es nicht") -> T:
     return wert
 
 
-def router(geruest: Geruest, themen: Themen, suche: Suche, bibliothek: Bibliothek, meins: Meins, leser: Artikelleser) -> APIRouter:
+def router(geruest: Geruest, themen: Themen, suche: Suche, bibliothek: Bibliothek, meins: Meins, leser: Artikelleser,
+           markdown: Markdownablage) -> APIRouter:
     """`bibliothek`: Namen und Angaben der Quellen (Angebote mit Bekanntem vergleichen, Literaturliste); `meins`: die
     Notizen mit ihren Belegen (Literaturliste); `leser`: Autor und Datum von Fragen (Literaturliste)."""
     name_von: Callable[[str], Awaitable[str]] = bibliothek.name_von
@@ -88,6 +91,17 @@ def router(geruest: Geruest, themen: Themen, suche: Suche, bibliothek: Bibliothe
             return a.autor, a.datum
 
         return Literaturliste(form=form, text=await literaturliste(t, buecher, await meins.notizen(konto.id), form, verfasser))
+
+    @r.post("/{thema}/markdown", response_model=Markdownpfad)
+    async def als_markdown(thema: str, konto: Konto = geruest.mensch) -> Markdownpfad:
+        """Das Thema als Markdown in die Kellerwolke (WIKI-23): Bereiche, Artikel mit Verweisen, ihre Notizen und die
+        Literaturliste; eine vorhandene Datei bekommt eine neue Fassung."""
+        t = _da(await themen.thema(konto.id, thema))
+        liste = await literatur(thema, "einfach", konto)
+        try:
+            return Markdownpfad(pfad=await markdown.thema_ablegen(konto.id, t, liste.text))
+        except MarkdownFehler as f:
+            raise HTTPException(status_code=503, detail=f.meldung) from f
 
     @r.patch("/{thema}", response_model=Thema)
     async def aendern(thema: str, aenderung: ThemaAenderung, konto: Konto = geruest.mensch) -> Thema:

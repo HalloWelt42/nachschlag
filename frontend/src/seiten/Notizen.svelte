@@ -4,7 +4,7 @@
   // schmaler als Tafel); am Telefon im Blatt von unten. Speichert von selbst, Zur Stelle springt in den Artikel.
   import Buchmarke from "../teile/Buchmarke.svelte";
   import { onMount } from "svelte";
-  import { Auswahl, geraet, Leiste, leisteOeffnen } from "appkern-oberflaeche";
+  import { Auswahl, geraet, hole, Leiste, leisteOeffnen, seitenFehler } from "appkern-oberflaeche";
   import { bibliothekLaden, buchName } from "../lib/bibliothek.svelte";
   import { meins, meinsLaden, notizBildAdresse, wann, type Notiz } from "../lib/meins.svelte";
   import { lesen } from "../lib/ziele";
@@ -50,6 +50,18 @@
 
   const zurStelle = (n: Notiz) => n.buch && lesen(n.buch, n.pfad, { notiz: n.id });
 
+  // Alle Notizen als Markdown in die Kellerwolke (WIKI-23); nach jeder Änderung geschieht das je Artikel von selbst
+  let ablage = $state<{ zustand: "" | "laeuft" | "fertig" | "fehler"; text: string }>({ zustand: "", text: "" });
+  async function alleAblegen() {
+    ablage = { zustand: "laeuft", text: "" };
+    try {
+      const s = await hole<{ dateien: number; ordner: string }>("/meins/notizen/markdown", { method: "POST" });
+      ablage = { zustand: "fertig", text: `${s.dateien} ${s.dateien === 1 ? "Datei" : "Dateien"} in ${s.ordner}` };
+    } catch (f) {
+      ablage = { zustand: "fehler", text: seitenFehler(f) };
+    }
+  }
+
   onMount(async () => {
     void bibliothekLaden();             // Namen der Bücher statt Kennungen
     void themenLaden(true);
@@ -77,6 +89,13 @@
           {/if}
           <Auswahl bind:wert={reihenfolge} symbol="fa-arrow-down-wide-short" titel="Reihenfolge"
                    optionen={[{ wert: "neu", titel: "Neueste zuerst" }, { wert: "alt", titel: "Älteste zuerst" }]} />
+          {#if meins.notizen.length}
+            <button class="knopf" disabled={ablage.zustand === "laeuft"} onclick={alleAblegen}
+                    title={ablage.text || "Alle Notizen als Markdown in die Kellerwolke, je Artikel eine Datei (Ordner Notizen der App); nach jeder Änderung geschieht das je Artikel von selbst"}>
+              <i class="fa-solid {ablage.zustand === 'laeuft' ? 'fa-spinner fa-spin' : ablage.zustand === 'fertig' ? 'fa-check'
+                : ablage.zustand === 'fehler' ? 'fa-triangle-exclamation' : 'fa-file-export'}"></i>{ablage.zustand === "fertig"
+                ? "In der Kellerwolke" : ablage.zustand === "fehler" ? "Geht nicht" : "Als Markdown"}</button>
+          {/if}
         </div>
         {#if meins.geladen && !meins.notizen.length}
           <p class="leer-hinweis">Noch keine Notizen. Im Artikel Text markieren und "Notiz" wählen, oder oben "Notiz" für den ganzen Artikel; Notizen gelten auf allen deinen Geräten.</p>

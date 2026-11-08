@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query, Response, UploadFile
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Response, UploadFile
 from fastapi.responses import StreamingResponse
 
 from appkern.anmeldung import Konto
@@ -10,11 +10,13 @@ from appkern.app import Geruest
 
 from ..modell.meins import (Beispiel, BeispielAenderung, BeispielNeu, Bewertung, BewertungNeu, Lesestand, Merkeintrag, Merken, Notiz, NotizAenderung,
                             NotizNeu, Suchmeldung, Verlaufseintrag, Vorliebe)
+from ..markdownablage import Markdownablage, MarkdownFehler
+from ..modell.meins import Markdownstand
 from .bilder import HOECHSTENS_BYTES, BildFehler, Notizbilder
 from .speicher import Meins
 
 
-def router(geruest: Geruest, meins: Meins, bilder: Notizbilder) -> APIRouter:
+def router(geruest: Geruest, meins: Meins, bilder: Notizbilder, markdown: Markdownablage) -> APIRouter:
     r = APIRouter(prefix="/api/v1/meins", tags=["meins"])
 
     @r.get("/merkzettel", response_model=list[Merkeintrag])
@@ -38,24 +40,38 @@ def router(geruest: Geruest, meins: Meins, bilder: Notizbilder) -> APIRouter:
         """Notizen und Markierungen, zuletzt geänderte zuerst; mit `buch` und `pfad` nur die eines Artikels."""
         return await meins.notizen(konto.id, buch, pfad)
 
+    @r.post("/notizen/markdown", response_model=Markdownstand)
+    async def notizen_als_markdown(konto: Konto = geruest.mensch) -> Markdownstand:
+        """Alle Notizen als Markdown in die Kellerwolke (WIKI-23): je Artikel eine Datei unter Notizen/<Quelle>/."""
+        try:
+            dateien, ordner = await markdown.alle_ablegen(konto.id)
+        except MarkdownFehler as f:
+            raise HTTPException(status_code=503, detail=f.meldung) from f
+        return Markdownstand(dateien=dateien, ordner=ordner)
+
     @r.post("/notizen", response_model=Notiz)
-    async def notieren(eingabe: NotizNeu, konto: Konto = geruest.mensch) -> Notiz:
+    async def notieren(eingabe: NotizNeu, aufgaben: BackgroundTasks, konto: Konto = geruest.mensch) -> Notiz:
         """Notiz am ganzen Artikel (ohne Zitat) oder an einer Stelle (mit Zitat); ohne Text eine Markierung."""
-        return await meins.notieren(konto.id, eingabe)
+        notiz = await meins.notieren(konto.id, eingabe)
+        aufgaben.add_task(markdown.nach_aenderung, konto.id, notiz)
+        return notiz
 
     @r.patch("/notizen/{kennung}", response_model=Notiz)
-    async def notiz_aendern(kennung: str, aenderung: NotizAenderung, konto: Konto = geruest.mensch) -> Notiz:
+    async def notiz_aendern(kennung: str, aenderung: NotizAenderung, aufgaben: BackgroundTasks,
+                            konto: Konto = geruest.mensch) -> Notiz:
         notiz = await meins.notiz_aendern(konto.id, kennung, aenderung)
         if not notiz:
             raise HTTPException(status_code=404, detail="Diese Notiz gibt es nicht")
+        aufgaben.add_task(markdown.nach_aenderung, konto.id, notiz)
         return notiz
 
     @r.delete("/notizen/{kennung}", status_code=204)
-    async def notiz_loeschen(kennung: str, konto: Konto = geruest.mensch) -> Response:
+    async def notiz_loeschen(kennung: str, aufgaben: BackgroundTasks, konto: Konto = geruest.mensch) -> Response:
         notiz = await meins.notiz(konto.id, kennung)
         if notiz is None or not await meins.notiz_loeschen(konto.id, kennung):
             raise HTTPException(status_code=404, detail="Diese Notiz gibt es nicht")
         await bilder.alle_entfernen(notiz)
+        aufgaben.add_task(markdown.nach_aenderung, konto.id, notiz)
         return Response(status_code=204)
 
     @r.post("/notizen/{kennung}/bilder", response_model=Notiz)

@@ -15,6 +15,7 @@ VORLESEN = {"gruppe": "Vorlesen"}
 UEBER_NACHT = {"gruppe": "Über Nacht"}
 BUECHERLADER = {"gruppe": "Bücherlader"}
 BILDER = {"gruppe": "Bilder"}
+MEINS = {"gruppe": "Meins"}
 
 #: Wie oft der Bücherlader das Verzeichnis durchsieht (WIKI-57)
 DURCHSICHT = {"taeglich": "täglich", "woechentlich": "wöchentlich", "monatlich": "monatlich"}
@@ -139,6 +140,10 @@ class AppEinstellungen(Grundeinstellungen):
                                       description="Adresse der Codeschmiede: in ihrer Sandbox laufen Beispiele aus Handbüchern "
                                                   "zum Ausprobieren und Debuggen (sie muss Nachschlag zulassen). Leer: ohne "
                                                   "Ausprobieren.")
+    notizen_als_markdown: bool = Field(True, title="Notizen als Markdown in die Kellerwolke", json_schema_extra=MEINS,
+                                       description="Nach jeder Änderung liegen die Notizen eines Artikels als Markdown im "
+                                                   "Ordner Notizen der App in der Kellerwolke (je Quelle und Artikel); "
+                                                   "aus: nur in Nachschlag.")
     fundus_adresse: str = Field("", title="Bedeutungssuche (Fundus)", json_schema_extra=SUCHE,
                                 description="Adresse des Fundus, der die Artikel einer Quelle nach Abschnitten eingebettet hält. "
                                             "Leer: Nachschlag sucht nur im Index der Quellen.")

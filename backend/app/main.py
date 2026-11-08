@@ -35,6 +35,7 @@ from .kategorien.abfrage import Kategorienindex
 from .kategorien.api import router as kategorien_router
 from .kategorien.wikis import wiki
 from bildholer.modelle import Regeln as Bildregeln
+from .markdownablage import Markdownablage
 from .meins import Meins
 from .meins.api import inhalt_router as notizbilder_router
 from .meins.api import router as meins_router
@@ -117,6 +118,8 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     sprechdienst = Sprechdienst(lambda: geruest.leitstelle, lambda: e().sprechdienst, lambda: e().vorlesestimme,
                                 lambda: e().klondienst, stimmenquelle)
     meins = Meins(geruest.db, bibliothek.name_von, bibliothek.kennung_von)
+    # Notizen und Themen als Markdown in der Kellerwolke (WIKI-23)
+    markdown = Markdownablage(lambda: geruest.kellerwolke, meins.notizen, lambda: e().adresse, lambda: e().notizen_als_markdown)
     geruest.begleiter_anmelden(meins)
     themen = Themen(geruest.db, bibliothek.name_von, bibliothek.kennung_von)
     # große Bilder (WIKI-80): Regeln aus den Einstellungen an den Bildholer, geöffnete und gelesene Artikel vormerken
@@ -250,9 +253,9 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     app.include_router(sammlung_router(geruest, sammlungen, stimmen))
     app.include_router(ausprobieren_router(geruest, Ausprobieren(lambda: geruest.verbund, lambda: e().codeschmiede_adresse)))
     notizbilder = Notizbilder(meins, lambda: geruest.kellerwolke)
-    app.include_router(meins_router(geruest, meins, notizbilder))
+    app.include_router(meins_router(geruest, meins, notizbilder, markdown))
     app.include_router(notizbilder_router(geruest, notizbilder))                 # Bilder für <img> (Cookie)
-    app.include_router(themen_router(geruest, themen, suche, bibliothek, meins, leser))
+    app.include_router(themen_router(geruest, themen, suche, bibliothek, meins, leser, markdown))
     app.include_router(zitieren_router(geruest, bibliothek, leser))
     app.include_router(medien_router(geruest, Medien(leser, suche)))
     app.include_router(stoebern_router(geruest, Stoebern(bibliothek, leser, suche, meins.gelesen, eigen)))

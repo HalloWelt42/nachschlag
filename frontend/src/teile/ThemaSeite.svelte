@@ -23,6 +23,18 @@
    *  gibt es nur direkt im Klick, ohne Warten dazwischen. */
   let literatur = $state("");
   let literaturKopiert = $state<"" | "ja" | "nein">("");
+  // Als Markdown in die Kellerwolke (WIKI-23): leer, läuft, oder der Pfad der Datei bzw. die Meldung des Fehlers
+  let markdown = $state<{ zustand: "" | "laeuft" | "fertig" | "fehler"; text: string }>({ zustand: "", text: "" });
+
+  async function alsMarkdown(id: string) {
+    markdown = { zustand: "laeuft", text: "" };
+    try {
+      const { pfad } = await hole<{ pfad: string }>(`/meins/themen/${encodeURIComponent(id)}/markdown`, { method: "POST" });
+      markdown = { zustand: "fertig", text: pfad };
+    } catch (f) {
+      markdown = { zustand: "fehler", text: seitenFehler(f) };
+    }
+  }
   async function literaturLaden(thema: string, form: string) {
     try {
       literatur = (await hole<{ text: string }>(`/meins/themen/${encodeURIComponent(thema)}/literatur?form=${form}`)).text;
@@ -259,6 +271,12 @@
           <i class="fa-solid {literaturKopiert === 'ja' ? 'fa-check' : literaturKopiert === 'nein' ? 'fa-triangle-exclamation' : 'fa-list-ol'}"></i><span class="wort">{literaturKopiert === "ja" ? "Kopiert" : literaturKopiert === "nein" ? "Geht nicht" : "Literatur"}</span></button>
         <Auswahl wert={zitierform.form} symbol="fa-quote-right" titel="Zitierform der Literaturliste, bleibt auf diesem Gerät eingestellt"
                  optionen={ZITIERFORMEN} onwahl={zitierformMerken} />
+        <button class="knopf" disabled={markdown.zustand === "laeuft"} onclick={() => alsMarkdown(id)}
+                title={markdown.zustand === "fertig" ? `Abgelegt: ${markdown.text}` : markdown.zustand === "fehler" ? markdown.text
+                  : "Das Thema mit Bereichen, Artikeln, Notizen und Literatur als Markdown in die Kellerwolke (Ordner Themen der App)"}>
+          <i class="fa-solid {markdown.zustand === 'laeuft' ? 'fa-spinner fa-spin' : markdown.zustand === 'fertig' ? 'fa-check'
+            : markdown.zustand === 'fehler' ? 'fa-triangle-exclamation' : 'fa-file-export'}"></i><span class="wort">{markdown.zustand === "fertig"
+            ? "In der Kellerwolke" : markdown.zustand === "fehler" ? "Geht nicht" : "Als Markdown"}</span></button>
       {/if}
       <div class="rechts">
         <span class="segment">

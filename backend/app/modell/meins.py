@@ -165,3 +165,13 @@ class Bewertung(BaseModel):
     pfad: str
     sterne: int = Field(ge=1, le=5)
     geaendert: str
+
+
+class Markdownstand(BaseModel):
+    """Ergebnis einer Ablage als Markdown in der Kellerwolke (WIKI-23)."""
+    dateien: int = Field(description="so viele Dateien geschrieben (je Artikel eine)")
+    ordner: str = Field(description="Ordner in der Kellerwolke")
+
+
+class Markdownpfad(BaseModel):
+    pfad: str = Field(description="Datei in der Kellerwolke")
