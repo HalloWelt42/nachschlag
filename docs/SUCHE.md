@@ -12,6 +12,10 @@ fehlenden Feldern (Schlagwörter, Stimmen, Autoren, Rubriken).
    Liste, darunter ein Eintrag "Im ganzen Buch suchen".
 3. **Eigener Index für alle Bücher, gestaffelt:** kleine Bücher zuerst, große (Stack Overflow, Wikipedia) als langer
    Auftrag. Bis ein Index steht, sucht das Buch über den Index der Datei.
+   **Titelfolge (WIKI-21):** der eigene Index trägt je Seite einen Sortierschlüssel nach deutscher Ordnung (DIN 5007:
+   Umlaute wie ihr Grundlaut, ß wie ss, Groß und Klein gleich); Blättern wie im Buch folgt dann ihr statt der Bytefolge
+   der Pfade. Sie ist eine Ergänzung: ein fertiger Index ohne sie gilt weiter, Nachschlag reiht einen Auftrag ein, und
+   der Index-Dienst zieht sie in seiner Kopie nach (liest nur den Index, nicht das Buch) und liefert die Datei neu.
 4. **Wo gerechnet wird:** auf dem Mac (der Pi liefert nur Daten). Der Index-Dienst liest das Buch übers Heimnetz
    (Freigabe des Bücherordners, nur lesend), baut den Index und liefert die Indexdatei an Nachschlag auf dem Pi. Keine
    Kopie der Bücher auf dem Mac. Platz auf dem Pi: 1,3 TB frei (Stand 01.11.2026).

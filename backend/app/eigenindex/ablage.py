@@ -62,6 +62,11 @@ class Eigenindizes:
         self._geprueft.pop(pfad, None)
         return weg
 
+    def veraltet(self, kennung: str) -> bool:
+        """Gilt, aber ohne die Ergänzungen dieses Stands (WIKI-21): der Index-Dienst zieht sie nach."""
+        pfad = self.datei(kennung)
+        return pfad is not None and not schema.aktuell(pfad)
+
     def vorgaenger(self, kennung: str) -> str:
         """Kennung des jüngsten geltenden Index einer früheren Fassung desselben Buchs (gleicher Name, älterer Stand),
         als Vorlage für den Bau (WIKI-58); keiner: leer. Die Datei des Buchs selbst muss dafür nicht mehr da sein."""

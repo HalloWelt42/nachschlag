@@ -196,7 +196,8 @@ class Indexauftraege(Begleiter):
                          key=lambda b: b.groesse)
         eingereiht = []
         for b in buecher:
-            if self._ablage.datei(b.kennung) or await self._hat_auftrag(b.kennung):
+            hat = self._ablage.datei(b.kennung) and not (self._sorte == "volltext" and self._ablage.veraltet(b.kennung))
+            if hat or await self._hat_auftrag(b.kennung):
                 continue
             await self._auftraege.einreihen(self._art, IndexEingabe(buch=b.kennung), titel=f"{self._titel}: {b.titel}",
                                             stapel=b.kennung, von="Nachschlag")
@@ -216,16 +217,21 @@ class Indexauftraege(Begleiter):
                 teil = self.teil(kanal.buch)
                 return Abholung(auftrag=auftrag_id, buch=kanal.buch, sorte=self._sorte,
                                 da=teil.stat().st_size if teil.exists() else 0,
-                                vorlage=self._ablage.vorgaenger(kanal.buch) if self._sorte == "volltext" else "")
+                                vorlage=self._vorlage_fuer(kanal.buch) if self._sorte == "volltext" else "")
         return None
 
     def kennt(self, auftrag_id: str) -> bool:
         """Ob der Auftrag zu diesen Aufträgen gehört und gerade läuft."""
         return auftrag_id in self._kanaele
 
+    def _vorlage_fuer(self, buch: str) -> str:
+        """Vorlage des Baus: der geltende Index des Buchs selbst, wenn er nur Ergänzungen braucht (WIKI-21, der Mac zieht
+        sie darin nach), sonst der Index der vorigen Fassung (WIKI-58)."""
+        return buch if self._ablage.veraltet(buch) else self._ablage.vorgaenger(buch)
+
     def vorlage(self, auftrag_id: str) -> Path | None:
-        """Die Datei des Index der vorigen Fassung zum Buch eines laufenden Auftrags (für den Mac, der sie nicht hat)."""
-        kennung = self._ablage.vorgaenger(self._kanal(auftrag_id).buch)
+        """Die Datei der Vorlage zum Buch eines laufenden Auftrags (für den Mac, der sie nicht hat)."""
+        kennung = self._vorlage_fuer(self._kanal(auftrag_id).buch)
         return self._ablage.datei(kennung) if kennung else None
 
     def _kanal(self, auftrag_id: str) -> _Kanal:

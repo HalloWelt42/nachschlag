@@ -429,3 +429,46 @@ def test_rueckverweise(buecher, tmp_path):
     v.commit()
     v.close()
     assert abfrage.rueckverweise(ziel, "Kreuzfuchs") is None
+
+
+def test_deutsche_titelfolge_und_nachziehen(buecher, tmp_path):
+    """WIKI-21: Sortierschlüssel nach DIN 5007; ein fertiger Index ohne Titelfolge gilt weiter und bekommt sie beim
+    nächsten Bau nachgezogen, ohne das Buch neu zu lesen."""
+    titel = ["Zebra", "Ölbaum", "apfel", "Hundefloh", "Höhere Säugetiere", "Straße", "Strasse_B"]
+    assert sorted(titel, key=schema.sortierschluessel) == ["apfel", "Höhere Säugetiere", "Hundefloh", "Ölbaum", "Straße",
+                                                           "Strasse_B", "Zebra"]
+    ziel = tmp_path / "probe.sqlite"
+    assert _bauen(buecher, "probe_de_all_2026-01", ziel).fertig and schema.aktuell(ziel)
+    v = sqlite3.connect(ziel)
+    with v:                                                  # wie ein Index von vor WIKI-21
+        v.execute("DELETE FROM titelfolge")
+        v.execute("DELETE FROM angaben WHERE schluessel = 'ergaenzung'")
+    v.close()
+    assert schema.gueltig(ziel) and not schema.aktuell(ziel)
+    assert _bauen(buecher, "probe_de_all_2026-01", ziel).fertig and schema.aktuell(ziel)
+    v = schema.lesen(ziel)
+    folge = [z[0] for z in v.execute("SELECT s.titel FROM titelfolge t JOIN seiten s ON s.nr = t.nr ORDER BY t.schluessel, t.nr")]
+    assert folge and folge == sorted(folge, key=schema.sortierschluessel)
+    assert v.execute("SELECT COUNT(*) FROM titelfolge").fetchone()[0] == v.execute("SELECT COUNT(*) FROM seiten").fetchone()[0]
+    v.close()
+    assert ziel.with_suffix(".sha256").read_text().strip() == aufbau.pruefsumme(ziel)
+
+
+def test_blaettern_in_titelfolge(buecher, tmp_path):
+    """WIKI-21: Seiten der Titelfolge vorwärts und rückwärts, ab einem Buchstaben und um eine Seite herum."""
+    from app.stoebern.dienst import platz_ab, platz_von, titelseite
+
+    ziel = tmp_path / "probe.sqlite"
+    _bauen(buecher, "probe_de_all_2026-01", ziel)
+    v = schema.lesen(ziel)
+    alle = titelseite(v, 0, "vor", 1000).eintraege
+    assert [e.titel for e in alle] == sorted((e.titel for e in alle), key=schema.sortierschluessel)
+    erste = titelseite(v, 0, "vor", 2)
+    assert erste.eintraege == alle[:2] and erste.erste == 0 and (erste.naechste == 2 or len(alle) <= 2)
+    zurueck = titelseite(v, 2, "zurueck", 2)
+    assert zurueck.eintraege == alle[:2]
+    mitte = alle[len(alle) // 2]
+    assert platz_von(v, mitte.pfad) == len(alle) // 2 and platz_von(v, "gibt/es/nicht") is None
+    ab = titelseite(v, platz_ab(v, mitte.titel[:1]), "vor", 1).eintraege[0]
+    assert schema.sortierschluessel(ab.titel)[:1] == schema.sortierschluessel(mitte.titel)[:1]
+    v.close()

@@ -19,17 +19,25 @@ Unterkategorien (`geraet_kind`, daraus der Baum) und Anleitungen mit dem Bauteil
 Bilder stehen als Pfad im Buch, damit sie über Fassungen hinweg gelten.
 
 Verweise (WIKI-20): je Seite die Pfade der Seiten desselben Buchs, auf die sie verweist (`verweise`); daraus die
-Rückverweise ("verweist hierher"). Ein Index, der sie kennt, trägt die Angabe `verweise` = 1 (ältere nicht). Verdichtet: `register_einordnung` nennt je Anleitung
+Rückverweise ("verweist hierher"). Ein Index, der sie kennt, trägt die Angabe `verweise` = 1 (ältere nicht).
+
+Titelfolge (WIKI-21): je Seite ein Sortierschlüssel nach deutscher Ordnung (DIN 5007, Umlaute wie ihr Grundlaut, ß wie
+ss, Groß- und Kleinschreibung gleich), damit Blättern wie im Buch der deutschen Reihenfolge folgt statt der Bytefolge der
+Pfade. Sie ist eine Ergänzung (`ERGAENZUNG`): ein Index ohne sie gilt weiter, der Index-Dienst zieht sie nach, ohne
+das Buch neu zu lesen. Verdichtet: `register_einordnung` nennt je Anleitung
 jede Geräteseite darüber (Gerät, Kategorie, bis zur Startseite), so filtert ein Knoten des Baums seinen ganzen Ast."""
 
 from __future__ import annotations
 
 import hashlib
 import sqlite3
+import unicodedata
 from pathlib import Path
 
 #: Fassung des Schemas; eine andere Fassung baut den Index neu (2: Frage und Antwort mit Registern, WIKI-39)
 FASSUNG = 2
+#: Stand der Ergänzungen, die sich in einen fertigen Index nachziehen lassen (1: Titelfolge, WIKI-21)
+ERGAENZUNG = 1
 
 SCHEMA = f"""
 PRAGMA journal_mode = WAL;
@@ -78,6 +86,7 @@ CREATE TABLE IF NOT EXISTS verweise (nr INTEGER NOT NULL, ziel TEXT NOT NULL, PR
 CREATE INDEX IF NOT EXISTS verweise_ziel ON verweise (ziel);
 CREATE TABLE IF NOT EXISTS register_einordnung (oben TEXT NOT NULL, nr INTEGER NOT NULL, PRIMARY KEY (oben, nr)) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS register_einordnung_nr ON register_einordnung (nr);
+CREATE TABLE IF NOT EXISTS titelfolge (schluessel TEXT NOT NULL, nr INTEGER NOT NULL, PRIMARY KEY (schluessel, nr)) WITHOUT ROWID;
 INSERT OR IGNORE INTO angaben (schluessel, wert) VALUES ('fassung', '{FASSUNG}');
 """
 
@@ -129,6 +138,25 @@ def gueltig(pfad: Path) -> bool:
             v.close()
     except sqlite3.DatabaseError:
         return False
+
+
+def aktuell(pfad: Path) -> bool:
+    """Gültig und mit allen Ergänzungen dieses Stands; ein gültiger Index ohne sie bleibt in Gebrauch, bis sie nachgezogen sind."""
+    try:
+        v = lesen(pfad)
+        try:
+            return gueltig(pfad) and int(angabe(v, "ergaenzung", "0") or 0) >= ERGAENZUNG
+        finally:
+            v.close()
+    except (sqlite3.DatabaseError, ValueError):
+        return False
+
+
+def sortierschluessel(titel: str) -> str:
+    """Deutsche Ordnung nach DIN 5007 (Wörterbuch): Umlaute wie ihr Grundlaut, ß wie ss, ohne Akzente, ohne Unterschied
+    von Groß und Klein; Unterstriche der Pfade wie Leerzeichen."""
+    zerlegt = unicodedata.normalize("NFKD", titel.replace("_", " ").casefold().replace("ß", "ss"))
+    return "".join(z for z in zerlegt if not unicodedata.combining(z)).strip()
 
 
 def angabe(v: sqlite3.Connection, schluessel: str, vorgabe: str = "") -> str:

@@ -265,6 +265,15 @@ def _einordnung(v):
             yield oben, nr
 
 
+def titelfolge_bauen(v) -> None:
+    """Sortierschlüssel nach deutscher Ordnung je Seite (WIKI-21); liest nur den Index, nicht das Buch."""
+    with v:
+        v.execute("DELETE FROM titelfolge")
+        v.executemany("INSERT OR IGNORE INTO titelfolge (schluessel, nr) VALUES (?, ?)",
+                      ((schema.sortierschluessel(titel), nr) for nr, titel in v.execute("SELECT nr, titel FROM seiten").fetchall()))
+        schema.angabe_setzen(v, "ergaenzung", str(schema.ERGAENZUNG))
+
+
 def _buch_lesbar(archiv: Archive) -> bool:
     """Ob die Datei des Buchs noch zu lesen ist (über die Freigabe: Netz da). Entscheidet, ob ein Fehler beim Aufbereiten
     an der Seite liegt (überspringen) oder am Lesen (anhalten, später weiter)."""
@@ -327,8 +336,13 @@ def bauen(archiv: Archive, buch: Buch, wege: Wege, ziel: Path, melden: Callable[
     try:
         gesamt = archiv.entry_count
         if schema.angabe(v, "fertig") == "1":
-            return Stand(gesamt, gesamt, v.execute("SELECT COUNT(*) FROM seiten").fetchone()[0], True,
-                         int(schema.angabe(v, "uebernommen", "0")))
+            seiten, uebernommen = v.execute("SELECT COUNT(*) FROM seiten").fetchone()[0], int(schema.angabe(v, "uebernommen", "0"))
+            if int(schema.angabe(v, "ergaenzung", "0") or 0) < schema.ERGAENZUNG:
+                titelfolge_bauen(v)                         # fertig, aber ohne die Ergänzungen dieses Stands: nachziehen
+                v.execute("PRAGMA journal_mode = DELETE")
+                v.close()
+                ziel.with_suffix(".sha256").write_text(pruefsumme(ziel) + "\n")
+            return Stand(gesamt, gesamt, seiten, True, uebernommen)
         with v:
             schema.angabe_setzen(v, "buch", buch.kennung)
             if schema.angabe(v, "naechste", "0") == "0":   # neu angefangen: dieser Index kennt die Verweise (WIKI-20)
@@ -382,6 +396,7 @@ def bauen(archiv: Archive, buch: Buch, wege: Wege, ziel: Path, melden: Callable[
                     return Stand(nr, gesamt, seiten, False, uebernommen)
         stapel_schreiben(gesamt)
         _register_verdichten(v)
+        titelfolge_bauen(v)
         with v:
             v.execute("INSERT INTO volltext(volltext) VALUES('optimize')")
             schema.angabe_setzen(v, "fertig", "1")

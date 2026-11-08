@@ -3,7 +3,10 @@ Blättern in der Reihenfolge des Buchs.
 
 Blättern: libzim 4 kennt keinen Gang über den Titelindex; die Einträge liegen aber nach Pfad geordnet in der Datei
 (`get_entry_by_id`), und Pfade sind in den Büchern die Titel. Eine Seite sammelt von einer Stelle aus Artikel (HTML, keine
-Weiterleitung) vorwärts oder rückwärts; ein Buchstabe wird per Halbierung über die Pfade gefunden."""
+Weiterleitung) vorwärts oder rückwärts; ein Buchstabe wird per Halbierung über die Pfade gefunden.
+
+Hat das Buch einen eigenen Index mit Titelfolge (WIKI-21), blättert es in deutscher Ordnung (Umlaute bei ihrem Grundlaut,
+Groß und Klein gleich); die Stellen sind dann Plätze in dieser Folge statt Einträge der Datei."""
 
 from __future__ import annotations
 
@@ -18,6 +21,7 @@ from lxml import html as lhtml
 
 from ..artikel import Artikelleser
 from ..bibliothek import Bibliothek
+from ..eigenindex import schema as indexschema
 from ..eigenindex.abfrage import rueckverweise
 from ..eigenindex.ablage import Eigenindizes
 from ..modell.artikel import Artikel
@@ -111,6 +115,34 @@ def buchseite(a: Archive, start: int, richtung: Richtung, anzahl: int, springt: 
     return Buchseite(eintraege=[e for _, e in gefunden], erste=gefunden[0][0], naechste=ende if ende < a.entry_count else -1)
 
 
+_FOLGE = ("SELECT s.pfad, s.titel FROM titelfolge t JOIN seiten s ON s.nr = t.nr "
+          "ORDER BY t.schluessel, t.nr LIMIT ? OFFSET ?")
+
+
+def titelseite(v, start: int, richtung: Richtung, anzahl: int) -> Buchseite:
+    """Bis zu `anzahl` Seiten ab Platz `start` vorwärts (oder vor `start` rückwärts) in deutscher Ordnung."""
+    gesamt = v.execute("SELECT COUNT(*) FROM titelfolge").fetchone()[0]
+    von = max(start, 0) if richtung == "vor" else max(start - anzahl, 0)
+    bis = min(von + anzahl, gesamt) if richtung == "vor" else max(start, 0)
+    zeilen = v.execute(_FOLGE, (max(bis - von, 0), von)).fetchall()
+    eintraege = [Blatteintrag(pfad=z["pfad"], titel=z["titel"]) for z in zeilen]
+    if not eintraege:
+        return Buchseite(eintraege=[], erste=start, naechste=-1)
+    return Buchseite(eintraege=eintraege, erste=von, naechste=von + len(eintraege) if von + len(eintraege) < gesamt else -1)
+
+
+def platz_von(v, pfad: str) -> int | None:
+    """Platz einer Seite in der Titelfolge; nicht im Index: None."""
+    z = v.execute("SELECT t.schluessel, t.nr FROM seiten s JOIN titelfolge t ON t.nr = s.nr WHERE s.pfad = ?", (pfad,)).fetchone()
+    if z is None:
+        return None
+    return v.execute("SELECT COUNT(*) FROM titelfolge WHERE (schluessel, nr) < (?, ?)", (z["schluessel"], z["nr"])).fetchone()[0]
+
+
+def platz_ab(v, buchstabe: str) -> int:
+    return v.execute("SELECT COUNT(*) FROM titelfolge WHERE schluessel < ?", (indexschema.sortierschluessel(buchstabe),)).fetchone()[0]
+
+
 class Stoebern:
     def __init__(self, bibliothek: Bibliothek, leser: Artikelleser, suche: Suche,
                  gelesen: Callable[[str, str, str], Awaitable[bool]], eigen: Eigenindizes | None = None) -> None:
@@ -163,8 +195,34 @@ class Stoebern:
         einer Stelle rückwärts."""
         a = self._bib.archiv(buch)
         springt = lambda pfad: bool(self._bib.weiterleitung(buch, pfad))  # noqa: E731
+        datei = self._eigen.datei(buch) if self._eigen else None
+
+        def nach_titelfolge() -> Buchseite | None:
+            """In deutscher Ordnung, wenn der eigene Index die Titelfolge trägt; sonst None (dann die Datei)."""
+            if datei is None or not indexschema.aktuell(datei):
+                return None
+            v = indexschema.lesen(datei)
+            try:
+                if um:
+                    ziel = (self._bib.weiterleitung(buch, um) or um).partition("#")[0]
+                    platz = platz_von(v, ziel)
+                    if platz is None:
+                        return None
+                    davor = titelseite(v, platz, "zurueck", anzahl // 2)
+                    danach = titelseite(v, platz, "vor", anzahl - len(davor.eintraege))
+                    return Buchseite(eintraege=davor.eintraege + danach.eintraege,
+                                     erste=davor.erste if davor.eintraege else danach.erste, naechste=danach.naechste, hier=ziel)
+                if buchstabe:
+                    return titelseite(v, platz_ab(v, buchstabe), "vor", anzahl)
+                if bis >= 0:
+                    return titelseite(v, bis, "zurueck", anzahl)
+                return titelseite(v, max(ab, 0), "vor", anzahl)
+            finally:
+                v.close()
 
         def arbeit() -> Buchseite:
+            if (seite := nach_titelfolge()) is not None:
+                return seite
             if um:
                 ziel = (self._bib.weiterleitung(buch, um) or um).partition("#")[0]
                 stelle = a.get_entry_by_path(ziel)._index
