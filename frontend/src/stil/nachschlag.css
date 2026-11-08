@@ -271,6 +271,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .suchmitte h1 { margin: 0; font-size: calc(var(--seitentitel) + 4px); font-weight: 600; }
 .suchmitte .unter { color: var(--text-2); font-size: var(--klein); }
 .suchmitte .unter .zahl { font-family: var(--schrift-zahl); }
+.mobil .suchmitte { padding-top: var(--a2); }   /* am Telefon ohne Überschrift: das Suchfeld oben, keine Lücke (WIKI-67) */
 .grosssuche { position: relative; width: min(100%, 760px); max-width: none; text-align: left; }
 .grosssuche .suchfeld { height: 58px; padding: 0 10px 0 18px; font-size: calc(var(--gross) + 2px); border-radius: var(--r3); box-shadow: var(--schatten); gap: var(--a3); }
 .grosssuche .suchfeld > i { font-size: 18px; }
@@ -1375,7 +1376,6 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 
 /* ----- Anleitungen finden (teile/Anleitungssuche.svelte, Entwurf ifixit-anleitungen.html) ----- */
 .anl-geraet.mit-kopf { padding-top: 0; }   /* der stehende Kopf sitzt bündig oben */
-.anl-titelzeile { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--a2); font-size: var(--klein); color: var(--text-3); }
 .anl-werkzeugwahl { display: flex; flex-direction: column; gap: var(--a2); padding: var(--a3); background: var(--flaeche); border-radius: var(--r2); }
 .anl-werkzeugwahl .suchfeld { max-width: 320px; }
 .anl-werkzeugwahl .anl-chips { max-height: 30vh; overflow-y: auto; }
@@ -1407,7 +1407,10 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .anl-zeile-liste .werte { grid-area: w; display: flex; flex-wrap: wrap; gap: 4px var(--a4); }
 .anl-zeile-liste .w { display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); white-space: nowrap; }
 .anl-zeile-liste .anl-chips { grid-area: c; }
-.anl-sprache { font-size: var(--marke); font-weight: 600; padding: 1px 5px; border-radius: var(--r1); background: var(--flaeche-2); color: var(--text-2); vertical-align: middle; }
+.anl-symbolwahl button { flex: none; display: inline-flex; align-items: center; min-height: 28px; min-width: 0; padding-inline: 8px; }
+.anl-symbolwahl .anl-stufe { margin-right: 0; gap: 2px; }
+.anl-symbolwahl .anl-stufe span { width: 7px; height: 7px; }
+.anl-geraet .katalog-filter .segment.anl-symbolwahl { flex-wrap: nowrap; }
 .faehigkeit.fehlt { background: var(--warn-weich); color: var(--warn); }
 @media (max-width: 1100px) {
   .anl-treffer-seite { grid-template-columns: minmax(0, 1fr); }
@@ -1415,7 +1418,7 @@ button.kachel:disabled { opacity: .6; cursor: default; }
   .anl-facetten button { width: auto; background: var(--flaeche-2); }
 }
 @media (max-width: 700px) {
-  .anl-geraet .katalog-filter .segment { flex-wrap: wrap; max-width: 100%; }
+  .anl-geraet .katalog-filter .segment { flex-wrap: wrap; max-width: 100%; }   /* Breiten zwischen Telefon und Tisch */
   .anl-zeile-liste { grid-template-columns: 72px minmax(0, 1fr); grid-template-areas: "b t" "b u" "w w" "c c"; }
   .anl-zeile-liste > img, .anl-zeile-liste > .anl-ohne-bild { width: 72px; }
   .anl-einordnung > a:last-child { margin-left: 0; }

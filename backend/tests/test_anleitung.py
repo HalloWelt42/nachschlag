@@ -124,7 +124,7 @@ def test_anleitungen_finden_mit_filtern_und_einordnung(tmp_path):
         assert [a.titel for a in f.anleitungen] == ["Probephone Akku tauschen"] and f.gesamt == 1
         a = f.anleitungen[0]
         assert (a.geraet, a.bauteil, a.bild, a.schritte) == ("Probephone", "Akku", "/m/images/haupt.png", 2)
-        assert [(u.wert, u.zahl) for u in f.unter] == [("Device/Phone", 1)] and (f.bestand_anleitungen, f.bestand_geraete) == (1, 2)
+        assert [(u.wert, u.zahl) for u in f.unter] == [("Device/Phone", 1)]
         beide = abfrage.finden(v, F(sprachen=["de", "en"], reihenfolge="einfach"), medien)
         assert [a.schwierigkeit for a in beide.anleitungen] == [2, 4]
         assert abfrage.finden(v, F(sprachen=["de", "en"], text="display"), medien).anleitungen[0].sprache == "en"

@@ -4,7 +4,7 @@
   // ein Magazin: groß der Artikel für heute aus den eigenen Themen, daneben Weiterlesen und Merkzettel, darunter das
   // Thema als Reihe; die Suche steht dann nur im Kopf. Welche, wählt das Gerät.
   import { onMount } from "svelte";
-  import { seitenFehler } from "appkern-oberflaeche";
+  import { geraet, seitenFehler } from "appkern-oberflaeche";
   import Suchfeld from "../teile/Suchfeld.svelte";
   import Kachel from "../teile/Kachel.svelte";
   import Sprachmarke from "../teile/Sprachmarke.svelte";
@@ -111,7 +111,7 @@
       </section>
     {:else}
       <div class="suchmitte">
-        <h1>Was möchtest du nachschlagen?</h1>
+        {#if !geraet.mobil}<h1>Was möchtest du nachschlagen?</h1>{/if}   <!-- am Telefon zu viel Platz (WIKI-67) -->
         <Suchfeld gross />
         {#if bibliothek.buecher.length}
           <div class="unter">Index über <span class="zahl">{zahl(artikelGesamt)}</span> Artikel in {bibliothek.buecher.filter(nutzbar).length}

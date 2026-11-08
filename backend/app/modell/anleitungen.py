@@ -71,8 +71,6 @@ class Anleitungsfunde(BaseModel):
     unter: list[Facette] = Field(default_factory=list, description="Unterkategorien oder Geräte des gewählten Knotens mit Zahl")
     bauteile: list[Facette] = Field(default_factory=list)
     einordnung: list[Einordnungsschritt] = Field(default_factory=list, description="Weg von der Startseite zum gewählten Gerät")
-    bestand_anleitungen: int = Field(0, description="Anleitungen im Buch in den gewählten Sprachen")
-    bestand_geraete: int = 0
 
 
 class Werkzeugeintrag(BaseModel):

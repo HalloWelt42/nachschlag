@@ -4,7 +4,7 @@
   // der Adresse (zurück, teilen, neu laden). Ohne Filter zeigt die Seite die Kategorien der Quelle, mit Filtern die
   // Treffer: links die Geräte des gewählten Asts und die Bauteile mit Zahl, rechts die Liste, nachgeladen beim Rollen.
   // Ich habe: die eigenen Werkzeuge (in Meins, auf allen Geräten); dann zählen nur Anleitungen, für die sie reichen.
-  import { Auswahl, gehe, Nachladen, navigation, seitenFehler, Seitenkopf } from "appkern-oberflaeche";
+  import { Auswahl, gehe, geraet, Nachladen, navigation, seitenFehler, Seitenkopf } from "appkern-oberflaeche";
   import { untrack } from "svelte";
   import { zahl } from "../lib/bibliothek.svelte";
   import { meins, vorliebeSetzen } from "../lib/meins.svelte";
@@ -13,6 +13,7 @@
   import { lesen, lesenZiel } from "../lib/ziele";
   import Geraeteseite from "./Geraeteseite.svelte";
   import Kachel from "./Kachel.svelte";
+  import Sprachmarke from "./Sprachmarke.svelte";
 
   let { artikel }: { artikel: Artikel } = $props();
 
@@ -81,9 +82,10 @@
       if (mein === stand) laedt = false;
     }
   }
-  // auch ohne Filter: der Bestand im Kopf und ob der Index schon da ist
   $effect(() => {
-    void JSON.stringify(frage);
+    const schluessel = JSON.stringify(frage);
+    if (!aktiv) return;                      // ohne Filter stehen die Kategorien da, keine Treffer
+    void schluessel;
     untrack(() => void laden());
   });
 
@@ -104,17 +106,20 @@
 
   const geladen = $derived(funde ? (frage.art === "geraet" ? funde.geraete.length : funde.anleitungen.length) : 0);
   const einheit = $derived(frage.art === "geraet" ? "Geräte" : frage.art === "zerlegung" ? "Zerlegungen" : "Anleitungen");
+  const einheitZahl = $derived(funde?.gesamt === 1 ? (frage.art === "geraet" ? "Gerät" : frage.art === "zerlegung" ? "Zerlegung" : "Anleitung") : einheit);
   const sprachText = $derived(frage.sprachen.length > 1 ? "auf Deutsch und Englisch" : "auf Deutsch");
+  const stufeText = $derived(frage.schwierigkeit.length ? STUFEN[frage.schwierigkeit[0] - 1] : "");
   const ziel = (pfad: string) => "/" + lesenZiel(artikel.buch, pfad);
+
+  // Am Telefon stehen die Filter hinter einem Knopf (sonst füllt der Kopf den Schirm); die Zahl nennt die gesetzten
+  let filterOffen = $state(false);
+  const gesetzt = $derived(["stufe", "zeit", "ich", "folge", "en"].filter((k) => q.has(k)).length);
+  const filterZeigen = $derived(!geraet.mobil || filterOffen);
 </script>
 
 {#snippet kopf()}
   <Seitenkopf rand="var(--a5)">
     {#snippet kopf()}
-      {#if funde?.index}
-        <div class="anl-titelzeile"><i class="fa-solid fa-screwdriver-wrench"></i>{zahl(funde.bestand_anleitungen)} Anleitungen {sprachText} ·
-          {zahl(funde.bestand_geraete)} Geräte und Kategorien</div>
-      {/if}
       <div class="katalog-filter">
         <label class="suchfeld katalog-suche"><i class="fa-solid fa-magnifying-glass"></i>
           <input type="search" bind:value={eingabe} oninput={getippt} placeholder="Gerät, Bauteil oder Fehler" aria-label="Anleitungen suchen" /></label>
@@ -123,17 +128,24 @@
             <button class:aktiv={aktiv && frage.art === a.wert} onclick={() => setze({ art: a.wert, bauteil: null })}>{a.titel}</button>
           {/each}
         </div>
-        <div class="segment" role="radiogroup" aria-label="Sprache">
-          <button class:aktiv={frage.sprachen.length === 1} onclick={() => setze({ en: null })}>Deutsch</button>
-          <button class:aktiv={frage.sprachen.length > 1} onclick={() => setze({ en: "1" })}>auch Englisch</button>
-        </div>
+        {#if geraet.mobil}
+          <button class="chip wahl" class:an={filterOffen} onclick={() => (filterOffen = !filterOffen)}><i class="fa-solid fa-filter"></i>Filter{#if gesetzt}<span>({gesetzt})</span>{/if}</button>
+        {/if}
+        {#if filterZeigen}
+          <div class="segment anl-symbolwahl" role="radiogroup" aria-label="Sprache">
+            <button class:aktiv={frage.sprachen.length === 1} title="Nur Deutsch" onclick={() => setze({ en: null })}><Sprachmarke kuerzel="deu" /></button>
+            <button class:aktiv={frage.sprachen.length > 1} title="Deutsch und Englisch" onclick={() => setze({ en: "1" })}><Sprachmarke kuerzel="deu,eng" /></button>
+          </div>
+        {/if}
       </div>
-      {#if frage.art !== "geraet"}
+      {#if frage.art !== "geraet" && filterZeigen}
         <div class="katalog-filter">
-          <div class="segment anl-schw" role="radiogroup" aria-label="Schwierigkeit">
-            <button class:aktiv={!frage.schwierigkeit.length} onclick={() => setze({ stufe: null })}>jede Schwierigkeit</button>
+          <div class="segment anl-symbolwahl" role="radiogroup" aria-label="Schwierigkeit">
             {#each STUFEN as s, i (s)}
-              <button class:aktiv={frage.schwierigkeit[0] === i + 1} onclick={() => setze({ stufe: String(i + 1) })}>{s}</button>
+              <!-- noch einmal getippt: wieder jede Schwierigkeit -->
+              <button class:aktiv={frage.schwierigkeit[0] === i + 1} title={s} aria-label={s} aria-checked={frage.schwierigkeit[0] === i + 1} role="radio"
+                      onclick={() => setze({ stufe: frage.schwierigkeit[0] === i + 1 ? null : String(i + 1) })}>
+                <span class="anl-stufe">{#each { length: i + 1 } as _, k (k)}<span class="an"></span>{/each}</span></button>
             {/each}
           </div>
           <Auswahl wert={String(frage.zeit_bis ?? "")} symbol="fa-clock" titel="Zeitaufwand" optionen={ZEITEN} onwahl={(w: string) => setze({ zeit: w || null })} />
@@ -189,7 +201,7 @@
       {/if}
       <div class="anl-treffer">
         <div class="anl-trefferzahl">
-          <b>{zahl(funde.gesamt)}</b> {einheit} {frage.art !== "geraet" ? sprachText : ""}{#if frage.text} zu <b>{frage.text}</b>{/if}{#if frage.bauteil}, Bauteil <b>{frage.bauteil}</b>{/if}{#if ich && !frage.mehr_noetig}, für die deine Werkzeuge reichen{/if}
+          <b>{zahl(funde.gesamt)}</b> {einheitZahl} {frage.art !== "geraet" ? sprachText : ""}{#if frage.text} zu <b>{frage.text}</b>{/if}{#if frage.bauteil}, Bauteil <b>{frage.bauteil}</b>{/if}{#if stufeText}, <b>{stufeText}</b>{/if}{#if ich && !frage.mehr_noetig}, für die deine Werkzeuge reichen{/if}
           {#if ich && funde.brauchen_mehr}
             · <button class="knopf still" onclick={() => setze({ mehr: frage.mehr_noetig ? null : "1" })}>
               {frage.mehr_noetig ? "nur die, für die meine Werkzeuge reichen" : `weitere ${zahl(funde.brauchen_mehr)} brauchen mehr`}</button>
@@ -207,7 +219,7 @@
             {#each funde.anleitungen as a (a.pfad)}
               <a class="anl-zeile-liste" href={ziel(a.pfad)} onclick={(e) => { if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey) { e.preventDefault(); lesen(artikel.buch, a.pfad); } }}>
                 {#if a.bild}<img src={a.bild} alt="" loading="lazy" />{:else}<span class="anl-ohne-bild"><i class="fa-solid fa-screwdriver-wrench"></i></span>{/if}
-                <span class="t">{a.titel}{#if a.sprache === "en"} <span class="anl-sprache">EN</span>{/if}</span>
+                <span class="t">{a.titel}{#if a.sprache === "en"} <Sprachmarke kuerzel="eng" />{/if}</span>
                 {#if a.geraet}<span class="u">{a.geraet}{#if a.bauteil && a.bauteil !== a.titel} · {a.bauteil}{/if}</span>{/if}
                 <span class="werte">
                   {#if a.schwierigkeit}<span class="w"><span class="anl-stufe" title="Schwierigkeit {a.schwierigkeit} von 5">{#each [1, 2, 3, 4, 5] as i (i)}<span class:an={i <= a.schwierigkeit}></span>{/each}</span>{a.schwierigkeit_text}</span>{/if}

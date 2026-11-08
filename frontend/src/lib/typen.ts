@@ -334,7 +334,7 @@ export interface Facette { wert: string; titel: string; zahl: number }
 export interface Einordnungsschritt { pfad: string; titel: string }
 export interface Anleitungsfunde {
   index: boolean; anleitungen: Anleitungstreffer[]; geraete: Geraetetreffer[]; gesamt: number; brauchen_mehr: number;
-  unter: Facette[]; bauteile: Facette[]; einordnung: Einordnungsschritt[]; bestand_anleitungen: number; bestand_geraete: number;
+  unter: Facette[]; bauteile: Facette[]; einordnung: Einordnungsschritt[];
 }
 export interface Werkzeugeintrag { wort: string; anleitungen: number }
 export interface Einordnung { weg: Einordnungsschritt[]; bauteil: string }

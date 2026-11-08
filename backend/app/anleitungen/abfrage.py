@@ -158,13 +158,7 @@ def _geraete(v: sqlite3.Connection, f: Anleitungsfrage, knoten: str, medien: Cal
 
 def finden(v: sqlite3.Connection, f: Anleitungsfrage, medien: Callable[[str], str]) -> Anleitungsfunde:
     knoten = f.geraet or schema.angabe(v, "startseite", "")
-    sprachen = f.sprachen or ["de", "en"]
-    funde = Anleitungsfunde(
-        einordnung=weg(v, f.geraet) if f.geraet else [],
-        bestand_anleitungen=v.execute(f"SELECT COUNT(*) FROM anleitungen WHERE art = 'anleitung' AND sprache IN ({_liste(sprachen)})",
-                                      sprachen).fetchone()[0],
-        bestand_geraete=v.execute("SELECT COUNT(*) FROM geraete g JOIN seiten s ON s.nr = g.nr WHERE s.pfad != ?",
-                                  (schema.angabe(v, "startseite", ""),)).fetchone()[0])
+    funde = Anleitungsfunde(einordnung=weg(v, f.geraet) if f.geraet else [])
     if f.art == "geraet":
         funde.geraete, funde.gesamt = _geraete(v, f, knoten, medien)
         return funde
