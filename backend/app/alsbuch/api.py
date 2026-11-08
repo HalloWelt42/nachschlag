@@ -1,6 +1,6 @@
 """Schnittstelle Als Buch (WIKI-45): eigene Bücher je Konto unter /api/v1/meins/buecher (Seite Als Buch, Schätzung,
 Probekapitel, Bauen, Regal, Lesen, Nachbauen, Löschen) und die Vorlagen unter /api/v1/buchvorlagen (gemeinsam für die App;
-eigene sind Dateien in der Kellerwolke). Nur für Menschen. Die Dateien zum Herunterladen liegen unter /api/v1/inhalt mit
+eigene sind Dateien in der Ablage: Kellerwolke oder Datenordner). Nur für Menschen. Die Dateien zum Herunterladen liegen unter /api/v1/inhalt mit
 dem Lesezugang der Sitzung (Cookie), weil ein Verweis zum Herunterladen keine Köpfe sendet."""
 
 from __future__ import annotations
@@ -111,7 +111,7 @@ def router(geruest: Geruest, buecher: Buecher) -> APIRouter:
 
     @r.delete("/meins/buecher/{buch}", status_code=204)
     async def loeschen(buch: str, konto: Konto = geruest.mensch) -> Response:
-        """Ein Buch aus dem Regal nehmen; seine Dateien gehen in den Papierkorb der Kellerwolke."""
+        """Ein Buch aus dem Regal nehmen; seine Dateien gehen aus der Ablage (in der Kellerwolke: in den Papierkorb)."""
         if not await buecher.loeschen(konto.id, buch):
             raise HTTPException(status_code=404, detail="Dieses Buch gibt es nicht")
         return Response(status_code=204)
@@ -119,7 +119,7 @@ def router(geruest: Geruest, buecher: Buecher) -> APIRouter:
     # ----- Vorlagen --------------------------------------------------------------------------------------------------
     @r.get("/buchvorlagen", response_model=Vorlagenliste)
     async def vorlagen(konto: Konto = geruest.mensch) -> Vorlagenliste:
-        """Alle Vorlagen: die mitgelieferten und die eigenen aus der Kellerwolke (Ordner Vorlagen der App)."""
+        """Alle Vorlagen: die mitgelieferten und die eigenen aus der Ablage (Ordner Vorlagen)."""
         return await buecher.vorlagen.liste()
 
     @r.get("/buchvorlagen/teile", response_model=Teilkatalog)
@@ -140,7 +140,7 @@ def router(geruest: Geruest, buecher: Buecher) -> APIRouter:
 
     @r.put("/buchvorlagen/{kennung}", response_model=Vorlage)
     async def speichern(kennung: str, v: Vorlage, konto: Konto = geruest.mensch) -> Vorlage:
-        """Eine eigene Vorlage speichern (neue Fassung ihrer Datei in der Kellerwolke); mitgelieferte sind fest."""
+        """Eine eigene Vorlage speichern (neuer Stand ihrer Datei in der Ablage); mitgelieferte sind fest."""
         if v.kennung != kennung:
             raise HTTPException(status_code=422, detail="Die Kennung im Weg und in der Vorlage unterscheiden sich")
         try:
@@ -160,7 +160,7 @@ def router(geruest: Geruest, buecher: Buecher) -> APIRouter:
 
     @r.delete("/buchvorlagen/{kennung}", status_code=204)
     async def vorlage_loeschen(kennung: str, konto: Konto = geruest.mensch) -> Response:
-        """Eine eigene Vorlage in den Papierkorb der Kellerwolke."""
+        """Eine eigene Vorlage löschen (in der Kellerwolke: in den Papierkorb)."""
         try:
             if not await buecher.vorlagen.loeschen(kennung):
                 raise HTTPException(status_code=404, detail="Diese Vorlage gibt es nicht")
@@ -177,9 +177,9 @@ def inhalt_router(geruest: Geruest, buecher: Buecher) -> APIRouter:
 
     @r.get("/buecher/{buch}/{format}", response_class=StreamingResponse,
            responses={200: {"content": {"application/epub+zip": {}, "application/pdf": {}},
-                            "description": "Die Datei aus der Kellerwolke"}})
+                            "description": "Die Datei aus der Ablage"}})
     async def datei(buch: str, format: str, konto: Konto = geruest.lesen) -> StreamingResponse:
-        """Ein Buch als EPUB oder PDF zum Herunterladen (aus der Kellerwolke)."""
+        """Ein Buch als EPUB oder PDF zum Herunterladen (aus der Ablage)."""
         if format not in ("epub", "pdf"):
             raise HTTPException(status_code=404, detail="Format epub oder pdf")
         try:
@@ -191,7 +191,7 @@ def inhalt_router(geruest: Geruest, buecher: Buecher) -> APIRouter:
     @r.get("/buchvorlagen/{kennung}", response_class=Response,
            responses={200: {"content": {"application/toml": {}}, "description": "Die Vorlage als TOML-Datei"}})
     async def vorlage_datei(kennung: str, konto: Konto = geruest.lesen) -> Response:
-        """Eine Vorlage als Datei zum Weitergeben (TOML, wie sie in der Kellerwolke liegt)."""
+        """Eine Vorlage als Datei zum Weitergeben (TOML, wie sie in der Ablage liegt)."""
         try:
             v = await buecher.vorlagen.holen(kennung)
         except VorlagenFehler as f:

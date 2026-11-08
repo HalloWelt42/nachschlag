@@ -89,9 +89,10 @@ class NotizAenderung(BaseModel):
 
 
 class Notizbild(BaseModel):
-    """Ein Bild an einer Notiz (WIKI-51): liegt in der Kellerwolke (Knoten), die Notiz merkt sich Name und Art."""
+    """Ein Bild an einer Notiz (WIKI-51): liegt in der Ablage (Kellerwolke oder Datenordner), die Notiz merkt sich Name
+    und Art."""
     id: str
-    knoten: str = Field(description="Knoten der Datei in der Kellerwolke")
+    knoten: str = Field(description="Kennung der Datei in der Ablage (Kellerwolke: Knoten, Datenordner: Pfad)")
     name: str = Field(description="Dateiname, wie er hochkam (oder aus der Zwischenablage benannt)")
     typ: str = Field(description="Art des Bilds, etwa image/png")
     groesse: int = 0
@@ -168,10 +169,10 @@ class Bewertung(BaseModel):
 
 
 class Markdownstand(BaseModel):
-    """Ergebnis einer Ablage als Markdown in der Kellerwolke (WIKI-23)."""
+    """Ergebnis einer Ablage als Markdown (WIKI-23), in der Kellerwolke oder im Datenordner (WIKI-11)."""
     dateien: int = Field(description="so viele Dateien geschrieben (je Artikel eine)")
-    ordner: str = Field(description="Ordner in der Kellerwolke")
+    ordner: str = Field(description="Ordner in der Ablage (Kellerwolke: im Zweig der App, sonst im Datenordner)")
 
 
 class Markdownpfad(BaseModel):
-    pfad: str = Field(description="Datei in der Kellerwolke")
+    pfad: str = Field(description="Datei in der Ablage (Kellerwolke: im Zweig der App, sonst im Datenordner)")

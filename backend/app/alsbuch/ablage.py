@@ -1,71 +1,57 @@
-"""Ablage der fertigen Bücher in der Kellerwolke (WIKI-45): je Thema ein Ordner unter Bücher im Zweig der App, darin
-EPUB und PDF je Vorlage. Eine vorhandene Datei bekommt eine neue Fassung; Löschen geht in den Papierkorb."""
+"""Ablage der fertigen Bücher (WIKI-45): je Thema ein Ordner unter Bücher in der Ablage der App (Kellerwolke oder
+Datenordner, WIKI-11, `appkern.ablage`), darin EPUB und PDF je Vorlage. Eine vorhandene Datei bekommt einen neuen
+Stand; Löschen geht in der Kellerwolke in den Papierkorb. Gemerkt wird je Datei ihr Pfad in der Ablage."""
 
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Callable
 
-from appkern.kellerwolke import Kellerwolke, KellerwolkeFehler
+from appkern.ablage import Ablage, AblageFehler, Eintrag
 
 from ..sammlung.dienst import ordnername
 
 ORDNER = "Bücher"
+#: so begannen Pfade vor WIKI-11 (voller Pfad in der Kellerwolke, Apps/<App>/...); sie gelten weiter
+_FRUEHER = "Apps/"
 
-
-class AblageFehler(Exception):
-    def __init__(self, meldung: str) -> None:
-        super().__init__(meldung)
-        self.meldung = meldung
+__all__ = ["AblageFehler", "Buchablage", "ORDNER"]
 
 
 class Buchablage:
-    def __init__(self, kellerwolke: Callable[[], Kellerwolke | None]) -> None:
-        self._kw = kellerwolke
-
-    def _wolke(self) -> Kellerwolke:
-        kw = self._kw()
-        if kw is None:
-            raise AblageFehler("Kellerwolke nicht eingerichtet (Einstellungen, Verbindungen): dort liegen die Bücher")
-        return kw
+    def __init__(self, ablage: Callable[[], Ablage]) -> None:
+        self._ablage = ablage
 
     async def ordner(self, thema: str = "") -> str:
-        """Der Ordner der Bücher (mit Thema: der des Themas) als Pfad in der Kellerwolke."""
-        try:
-            zweig = (await self._wolke().ich()).zweig
-        except (AblageFehler, KellerwolkeFehler):
-            zweig = "Apps/Nachschlag"
-        return f"{zweig}/{ORDNER}" + (f"/{ordnername(thema)}" if thema else "")
+        """Der Ordner der Bücher (mit Thema: der des Themas), wie Menschen ihn finden."""
+        return await self._ablage().ort(f"{ORDNER}/{ordnername(thema)}" if thema else ORDNER)
 
     @staticmethod
     def dateiname(titel: str, vorlage: str, endung: str) -> str:
         return f"{ordnername(titel)} - {ordnername(vorlage)}.{endung}"
 
     async def ablegen(self, thema: str, name: str, daten: bytes, art: str) -> str:
-        kw = self._wolke()
-        ordner = await self.ordner(thema)
-        pfad = f"{ordner}/{name}"
-        try:
-            await kw.ordner(ordner)
-            alt = await kw.finden(pfad)
-            await kw.schreiben(pfad, daten, stand=alt.etag if alt else None, inhaltstyp=art)
-        except KellerwolkeFehler as f:
-            raise AblageFehler(f"Das Buch ließ sich nicht in der Kellerwolke ablegen: {f}") from f
-        return pfad
+        """Schreibt die Datei und gibt ihren Pfad in der Ablage zurück (zum Merken am Buch)."""
+        e = await self._ablage().schreiben(f"{ORDNER}/{ordnername(thema)}/{name}", daten, inhaltstyp=art)
+        return e.pfad
+
+    @staticmethod
+    async def _finden(ablage: Ablage, pfad: str) -> Eintrag | None:
+        e = await ablage.finden(pfad)
+        if e is None and pfad.startswith(_FRUEHER) and pfad.count("/") >= 2:
+            e = await ablage.finden(pfad.split("/", 2)[2])        # früher gemerkter voller Pfad der Kellerwolke
+        return e
 
     async def oeffnen(self, pfad: str) -> AsyncIterator[bytes]:
         """Den Inhalt einer Datei zum Lesen in Stücken; fehlt sie, gleich AblageFehler (nicht erst beim Lesen)."""
-        kw = self._wolke()
-        try:
-            knoten = await kw.finden(pfad)
-        except KellerwolkeFehler as f:
-            raise AblageFehler(f"Die Kellerwolke antwortet nicht: {f}") from f
-        if knoten is None:
-            raise AblageFehler("Die Datei liegt nicht mehr in der Kellerwolke")
-        return kw.lesen(knoten.id)
+        ablage = self._ablage()
+        e = await self._finden(ablage, pfad)
+        if e is None:
+            raise AblageFehler(f"Die Datei liegt nicht mehr in der Ablage ({ablage.name})")
+        return ablage.lesen(e.kennung)
 
     async def loeschen(self, pfad: str) -> None:
-        """In den Papierkorb der Kellerwolke; fehlt die Datei schon, ist nichts zu tun."""
-        kw = self._wolke()
-        knoten = await kw.finden(pfad)
-        if knoten is not None:
-            await kw.loeschen(knoten.id)
+        """Löscht die Datei (in der Kellerwolke: in den Papierkorb); fehlt sie schon, ist nichts zu tun."""
+        ablage = self._ablage()
+        e = await self._finden(ablage, pfad)
+        if e is not None:
+            await ablage.loeschen(e.kennung)

@@ -80,6 +80,6 @@
         </div>
       {/if}
     </section>
-    <p class="bh-hinweis"><i class="fa-solid fa-circle-info"></i>Der Bildholer ist ein eigenes Programm im eigenen Container auf dem Pi; Nachschlag liest nur seine Ablage. Die Regeln stehen im Reiter Bilder.</p>
+    <p class="bh-hinweis"><i class="fa-solid fa-circle-info"></i>Der Bildholer ist ein eigenes Programm im eigenen Container neben Nachschlag; Nachschlag liest nur seine Ablage. Die Regeln stehen im Reiter Bilder.</p>
   {/if}
 </div>

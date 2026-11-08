@@ -1,8 +1,13 @@
-"""Probebetrieb am Mac: Nachschlag mit nachgestellter Kellerwolke (wie in den Tests), damit sich die Oberfläche ohne
-echte Konten entwickeln und prüfen lässt. Einrichten einmal vom Mac aus (Adresse und
-Schlüssel sind nur Platzhalter), anmelden mit Kennung `probe` und Passwort `probe`. Bücher aus `NACHSCHLAG_BUECHER_ORDNER`, Daten in `NACHSCHLAG_DATEN` (Vorgabe: daten-probe/ im Repo, nie im Git).
+"""Probebetrieb beim Entwickeln: Nachschlag mit nachgestellter Kellerwolke (wie in den Tests), damit sich die
+Oberfläche ohne echte Konten entwickeln und prüfen lässt. Bücher aus `NACHSCHLAG_BUECHER_ORDNER`, Daten in
+`NACHSCHLAG_DATEN` (Vorgabe: daten-probe/ im Repo, nie im Git).
 
-    NACHSCHLAG_BUECHER_ORDNER=/pfad/zu/zims .venv/bin/uvicorn probebetrieb:app --port 8711
+Mit Anmeldung (wie ein Betrieb mit Kellerwolke): `NACHSCHLAG_ANMELDUNG=kellerwolke`, einmal einrichten (Adresse und
+Schlüssel sind nur Platzhalter), anmelden mit Kennung `probe` und Passwort `probe`. Ohne diese Angabe beginnt ein frischer
+Datenordner wie Nachschlag aus dem öffentlichen Repo ohne Anmeldung (WIKI-11); ein Datenordner, in dem schon eine
+Kellerwolke eingetragen ist, bleibt mit Anmeldung.
+
+    NACHSCHLAG_ANMELDUNG=kellerwolke NACHSCHLAG_BUECHER_ORDNER=/pfad/zu/zims .venv/bin/uvicorn probebetrieb:app --port 8711
     curl -X POST localhost:8711/api/v1/einrichtung -H 'Content-Type: application/json' \
          -d '{"kellerwolke_adresse": "http://kellerwolke.probe", "kellerwolke_schluessel": "kw_app_probe"}'
 """

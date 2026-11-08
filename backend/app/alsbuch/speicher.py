@@ -1,7 +1,7 @@
 """Was Als Buch in der Datenbank der App hält (WIKI-45): die fertigen Bücher je Konto (mit ihrem Inhalt für Leseansicht
 und Nachbau), den Zwischenspeicher der Umformungen (gleiche Anfrage, gleiches Ergebnis: ein Nachbau formt nur Neues um),
 das gemessene Tempo je Modell, das letzte Probekapitel und die letzte Bestellung je Thema und den Stand laufender Bauten.
-Die Dateien der Bücher liegen in der Kellerwolke."""
+Die Dateien der Bücher liegen in der Ablage der App (Kellerwolke oder Datenordner)."""
 
 from __future__ import annotations
 

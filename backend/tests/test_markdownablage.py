@@ -1,41 +1,12 @@
-"""WIKI-23: Notizen je Artikel und Themen als Markdown in der Kellerwolke; ohne Notizen geht die Datei weg, abgeschaltet
-schreibt nichts, Verweise führen zurück in Nachschlag."""
+"""WIKI-23: Notizen je Artikel und Themen als Markdown in der Ablage (Kellerwolke oder Datenordner, WIKI-11); ohne
+Notizen geht die Datei weg, abgeschaltet schreibt nichts, Verweise führen zurück in Nachschlag."""
 
-from dataclasses import dataclass
+from ablage_probe import Speicher
 
 from app.markdownablage import Markdownablage, notizen_md, thema_md
 from app.modell.artikel import Beleg
 from app.modell.meins import Notiz
 from app.modell.themen import Bereich, Thema, Themeneintrag
-
-
-@dataclass
-class Knoten:
-    etag: str
-    id: str
-
-
-class Kellerwolke:
-    def __init__(self) -> None:
-        self.dateien: dict[str, bytes] = {}
-        self.geloescht: list[str] = []
-
-    async def ich(self):
-        return type("Ich", (), {"zweig": "Apps/Nachschlag"})()
-
-    async def ordner(self, pfad):
-        return None
-
-    async def finden(self, pfad):
-        return Knoten("e", pfad) if pfad in self.dateien else None
-
-    async def schreiben(self, pfad, inhalt, *, stand=None, inhaltstyp=None):
-        assert (pfad in self.dateien) == (stand is not None) and inhaltstyp == "text/markdown"
-        self.dateien[pfad] = inhalt
-
-    async def loeschen(self, knoten_id):
-        self.geloescht.append(knoten_id)
-        self.dateien.pop(knoten_id)
 
 
 def notiz(text: str, zitat: str = "", **weiter) -> Notiz:
@@ -60,13 +31,13 @@ def test_darstellung():
 
 
 async def test_ablage_nach_aenderung_und_alle():
-    kw, bestand, an = Kellerwolke(), [notiz("eins"), notiz("zwei", "Stelle")], {"wert": True}
+    kw, bestand, an = Speicher(), [notiz("eins"), notiz("zwei", "Stelle")], {"wert": True}
 
     async def notizen(konto, buch, pfad):
         return list(bestand)
 
     a = Markdownablage(lambda: kw, notizen, lambda: "https://n.test", lambda: an["wert"])
-    datei = "Apps/Nachschlag/Notizen/wikipedia_de_all/Saturn (Planet).md"
+    datei = "Notizen/wikipedia_de_all/Saturn (Planet).md"
     await a.nach_aenderung("k", bestand[0])
     assert b"eins" in kw.dateien[datei] and b"zwei" in kw.dateien[datei]
     bestand.clear()

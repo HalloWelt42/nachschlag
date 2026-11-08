@@ -1,7 +1,7 @@
 """Als Buch (WIKI-45): ein Thema wird ein Buch als EPUB und PDF, in der Form, die eine Vorlage bestimmt. Der Dienst
 verbindet die Schichten: Plan aus Thema und Bestellung, Quelle je Artikel (`quelle.py`), Umformung über die Leitstelle
 (`umformung.py`, nur in Aufträgen, mit Zwischenspeicher), Prüfung (`pruefung.py`), Darstellung und Satz (`darstellung.py`,
-`epub.py`, `pdf.py`) und Ablage in der Kellerwolke (`ablage.py`).
+`epub.py`, `pdf.py`) und Ablage (Kellerwolke oder Datenordner, `ablage.py`).
 
 Zwei Arten von Aufträgen: das Probekapitel (ein Artikel, sein Anfang, gleich) und der Bau eines Buchs (jetzt oder
 nachts im Fenster der Einstellungen). Gleiche Anfragen ans Modell liefern das gespeicherte Ergebnis: ein Bau setzt nach
@@ -730,7 +730,7 @@ class Buecher(Begleiter):
         return await self.bestellen(konto, wer, s.bestellung.model_copy(update={"wann": wann}))
 
     async def loeschen(self, konto: str, kennung: str) -> bool:
-        """Das Buch aus dem Regal; seine Dateien gehen in den Papierkorb der Kellerwolke."""
+        """Das Buch aus dem Regal; seine Dateien gehen aus der Ablage (in der Kellerwolke: in den Papierkorb)."""
         s = await self._sp.buch(konto, kennung)
         if s is None:
             return False
@@ -748,7 +748,7 @@ class Buecher(Begleiter):
         return Leseansicht(titel=s.inhalt.titel, untertitel=s.inhalt.untertitel, html=lesen_html(s.inhalt, lambda b: b.adresse))
 
     async def datei(self, konto: str, kennung: str, fmt: str) -> tuple[str, str, AsyncIterator[bytes]]:
-        """Name, Medienart und Inhalt einer Datei des Buchs aus der Kellerwolke."""
+        """Name, Medienart und Inhalt einer Datei des Buchs aus der Ablage."""
         s = await self._sp.buch(konto, kennung)
         f = next((x for x in s.formate if x.format == fmt), None) if s else None
         if s is None or f is None:

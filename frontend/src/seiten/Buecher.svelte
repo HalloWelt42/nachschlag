@@ -8,6 +8,7 @@
     auftragAbbrechen, auftraege, auftragWiederholen, beiAuftrag, gehe, geraet, hole, navigation, Rueckfrage, seitenFehler, type Auftrag,
   } from "appkern-oberflaeche";
   import Buchdeckel from "../teile/Buchdeckel.svelte";
+  import { ablageIn, geloeschtWird } from "../lib/ablage";
   import {
     buchDatei, buchLoeschen, buecher, datum, dauerText, leseansichtHolen, nachbauen, regalLaden, uhrzeit, type Baustand, type Eigenbuch,
   } from "../lib/buecher.svelte";
@@ -155,7 +156,7 @@
             </div>
           {/each}
 
-          <div class="exp-abschnitt"><h2>Fertig</h2><span>{regal.fertig.length} {regal.fertig.length === 1 ? "Buch" : "Bücher"}, in der Kellerwolke unter {ordner}</span></div>
+          <div class="exp-abschnitt"><h2>Fertig</h2><span>{regal.fertig.length} {regal.fertig.length === 1 ? "Buch" : "Bücher"}, {ablageIn()} unter {ordner}</span></div>
           {#if !regal.fertig.length}
             <p class="leer-hinweis">Noch keine Bücher. Im Thema oben "Als Buch" wählen: Vorlage, Probekapitel, dann jetzt oder heute Nacht bauen.</p>
           {/if}
@@ -205,7 +206,7 @@
   </div>
   {#if loeschenFragen}
     {@const b = loeschenFragen}
-    <Rueckfrage frage="Buch {b.titel} ({b.vorlage_titel}) löschen?" hinweis="Die Dateien gehen in den Papierkorb der Kellerwolke; das Thema bleibt."
+    <Rueckfrage frage="Buch {b.titel} ({b.vorlage_titel}) löschen?" hinweis="Die Dateien {geloeschtWird(true)}; das Thema bleibt."
                 knopf="Löschen" onabbrechen={() => (loeschenFragen = null)} onja={() => tun(async () => { await buchLoeschen(b.id); loeschenFragen = null; })} />
   {/if}
 {/if}

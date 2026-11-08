@@ -85,7 +85,8 @@ class Gestaltung(BaseModel):
 
 
 class Vorlage(BaseModel):
-    """Eine Vorlage: mitgeliefert (fest) oder eigene (eine Datei in der Kellerwolke, Ordner Vorlagen der App)."""
+    """Eine Vorlage: mitgeliefert (fest) oder eigene (eine Datei im Ordner Vorlagen der Ablage, Kellerwolke oder
+    Datenordner)."""
     kennung: str = Field(pattern=r"^[a-z0-9][a-z0-9-]{0,59}$", description="Name der Datei ohne .toml (klein, ASCII)")
     titel: str = Field(min_length=1, max_length=60, description="Name der Vorlage")
     symbol: str = Field("fa-book", pattern=r"^fa-[a-z0-9-]+$", description="Symbol (Name der Symbolschrift)")
@@ -184,7 +185,7 @@ class Buchwahl(BaseModel):
     modell: str = Field(description="Modell der Umformung (Einstellung Modell für Bücher)")
     leitstelle: bool = Field(description="Die Leitstelle ist eingerichtet (ohne sie gehen nur Vorlagen ohne KI)")
     pdf: str = Field("", description="Leer: PDF geht; sonst der Grund, warum der Satz als PDF hier nicht geht")
-    ablage: str = Field(description="Ordner des Buchs in der Kellerwolke")
+    ablage: str = Field(description="Ordner des Buchs in der Ablage (Kellerwolke oder Datenordner)")
     letzte: Bestellung | None = Field(None, description="Die zuletzt gebaute Bestellung dieses Themas (zum Vorbelegen)")
 
 
@@ -411,10 +412,10 @@ class Baustand(BaseModel):
 
 
 class Buchformat(BaseModel):
-    """Eine Datei des Buchs in der Kellerwolke."""
+    """Eine Datei des Buchs in der Ablage."""
     format: Literal["epub", "pdf"] = Field(description="epub oder pdf")
     titel: str = Field(description="Beschriftung, etwa PDF A5")
-    pfad: str = Field(description="Pfad in der Kellerwolke")
+    pfad: str = Field(description="Pfad in der Ablage")
     groesse: int = Field(description="Größe in Bytes")
 
 
@@ -446,7 +447,7 @@ class Regal(BaseModel):
     """Eigene Bücher: was gerade entsteht und was fertig ist."""
     laufend: list[Baustand] = Field(description="Bücher, die entstehen, warten oder angehalten sind")
     fertig: list[Eigenbuch] = Field(description="Fertige Bücher, neueste zuerst")
-    ablage: str = Field(description="Ordner der Bücher in der Kellerwolke")
+    ablage: str = Field(description="Ordner der Bücher in der Ablage (Kellerwolke oder Datenordner)")
 
 
 class Leseansicht(BaseModel):
@@ -457,10 +458,10 @@ class Leseansicht(BaseModel):
 
 
 class Vorlagenliste(BaseModel):
-    """Alle Vorlagen: mitgelieferte zuerst, dann die eigenen aus der Kellerwolke."""
+    """Alle Vorlagen: mitgelieferte zuerst, dann die eigenen aus der Ablage."""
     vorlagen: list[Vorlage] = Field(description="Die Vorlagen")
-    ordner: str = Field(description="Ordner der eigenen Vorlagen in der Kellerwolke")
-    hinweis: str = Field("", description="Was sich nicht lesen ließ (Kellerwolke fehlt, Datei kaputt); leer: alles gut")
+    ordner: str = Field(description="Ordner der eigenen Vorlagen in der Ablage")
+    hinweis: str = Field("", description="Was sich nicht lesen ließ (Ablage nicht erreichbar, Datei kaputt); leer: alles gut")
 
 
 class Teilkatalog(BaseModel):

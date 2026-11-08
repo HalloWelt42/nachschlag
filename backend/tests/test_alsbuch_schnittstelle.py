@@ -57,7 +57,7 @@ async def test_als_buch_ueber_die_schnittstelle(nachschlag):  # noqa: F811
     regal = (await c.get("/api/v1/meins/buecher")).json()
     buch = regal["fertig"][0]
     assert (buch["titel"], buch["vorlage_titel"], buch["artikel"]) == ("Füchse", "Nachschlagewerk", 2)
-    assert buch["formate"][0]["pfad"] == "Apps/Nachschlag/Bücher/Füchse/Füchse - Nachschlagewerk.epub"
+    assert buch["formate"][0]["pfad"] == "Bücher/Füchse/Füchse - Nachschlagewerk.epub"           # Pfad in der Ablage
     epub = await c.get(f"/api/v1/inhalt/buecher/{buch['id']}/epub")
     assert epub.headers["content-type"] == "application/epub+zip" and "filename*=UTF-8''F%C3%BCchse" in epub.headers["content-disposition"]
     assert zipfile.ZipFile(io.BytesIO(epub.content)).read("mimetype") == b"application/epub+zip"

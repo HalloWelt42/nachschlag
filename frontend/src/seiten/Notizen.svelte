@@ -8,6 +8,7 @@
   import { bibliothekLaden, buchName } from "../lib/bibliothek.svelte";
   import { meins, meinsLaden, notizBildAdresse, wann, type Notiz } from "../lib/meins.svelte";
   import { lesen } from "../lib/ziele";
+  import { ablageHinein } from "../lib/ablage";
   import { themen, themenLaden, themenVon } from "../lib/themen.svelte";
   import NotizBearbeiten from "../teile/NotizBearbeiten.svelte";
   import NotizBlatt from "../teile/NotizBlatt.svelte";
@@ -50,7 +51,8 @@
 
   const zurStelle = (n: Notiz) => n.buch && lesen(n.buch, n.pfad, { notiz: n.id });
 
-  // Alle Notizen als Markdown in die Kellerwolke (WIKI-23); nach jeder Änderung geschieht das je Artikel von selbst
+  // Alle Notizen als Markdown in die Ablage (WIKI-23, Kellerwolke oder Datenordner); nach jeder Änderung geschieht das
+  // je Artikel von selbst
   let ablage = $state<{ zustand: "" | "laeuft" | "fertig" | "fehler"; text: string }>({ zustand: "", text: "" });
   async function alleAblegen() {
     ablage = { zustand: "laeuft", text: "" };
@@ -91,10 +93,10 @@
                    optionen={[{ wert: "neu", titel: "Neueste zuerst" }, { wert: "alt", titel: "Älteste zuerst" }]} />
           {#if meins.notizen.length}
             <button class="knopf" disabled={ablage.zustand === "laeuft"} onclick={alleAblegen}
-                    title={ablage.text || "Alle Notizen als Markdown in die Kellerwolke, je Artikel eine Datei (Ordner Notizen der App); nach jeder Änderung geschieht das je Artikel von selbst"}>
+                    title={ablage.text || `Alle Notizen als Markdown ${ablageHinein()}, je Artikel eine Datei (Ordner Notizen); nach jeder Änderung geschieht das je Artikel von selbst`}>
               <i class="fa-solid {ablage.zustand === 'laeuft' ? 'fa-spinner fa-spin' : ablage.zustand === 'fertig' ? 'fa-check'
                 : ablage.zustand === 'fehler' ? 'fa-triangle-exclamation' : 'fa-file-export'}"></i>{ablage.zustand === "fertig"
-                ? "In der Kellerwolke" : ablage.zustand === "fehler" ? "Geht nicht" : "Als Markdown"}</button>
+                ? "Abgelegt" : ablage.zustand === "fehler" ? "Geht nicht" : "Als Markdown"}</button>
           {/if}
         </div>
         {#if meins.geladen && !meins.notizen.length}

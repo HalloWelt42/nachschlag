@@ -18,6 +18,7 @@ from lxml import etree
 
 from appkern.auftraege import Auftraege
 from appkern.datenbank import Datenbank
+from ablage_probe import Speicher
 
 from app.alsbuch import quelle as quellen
 from app.alsbuch.ablage import Buchablage
@@ -331,33 +332,6 @@ class Leitstelle:
         raise AssertionError(name)
 
 
-@dataclass
-class Knoten:
-    etag: str
-    id: str
-
-
-class Kellerwolke:
-    def __init__(self) -> None:
-        self.dateien: dict[str, bytes] = {}
-
-    async def ich(self):
-        return type("Ich", (), {"zweig": "Apps/Nachschlag"})()
-
-    async def ordner(self, pfad):
-        return None
-
-    async def finden(self, pfad):
-        return Knoten("e", pfad) if pfad in self.dateien else None
-
-    async def schreiben(self, pfad, inhalt, *, stand=None, inhaltstyp=None):
-        assert (pfad in self.dateien) == (stand is not None)
-        self.dateien[pfad] = inhalt
-
-    async def lesen(self, kennung):
-        yield self.dateien[kennung]
-
-
 class Bilder:
     async def holen(self, adresse, gross=False):
         return Bilddatei(PNG, "image/png", "Jemand" if gross else "", "CC0" if gross else "")
@@ -373,7 +347,7 @@ async def db(tmp_path: Path):
 @pytest.fixture
 async def dienst(db):
     auftraege = Auftraege(db, [], gleichzeitig=2)
-    themen, kw, ls = Themen(), Kellerwolke(), Leitstelle()
+    themen, kw, ls = Themen(), Speicher(), Leitstelle()
     notizen = [Notiz(id="n1", buch_name="wp_de", buch=BUCH.kennung, pfad="Saturn", titel="Saturn", zitat="ungefähr 29 Jahre",
                      text="Mit dem Fernrohr sehen", angelegt="1", geaendert="1"),
                Notiz(id="n2", buch_name="wp_de", buch=BUCH.kennung, pfad="Saturn", titel="Saturn", zitat="keine feste Oberfläche",
@@ -385,7 +359,7 @@ async def dienst(db):
     async def literatur(konto, t):
         return "# Literatur\n\n## Planeten\n\n- Saturn. In: Probe-Wiki\n"
 
-    b = Buecher(db, auftraege, themen, Bib(), Leser(), Uebersetzer(), alle_notizen, literatur, Vorlagen(lambda: None),
+    b = Buecher(db, auftraege, themen, Bib(), Leser(), Uebersetzer(), alle_notizen, literatur, Vorlagen(lambda: kw),
                 Buchablage(lambda: kw), Bilder(), lambda: ls, lambda: TEXTMODELL,
                 Nachtfenster(lambda: (22, 7), lambda: datetime(2026, 11, 8, 12, 0, tzinfo=ZONE)))
     auftraege.zurueckstellen_wenn(b.zurueckstellen)
@@ -432,7 +406,7 @@ async def test_bauen_regal_und_nachbau_nur_des_neuen(dienst):
     s = await b.schaetzen("k", bestellung)
     assert s.artikel == 2 and s.kapitel == 2 and s.probe_titel == "Saturn" and s.ende and not s.gemessen
     await fertig(auftraege, (await b.bestellen("k", "Probe", bestellung)).id)
-    epub = kw.dateien["Apps/Nachschlag/Bücher/Sternenhimmel/Sternenhimmel - Lernheft.epub"]
+    epub = kw.dateien["Bücher/Sternenhimmel/Sternenhimmel - Lernheft.epub"]
     dateien = epub_pruefen(epub)
     kapitel = dateien["OEBPS/kapitel-01.xhtml"].decode()
     assert "Hier geht es um den Himmel." in kapitel and "Auf einen Blick" in kapitel and "<dt>Art</dt>" in kapitel
@@ -472,7 +446,7 @@ async def test_heute_nacht_wartet_und_nachschlagewerk_ohne_ki(dienst):
     await fertig(auftraege, (await b.bestellen("k", "Probe", Bestellung(thema="t1", vorlage="nachschlagewerk", pdf=False,
                                                                          wann="jetzt"))).id)
     assert ls.aufrufe == []                                                                   # ohne KI
-    dateien = epub_pruefen(kw.dateien["Apps/Nachschlag/Bücher/Sternenhimmel/Sternenhimmel - Nachschlagewerk.epub"])
+    dateien = epub_pruefen(kw.dateien["Bücher/Sternenhimmel/Sternenhimmel - Nachschlagewerk.epub"])
     assert sorted(n for n in dateien if n.startswith("OEBPS/kapitel")) == ["OEBPS/kapitel-01.xhtml", "OEBPS/kapitel-02.xhtml"]
     m = dateien["OEBPS/kapitel-01.xhtml"].decode()
     assert "<h1>M</h1>" in m and "<td>95 Erdmassen</td>" not in m                            # von A bis Z
@@ -483,8 +457,8 @@ async def test_heute_nacht_wartet_und_nachschlagewerk_ohne_ki(dienst):
 
 async def test_ohne_leitstelle_keine_ki_vorlage(db):
     auftraege = Auftraege(db, [], gleichzeitig=1)
-    b = Buecher(db, auftraege, Themen(), Bib(), Leser(), Uebersetzer(), None, None, Vorlagen(lambda: None),  # type: ignore[arg-type]
-                Buchablage(lambda: None), Bilder(), lambda: None, lambda: TEXTMODELL, Nachtfenster(lambda: (22, 7)))
+    b = Buecher(db, auftraege, Themen(), Bib(), Leser(), Uebersetzer(), None, None, Vorlagen(lambda: Speicher()),  # type: ignore[arg-type]
+                Buchablage(lambda: Speicher()), Bilder(), lambda: None, lambda: TEXTMODELL, Nachtfenster(lambda: (22, 7)))
     await b.starten()
     with pytest.raises(ValueError, match="Leitstelle"):
         await b.bestellen("k", "Probe", Bestellung(thema="t1", vorlage="lernheft"))

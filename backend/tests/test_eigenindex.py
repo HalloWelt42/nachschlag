@@ -184,7 +184,7 @@ async def test_mac_holt_ab_baut_und_uebergibt(pi, buecher, tmp_path):
     assert await app.state.indexauftraege.fehlende_einreihen() == [DOKU]    # nur die eingestellten Arten (Handbücher)
     assert await app.state.indexauftraege.fehlende_einreihen() == []        # kein zweiter Auftrag für dasselbe Buch
     laufend = await _laeuft(c)
-    assert "wartet auf den Mac" in laufend["schritt"] or laufend["schritt"] == ""
+    assert "wartet auf den Index-Dienst" in laufend["schritt"] or laufend["schritt"] == ""
 
     halt = threading.Event()
     mac = httpx.Client(transport=Bruecke(app, asyncio.get_running_loop()), base_url="http://pi.test", headers=SCHLUESSEL)

@@ -131,8 +131,9 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     sprechdienst = Sprechdienst(lambda: geruest.leitstelle, lambda: e().sprechdienst, lambda: e().vorlesestimme,
                                 lambda: e().klondienst, stimmenquelle)
     meins = Meins(geruest.db, bibliothek.name_von, bibliothek.kennung_von)
-    # Notizen und Themen als Markdown in der Kellerwolke (WIKI-23)
-    markdown = Markdownablage(lambda: geruest.kellerwolke, meins.notizen, lambda: e().adresse, lambda: e().notizen_als_markdown)
+    # Notizen und Themen als Markdown in der Ablage der App (WIKI-23): Kellerwolke oder Datenordner (WIKI-11)
+    ablage = lambda: geruest.ablage  # noqa: E731
+    markdown = Markdownablage(ablage, meins.notizen, lambda: e().adresse, lambda: e().notizen_als_markdown)
     geruest.begleiter_anmelden(meins)
     themen = Themen(geruest.db, bibliothek.name_von, bibliothek.kennung_von)
     # große Bilder (WIKI-80): Regeln aus den Einstellungen an den Bildholer, geöffnete und gelesene Artikel vormerken
@@ -223,7 +224,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     sammlungen = Sammlungen(geruest.db, geruest.auftraege, themen, bibliothek, leser, artikeluebersetzer,
                             lambda stimme: Sprechdienst(lambda: geruest.leitstelle, lambda: e().sprechdienst,
                                                         lambda: stimme or e().vorlesestimme, lambda: e().klondienst, stimmenquelle),
-                            lambda: geruest.leitstelle, lambda: e().suchmodell, lambda: geruest.kellerwolke,
+                            lambda: geruest.leitstelle, lambda: e().suchmodell, ablage,
                             lambda: (e().nachts_von, e().nachts_bis))
     geruest.begleiter_anmelden(sammlungen)
 
@@ -232,7 +233,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
         return await literatur_fuer_thema(thema, bibliothek, leser, await meins.notizen(konto), "einfach")
 
     buecher = Buecher(geruest.db, geruest.auftraege, themen, bibliothek, leser, artikeluebersetzer, meins.notizen, literatur,
-                      Vorlagen(lambda: geruest.kellerwolke), Buchablage(lambda: geruest.kellerwolke),
+                      Vorlagen(ablage), Buchablage(ablage),
                       Bildquelle(bibliothek, grossbilder.finden), lambda: geruest.leitstelle, lambda: e().buchmodell, nacht)
     geruest.begleiter_anmelden(buecher)
     geruest.einstellungen.anbieten("buchmodell", geruest.leitstelle_angebot("text"))
@@ -288,7 +289,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     app.include_router(buecherlader_router(geruest, lader))
     app.include_router(sammlung_router(geruest, sammlungen, stimmen))
     app.include_router(ausprobieren_router(geruest, Ausprobieren(lambda: geruest.verbund, lambda: e().codeschmiede_adresse)))
-    notizbilder = Notizbilder(meins, lambda: geruest.kellerwolke)
+    notizbilder = Notizbilder(meins, ablage)
     app.include_router(meins_router(geruest, meins, notizbilder, markdown))
     app.include_router(notizbilder_router(geruest, notizbilder))                 # Bilder für <img> (Cookie)
     app.include_router(themen_router(geruest, themen, suche, bibliothek, meins, leser, markdown,

@@ -20,6 +20,8 @@ services:
       NACHSCHLAG_EINRICHTUNGSCODE_DATEI: /app/daten/einrichtungscode
       # wo der Code für den Menschen zu finden ist; das Ausrollen setzt rechner:ordner aus der privaten Wahrheit
       NACHSCHLAG_EINRICHTUNGSCODE_ORT: ${EINRICHTUNGSCODE_ORT:-daten/einrichtungscode im Ordner der App}
+      # der Bildholer dieser Datei (unten), im eigenen Netz der Container
+      NACHSCHLAG_BILDHOLER_ADRESSE: http://bildholer:8000
     volumes:
       - ./daten:/app/daten
       # Sicherungen der Datenbank nach der Regel des Appkerns: wöchentlich von der App, vor dem Neustart vom Ausrollen

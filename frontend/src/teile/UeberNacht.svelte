@@ -1,9 +1,10 @@
 <script lang="ts">
   // Stapelarbeit an einer Sammlung (WIKI-44): das Thema oder ein Bereich daraus übersetzen, vertonen, zusammenfassen
   // oder Lernfragen bilden, jetzt oder heute Nacht. Darunter, was läuft und was fertig ist; die Ergebnisse liegen in der
-  // Kellerwolke unter Apps/Nachschlag/Sammlungen/<Thema>/. Nie ganze Quellen: nur, was in der Sammlung steht.
+  // Ablage unter Sammlungen/<Thema>/ (Kellerwolke oder Datenordner). Nie ganze Quellen: nur, was in der Sammlung steht.
   import { Auswahl, hole, seitenFehler } from "appkern-oberflaeche";
   import type { Thema } from "../lib/themen.svelte";
+  import { ablageIn } from "../lib/ablage";
 
   type Arbeit = "uebersetzen" | "vertonen" | "zusammenfassen" | "lernfragen";
   interface Stand {
@@ -109,7 +110,7 @@
         <div class="nacht-ergebnis">
           <button class="knopf still" onclick={() => (offenesErgebnis = offenesErgebnis === e.arbeit ? "" : e.arbeit)}>
             <i class="fa-solid {offenesErgebnis === e.arbeit ? 'fa-chevron-down' : 'fa-chevron-right'}"></i>{TITEL[e.arbeit]}</button>
-          <span class="ablage" title="liegt in der Kellerwolke">{e.ablage}</span>
+          <span class="ablage" title="liegt {ablageIn()}">{e.ablage}</span>
           {#if offenesErgebnis === e.arbeit}<div class="ergebnis-text">{e.inhalt}</div>{/if}
         </div>
       {/each}

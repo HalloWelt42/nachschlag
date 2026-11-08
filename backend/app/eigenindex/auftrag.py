@@ -1,7 +1,7 @@
 """Eigene Indizes als Aufträge (WIKI-17, docs/SUCHE.md Punkte 3, 4, 12 und 15). Gerechnet wird auf dem Mac: der
 Index-Dienst dort holt sich den laufenden Auftrag hier ab, meldet seinen Fortschritt, lädt die fertige Datei in Teilen
 hoch (fortsetzbar) und meldet sie fertig. Der Pi ruft den Mac nie an, und am Mac lauscht nichts im Netz; ist der Mac
-weg (Ruhezustand, unterwegs), steht der Auftrag auf "wartet auf den Mac" und läuft weiter, sobald er sich meldet.
+weg (Ruhezustand, unterwegs), steht der Auftrag auf "wartet auf den Index-Dienst" und läuft weiter, sobald er sich meldet.
 
 Ausgetauscht wird erst nach geprüfter Prüfsumme und in einem Schritt; bis dahin gilt der alte Index oder der Index der
 ZIM-Datei. Welche Bücher einen eigenen Index bekommen, sagen die Einstellungen; der Begleiter reiht fehlende ein, kleine
@@ -34,10 +34,10 @@ from .ablage import Eigenindizes
 logger = logging.getLogger("nachschlag.eigenindex")
 
 ART = "eigenindex"
-PHASEN = (Phase(schluessel="bauen", titel="Auf dem Mac bauen", symbol="gears"),
+PHASEN = (Phase(schluessel="bauen", titel="Beim Index-Dienst bauen", symbol="gears"),
           Phase(schluessel="holen", titel="Übertragen", symbol="download"),
           Phase(schluessel="tauschen", titel="Prüfen und austauschen", symbol="check"))
-#: So lange ohne Meldung des Mac, bis der Auftrag "wartet auf den Mac" zeigt
+#: So lange ohne Meldung des Mac, bis der Auftrag "wartet auf den Index-Dienst" zeigt
 STILL_S = 90.0
 PRUEFEN_S = 3600
 STUECK = 1 << 20
@@ -158,7 +158,7 @@ class Indexauftraege(Begleiter):
             return Verbindung(name=name, ok=False, meldung="hat sich seit dem Start nicht gemeldet")
         vor = time.monotonic() - self._kontakt
         if vor > 2 * self._still:
-            return Verbindung(name=name, ok=False, meldung=f"zuletzt vor {_dauer(vor)} (Mac aus oder unterwegs)")
+            return Verbindung(name=name, ok=False, meldung=f"zuletzt vor {_dauer(vor)} (Rechner aus oder unterwegs)")
         return Verbindung(name=name, ok=True, meldung="meldet sich")
 
     def teil(self, buch: str) -> Path:
@@ -286,7 +286,7 @@ class Indexauftraege(Begleiter):
         try:
             while kanal.fertig is None:
                 if kanal.fehler:
-                    raise AuftragFehler(f"Der Mac konnte den Index nicht bauen: {kanal.fehler}")
+                    raise AuftragFehler(f"Der Index-Dienst konnte den Index nicht bauen: {kanal.fehler}")
                 await k.pruefen()
                 await self._zeigen(k, kanal)
                 await asyncio.sleep(self._takt)
@@ -305,7 +305,7 @@ class Indexauftraege(Begleiter):
 
     async def _zeigen(self, k: Kontext, kanal: _Kanal) -> None:
         if not kanal.zuletzt or time.monotonic() - kanal.zuletzt > self._still:
-            await k.fortschritt(None, "wartet auf den Mac", phase="holen" if kanal.uebertragen else "bauen")
+            await k.fortschritt(None, "wartet auf den Index-Dienst", phase="holen" if kanal.uebertragen else "bauen")
         elif kanal.uebertragen:
             da, gesamt = kanal.uebertragen
             await k.fortschritt(da / gesamt if gesamt else None, f"{_zahl(da / 1e6, 1)} von {_zahl(gesamt / 1e6, 1)} MB",
@@ -316,4 +316,4 @@ class Indexauftraege(Begleiter):
                                     + (f", davon {_zahl(s.uebernommen)} aus der vorigen Fassung" if s.uebernommen else ""))
             await k.fortschritt(s.erledigt / s.gesamt if s.gesamt else None, schritt, phase="bauen")
         else:
-            await k.fortschritt(None, "der Mac beginnt", phase="bauen")
+            await k.fortschritt(None, "der Index-Dienst beginnt", phase="bauen")

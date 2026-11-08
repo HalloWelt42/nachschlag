@@ -3,7 +3,7 @@ Bereich daraus; nie ganze Quellen (Nutzer: "niemals die gesamten bestände aller
 Arbeiten: Übersetzen (die fremdsprachigen Artikel, über den Auftrag je Artikel), Vertonen (je Artikel eine Hördatei mit
 Wiedergabeliste; Stimme und Format je Sammlung), Zusammenfassen (je Artikel und ein Überblick), Lernfragen (Karteikarten).
 Ein Auftrag je Arbeit, jetzt oder nachts (Fenster in den Einstellungen; bis dahin zurückgestellt, sichtbar auf der Seite
-Aufträge). Ergebnisse liegen in der Kellerwolke (Apps/Nachschlag/Sammlungen/<Thema>/) und am Thema in Nachschlag.
+Aufträge). Ergebnisse liegen in der Ablage unter Sammlungen/<Thema>/ (Kellerwolke oder Datenordner) und am Thema.
 
 Gerechnet wird über die Leitstelle mit Priorität "hintergrund"; was andere gerade brauchen, geht vor."""
 
@@ -24,7 +24,7 @@ from appkern.app.begleiter import Begleiter
 from appkern.auftraege import Art, AuftragFehler, Auftraege, Herkunft, Kontext
 from appkern.auftraege.modelle import Auftrag
 from appkern.datenbank import Datenbank
-from appkern.kellerwolke import Kellerwolke
+from appkern.ablage import Ablage, AblageFehler
 from appkern.leitstelle import Leitstelle, LeitstellenFehler, Nachricht, gerade, json_lesen
 
 from ..artikel import Artikelleser
@@ -72,7 +72,7 @@ class SammlungsEingabe(BaseModel):
 class Ergebnis(BaseModel):
     arbeit: Arbeit
     inhalt: str = Field(description="Markdown (Zusammenfassung, Lernfragen) oder die Liste der Hördateien")
-    ablage: str = Field(description="wo es in der Kellerwolke liegt")
+    ablage: str = Field(description="wo es in der Ablage liegt (Kellerwolke oder Datenordner)")
     wann: str
 
 
@@ -99,11 +99,11 @@ class Sammlungen(Begleiter):
     def __init__(self, db: Datenbank, auftraege: Auftraege, themen: Themen, bibliothek: Bibliothek, leser: Artikelleser,
                  artikel: Artikeluebersetzer, sprechdienst_fuer: Callable[[str], Sprechdienst],
                  leitstelle: Callable[[], Leitstelle | None], modell: Callable[[], str],
-                 kellerwolke: Callable[[], Kellerwolke | None], fenster: Callable[[], tuple[int, int]],
+                 ablage: Callable[[], Ablage], fenster: Callable[[], tuple[int, int]],
                  uhr: Callable[[], datetime] = lambda: datetime.now(ZONE)) -> None:
         self._db, self._auftraege, self._themen, self._bib, self._leser = db, auftraege, themen, bibliothek, leser
         self._artikel, self._sprechdienst_fuer, self._ls, self._modell = artikel, sprechdienst_fuer, leitstelle, modell
-        self._kw, self._nacht = kellerwolke, Nachtfenster(fenster, uhr)
+        self._ablage, self._nacht = ablage, Nachtfenster(fenster, uhr)
         auftraege.anmelden(Art(name=ART, titel="Sammlung bearbeiten", arbeit=self._arbeit, eingabe=SammlungsEingabe,
                                fortsetzbar=True, nach_neustart="fortsetzen", hoechstens=1,
                                herkunft=lambda e: Herkunft(titel="Zum Thema", ziel=f"themen/{e['thema']}")))   # WIKI-50
@@ -295,15 +295,15 @@ class Sammlungen(Begleiter):
     # ----- Ablage ------------------------------------------------------------------------------------------------------
 
     async def _ablegen(self, k: Kontext, t: Thema, name: str, inhalt: bytes, typ: str) -> str:
-        """In die Kellerwolke unter Apps/<App>/Sammlungen/<Thema>/; eine vorhandene Datei bekommt eine neue Fassung."""
-        kw = self._kw()
-        if kw is None:
-            raise AuftragFehler("Kellerwolke nicht eingerichtet (Einstellungen, Verbindungen)")
-        pfad = f"{(await kw.ich()).zweig}/Sammlungen/{ordnername(t.titel)}/{name}"
-        await kw.ordner(pfad.rsplit("/", 1)[0])
-        alt = await kw.finden(pfad)
-        await kw.schreiben(pfad, inhalt, stand=alt.etag if alt else None, inhaltstyp=typ)
-        return pfad
+        """In die Ablage unter Sammlungen/<Thema>/ (Kellerwolke oder Datenordner); eine vorhandene Datei bekommt einen
+        neuen Stand. Ergebnis: wo sie liegt, für Menschen."""
+        ablage = self._ablage()
+        pfad = f"Sammlungen/{ordnername(t.titel)}/{name}"
+        try:
+            await ablage.schreiben(pfad, inhalt, inhaltstyp=typ)
+        except AblageFehler as f:
+            raise AuftragFehler(f.meldung) from f
+        return await ablage.ort(pfad)
 
     async def _ergebnis(self, k: Kontext, arbeit: str, inhalt: str, ablage: str) -> None:
         e: SammlungsEingabe = k.eingabe

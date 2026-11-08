@@ -16,6 +16,7 @@ import pytest
 
 from appkern.auftraege import Auftraege
 from appkern.datenbank import Datenbank
+from ablage_probe import Speicher
 
 from app.einstellungen import TEXTMODELL
 from app.modell.artikel import Artikel
@@ -78,29 +79,6 @@ class Leitstelle:
         return Antwort(json.dumps({"text": f"Kurz: {nachrichten[1].inhalt[:20]}"}))
 
 
-@dataclass
-class Knoten:
-    etag: str
-
-
-class Kellerwolke:
-    def __init__(self) -> None:
-        self.dateien: dict[str, bytes] = {}
-
-    async def ich(self):
-        return type("Ich", (), {"zweig": "Apps/Nachschlag"})()
-
-    async def ordner(self, pfad):
-        return None
-
-    async def finden(self, pfad):
-        return Knoten("e") if pfad in self.dateien else None
-
-    async def schreiben(self, pfad, inhalt, *, stand=None, inhaltstyp=None):
-        assert (pfad in self.dateien) == (stand is not None)          # Überschreiben nur mit Stand
-        self.dateien[pfad] = inhalt
-
-
 def wav() -> bytes:
     puffer = io.BytesIO()
     with wave.open(puffer, "wb") as w:
@@ -130,7 +108,7 @@ async def db(tmp_path: Path):
 
 async def dienst(db, uhr=lambda: datetime(2026, 11, 2, 12, 0, tzinfo=ZONE)):
     auftraege = Auftraege(db, [], gleichzeitig=3)
-    kw, ls, sprecher = Kellerwolke(), Leitstelle(), Sprecher()
+    kw, ls, sprecher = Speicher(), Leitstelle(), Sprecher()
     s = Sammlungen(db, auftraege, Themen(), Bib(), Leser(), Artikel_(), lambda stimme: sprecher, lambda: ls, lambda: TEXTMODELL,
                    lambda: kw, lambda: (22, 7), uhr=uhr)
     auftraege.zurueckstellen_wenn(s.zurueckstellen)          # in der App verbindet main.py die Regeln aller Dienste
@@ -153,7 +131,7 @@ async def test_zusammenfassen_lernfragen_vertonen_in_die_kellerwolke(db):
     try:
         await s.anstossen("k", "Probe", "t1", ["zusammenfassen", "lernfragen", "vertonen"], None, "jetzt", "", "opus")
         stand = await bis_fertig(s, 3)
-        wurzel = "Apps/Nachschlag/Sammlungen/Füchse"
+        wurzel = "Sammlungen/Füchse"
         assert set(kw.dateien) == {f"{wurzel}/Zusammenfassung.md", f"{wurzel}/Lernfragen.md", f"{wurzel}/Hören/01 Rotfuchs.opus",
                                    f"{wurzel}/Hören/02 Polarfuchs.opus", f"{wurzel}/Hören/Thema anhören.m3u"}
         zusammen = kw.dateien[f"{wurzel}/Zusammenfassung.md"].decode()

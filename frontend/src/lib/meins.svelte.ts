@@ -32,7 +32,7 @@ export interface Verlaufseintrag {
   zuletzt: string;
 }
 
-/** Ein Bild an einer Notiz (WIKI-51); die Datei liegt in der Kellerwolke, Nachschlag liefert sie aus. */
+/** Ein Bild an einer Notiz (WIKI-51); die Datei liegt in der Ablage (Kellerwolke oder Datenordner), Nachschlag liefert sie aus. */
 export interface Notizbild {
   id: string;
   knoten: string;

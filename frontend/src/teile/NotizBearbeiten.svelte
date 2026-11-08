@@ -2,12 +2,13 @@
   // Eine Notiz bearbeiten (Entwurf mockups/notizen.html, rechte Leiste; am Telefon im Blatt): Stelle, Text, speichert
   // von selbst. Eine neue Notiz am ganzen Artikel kommt als `entwurf` und entsteht erst mit dem ersten Text; eine Notiz
   // an einer Stelle gibt es schon (als Markierung), sobald die Stelle markiert ist. Bilder (WIKI-51) kommen aus der
-  // Zwischenablage (Einfügen im Textfeld), durch Ablegen oder aus einer Datei; sie liegen in der Kellerwolke und
+  // Zwischenablage (Einfügen im Textfeld), durch Ablegen oder aus einer Datei; sie liegen in der Ablage und
   // stehen unter dem Text, groß im Leuchtkasten. Ein Bild an einem Entwurf legt die Notiz an.
   import { onDestroy, untrack } from "svelte";
   import { kopieren, seitenFehler } from "appkern-oberflaeche";
   import { Auswahl } from "appkern-oberflaeche";
   import { buchName } from "../lib/bibliothek.svelte";
+  import { ablageHinein } from "../lib/ablage";
   import { ZITIERFORMEN, zitierform, zitierformMerken } from "../lib/recherche.svelte";
   import { zitateHolen, type Zitate } from "../lib/schnittstelle";
   import { RUECKMELDUNG_MS, zitatMitHerkunft } from "../lib/zitat";
@@ -227,7 +228,7 @@
             placeholder={zitat ? "Ohne Text bleibt die Stelle markiert" : "Was du dir zum Artikel merken willst"}></textarea>
   <div class="gespeichert" class:fehlt={!!fehler}>
     {#if fehler}<i class="fa-solid fa-triangle-exclamation"></i>{fehler}
-    {:else if laedtHoch}<i class="fa-solid fa-spinner fa-spin"></i>{laedtHoch === 1 ? "Ein Bild" : `${laedtHoch} Bilder`} in die Kellerwolke ...
+    {:else if laedtHoch}<i class="fa-solid fa-spinner fa-spin"></i>{laedtHoch === 1 ? "Ein Bild" : `${laedtHoch} Bilder`} {ablageHinein()} ...
     {:else if speichert}<i class="fa-solid fa-spinner fa-spin"></i>Speichert ...
     {:else if gespeichertUm}<i class="fa-solid fa-check"></i>Gespeichert {vor < 5 ? "gerade eben" : vor < 60 ? `vor ${vor} Sekunden` : `vor ${Math.round(vor / 60)} Minuten`}
     {:else}<i class="fa-solid fa-floppy-disk"></i>Speichert von selbst{/if}

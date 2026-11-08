@@ -92,7 +92,7 @@ def router(geruest: Geruest, themen: Themen, suche: Suche, bibliothek: Bibliothe
 
     @r.post("/{thema}/markdown", response_model=Markdownpfad)
     async def als_markdown(thema: str, konto: Konto = geruest.mensch) -> Markdownpfad:
-        """Das Thema als Markdown in die Kellerwolke (WIKI-23): Bereiche, Artikel mit Verweisen, ihre Notizen und die
+        """Das Thema als Markdown in die Ablage (WIKI-23): Bereiche, Artikel mit Verweisen, ihre Notizen und die
         Literaturliste; eine vorhandene Datei bekommt eine neue Fassung."""
         t = _da(await themen.thema(konto.id, thema))
         liste = await literatur(thema, "einfach", konto)

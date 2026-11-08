@@ -1,5 +1,5 @@
 // Artikel aus Quellen in anderer Sprache (WIKI-8): auf diesem Gerät auf Deutsch zeigen oder in der Sprache der Quelle.
-// An zeigt eine vorhandene Übersetzung gleich; eine neue stößt nur der Knopf an (jede kostet Rechenzeit am Mac).
+// An zeigt eine vorhandene Übersetzung gleich; eine neue stößt nur der Knopf an (jede kostet Rechenzeit der KI).
 import type { ArtikelUebersetzung } from "./schnittstelle";
 import type { Artikel } from "./typen";
 

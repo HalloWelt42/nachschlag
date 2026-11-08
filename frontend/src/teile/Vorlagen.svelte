@@ -2,10 +2,11 @@
   // Vorlagen (Entwurf mockups/export-vorlage.html): eine Vorlage beschreibt ein Buch in drei Teilen. Aufbau (welche Teile
   // in welcher Reihenfolge, je Teil aus den Büchern oder von der KI), Anweisung an die KI (Ton, Vorgaben, eigener Zusatz,
   // feste Regeln) und Gestaltung. Mitgelieferte sind fest und lassen sich als eigene kopieren; jede eigene ist eine Datei
-  // in der Kellerwolke und wird nach jeder Änderung gespeichert. Weg: themen/<thema>/buch/vorlagen?vorlage=<kennung>.
+  // in der Ablage (Kellerwolke oder Datenordner) und wird nach jeder Änderung gespeichert. Weg: themen/<thema>/buch/vorlagen?vorlage=<kennung>.
   import { untrack } from "svelte";
   import { Auswahl, gehe, geraet, navigation, Rueckfrage, seitenFehler } from "appkern-oberflaeche";
   import Buchdeckel from "./Buchdeckel.svelte";
+  import { geloeschtWird, inKellerwolke } from "../lib/ablage";
   import {
     BILDER, FARBEN, FUER_WEN, HERKUNFT, LAENGE, TON, buecher, datum, vorlageDatei, vorlageKopieren, vorlageLoeschen, vorlagenLaden,
     vorlageSpeichern, type Teil, type Teilart, type Vorlage,
@@ -19,7 +20,7 @@
                                       "fragen", "glossar", "literatur"]);
 
   let v = $state<Vorlage | null>(null);
-  let gespeichert = "";                                      // Stand, der in der Kellerwolke liegt (zum Vergleich)
+  let gespeichert = "";                                      // Stand, der in der Ablage liegt (zum Vergleich)
   let zustand = $state<{ art: "" | "speichert" | "gespeichert" | "fehler"; text: string }>({ art: "", text: "" });
   let neu = $state<string | null>(null);
   let loeschenFragen = $state(false);
@@ -222,7 +223,7 @@
         </div>
         {#if zustand.art === "fehler"}<div class="fehlertext">{zustand.text}</div>{/if}
         {#if loeschenFragen}
-          <Rueckfrage frage="Vorlage {v.titel} löschen?" hinweis="Die Datei geht in den Papierkorb der Kellerwolke; fertige Bücher bleiben."
+          <Rueckfrage frage="Vorlage {v.titel} löschen?" hinweis="Die Datei {geloeschtWird(false)}; fertige Bücher bleiben."
                       knopf="Löschen" onabbrechen={() => (loeschenFragen = false)} onja={loeschen} />
         {/if}
 
@@ -304,7 +305,7 @@
 
         <div class="exp-datei">
           <i class="fa-solid fa-file-code"></i><span>{v.mitgeliefert ? "Mitgeliefert, im Programm" : "Liegt als Datei"}</span>
-          <code>{v.mitgeliefert ? `${v.kennung}.toml` : `Kellerwolke / ${buecher.ordner.replace(/^Apps\//, "").split("/").join(" / ")} / ${v.kennung}.toml`}</code>
+          <code>{v.mitgeliefert ? `${v.kennung}.toml` : `${inKellerwolke() ? "Kellerwolke" : "Datenordner"} / ${buecher.ordner.replace(/^Apps\//, "").split("/").join(" / ")} / ${v.kennung}.toml`}</code>
           <span class="rechts"><a class="knopf still" href={vorlageDatei(v.kennung)} download="{v.kennung}.toml"><i class="fa-solid fa-share-nodes"></i>Weitergeben</a></span>
         </div>
       </div>

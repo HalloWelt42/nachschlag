@@ -1,13 +1,17 @@
-"""Einstellungen von Nachschlag. Kellerwolke, Leitstelle und weitere Konten bringt das Gerüst mit; die Seite
+"""Einstellungen von Nachschlag. Kellerwolke, Leitstelle, Anmeldung und weitere Konten bringt das Gerüst mit; die Seite
 Einstellungen der Oberfläche entsteht hieraus von selbst (Reiter je Gruppe). Vorgaben sind neutral: Adressen im eigenen
-Netz kommen über die Umgebung (`NACHSCHLAG_<FELD>`) oder die Seite Einstellungen, nie ins Repo."""
+Netz kommen über die Umgebung (`NACHSCHLAG_<FELD>`) oder die Seite Einstellungen, nie ins Repo.
+
+Nachschlag beginnt frisch ohne Anmeldung (WIKI-11): ein Nutzer für alle Geräte, nur für das eigene Netz. Mit dem Konto
+der Kellerwolke meldet sich jeder an (Einstellungen, Zugang, oder `NACHSCHLAG_ANMELDUNG=kellerwolke`); eine Installation,
+die schon eine Kellerwolke eingetragen hat, bleibt beim ersten Start mit Anmeldung (Bestandsschutz im Appkern)."""
 
 from typing import Literal
 
 from pydantic import Field, SecretStr, field_validator
 
 from appkern.app import Grundeinstellungen
-from appkern.app.einstellungen import VERBINDUNGEN
+from appkern.app.einstellungen import OHNE_ANMELDUNG, VERBINDUNGEN, Anmeldeart, anmeldung_feld
 
 BIBLIOTHEK = {"gruppe": "Bibliothek"}
 SUCHE = {"gruppe": "Suche"}
@@ -37,6 +41,8 @@ ARTEN_JE_STUFE: dict[str, list[str]] = {
 
 
 class AppEinstellungen(Grundeinstellungen):
+    anmeldung: Anmeldeart = anmeldung_feld(OHNE_ANMELDUNG)
+
     # --- Bibliothek -------------------------------------------------------------------------------------------------
     buecher_ordner: str = Field("/buecher", title="Ordner der ZIM-Libs", json_schema_extra=BIBLIOTHEK,
                                 description="Jede ZIM-Datei in diesem Ordner ist eine Quelle; neue Dateien erscheinen von selbst. "
@@ -124,33 +130,34 @@ class AppEinstellungen(Grundeinstellungen):
     eigene_indizes: Literal["keine", "handbuecher", "handbuecher_fragen", "alle"] = Field(
         "handbuecher_fragen", title="Quellen mit eigenem Index", json_schema_extra={**SUCHE, "beschriftungen": EIGENE_INDIZES},
         description="Ein eigener Index findet Namen aus dem Code (array_map), Rubriken und Einleitungen und sucht in Quellen "
-                    "ohne eingebauten Index. Gebaut wird er auf dem Mac, kleine Quellen zuerst; bis er steht, sucht die Quelle "
-                    "über den Index der ZIM-Datei.")
+                    "ohne eingebauten Index. Gebaut wird er beim Index-Dienst, kleine Quellen zuerst; bis er steht, sucht "
+                    "die Quelle über den Index der ZIM-Datei.")
     eigenindex_hoechstens_gb: float = Field(
         5, ge=0, title="Eigener Index von selbst bis", json_schema_extra={**SUCHE, "schritt": 1, "einheit": "GB"},
         description="Quellen bis zu dieser Größe bekommen ihren Index von selbst. Größere (etwa Stack Overflow, 115 GB) "
-                    "brauchen auf dem Mac viele Stunden und mehrere hundert GB Platz; sie beginnen erst, wenn die Grenze "
-                    "darüber liegt.")
+                    "brauchen beim Index-Dienst viele Stunden und mehrere hundert GB Platz; sie beginnen erst, wenn die "
+                    "Grenze darüber liegt.")
     eigenindex_ordner: str = Field("/eigenindex", title="Ordner der eigenen Indizes", json_schema_extra=SUCHE,
                                    description="Je Quelle eine Datei. Leer: keine eigenen Indizes. Gehört in die Sicherung "
                                                "(Rechenzeit), anders als die ZIM-Libs.")
     kategorien_aus_abzuegen: bool = Field(
         True, title="Kategorien für Wikipedia", json_schema_extra=SUCHE,
         description="Die Bücher der Wikipedia (und anderer Wikis von Wikimedia) bringen keine Kategorien mit. Der "
-                    "Index-Dienst auf dem Mac lädt dafür die Datenabzüge von Wikimedia (gut 1 GB je Wiki, monatlich neu) "
+                    "Index-Dienst lädt dafür die Datenabzüge von Wikimedia (gut 1 GB je Wiki, monatlich neu) "
                     "und baut je Buch die Kategorien; danach stehen sie am Ende jedes Artikels und als eigene Seiten.")
     indexdienst_schluessel: SecretStr = Field(SecretStr(""), title="Schlüssel des Index-Dienstes", json_schema_extra=SUCHE,
-                                              description="Mit diesem Schlüssel holt der Index-Dienst auf dem Mac die "
+                                              description="Mit diesem Schlüssel holt der Index-Dienst (ein eigener Rechner) die "
                                                           "Aufträge hier ab (dort NACHSCHLAG_INDEX_SCHLUESSEL). Leer: "
                                                           "kein Index-Dienst, es wird nichts gebaut.")
     codeschmiede_adresse: str = Field("", title="Ausprobieren (Codeschmiede)", json_schema_extra=VERBINDUNGEN,
                                       description="Adresse der Codeschmiede: in ihrer Sandbox laufen Beispiele aus Handbüchern "
                                                   "zum Ausprobieren und Debuggen (sie muss Nachschlag zulassen). Leer: ohne "
                                                   "Ausprobieren.")
-    notizen_als_markdown: bool = Field(True, title="Notizen als Markdown in die Kellerwolke", json_schema_extra=MEINS,
+    notizen_als_markdown: bool = Field(True, title="Notizen als Markdown ablegen", json_schema_extra=MEINS,
                                        description="Nach jeder Änderung liegen die Notizen eines Artikels als Markdown im "
-                                                   "Ordner Notizen der App in der Kellerwolke (je Quelle und Artikel); "
-                                                   "aus: nur in Nachschlag.")
+                                                   "Ordner Notizen der Ablage (je Quelle und Artikel): in der Kellerwolke, "
+                                                   "wenn eine eingetragen ist, sonst im Datenordner von Nachschlag. Aus: nur "
+                                                   "in Nachschlag.")
     fundus_adresse: str = Field("", title="Bedeutungssuche (Fundus)", json_schema_extra=SUCHE,
                                 description="Adresse des Fundus, der die Artikel einer Quelle nach Abschnitten eingebettet hält. "
                                             "Leer: Nachschlag sucht nur im Index der Quellen.")
@@ -218,8 +225,10 @@ class AppEinstellungen(Grundeinstellungen):
                                  title="Absender bei der Bildquelle", json_schema_extra=BILDER,
                                  description="Die Bildquelle verlangt eine Kennung mit Kontakt (Webseite oder E-Mail), sonst "
                                              "sperrt sie (gemessen 08.11.2026). Vorgabe: die Seite des Projekts.")
-    bildholer_adresse: str = Field("http://bildholer:8000", title="Adresse des Bildholers", json_schema_extra=BILDER,
-                                   description="Im eigenen Netz der Container. Leer: kein Bildholer.")
+    bildholer_adresse: str = Field("", title="Adresse des Bildholers", json_schema_extra=BILDER,
+                                   description="Im eigenen Netz der Container, etwa http://bildholer:8000 (compose.pi.yml "
+                                               "setzt sie). Leer: kein Bildholer, die Artikel zeigen die Bilder aus den "
+                                               "Büchern.")
     bilder_ordner: str = Field("/bilder", title="Ablage der großen Bilder", json_schema_extra=BILDER,
                                description="Hier legt der Bildholer die Bilder ab; Nachschlag liest sie nur.")
 

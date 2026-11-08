@@ -42,7 +42,8 @@ def router(geruest: Geruest, meins: Meins, bilder: Notizbilder, markdown: Markdo
 
     @r.post("/notizen/markdown", response_model=Markdownstand)
     async def notizen_als_markdown(konto: Konto = geruest.mensch) -> Markdownstand:
-        """Alle Notizen als Markdown in die Kellerwolke (WIKI-23): je Artikel eine Datei unter Notizen/<Quelle>/."""
+        """Alle Notizen als Markdown in die Ablage (WIKI-23; Kellerwolke oder Datenordner): je Artikel eine Datei unter
+        Notizen/<Quelle>/."""
         try:
             dateien, ordner = await markdown.alle_ablegen(konto.id)
         except MarkdownFehler as f:
@@ -84,7 +85,7 @@ def router(geruest: Geruest, meins: Meins, bilder: Notizbilder, markdown: Markdo
 
     @r.delete("/notizen/{kennung}/bilder/{bild_id}", status_code=204)
     async def bild_entfernen(kennung: str, bild_id: str, konto: Konto = geruest.mensch) -> Response:
-        """Das Bild von der Notiz; die Datei kommt in den Papierkorb der Kellerwolke."""
+        """Das Bild von der Notiz; die Datei geht aus der Ablage (in der Kellerwolke: in den Papierkorb)."""
         try:
             await bilder.entfernen(konto.id, kennung, bild_id)
         except BildFehler as f:
@@ -172,7 +173,7 @@ def inhalt_router(geruest: Geruest, bilder: Notizbilder) -> APIRouter:
 
     @r.get("/notizbilder/{kennung}/{bild_id}", response_class=StreamingResponse)
     async def bild(kennung: str, bild_id: str, konto: Konto = geruest.lesen) -> StreamingResponse:
-        """Das Bild aus der Kellerwolke; ein Bild ändert sich nie (neues Bild, neue Kennung)."""
+        """Das Bild aus der Ablage; ein Bild ändert sich nie (neues Bild, neue Kennung)."""
         try:
             b, inhalt = await bilder.lesen(konto.id, kennung, bild_id)
         except BildFehler as f:

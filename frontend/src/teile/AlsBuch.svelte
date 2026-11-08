@@ -1,11 +1,12 @@
 <script lang="ts">
   // Als Buch (Entwurf mockups/export.html, am Telefon telefon-export.html): ein Thema wird ein Buch. Vier Schritte
-  // untereinander (Inhalt, Vorlage, Umformung, Format und Ablage), rechts immer Vorschau, Dauer aus der Hausmessung und
+  // untereinander (Inhalt, Vorlage, Umformung, Format und Ablage), rechts immer Vorschau, Dauer aus einem Richtwert und
   // wann gebaut wird. Erst ein Probekapitel ansehen, dann jetzt oder heute Nacht bauen. Weg: themen/<thema>/buch.
   import { onMount, untrack } from "svelte";
   import { gehe, geraet, navigation, seitenFehler } from "appkern-oberflaeche";
   import Buchblatt from "./Buchblatt.svelte";
   import Buchdeckel from "./Buchdeckel.svelte";
+  import { ablageIn, inKellerwolke } from "../lib/ablage";
   import {
     FUER_WEN, LAENGE, SEITEN, bauen, bestellungFuer, buecher, buchwahlHolen, dauerText, probeAnstossen, probeHolen,
     schaetzen, teileVon, titelVon, uhrzeit, vorlagenLaden, zahl, type Bestellung, type Buchwahl, type Schaetzung,
@@ -279,8 +280,8 @@
                   {:else}<span class="exp-leise">Die Artikel haben keine Bilder; der Deckel bleibt in der Farbe der Vorlage.</span>{/each}
                 </span></div>
             {/if}
-            <div class="feld"><div class="was"><div class="name">Ablage</div><div class="beschreibung">Fertige Bücher liegen in der Kellerwolke und unter Eigene Bücher zum Herunterladen.</div></div>
-              <span class="eingabe-schein"><i class="fa-solid fa-cloud"></i>{pfad}</span></div>
+            <div class="feld"><div class="was"><div class="name">Ablage</div><div class="beschreibung">Fertige Bücher liegen {ablageIn()} und unter Eigene Bücher zum Herunterladen.</div></div>
+              <span class="eingabe-schein"><i class="fa-solid {inKellerwolke() ? 'fa-cloud' : 'fa-folder'}"></i>{pfad}</span></div>
           </div>
         </div>
 
@@ -307,7 +308,7 @@
                 {#each schaetzung.schritte as s (s.titel)}<div class="z"><span>{s.titel}</span><span>{dauerText(s.sekunden)}</span></div>{/each}
                 <div class="z summe"><span>Zusammen</span><span>{dauerText(schaetzung.sekunden)}</span></div>
               </div>
-              <div class="exp-grundlage">{#if vorlage?.ki}Grundlage: {schaetzung.gemessen ? "gemessen beim letzten Buch" : "Hausmessung"} über die Leitstelle, {schaetzung.modell} schreibt rund {zahl(schaetzung.tempo)} Zeichen je Sekunde; nach jedem Auftrag misst Nachschlag neu.{:else}Ohne KI: Artikel lesen, Bilder holen, Satz.{/if}</div>
+              <div class="exp-grundlage">{#if vorlage?.ki}Grundlage: {schaetzung.gemessen ? "gemessen beim letzten Buch" : "Richtwert"} über die Leitstelle, {schaetzung.modell} schreibt rund {zahl(schaetzung.tempo)} Zeichen je Sekunde; nach jedem Auftrag misst Nachschlag neu.{:else}Ohne KI: Artikel lesen, Bilder holen, Satz.{/if}</div>
             {:else}<p class="exp-leise">Rechnet ...</p>{/if}
           </div>
           <div class="karte">

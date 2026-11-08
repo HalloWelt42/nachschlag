@@ -14,6 +14,7 @@
     themaHolen, themaLoeschen, verschieben, type Angebot, type Thema, type Themeneintrag,
   } from "../lib/themen.svelte";
   import { lesen } from "../lib/ziele";
+  import { ablageHinein } from "../lib/ablage";
   import UeberNacht from "./UeberNacht.svelte";
   import Kachel from "./Kachel.svelte";
 
@@ -24,7 +25,7 @@
    *  gibt es nur direkt im Klick, ohne Warten dazwischen. */
   let literatur = $state("");
   let literaturKopiert = $state<"" | "ja" | "nein">("");
-  // Als Markdown in die Kellerwolke (WIKI-23): leer, läuft, oder der Pfad der Datei bzw. die Meldung des Fehlers
+  // Als Markdown in die Ablage (WIKI-23): leer, läuft, oder der Pfad der Datei bzw. die Meldung des Fehlers
   let markdown = $state<{ zustand: "" | "laeuft" | "fertig" | "fehler"; text: string }>({ zustand: "", text: "" });
 
   async function alsMarkdown(id: string) {
@@ -321,10 +322,10 @@
                  optionen={ZITIERFORMEN} onwahl={zitierformMerken} />
         <button class="knopf" disabled={markdown.zustand === "laeuft"} onclick={() => alsMarkdown(id)}
                 title={markdown.zustand === "fertig" ? `Abgelegt: ${markdown.text}` : markdown.zustand === "fehler" ? markdown.text
-                  : "Das Thema mit Bereichen, Artikeln, Notizen und Literatur als Markdown in die Kellerwolke (Ordner Themen der App)"}>
+                  : `Das Thema mit Bereichen, Artikeln, Notizen und Literatur als Markdown ${ablageHinein()} (Ordner Themen)`}>
           <i class="fa-solid {markdown.zustand === 'laeuft' ? 'fa-spinner fa-spin' : markdown.zustand === 'fertig' ? 'fa-check'
             : markdown.zustand === 'fehler' ? 'fa-triangle-exclamation' : 'fa-file-export'}"></i><span class="wort">{markdown.zustand === "fertig"
-            ? "In der Kellerwolke" : markdown.zustand === "fehler" ? "Geht nicht" : "Als Markdown"}</span></button>
+            ? "Abgelegt" : markdown.zustand === "fehler" ? "Geht nicht" : "Als Markdown"}</span></button>
       {/if}
       <div class="rechts">
         <span class="segment">
