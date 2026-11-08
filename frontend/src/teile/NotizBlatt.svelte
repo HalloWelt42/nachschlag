@@ -35,6 +35,7 @@
 
   async function fertig() {
     await editor?.jetztSpeichern();
+    await editor?.leerVerwerfen();       // leere Notiz am ganzen Artikel nicht stehen lassen (WIKI-54)
     onzu();
   }
 

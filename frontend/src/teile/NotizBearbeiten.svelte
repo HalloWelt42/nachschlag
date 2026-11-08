@@ -193,6 +193,15 @@
     setTimeout(() => (kopiert = ""), RUECKMELDUNG_MS);
   }
 
+  /** Beim Schließen (WIKI-54): eine Notiz am ganzen Artikel ohne Text und ohne Bilder sagt nichts und zählt nur mit;
+   *  sie geht weg. An einer Stelle bleibt sie, dort markiert sie die Stelle. */
+  export async function leerVerwerfen(): Promise<void> {
+    await laufend;
+    if (!id || weg || zitat || text.trim() || bilder.length || laedtHoch) return;
+    weg = true;
+    await notizLoeschen(id).catch(() => { weg = false; });
+  }
+
   export function fokus() {
     feld?.focus();
   }
