@@ -27,31 +27,32 @@
 
   // eigener Reiter in den Einstellungen: der Stand des Bildholers (WIKI-80); seine Regeln stehen im erzeugten Reiter Bilder
   const einstellungen: EinstellungsReiter[] = [{ schluessel: "bildholer", titel: "Bildholer", seite: Bildholer }];
+  // gegliedert wie in den Entwürfen (WIKI-22): Lesen, Meins, dann App mit der Schnittstelle vor den Teilen des Appkerns
   const bereiche: Bereich[] = [
-    { schluessel: "start", titel: "Start", symbol: "fa-house", seite: Start, reiter: true, hinweis: "Suchen, stöbern, die Quellen der Bibliothek" },
-    { schluessel: "lesen", titel: "Artikel", symbol: "fa-book-open", seite: Lesen, reiter: false, hinweis: "Der zuletzt geöffnete Artikel" },
-    { schluessel: "stoebern", titel: "Stöbern", symbol: "fa-shuffle", seite: Stoebern, reiter: false,
+    { gruppe: "Lesen", schluessel: "start", titel: "Start", symbol: "fa-house", seite: Start, reiter: true, hinweis: "Suchen, stöbern, die Quellen der Bibliothek" },
+    { gruppe: "Lesen", schluessel: "lesen", titel: "Artikel", symbol: "fa-book-open", seite: Lesen, reiter: false, hinweis: "Der zuletzt geöffnete Artikel" },
+    { gruppe: "Lesen", schluessel: "suche", titel: "Suche", symbol: "fa-magnifying-glass", seite: Suche, reiter: true, hinweis: "Alle Treffer zu einer Frage" },
+    { gruppe: "Lesen", schluessel: "stoebern", titel: "Stöbern", symbol: "fa-shuffle", seite: Stoebern, reiter: false,
       hinweis: "Zufallsfunde, Entdeckungspfad und Blättern wie im Buch" },
-    { schluessel: "medien", titel: "Medien", symbol: "fa-images", seite: Medien, reiter: false,
-      hinweis: "Bilder zu einem Begriff aus den Artikeln der Quellen, groß ansehen" },
-    { schluessel: "suche", titel: "Suche", symbol: "fa-magnifying-glass", seite: Suche, reiter: true, hinweis: "Alle Treffer zu einer Frage" },
-    { schluessel: "kategorien", titel: "Kategorien", kurz: "Kategorie", symbol: "fa-shapes", seite: Kategorien, reiter: true,
+    { gruppe: "Lesen", schluessel: "kategorien", titel: "Kategorien", kurz: "Kategorie", symbol: "fa-shapes", seite: Kategorien, reiter: true,
       hinweis: "Die Bücher nach Art: Nachschlagewerke, Dokumentation, Frage und Antwort, Anleitungen" },
-    { schluessel: "register", titel: "Register", symbol: "fa-tags", seite: Register, reiter: false,
+    { gruppe: "Lesen", schluessel: "register", titel: "Register", symbol: "fa-tags", seite: Register, reiter: false,
       hinweis: "Schlagwörter und Autoren der Frage-Antwort-Quellen" },
-    { schluessel: "merkzettel", titel: "Merkzettel", symbol: "fa-bookmark", seite: Merkzettel, reiter: false,
-      hinweis: "Gemerkte Seiten mit Lesestand, auf allen Geräten", zahl: () => meins.merkzettel.length },
-    { schluessel: "notizen", titel: "Notizen", symbol: "fa-note-sticky", seite: Notizen, reiter: false,
-      hinweis: "Notizen und Markierungen an Artikeln und Stellen, auf allen Geräten", zahl: () => meins.notizen.length },
-    { schluessel: "themen", titel: "Themen", symbol: "fa-layer-group", seite: Themen, reiter: false,
-      hinweis: "Eigene Sammlungen von Artikeln aus allen Quellen, in Bereichen", zahl: () => themen.liste.length },
-    { schluessel: "bibliothek", titel: "Bibliothek", kurz: "Katalog", symbol: "fa-swatchbook", seite: Bibliothek, reiter: true,
+    { gruppe: "Lesen", schluessel: "medien", titel: "Medien", symbol: "fa-images", seite: Medien, reiter: false,
+      hinweis: "Bilder zu einem Begriff aus den Artikeln der Quellen, groß ansehen" },
+    { gruppe: "Lesen", schluessel: "bibliothek", titel: "Bibliothek", kurz: "Katalog", symbol: "fa-swatchbook", seite: Bibliothek, reiter: true,
       hinweis: "Meine Bücher, der Katalog mit allem Neuen, Fassungen und Laden",
       // beim Laden: wie viele Bücher laden oder warten, dazu der Balken des laufenden; sonst das Neue im Verzeichnis
       zahl: () => ladeZahl() || (lader.stand?.neu_ungesehen ?? 0), fortschritt: ladeAnteil },
-    { schluessel: "schnittstelle", titel: "Schnittstelle", symbol: "fa-plug", seite: Schnittstelle, reiter: false,
+    { gruppe: "Meins", schluessel: "merkzettel", titel: "Merkzettel", symbol: "fa-bookmark", seite: Merkzettel, reiter: false,
+      hinweis: "Gemerkte Seiten mit Lesestand, auf allen Geräten", zahl: () => meins.merkzettel.length },
+    { gruppe: "Meins", schluessel: "notizen", titel: "Notizen", symbol: "fa-note-sticky", seite: Notizen, reiter: false,
+      hinweis: "Notizen und Markierungen an Artikeln und Stellen, auf allen Geräten", zahl: () => meins.notizen.length },
+    { gruppe: "Meins", schluessel: "themen", titel: "Themen", symbol: "fa-layer-group", seite: Themen, reiter: false,
+      hinweis: "Eigene Sammlungen von Artikeln aus allen Quellen, in Bereichen", zahl: () => themen.liste.length },
+    { gruppe: "Meins", schluessel: "verlauf", titel: "Verlauf", symbol: "fa-clock-rotate-left", seite: Verlauf, reiter: false, hinweis: "Gelesenes und Gesuchtes, auf allen Geräten" },
+    { gruppe: "App", schluessel: "schnittstelle", titel: "Schnittstelle", symbol: "fa-plug", seite: Schnittstelle, reiter: false,
       hinweis: "Alle Wege der Schnittstelle zum Nachlesen und Ausprobieren (für eigene Werkzeuge und andere Apps)" },
-    { schluessel: "verlauf", titel: "Verlauf", symbol: "fa-clock-rotate-left", seite: Verlauf, reiter: false, hinweis: "Gelesenes und Gesuchtes, auf allen Geräten" },
   ];
 </script>
 
