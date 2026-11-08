@@ -351,6 +351,46 @@
         "nachschlag.leseansicht": "a",
         "nachschlag.startansicht": "a"
       }
+    },
+    {
+      "name": "als-buch",
+      "pfad": "/themen/1a116a3c-62e8-4aaf-af2a-9f3c85a91c82/buch",
+      "speicher": {
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
+      }
+    },
+    {
+      "name": "probekapitel",
+      "pfad": "/themen/1a116a3c-62e8-4aaf-af2a-9f3c85a91c82/buch/probe",
+      "speicher": {
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
+      }
+    },
+    {
+      "name": "buchvorlagen",
+      "pfad": "/themen/1a116a3c-62e8-4aaf-af2a-9f3c85a91c82/buch/vorlagen?vorlage=lernheft",
+      "speicher": {
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
+      }
+    },
+    {
+      "name": "eigene-buecher",
+      "pfad": "/buecher",
+      "speicher": {
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
+      }
+    },
+    {
+      "name": "buch-lesen",
+      "pfad": "/buecher/4d920cc3-dc1c-41a3-8684-b5e63797e811",
+      "speicher": {
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
+      }
     }
   ]
 }

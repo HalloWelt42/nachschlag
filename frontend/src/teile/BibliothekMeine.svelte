@@ -128,5 +128,5 @@
       </div>
     </div>
   {/each}
-  {#each bibliothek.fehler as f}<div class="fehlertext">{f}</div>{/each}
+  {#each bibliothek.fehler as f}<div class="fehlertext buchfehler">{f}</div>{/each}
 </div>

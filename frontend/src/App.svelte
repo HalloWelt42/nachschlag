@@ -9,6 +9,8 @@
   import Merkzettel from "./seiten/Merkzettel.svelte";
   import Notizen from "./seiten/Notizen.svelte";
   import Themen from "./seiten/Themen.svelte";
+  import Buecher from "./seiten/Buecher.svelte";
+  import { buecher, regalLaden } from "./lib/buecher.svelte";
   import { themen } from "./lib/themen.svelte";
   import Verlauf from "./seiten/Verlauf.svelte";
   import Start from "./seiten/Start.svelte";
@@ -23,6 +25,10 @@
   // Zahl des Neuen am Menüpunkt Bibliothek: geholt, sobald jemand angemeldet ist
   $effect(() => {
     if (sitzung.angemeldet) void laderLaden(true);
+  });
+  // Zahl der eigenen Bücher am Menüpunkt (WIKI-45)
+  $effect(() => {
+    if (sitzung.angemeldet) regalLaden().catch(() => {});
   });
 
   // eigener Reiter in den Einstellungen: der Stand des Bildholers (WIKI-80); seine Regeln stehen im erzeugten Reiter Bilder
@@ -50,6 +56,8 @@
       hinweis: "Notizen und Markierungen an Artikeln und Stellen, auf allen Geräten", zahl: () => meins.notizen.length },
     { gruppe: "Meins", schluessel: "themen", titel: "Themen", symbol: "fa-layer-group", seite: Themen, reiter: false,
       hinweis: "Eigene Sammlungen von Artikeln aus allen Quellen, in Bereichen", zahl: () => themen.liste.length },
+    { gruppe: "Meins", schluessel: "buecher", titel: "Eigene Bücher", kurz: "Bücher", symbol: "fa-book-bookmark", seite: Buecher, reiter: false,
+      hinweis: "Themen als Buch (EPUB und PDF): was gerade entsteht und das Regal der fertigen", zahl: () => buecher.regal?.fertig.length ?? 0 },
     { gruppe: "Meins", schluessel: "verlauf", titel: "Verlauf", symbol: "fa-clock-rotate-left", seite: Verlauf, reiter: false, hinweis: "Gelesenes und Gesuchtes, auf allen Geräten" },
     { gruppe: "App", schluessel: "schnittstelle", titel: "Schnittstelle", symbol: "fa-plug", seite: Schnittstelle, reiter: false,
       hinweis: "Alle Wege der Schnittstelle zum Nachlesen und Ausprobieren (für eigene Werkzeuge und andere Apps)" },

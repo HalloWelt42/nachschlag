@@ -233,7 +233,7 @@
           <Buchkachel buch={b} />
         {/each}
       </div>
-      {#each bibliothek.fehler as f}<div class="fehlertext">{f}</div>{/each}
+      {#each bibliothek.fehler as f}<div class="fehlertext buchfehler">{f}</div>{/each}
       {#if bibliothek.buecher.length}
         <!-- Archiv der Quellen (WIKI-46): ältere Fassungen von selbst, andere von Hand; je Quelle mitnutzen oder wieder aktiv -->
         <details class="archiv-block">

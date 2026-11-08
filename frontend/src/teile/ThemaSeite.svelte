@@ -3,7 +3,7 @@
   // Suche, Bereiche mit Artikeln als Karten oder Liste. Ziehen ordnet Artikel und Bereiche (am Rechner); in der Liste
   // wählt man den Bereich (überall, auch am Telefon).
   import Buchmarke from "./Buchmarke.svelte";
-  import { Auswahl, beiAuftrag, geraet, hole, json, kopieren, navigation, Rueckfrage, seitenFehler, type Auftrag } from "appkern-oberflaeche";
+  import { Auswahl, beiAuftrag, gehe, geraet, hole, json, kopieren, navigation, Rueckfrage, seitenFehler, type Auftrag } from "appkern-oberflaeche";
   import { onMount } from "svelte";
   import { RUECKMELDUNG_MS } from "../lib/zitat";
   import { ZITIERFORMEN, zitierform, zitierformMerken } from "../lib/recherche.svelte";
@@ -307,6 +307,11 @@
           <button class="knopf" disabled={ordnen.laeuft} onclick={() => ordnenStarten("einsortieren")}
                   title="Die KI ordnet Artikel ohne Bereich den vorhandenen Bereichen zu; erst Übernehmen ändert das Thema">
             <i class="fa-solid fa-arrow-right-to-bracket"></i><span class="wort">Einsortieren lassen</span></button>
+        {/if}
+        {#if thema && thema.eintraege.length}
+          <button class="knopf" onclick={() => gehe(`themen/${id}/buch`)}
+                  title="Das Thema als Buch (EPUB und PDF), nach einer Vorlage umgeformt, jetzt oder über Nacht">
+            <i class="fa-solid fa-book"></i><span class="wort">Als Buch</span></button>
         {/if}
         {#if geraet.mobil && !bearbeiten}<button class="knopf" onclick={bearbeitenBeginnen}><i class="fa-solid fa-pen"></i><span class="wort">Bearbeiten</span></button>{/if}
         <button class="knopf" class:kopiert-ok={literaturKopiert === "ja"} onclick={literaturKopieren}

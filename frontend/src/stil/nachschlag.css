@@ -1164,6 +1164,8 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 /* Abstand oben nur bei Reitern ohne stehenden Kopf; der Katalog hat seinen Seitenkopf mit eigenem Abstand (WIKI-63) */
 .bib-oben { padding-top: var(--a4); }
 .bib-reiter .neu-fassung { margin-left: 6px; }
+/* Fehler beim Öffnen einer Datei nennen lange Pfade ohne Leerzeichen: umbrechen, wo nötig */
+.fehlertext.buchfehler { overflow-wrap: anywhere; }
 .bibliothek { display: flex; flex-direction: column; gap: var(--a4); max-width: 1180px; padding-bottom: var(--a6); }
 .bibliothek .fundband, .katalog-seite .fundband { margin: 0; flex-wrap: wrap; }
 .ordnerzeile { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a3); padding: var(--a3) var(--a4); border-radius: var(--r3); background: var(--flaeche-2);
@@ -1553,3 +1555,327 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .ordnungsvorschlag .ordnung-kopf { display: flex; gap: var(--a3); align-items: baseline; flex-wrap: wrap; }
 .ordnungsvorschlag .ordnung-bereich { display: flex; gap: var(--a2); align-items: baseline; flex-wrap: wrap; }
 .ordnungsvorschlag .neu { font-size: var(--marke); color: var(--gut); }
+
+/* ===== Als Buch (WIKI-45, Entwürfe export.html, export-probe.html, export-vorlage.html, export-buecher.html,
+   telefon-export.html): Seite Als Buch mit vier Schritten und Vorschau, Probekapitel, Vorlagen, Eigene Bücher ===== */
+.exp-buehne { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--a4); max-width: 1240px; align-items: start; padding-bottom: var(--a6); }
+.exp-schritte { display: flex; flex-direction: column; gap: var(--a4); min-width: 0; }
+.exp-schritte .karte { max-width: none; margin-bottom: 0; padding-bottom: var(--a2); }
+.exp-schritte .karte h2 .neben { font-size: var(--klein); font-weight: 400; color: var(--text-3); }
+.karte h2 .exp-nr { width: 26px; height: 26px; border-radius: var(--r2); display: grid; place-items: center; background: var(--akzent-weich); color: var(--akzent);
+                    font-family: var(--schrift-zahl); font-size: var(--klein); flex: none; }
+.karte h2 .exp-nr.fertig { background: var(--gut-weich); color: var(--gut); }
+.chip.exp-chip { border: 0; font: inherit; font-size: var(--klein); color: var(--text-2); cursor: pointer; }
+.chip.exp-chip.an { background: var(--akzent-weich); color: var(--akzent); font-weight: 600; }
+.chip.exp-chip:disabled { opacity: .5; cursor: default; }
+.exp-schritte .wert-rechts { display: flex; flex-wrap: wrap; gap: var(--a2); align-items: center; justify-self: start; min-width: 0; }
+.exp-schritte .wert-zahl { display: inline-flex; align-items: center; gap: var(--a2); justify-self: start; }
+.exp-schritte .wert-zahl b { font-family: var(--schrift-zahl); min-width: 3ch; text-align: center; font-size: var(--gross); }
+.exp-schritte .wert-zahl .knopf { width: var(--knopf-hoehe); padding: 0; justify-content: center; }
+.exp-schritte .eingabe-schein { display: flex; align-items: center; gap: var(--a2); height: var(--knopf-hoehe); padding: 0 12px; border-radius: var(--r2); background: var(--flaeche);
+                                border: 1px solid var(--rand); font-size: var(--klein); min-width: 0; width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.exp-schritte .eingabe-schein i { color: var(--text-3); }
+.exp-schritte .segment button:disabled { cursor: default; opacity: .6; }
+
+.exp-kapitel { display: flex; flex-direction: column; gap: 4px; padding: var(--a2) 0 var(--a3); }
+.exp-kapitel .zeile { display: grid; grid-template-columns: 18px 22px 28px minmax(0, 1fr) auto; gap: var(--a2); align-items: center; padding: 6px 10px;
+                      border-radius: var(--r2); background: var(--flaeche-2); font-size: var(--klein); }
+.exp-kapitel .zeile .griff { color: var(--text-3); cursor: grab; }
+.exp-kapitel .zeile .wahl { border: 0; background: transparent; padding: 0; cursor: pointer; color: var(--akzent); font: inherit; }
+.exp-kapitel .zeile .nr { font-family: var(--schrift-zahl); color: var(--text-3); }
+.exp-kapitel .zeile b { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.exp-kapitel .zeile .u { color: var(--text-3); white-space: nowrap; display: flex; align-items: center; gap: var(--a3); }
+.exp-kapitel .zeile.aus { background: transparent; box-shadow: inset 0 0 0 1px var(--rand); color: var(--text-2); }
+.exp-kapitel .zeile.aus .wahl { color: var(--text-3); }
+.exp-kapitel .zeile.zieht { opacity: .5; }
+.exp-kapitel .zeile .bilder { display: flex; gap: 3px; }
+.exp-kapitel .zeile .bilder img { width: 26px; height: 20px; object-fit: cover; border-radius: 3px; }
+
+.exp-vorlagen { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--a3); padding: var(--a2) 0 var(--a3); }
+.exp-vorlage { display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: var(--r3); background: var(--flaeche-2); cursor: pointer; text-decoration: none;
+               color: inherit; min-width: 0; border: 0; font: inherit; text-align: left; }
+.exp-vorlage b { font-size: var(--klein); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.exp-vorlage .u { font-size: var(--marke); color: var(--text-3); line-height: 1.35; }
+.exp-vorlage.aktiv { background: var(--akzent-weich); box-shadow: inset 0 0 0 2px var(--akzent-flaeche); }
+.exp-vorlage.aktiv b { color: var(--akzent); }
+.exp-vorlage.neu { background: transparent; box-shadow: inset 0 0 0 1px var(--rand-stark); align-items: center; justify-content: center; color: var(--text-2); min-height: 150px; }
+.exp-vorlage .ki { margin-left: auto; font-size: var(--marke); font-weight: 600; color: var(--violett); }
+
+.exp-blatt { aspect-ratio: 3 / 4; height: 84px; align-self: center; background: var(--flaeche); border-radius: 3px; box-shadow: var(--schatten); padding: 8px 7px;
+             display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
+.exp-blatt i { display: block; height: 3px; border-radius: 2px; background: var(--rand-stark); font-style: normal; }
+.exp-blatt i.h { height: 5px; width: 60%; background: var(--text-2); margin-bottom: 2px; }
+.exp-blatt i.h.zweite { margin-top: 3px; }
+.exp-blatt i.k { width: 70%; }
+.exp-blatt i.kurz { width: 45%; }
+.exp-blatt .kasten { display: flex; flex-direction: column; gap: 2px; padding: 3px; border-radius: 2px; background: var(--akzent-weich); }
+.exp-blatt .kasten i { background: var(--akzent-flaeche); }
+.exp-blatt .bild { height: 18px; flex: none; border-radius: 2px; background: var(--mulde); }
+.exp-blatt .spalten { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+.exp-blatt .spalten > span { display: flex; flex-direction: column; gap: 3px; }
+.exp-blatt i.frage { width: 80%; background: var(--violett); opacity: .5; }
+.exp-regeln { display: flex; flex-wrap: wrap; gap: 6px; }
+.exp-regeln .chip i { color: var(--gut); }
+.exp-titelbilder { display: flex; gap: 6px; flex-wrap: wrap; }
+.exp-titelbilder button { border: 0; padding: 0; background: transparent; cursor: pointer; border-radius: var(--r1); }
+.exp-titelbilder img { display: block; width: 54px; height: 40px; object-fit: cover; border-radius: var(--r1); opacity: .7; }
+.exp-titelbilder button.an img { opacity: 1; box-shadow: 0 0 0 2px var(--flaeche), 0 0 0 4px var(--akzent); }
+.exp-ohne-ki { padding-bottom: var(--a3); }
+.exp-hinweis { margin: 0; padding: var(--a2) var(--a3); border-radius: var(--r2); background: var(--warn-weich); color: var(--warn); font-size: var(--klein); }
+.exp-leise { font-size: var(--marke); color: var(--text-3); }
+.exp-verweis { border: 0; background: transparent; padding: 0; font: inherit; color: var(--akzent); cursor: pointer; text-decoration: underline; }
+
+.exp-vorschau { position: sticky; top: 0; display: flex; flex-direction: column; gap: var(--a3); }
+.exp-vorschau .karte { max-width: none; margin-bottom: 0; padding: var(--a3) var(--a4); }
+.exp-vorschau h3 { margin: 0 0 var(--a2); font-size: var(--klein); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; }
+.exp-buch { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: var(--a3); align-items: end; }
+.exp-buch-klein { grid-template-columns: 96px 150px; width: 100%; }
+.exp-titel { position: relative; height: 136px; border-radius: 3px 6px 6px 3px; overflow: hidden; box-shadow: var(--schatten); background: var(--akzent-flaeche);
+             color: var(--auf-akzent); font-size: var(--marke); }
+.exp-titel.mit-bild { color: var(--licht); }
+.exp-titel::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: color-mix(in srgb, var(--schattenfarbe) 25%, transparent); }
+.exp-titel img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .85; }
+.exp-titel span { position: absolute; left: 8px; right: 6px; bottom: 8px; display: flex; flex-direction: column; gap: 2px;
+                  text-shadow: 0 1px 3px color-mix(in srgb, var(--schattenfarbe) 60%, transparent); }
+.exp-titel b { font-size: 1em; line-height: 1.1; hyphens: auto; overflow-wrap: anywhere; }
+.exp-titel small { font-size: .75em; opacity: .9; }
+/* Ausnahme: Miniatur einer Buchseite, nicht zum Lesen, darum kleiner als jede Marke */
+.exp-seite { height: 136px; border-radius: 2px; background: var(--flaeche); box-shadow: var(--schatten); padding: 10px; display: flex; flex-direction: column; gap: 4px;
+             overflow: hidden; font-size: 8px; line-height: 1.35; color: var(--text-2); --exp-farbe: var(--akzent); }
+/* Ausnahme: Vorschau der Buchschrift mit Serifen, wie sie im Buch steht */
+.exp-seite.serifen, .exp-buchseite.serifen { font-family: Georgia, "Liberation Serif", serif; }
+.exp-seite b { font-size: 1.25em; color: var(--exp-farbe); font-family: var(--schrift); }
+.exp-seite .kasten { padding: 4px 5px; border-radius: 2px; background: color-mix(in srgb, var(--exp-farbe) 14%, transparent); color: var(--text); }
+.exp-seite .kasten em { font-style: normal; font-weight: 600; color: var(--exp-farbe); display: block; }
+.exp-zahlen { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--a3); }
+.exp-zeitleiste { display: flex; flex-direction: column; gap: 6px; margin-top: var(--a3); font-size: var(--klein); }
+.exp-zeitleiste .z { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--a2); color: var(--text-2); }
+.exp-zeitleiste .z span:last-child { font-family: var(--schrift-zahl); color: var(--text); }
+.exp-zeitleiste .z.summe { padding-top: 6px; border-top: 1px solid var(--rand); font-weight: 600; color: var(--text); }
+.exp-grundlage { font-size: var(--marke); color: var(--text-3); margin-top: var(--a2); line-height: 1.4; }
+.exp-wann { display: flex; flex-direction: column; gap: var(--a2); }
+.exp-wann .segment { align-self: flex-start; }
+.exp-wann .fertig-um { font-size: var(--klein); color: var(--text-2); }
+.exp-wann .fertig-um b { font-family: var(--schrift-zahl); color: var(--text); }
+.exp-knoepfe { display: flex; flex-direction: column; gap: var(--a2); }
+.exp-knoepfe .knopf { justify-content: center; white-space: normal; height: auto; min-height: var(--knopf-hoehe); padding-block: 6px; text-align: center; }
+
+/* Probekapitel */
+.exp-werkzeuge { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2); padding: 0 16px 10px; }
+.exp-werkzeuge .rechts { margin-left: auto; display: flex; gap: var(--a2); flex-wrap: wrap; }
+.pille.exp-gut { background: var(--gut-weich); color: var(--gut); }
+.exp-pruefung { display: flex; flex-wrap: wrap; gap: var(--a2) var(--a4); align-items: center; padding: var(--a3) var(--a4); border-radius: var(--r3); background: var(--flaeche);
+                box-shadow: var(--schatten); font-size: var(--klein); max-width: 1240px; }
+.exp-pruefung b { font-weight: 600; }
+.exp-pruefung .ok { color: var(--gut); }
+.exp-pruefung .hinweis { color: var(--warn); }
+.exp-pruefung .rechts { margin-left: auto; display: flex; gap: var(--a2); }
+.exp-vergleich { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--a4); max-width: 1240px; margin-top: var(--a4); padding-bottom: var(--a6); }
+.exp-spalte { background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten); padding: var(--a4) var(--a5); min-width: 0; }
+.exp-spalte > .exp-spaltenkopf { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2); font-size: var(--klein); color: var(--text-3); text-transform: uppercase;
+                      letter-spacing: .06em; font-weight: 600; margin-bottom: var(--a3); }
+.exp-spalte > .exp-spaltenkopf .rechts { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 400; }
+.exp-spalte p, .exp-buchseite p { margin: 0 0 var(--a3); line-height: 1.6; }
+.exp-spalte h2, .exp-buchseite h2 { margin: 0 0 var(--a3); font-size: var(--seitentitel); }
+.exp-spalte h3, .exp-buchseite h3 { margin: var(--a4) 0 var(--a2); font-size: var(--titel); }
+.exp-ki { color: var(--violett); }
+.exp-original p { color: var(--text-2); }
+.exp-original p.belegt { color: var(--text); background: var(--akzent-weich); box-shadow: inset 3px 0 0 var(--akzent); border-radius: 0; padding: 6px 10px; margin-left: -10px; margin-right: -10px; }
+.exp-nr-klein { display: inline-block; min-width: 2.2em; font-family: var(--schrift-zahl); font-size: var(--marke); color: var(--text-3); }
+.exp-beleg { display: inline-grid; place-items: center; min-width: 18px; height: 16px; padding: 0 4px; margin-left: 3px; border: 0; border-radius: var(--r1); background: var(--flaeche-2);
+             color: var(--text-3); font-family: var(--schrift-zahl); font-size: var(--marke); vertical-align: 2px; cursor: pointer; line-height: 1; }
+.exp-beleg.an { background: var(--akzent); color: var(--auf-akzent); }
+.ohne-beleg { text-decoration: underline wavy var(--warn); text-underline-offset: 4px; }
+.exp-blick { padding: var(--a3) var(--a4); border-radius: var(--r2); background: var(--akzent-weich); margin: 0 0 var(--a4); }
+.exp-blick.eigen { background: color-mix(in srgb, var(--violett) 10%, transparent); }
+.exp-blick b { display: block; color: var(--akzent); margin-bottom: 6px; }
+.exp-blick.eigen b { color: var(--violett); }
+.exp-blick ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; }
+.exp-randnotiz { display: flex; gap: var(--a2); padding: var(--a2) var(--a3); margin: 0 0 var(--a3); border-radius: 0; background: var(--warn-weich); box-shadow: inset 3px 0 0 var(--honig);
+                 font-size: var(--klein); }
+.exp-randnotiz i { color: var(--honig); margin-top: 3px; }
+.exp-einleitung { font-style: italic; color: var(--text-2); }
+.exp-spalte p.hervorgehoben, .exp-buchseite p.hervorgehoben { background: var(--warn-weich); border-radius: var(--r1); }
+.exp-wie-im-buch :is(b, strong) { font-weight: 600; }
+.exp-bild { margin: 0 0 var(--a3); text-align: center; }
+.exp-bild img { max-width: 100%; max-height: 260px; border-radius: var(--r1); }
+.exp-bild figcaption { font-size: var(--marke); color: var(--text-3); }
+.exp-fragen { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: var(--a2); }
+.exp-fragen li::marker { font-family: var(--schrift-zahl); color: var(--violett); }
+.exp-fragen .antwort { display: block; border: 0; background: transparent; padding: 0; font: inherit; font-size: var(--klein); color: var(--text-3); cursor: pointer; text-align: left; }
+.exp-hinweisblase { display: inline-flex; align-items: center; gap: 6px; margin-left: 6px; padding: 2px 8px; border-radius: var(--r1); background: var(--warn-weich); color: var(--warn);
+                    font-size: var(--marke); vertical-align: 2px; }
+.exp-buchseite { max-width: 640px; margin: var(--a4) auto var(--a6); padding: var(--a5) var(--a6); background: var(--flaeche); box-shadow: var(--schatten); border-radius: 2px;
+                 --exp-farbe: var(--akzent); }
+.exp-buchseite h2, .exp-buchseite h3 { color: var(--exp-farbe); }
+
+/* Vorlagen */
+.exp-zweispaltig { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: var(--a4); max-width: 1240px; align-items: start; padding-bottom: var(--a6); }
+.exp-zweispaltig > .exp-vorlagenwahl { position: sticky; top: 0; }
+.exp-vorlagenwahl { display: flex; flex-direction: column; gap: 4px; }
+.exp-vorlagenwahl .gruppe { font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; margin: var(--a3) 0 2px; }
+.exp-vorlagenwahl .eintrag { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: var(--a2); align-items: center; padding: 8px 10px; border-radius: var(--r2);
+                             font: inherit; font-size: var(--klein); cursor: pointer; border: 0; background: transparent; color: var(--text); text-align: left; }
+.exp-vorlagenwahl .eintrag i { color: var(--text-3); text-align: center; }
+.exp-vorlagenwahl .eintrag .u { color: var(--text-3); font-size: var(--marke); }
+.exp-vorlagenwahl .eintrag.aktiv { background: var(--akzent-weich); color: var(--akzent); font-weight: 600; }
+.exp-vorlagenwahl .eintrag.aktiv i { color: var(--akzent); }
+.exp-vorlagenwahl .exp-neu { margin-top: var(--a2); align-self: flex-start; }
+.exp-neu-form { display: flex; flex-direction: column; gap: var(--a2); margin-top: var(--a2); }
+.exp-teile { display: flex; flex-direction: column; gap: 4px; padding: var(--a2) 0 var(--a3); }
+.exp-teile .teil { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto auto; gap: var(--a2); align-items: center; padding: 7px 10px; border-radius: var(--r2);
+                   background: var(--flaeche-2); font-size: var(--klein); }
+.exp-teile .teil .griff { color: var(--text-3); cursor: grab; }
+.exp-teile .teil .griff.unsichtbar { visibility: hidden; }
+.exp-teile .teil.innen { margin-left: 28px; }
+.exp-teile .teil.zieht { opacity: .5; }
+.exp-teile .teil.fest { background: transparent; box-shadow: inset 0 0 0 1px var(--rand); }
+.exp-teile .herkunft { font-size: var(--marke); padding: 1px 7px; border-radius: var(--r1); background: var(--flaeche); color: var(--text-3); white-space: nowrap; border: 0; font-family: inherit; }
+.exp-teile button.herkunft { cursor: pointer; }
+.exp-teile .herkunft.ki { color: var(--violett); font-weight: 600; }
+.exp-teile .rund { width: 28px; height: 28px; }
+.exp-teilname { border: 0; background: transparent; padding: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.exp-teilname i { color: var(--text-3); font-size: .85em; }
+.exp-hinzu { padding: 0 0 var(--a3); }
+.exp-kastenform { display: flex; flex-direction: column; gap: var(--a2); padding: 0 0 var(--a3); }
+.exp-freitext { width: 100%; min-height: 84px; padding: 10px 12px; border-radius: var(--r2); background: var(--flaeche); border: 1px solid var(--rand); font: inherit;
+                font-size: var(--klein); line-height: 1.5; color: var(--text); resize: vertical; box-sizing: border-box; }
+.exp-farben { display: flex; gap: 8px; }
+.exp-farben button { width: 26px; height: 26px; border-radius: var(--r2); cursor: pointer; border: 0; padding: 0; }
+.exp-farben button.an { box-shadow: 0 0 0 2px var(--flaeche), 0 0 0 4px var(--text); }
+.exp-farben button:disabled { cursor: default; }
+.exp-datei { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a3); padding: var(--a3) var(--a4); border-radius: var(--r3); background: var(--flaeche-2);
+             font-size: var(--klein); color: var(--text-2); }
+.exp-datei code { font-family: var(--schrift-code); color: var(--text); overflow-wrap: anywhere; }
+.exp-datei .rechts { margin-left: auto; display: flex; flex-wrap: wrap; gap: var(--a2); align-items: center; }
+.exp-datei .exp-dateititel { font-weight: 600; color: var(--text); }
+.exp-datei input.exp-dateititel { width: 16em; max-width: 100%; }
+.exp-akzent { color: var(--akzent); }
+
+/* Eigene Bücher */
+.exp-buecher { max-width: 1180px; display: flex; flex-direction: column; gap: var(--a4); padding-bottom: var(--a6); }
+.exp-lage { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--a3) var(--a4); padding: var(--a4); border-radius: var(--r3); background: var(--flaeche); box-shadow: var(--schatten); }
+.exp-lage .zustand { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a3); }
+.exp-lage .zustand b { font-size: var(--titel); }
+.exp-lage .beschreibung { color: var(--text-2); font-size: var(--klein); margin-top: 4px; }
+.exp-lage .aktionen { display: flex; flex-wrap: wrap; gap: var(--a2); align-items: flex-start; justify-content: flex-end; }
+.exp-lage .zahlen { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--a4); }
+.exp-lage .exp-hinweis { grid-column: 1 / -1; }
+.exp-spur { display: block; height: 6px; border-radius: 3px; background: var(--mulde); overflow: hidden; margin-top: 3px; }
+.exp-spur span { display: block; height: 100%; background: var(--akzent-flaeche); }
+.exp-stufen { grid-column: 1 / -1; display: flex; flex-direction: column; gap: var(--a2); }
+.exp-stufen .stufe { display: grid; grid-template-columns: 24px minmax(0, 220px) minmax(0, 1fr) 150px; gap: var(--a3); align-items: center; font-size: var(--klein); }
+.exp-stufen .stufe i { color: var(--text-3); text-align: center; }
+.exp-stufen .stufe.fertig i { color: var(--gut); }
+.exp-stufen .stufe.jetzt i { color: var(--akzent); }
+.exp-stufen .stufe .exp-spur { margin-top: 0; }
+.exp-stufen .stufe.fertig .exp-spur span { background: var(--gut); }
+.exp-stufen .stufe .zahl { font-family: var(--schrift-zahl); color: var(--text-2); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.exp-abschnitt { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--a3); margin: var(--a3) 0 0; }
+.exp-abschnitt h2 { margin: 0; font-size: var(--titel); }
+.exp-abschnitt span { color: var(--text-3); font-size: var(--klein); }
+.exp-regal { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: var(--a4); }
+.exp-buchkarte { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: var(--a3); padding: var(--a3); border-radius: var(--r3); background: var(--flaeche); box-shadow: var(--schatten);
+                 min-width: 0; align-content: start; }
+.exp-buchkarte .koerper { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.exp-buchkarte .t { font-weight: 600; font-size: var(--titel); line-height: 1.2; overflow-wrap: anywhere; }
+.exp-buchkarte .u { font-size: var(--klein); color: var(--text-2); }
+.exp-buchkarte .formate { display: flex; gap: 4px; flex-wrap: wrap; }
+.exp-buchkarte .formate span { font-size: var(--marke); font-weight: 600; padding: 1px 7px; border-radius: var(--r1); background: var(--flaeche-2); color: var(--text-2); }
+.exp-buchkarte .aktionen { display: flex; gap: 6px; margin-top: auto; flex-wrap: wrap; padding-top: var(--a2); }
+.exp-buchkarte .aktionen a.rund { text-decoration: none; }
+.exp-buchkarte .veraltet { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2); padding: 6px 10px; border-radius: var(--r2);
+                           background: var(--akzent-weich); font-size: var(--klein); }
+.exp-buchkarte .veraltet i { color: var(--info); }
+.exp-buchkarte .veraltet .knopf { margin-left: auto; }
+.exp-pruefhinweis { align-self: flex-start; border: 0; background: transparent; padding: 0; font: inherit; font-size: var(--klein); color: var(--warn); cursor: pointer; }
+.exp-hinweisliste { grid-column: 1 / -1; margin: 0; padding: var(--a2) var(--a3) var(--a2) var(--a5); border-radius: var(--r2); background: var(--warn-weich); font-size: var(--klein);
+                    display: flex; flex-direction: column; gap: 4px; }
+.exp-menue-anker { position: relative; }
+.exp-menue { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; display: flex; flex-direction: column; min-width: 220px; padding: 4px; border-radius: var(--r2);
+             background: var(--flaeche); box-shadow: var(--schatten-schwebend); }
+.exp-menue button { display: flex; align-items: center; gap: var(--a2); padding: 8px 10px; border: 0; border-radius: var(--r1); background: transparent; font: inherit;
+                    font-size: var(--klein); color: var(--text); cursor: pointer; text-align: left; white-space: nowrap; }
+.exp-menue button i { color: var(--text-3); width: 1.2em; text-align: center; }
+.exp-menue button.gefahr { color: var(--gefahr); }
+.exp-menue button:hover { background: var(--flaeche-2); }
+
+/* Ein Buch lesen: der Inhalt des Buchs im Lesedesign der App */
+.exp-lesen { max-width: var(--lese-breite); margin: 0 auto; padding-bottom: var(--a6); line-height: var(--lese-zeile); font-size: var(--lesen); }
+.exp-lesen .titelseite { text-align: center; padding: var(--a5) 0; }
+.exp-lesen .titelseite img { max-width: 100%; max-height: 360px; border-radius: var(--r2); }
+.exp-lesen .buchtitel { font-size: calc(var(--seitentitel) + 8px); margin: var(--a4) 0 var(--a2); }
+.exp-lesen .untertitel, .exp-lesen .beschreibung { color: var(--text-2); }
+.exp-lesen section.kapitel > h1, .exp-lesen section > h1 { font-size: calc(var(--seitentitel) + 4px); margin: var(--a6) 0 var(--a3); }
+.exp-lesen article.artikel > h2 { font-size: var(--seitentitel); margin: var(--a5) 0 var(--a3); }
+.exp-lesen .buch-text.farbe-petrol { --exp-farbe: var(--petrol); }
+.exp-lesen .buch-text.farbe-violett { --exp-farbe: var(--violett); }
+.exp-lesen .buch-text.farbe-honig { --exp-farbe: var(--honig); }
+.exp-lesen .buch-text.farbe-koralle { --exp-farbe: var(--koralle); }
+.exp-lesen .buch-text.farbe-stahl { --exp-farbe: var(--stahl); }
+.exp-lesen .buch-text :is(h1, h2, h3, h4) { color: var(--exp-farbe); }
+.exp-lesen .kasten { padding: var(--a3) var(--a4); border-radius: var(--r2); background: color-mix(in srgb, var(--exp-farbe) 12%, transparent); margin: var(--a3) 0; }
+.exp-lesen .kasten-kopf { font-weight: 600; color: var(--exp-farbe); margin: 0 0 var(--a1); }
+.exp-lesen .kasten ul { margin: 0; padding-left: 1.2em; }
+.exp-lesen .randnotiz { display: block; padding: var(--a2) var(--a3); margin: var(--a2) 0; border-radius: 0; background: var(--warn-weich); box-shadow: inset 3px 0 0 var(--honig);
+                        font-size: var(--klein); }
+.exp-lesen .hervorgehoben, .exp-lesen mark { background: var(--warn-weich); color: inherit; }
+.exp-lesen .einleitung { font-style: italic; color: var(--text-2); }
+.exp-lesen figure { margin: var(--a3) 0; text-align: center; }
+.exp-lesen figure img { max-width: 100%; max-height: 420px; border-radius: var(--r1); }
+.exp-lesen figcaption { font-size: var(--klein); color: var(--text-3); }
+.exp-lesen .tabelle { overflow-x: auto; }
+.exp-lesen table { border-collapse: collapse; font-size: var(--klein); }
+.exp-lesen :is(td, th) { border: 1px solid var(--rand); padding: 4px 8px; text-align: left; vertical-align: top; }
+.exp-lesen .steckbrief { padding: var(--a3); border-radius: var(--r2); background: var(--flaeche-2); font-size: var(--klein); }
+.exp-lesen .fragen details summary { color: var(--exp-farbe); cursor: pointer; }
+.exp-lesen .glossar dt { font-weight: 600; color: var(--exp-farbe); }
+.exp-lesen .glossar dd { margin: 0 0 var(--a2); }
+.exp-lesen .literatur li.beleg { color: var(--text-2); font-size: var(--klein); }
+.exp-lesen .quellen { font-size: var(--klein); color: var(--text-2); }
+.exp-lesen .quellen a { overflow-wrap: anywhere; }
+
+/* Telefon: Als Buch und Eigene Bücher (Entwurf telefon-export.html) */
+.exp-telefon { display: flex; flex-direction: column; gap: 4px; }
+.exp-t-kopf { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: var(--a3); align-items: center; }
+.exp-t-kopf .exp-titel { height: 100px; }
+.exp-t-kopf .exp-titel span { display: none; }
+.exp-t-kopf b { font-size: var(--titel); }
+.exp-t-kopf .u { color: var(--text-3); font-size: var(--klein); }
+.exp-t-h2 { font-size: var(--titel); margin: var(--a4) 0 var(--a2); }
+.exp-t-wahl { display: flex; flex-direction: column; gap: 6px; }
+.exp-t-wahl .zeile { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 12px; border-radius: var(--r2);
+                     background: var(--flaeche-2); font: inherit; font-size: var(--gross); border: 0; color: var(--text); text-align: left; cursor: pointer; }
+.exp-t-wahl .zeile i { color: var(--text-3); }
+.exp-t-wahl .zeile.an { background: var(--akzent-weich); color: var(--akzent); font-weight: 600; }
+.exp-t-wahl .zeile.an i { color: var(--akzent); }
+.exp-t-wahl .zeile .u { font-size: var(--klein); color: var(--text-3); font-weight: 400; }
+.exp-t-formate { display: flex; flex-wrap: wrap; gap: 8px; }
+.exp-t-formate .chip { font-size: var(--gross); }
+.exp-t-schaetzung { padding: 12px; border-radius: var(--r2); background: var(--flaeche-2); font-size: var(--klein); color: var(--text-2); display: flex; flex-direction: column; gap: 4px; }
+.exp-t-schaetzung b { color: var(--text); font-size: var(--titel); }
+.exp-t-steuer { position: sticky; bottom: 0; padding: 10px 14px; background: var(--leiste); box-shadow: 0 -1px 0 var(--rand); display: flex; gap: 10px; }
+.exp-t-steuer .knopf { justify-content: center; }
+.exp-t-steuer .knopf.primaer { flex: 1; }
+.exp-t-liste { display: flex; flex-direction: column; }
+.exp-t-liste { gap: 8px; }
+.exp-t-buch { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; padding: 10px; border-radius: var(--r2); background: var(--flaeche);
+              box-shadow: var(--schatten); align-items: center; color: inherit; text-decoration: none; }
+.exp-t-buch .exp-titel { height: 88px; }
+.exp-t-buch .exp-titel span { display: none; }
+.exp-t-buch .t { font-weight: 600; font-size: var(--titel); }
+.exp-t-buch .u { font-size: var(--klein); color: var(--text-3); }
+.exp-t-buch .exp-info { color: var(--info); }
+
+@media (max-width: 1100px) {
+  .exp-buehne, .exp-vergleich, .exp-zweispaltig { grid-template-columns: minmax(0, 1fr); }
+  .exp-vorschau, .exp-zweispaltig > .exp-vorlagenwahl { position: static; }
+  .exp-lage .zahlen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .exp-stufen .stufe { grid-template-columns: 24px minmax(0, 1fr) 110px; }
+  .exp-stufen .stufe .exp-spur { grid-column: 2 / -1; grid-row: 2; }
+  .exp-regal { grid-template-columns: minmax(0, 1fr); }
+  .exp-lage { grid-template-columns: minmax(0, 1fr); }
+  .exp-lage .aktionen { justify-content: flex-start; }
+}
