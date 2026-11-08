@@ -20,7 +20,7 @@ braucht, statt Fehler zu zeigen. Gebaut auf dem [Appkern](https://github.com/Hal
   öffentliche Verzeichnis der Bücher durch, meldet Neues, lädt abonnierte Bücher mit Prüfsumme und schaltet zwischen
   Fassungen um.
 - **Meins**: Merkzettel, Notizen an Stellen oder ganzen Artikeln (mit Bildern, auf Wunsch als Markdown abgelegt),
-  Themen mit Bereichen und Literaturliste, Verlauf nach Sitzungen.
+  Themen mit Bereichen und Literaturliste, Verlauf von Gelesenem und Gesuchtem nach Tagen.
 - **Als Buch**: ein Thema wird ein Buch als EPUB und PDF nach einer Vorlage; ohne KI aus den Artikeln, mit Leitstelle
   auch umgeformt und gegen das Original geprüft ([docs/ALS_BUCH.md](docs/ALS_BUCH.md)).
 - **Schnittstelle**: alle Wege unter `/api/v1`, beschrieben in der App (Bereich Schnittstelle), dazu MCP für
