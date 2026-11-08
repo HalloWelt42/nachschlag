@@ -335,6 +335,22 @@
         "nachschlag.leseansicht": "a",
         "nachschlag.startansicht": "a"
       }
+    },
+    {
+      "name": "schnittstelle",
+      "pfad": "/schnittstelle",
+      "speicher": {
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
+      }
+    },
+    {
+      "name": "schnittstelle-weg",
+      "pfad": "/schnittstelle/werkzeuge_api_v1_anleitungen__buch__werkzeuge_get",
+      "speicher": {
+        "nachschlag.leseansicht": "a",
+        "nachschlag.startansicht": "a"
+      }
     }
   ]
 }

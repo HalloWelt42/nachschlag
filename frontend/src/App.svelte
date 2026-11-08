@@ -1,7 +1,7 @@
 <script lang="ts">
   // Die Bereiche von Nachschlag in der gemeinsamen Schale; die Suche steht in der Mitte des Kopfs. Am Telefon als Reiter
   // Start, Stöbern, Merkzettel und Themen (Entwurf telefon-merkzettel.html), alles andere unter Mehr.
-  import { Schale, sitzung, type Bereich } from "appkern-oberflaeche";
+  import { Schale, Schnittstelle, sitzung, type Bereich } from "appkern-oberflaeche";
   import Bibliothek from "./seiten/Bibliothek.svelte";
   import Lesen from "./seiten/Lesen.svelte";
   import Medien from "./seiten/Medien.svelte";
@@ -46,6 +46,8 @@
       hinweis: "Meine Bücher, der Katalog mit allem Neuen, Fassungen und Laden",
       // beim Laden: wie viele Bücher laden oder warten, dazu der Balken des laufenden; sonst das Neue im Verzeichnis
       zahl: () => ladeZahl() || (lader.stand?.neu_ungesehen ?? 0), fortschritt: ladeAnteil },
+    { schluessel: "schnittstelle", titel: "Schnittstelle", symbol: "fa-plug", seite: Schnittstelle, reiter: false,
+      hinweis: "Alle Wege der Schnittstelle zum Nachlesen und Ausprobieren (für eigene Werkzeuge und andere Apps)" },
     { schluessel: "verlauf", titel: "Verlauf", symbol: "fa-clock-rotate-left", seite: Verlauf, reiter: false, hinweis: "Gelesenes und Gesuchtes, auf allen Geräten" },
   ];
 </script>
