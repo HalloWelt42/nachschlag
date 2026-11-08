@@ -853,10 +853,12 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .leuchtkasten .oben .rund, .leuchtkasten .pfeil { background: var(--lk-knopf); color: var(--lk-hell); border: 0; }
 .leuchtkasten .oben .zaehler { font-family: var(--schrift-zahl); font-size: var(--klein); color: var(--lk-blass); }
 .leuchtkasten .bild-b { display: grid; place-items: center; min-height: 0; padding: 0 var(--a6); position: relative; }
-.leuchtkasten .bild-b img { max-width: 100%; max-height: 100%; min-width: min(100%, 420px); object-fit: contain; border-radius: var(--r1); }
-.leuchtkasten .bild-b img { touch-action: pan-y pinch-zoom; }
-.leuchtkasten .bild-b:has(img.gross) { place-items: start; overflow: auto; padding: 0; }
-.leuchtkasten .bild-b img.gross { max-width: none; max-height: none; min-width: 0; cursor: zoom-out; touch-action: auto; }
+.leuchtkasten .bild-b .zb-feld { width: 100%; height: 100%; }
+.leuchtkasten .oben .lk-info { display: none; margin-left: auto; }
+/* Zoombild (teile/Zoombild.svelte): füllt sein Feld, das Bild eingepasst; Gesten gehören dem Bild, nicht dem Browser */
+.zb-feld { position: relative; overflow: hidden; display: grid; place-items: center; touch-action: none; cursor: zoom-in; user-select: none; }
+.zb-feld.zb-gross { cursor: grab; }
+.zb-feld img { width: 100%; height: 100%; object-fit: contain; transform-origin: center; will-change: transform; -webkit-user-drag: none; }
 .leuchtkasten .pfeil { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 24px; display: grid; place-items: center; cursor: pointer; }
 .leuchtkasten .pfeil.l { left: var(--a3); }
 .leuchtkasten .pfeil.r { right: var(--a3); }
@@ -963,9 +965,12 @@ button.kachel:disabled { opacity: .6; cursor: default; }
   .register-seite { padding-inline: 0; }
   .medien-suche { max-width: none; }
   .mediengitter { columns: 2 150px; }
+  /* Telefon (WIKI-69): immer Vollbild, Angaben und Streifen erst über den Knopf Info */
   .leuchtkasten { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
-  .leuchtkasten .bild-b { padding: 0 var(--a3); }
-  .leuchtkasten .bild-b img { min-width: 0; }
+  .leuchtkasten .bild-b { padding: 0; }
+  .leuchtkasten .pfeil { display: none; }
+  .leuchtkasten .oben .lk-info { display: grid; }
+  .leuchtkasten:not(.mit-angaben) .angaben, .leuchtkasten:not(.mit-angaben) .streifen { display: none; }
   .leuchtkasten .angaben { max-height: 40dvh; padding-bottom: max(var(--a4), env(safe-area-inset-bottom)); }
   .zufall-gross { grid-template-columns: minmax(0, 1fr); }
   .zufall-gross .koerper { padding: var(--a3) var(--a4) var(--a4); }
@@ -1306,7 +1311,9 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .anl-schritt h2 { grid-column: 1 / -1; margin: 0; font-size: var(--titel); display: flex; align-items: center; gap: var(--a3); }
 .anl-nr { font-family: var(--schrift-zahl); min-width: 34px; height: 34px; display: inline-grid; place-items: center; border-radius: 50%; background: var(--akzent-weich); color: var(--akzent); font-size: var(--gross); }
 .anl-bild { margin: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.anl-bild > img { width: 100%; aspect-ratio: 4 / 3; object-fit: contain; border-radius: var(--r2); background: var(--mulde); }
+/* Bild als Knopf: öffnet es groß (Leuchtkasten mit Zoom, WIKI-69) */
+.anl-bildknopf { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; border-radius: var(--r2); }
+.anl-bild > .anl-bildknopf > img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain; border-radius: var(--r2); background: var(--mulde); }
 .anl-vorschau { display: flex; flex-wrap: wrap; gap: 6px; }
 .anl-vorschau button { padding: 0; border: 0; background: none; cursor: pointer; border-radius: var(--r1); }
 .anl-vorschau img { display: block; width: 64px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r1); opacity: .6; }
@@ -1361,7 +1368,8 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .anl-geraet { display: flex; flex-direction: column; gap: var(--a5); padding: var(--a4) var(--a5) var(--a6); max-width: 1320px; }
 .anl-g-kopf { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: var(--a5); align-items: start; }
 .anl-g-kopf.ohne-bild { grid-template-columns: minmax(0, 1fr); }
-.anl-g-kopf > img { width: 220px; aspect-ratio: 4 / 3; object-fit: contain; border-radius: var(--r3); background: var(--mulde); }
+.anl-g-kopf > .anl-bildknopf { width: 220px; }
+.anl-g-kopf > .anl-bildknopf > img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain; border-radius: var(--r3); background: var(--mulde); }
 .anl-g-kurz { margin: 0 0 var(--a4); font-size: var(--gross); color: var(--text-2); }
 .anl-g-abschnitt { display: flex; flex-direction: column; gap: var(--a3); }
 .anl-g-abschnitt h2 { margin: 0; font-size: var(--titel); display: flex; gap: var(--a2); align-items: center; }
@@ -1423,4 +1431,4 @@ button.kachel:disabled { opacity: .6; cursor: default; }
   .anl-zeile-liste > img, .anl-zeile-liste > .anl-ohne-bild { width: 72px; }
   .anl-einordnung > a:last-child { margin-left: 0; }
 }
-@media (max-width: 900px) { .anl-g-kopf { grid-template-columns: minmax(0, 1fr); } .anl-g-kopf > img { width: 100%; max-width: 360px; } }
+@media (max-width: 900px) { .anl-g-kopf { grid-template-columns: minmax(0, 1fr); } .anl-g-kopf > .anl-bildknopf { width: 100%; max-width: 360px; } }

@@ -9,6 +9,7 @@
   import { lesen, lesenZiel } from "../lib/ziele";
   import Einordnung from "./Einordnung.svelte";
   import Kachel from "./Kachel.svelte";
+  import Leuchtkasten from "./Leuchtkasten.svelte";
 
   let { artikel, kopf, statt }: { artikel: Artikel; kopf?: Snippet; statt?: Snippet } = $props();
   const g = $derived(artikel.geraet!);
@@ -16,6 +17,7 @@
   const uebrige = $derived(g.unterkategorien.filter((e) => !(e.empfohlen && e.bild)));
   const anleitungen = $derived([...g.anleitungen].sort((x, y) => Number(y.empfohlen) - Number(x.empfohlen)));
   const ziel = (e: Geraeteeintrag) => "/" + lesenZiel(artikel.buch, e.pfad);
+  let gross = $state(false);                     // das Bild des Geräts groß (WIKI-69)
 </script>
 
 <div class="rollfeld" style="padding: 0">
@@ -26,7 +28,7 @@
     {#if artikel.darstellung === "geraet"}
       <Einordnung buch={artikel.buch} pfad={artikel.pfad} geraet />
       <div class="anl-g-kopf" class:ohne-bild={!g.bild}>
-        {#if g.bild}<img src={g.bild} alt="" />{/if}
+        {#if g.bild}<button class="anl-bildknopf" title="Groß ansehen" onclick={() => (gross = true)}><img src={g.bild} alt="" /></button>{/if}
         <div>
           {#if g.kurz}<p class="anl-g-kurz">{g.kurz}</p>{/if}
           <div class="kennzahlen-reihe">
@@ -87,3 +89,9 @@
     {/if}
   </div>
 </div>
+
+{#if gross && g.bild}
+  <Leuchtkasten medien={[{ buch: artikel.buch, pfad: artikel.pfad, artikel: artikel.titel, abschnitt: "", bild: g.bild, breite: 0, hoehe: 0,
+                           unterschrift: artikel.titel, datei: decodeURIComponent(g.bild.split("/").pop() ?? "") }]}
+               onzu={() => (gross = false)} />
+{/if}

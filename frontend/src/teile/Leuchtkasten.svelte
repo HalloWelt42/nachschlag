@@ -2,37 +2,34 @@
   // Große Bildansicht (Entwurf mockups/medien.html): das Bild, Pfeile und Tasten zum Blättern, darunter der Streifen der
   // übrigen Bilder, rechts die Angaben (Artikel, Abschnitt, Größe, Datei) mit "Im Artikel zeigen" und Thema. Escape
   // schließt. Die Bücher bringen meist nur Vorschaubilder mit; die Ansicht zeigt das ehrlich bei der Größe.
-  // Telefon (WIKI-27): Wischen blättert; quer gedreht nur das Bild über den ganzen Schirm; Tippen vergrößert auf die
-  // volle Auflösung, wenn das Bild mehr hat, als der Schirm zeigt (sonst tut Tippen nichts).
+  // Telefon (WIKI-27, WIKI-69): nur das Bild über den ganzen Schirm, Angaben und Streifen hinter dem Knopf Info;
+  // Wischen blättert. Vergrößern überall (Zoombild): zwei Finger, Doppeltippen, Mausrad; vergrößert verschiebt der
+  // Finger das Bild statt zu blättern.
   import { onMount, tick } from "svelte";
   import { bibliothekLaden, buch as buchVon } from "../lib/bibliothek.svelte";
   import { themenLaden } from "../lib/themen.svelte";
   import type { Medium } from "../lib/medien";
   import { lesen } from "../lib/ziele";
   import ThemaWahl from "./ThemaWahl.svelte";
+  import Zoombild from "./Zoombild.svelte";
 
   let { medien, start = 0, titel = "", onzu }: { medien: Medium[]; start?: number; titel?: string; onzu: () => void } = $props();
 
   const WISCHEN_AB_PX = 50;
 
   let index = $state(0);
-  let gross = $state(false);                           // volle Auflösung, rollbar
-  let bildEl = $state<HTMLImageElement>();
+  let vergroessert = $state(false);                    // das Zoombild gehört dann dem Finger, Wischen blättert nicht
+  let angaben = $state(false);                         // Telefon: Angaben und Streifen sichtbar
   let wischStart: { x: number; y: number } | null = null;
 
   function wischBeginn(e: PointerEvent) {
-    if (e.pointerType !== "mouse") wischStart = { x: e.clientX, y: e.clientY };
+    wischStart = e.pointerType !== "mouse" && e.isPrimary ? { x: e.clientX, y: e.clientY } : null;
   }
   function wischEnde(e: PointerEvent) {
-    if (!wischStart || gross) return (wischStart = null);
+    if (!wischStart || vergroessert || !e.isPrimary) return (wischStart = null);
     const dx = e.clientX - wischStart.x, dy = e.clientY - wischStart.y;
     wischStart = null;
     if (Math.abs(dx) > WISCHEN_AB_PX && Math.abs(dx) > Math.abs(dy) * 1.5) void gehe(index + (dx < 0 ? 1 : -1));
-  }
-  /** Tippen vergrößert nur, wenn die Datei mehr Pixel hat, als gerade zu sehen sind. */
-  function antippen() {
-    if (gross) return (gross = false);
-    if (bildEl && bildEl.naturalWidth > bildEl.clientWidth * 1.2) gross = true;
   }
   let streifen = $state<HTMLElement>();
   let fehlen = $state<Record<string, true>>({});        // Bilder, die nicht laden, bleiben aus dem Streifen
@@ -52,7 +49,6 @@
   async function gehe(neu: number) {
     if (!medien.length) return;
     index = (neu + medien.length) % medien.length;
-    gross = false;
     await tick();
     streifen?.querySelector(".an")?.scrollIntoView({ block: "nearest", inline: "center" });
   }
@@ -75,17 +71,17 @@
 <!-- in der Fangphase: die Bildansicht nimmt ihre Tasten vor der Leiste darunter (Escape schließt nur sie) -->
 <svelte:window onkeydowncapture={taste} />
 {#if m}
-  <div class="leuchtkasten" role="dialog" aria-modal="true" aria-label="Bild: {m.unterschrift || m.datei}">
+  <div class="leuchtkasten" class:mit-angaben={angaben} role="dialog" aria-modal="true" aria-label="Bild: {m.unterschrift || m.datei}">
     <div class="buehne-b">
       <div class="oben">
         <button class="rund" title="Schließen (Escape)" onclick={onzu}><i class="fa-solid fa-xmark"></i></button>
         <span class="zaehler">{index + 1} von {medien.length} Bildern{titel ? ` ${titel}` : ""}</span>
+        <button class="rund lk-info" class:aktiv={angaben} title="Angaben zum Bild" aria-label="Angaben zum Bild" aria-pressed={angaben}
+                onclick={() => (angaben = !angaben)}><i class="fa-solid fa-circle-info"></i></button>
       </div>
-      <div class="bild-b">
+      <div class="bild-b" onpointerdown={wischBeginn} onpointerup={wischEnde} role="presentation">
         {#if medien.length > 1}<button class="pfeil l" title="Voriges (Pfeil links)" onclick={() => gehe(index - 1)}><i class="fa-solid fa-chevron-left"></i></button>{/if}
-        <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-        <img bind:this={bildEl} class:gross src={m.bild} alt={m.unterschrift} onclick={antippen} onpointerdown={wischBeginn} onpointerup={wischEnde}
-             title={gross ? "Wieder einpassen" : "Tippen: größer, wenn das Bild mehr Auflösung hat"} />
+        <Zoombild src={m.bild} alt={m.unterschrift} bind:vergroessert />
         {#if medien.length > 1}<button class="pfeil r" title="Nächstes (Pfeil rechts)" onclick={() => gehe(index + 1)}><i class="fa-solid fa-chevron-right"></i></button>{/if}
       </div>
       {#if medien.length > 1}

@@ -7,7 +7,9 @@
   import { onMount, untrack } from "svelte";
   import { lesestandHolen, lesestandMelden, meins, vorliebeSetzen } from "../lib/meins.svelte";
   import type { Anleitungsschritt, Anleitungszeile, Artikel } from "../lib/typen";
+  import type { Medium } from "../lib/medien";
   import Einordnung from "./Einordnung.svelte";
+  import Leuchtkasten from "./Leuchtkasten.svelte";
 
   let { artikel }: { artikel: Artikel } = $props();
   const a = $derived(artikel.anleitung!);
@@ -54,9 +56,21 @@
   }
 
   function taste(e: KeyboardEvent) {
-    if (ansicht !== "werkstatt" || (e.target as HTMLElement)?.closest("input, textarea, [contenteditable]")) return;
+    if (ansicht !== "werkstatt" || grossbild !== null || (e.target as HTMLElement)?.closest("input, textarea, [contenteditable]")) return;
     if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); gehe(nr + 1); }
     else if (e.key === "ArrowLeft") { e.preventDefault(); gehe(nr - 1); }
+  }
+
+  // Jedes Bild groß (WIKI-69): Hauptbild und alle Bilder der Schritte in einer Reihe, beim angetippten beginnend
+  let grossbild = $state<number | null>(null);
+  const medien = $derived<Medium[]>([
+    ...(a.hauptbild ? [{ bild: a.hauptbild, abschnitt: "", unterschrift: artikel.titel }] : []),
+    ...a.schritte.flatMap((s) => s.bilder.map((b, i) => ({ bild: b, abschnitt: `Schritt ${s.nr}`,
+                                                            unterschrift: `${titelVon(s)}${s.bilder.length > 1 ? `, Bild ${i + 1}` : ""}` }))),
+  ].map((m) => ({ ...m, buch: artikel.buch, pfad: artikel.pfad, artikel: artikel.titel, breite: 0, hoehe: 0,
+                  datei: decodeURIComponent(m.bild.split("/").pop() ?? "") })));
+  function grossZeigen(b: string) {
+    grossbild = Math.max(0, medien.findIndex((m) => m.bild === b));
   }
 
   function zumSchritt(n: number) {
@@ -81,7 +95,7 @@
 {#snippet bilder(s: Anleitungsschritt, gross: boolean)}
   {#if s.bilder.length}
     <figure class="anl-bild" class:gross>
-      <img src={bild(s)} alt="Bild zu Schritt {s.nr}" loading="lazy" />
+      <button class="anl-bildknopf" title="Groß ansehen" onclick={() => grossZeigen(bild(s))}><img src={bild(s)} alt="Bild zu Schritt {s.nr}" loading="lazy" /></button>
       {#if s.bilder.length > 1}
         <div class="anl-vorschau">
           {#each s.bilder as b, i (b)}
@@ -159,7 +173,7 @@
       <article class="artikel anl-artikel">
         <aside class="steckbrief anl-steckbrief">
           <div class="steckbrief-kopf">{a.art === "zerlegung" ? "Zerlegung" : "Anleitung"}</div>
-          {#if a.hauptbild}<figure class="steckbrief-bild"><img src={a.hauptbild} alt="" /></figure>{/if}
+          {#if a.hauptbild}<figure class="steckbrief-bild"><button class="anl-bildknopf" title="Groß ansehen" onclick={() => grossZeigen(a.hauptbild)}><img src={a.hauptbild} alt="" /></button></figure>{/if}
           <dl class="steckbrief-werte">
             {#if a.schwierigkeit}<dt>Schwierigkeit</dt><dd>{@render stufe(a.schwierigkeit)}{a.schwierigkeit_text}</dd>{/if}
             {#if a.zeit}<dt>Zeit</dt><dd>{a.zeit}</dd>{/if}
@@ -188,4 +202,8 @@
       </article>
     </div>
   </div>
+{/if}
+
+{#if grossbild !== null}
+  <Leuchtkasten {medien} start={grossbild} titel={`in ${artikel.titel}`} onzu={() => (grossbild = null)} />
 {/if}
