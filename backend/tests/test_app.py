@@ -226,6 +226,37 @@ async def test_suche_wartet_nicht_auf_langsame_bedeutung(nachschlag):
     assert s["nur_index"] and s["treffer"] and s["zeiten"]["bedeutung_ms"] is None and s["bedeutung_angebunden"]
 
 
+async def test_einstellungen_der_suche(nachschlag):
+    """WIKI-79: Mischung gewichtet die Wege, Bücher in der Suche begrenzt die Suche ohne eigene Wahl (über den Namen),
+    Tippfehler aus heißt nie ein Vorschlag, die Regeln für die Oberfläche kommen aus den Einstellungen."""
+    c, geruest, _ = nachschlag
+    regeln = (await c.get("/api/v1/suche/regeln")).json()
+    assert regeln == {"vorschlaege": "titel_stellen", "an_der_stelle": True}
+    await geruest.einstellungen.aendern({"vorschlaege": "titel", "an_der_stelle": False})
+    assert (await c.get("/api/v1/suche/regeln")).json() == {"vorschlaege": "titel", "an_der_stelle": False}
+
+    await geruest.einstellungen.aendern({"fundus_adresse": FUNDUS, "fundus_sammlung": "probe", "bedeutung_buch": "probe_de_all_2026-01"})
+
+    async def rang(mischung: str) -> float:
+        await geruest.einstellungen.aendern({"mischung": mischung})
+        s = (await c.get("/api/v1/suche", params={"frage": "Farbform"})).json()
+        return next(t["rang"] for t in s["treffer"] if t["pfad"] == "Kreuzfuchs")   # von beiden Wegen gefunden
+
+    ausgewogen, index, bedeutung = await rang("ausgewogen"), await rang("index"), await rang("bedeutung")
+    assert index > ausgewogen and bedeutung > ausgewogen
+
+    await geruest.einstellungen.aendern({"fundus_adresse": "", "suche_buecher": ["probedoku_en_php"]})
+    nur_doku = (await c.get("/api/v1/suche", params={"frage": "array"})).json()["treffer"]
+    assert nur_doku and {t["buch"] for t in nur_doku} == {"probedoku_en_php_2026-08"}
+    assert not (await c.get("/api/v1/suche", params={"frage": "Städte"})).json()["treffer"]          # Lexikon ist nicht dabei
+    gewaehlt = (await c.get("/api/v1/suche", params={"frage": "Städte", "buecher": ["probe_de_all_2026-01"]})).json()
+    assert gewaehlt["treffer"][0]["pfad"] == "Rotfuchs"                                               # eigene Wahl geht vor
+
+    await geruest.einstellungen.aendern({"tippfehler": False})
+    k = (await c.get("/api/v1/korrektur", params={"frage": "Rotfuchz"})).json()
+    assert k == {"frage": "Rotfuchz", "vorschlag": "", "quelle": ""}
+
+
 DOKU = "probedoku_en_php_2026-08"
 
 

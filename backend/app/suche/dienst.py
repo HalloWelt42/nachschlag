@@ -19,6 +19,8 @@ from . import index
 from .bedeutung import Bedeutung, BedeutungFehlt, Fundstelle
 
 RRF_K = 60
+#: Gewichte der beiden Wege je Einstellung Mischung (Index, Bedeutung): der bevorzugte Weg zählt doppelt (WIKI-79)
+MISCHUNG: dict[str, tuple[float, float]] = {"index": (2.0, 1.0), "ausgewogen": (1.0, 1.0), "bedeutung": (1.0, 2.0)}
 
 
 def _rang(platz: int) -> float:
@@ -28,16 +30,22 @@ def _rang(platz: int) -> float:
 class Suche:
     def __init__(self, bibliothek: Bibliothek, bedeutung: Bedeutung, wartezeit_s: Callable[[], float],
                  bedeutungsbuch: Callable[[], Awaitable[str]], medien: Callable[[str, str], str], eigen: Eigenindizes,
-                 nutzbare: Callable[[], Awaitable[list[Buch]]] | None = None) -> None:
+                 nutzbare: Callable[[], Awaitable[list[Buch]]] | None = None, mischung: Callable[[], str] = lambda: "ausgewogen",
+                 vorgewaehlt: Callable[[], Awaitable[list[str]]] | None = None) -> None:
         """`bedeutungsbuch`: Kennung des Buchs, zu dem die Bedeutungssuche gehört (ihre Treffer zeigen in dieses Buch); nach
         einer neuen Fassung die neue (WIKI-58).
-        `nutzbare`: die Quellen ohne Auswahl (ohne archivierte, die nicht mitgenutzt werden, WIKI-46); sonst alle."""
+        `nutzbare`: die Quellen ohne Auswahl (ohne archivierte, die nicht mitgenutzt werden, WIKI-46); sonst alle.
+        `mischung`: Einstellung, wie die Wege gewichtet werden (MISCHUNG). `vorgewaehlt`: Kennungen der Bücher, in denen
+        ohne eigene Auswahl gesucht wird (Einstellung Bücher in der Suche); leer: alle nutzbaren (WIKI-79)."""
         self._bib, self._bedeutung, self._warten, self._bedeutungsbuch = bibliothek, bedeutung, wartezeit_s, bedeutungsbuch
         self._medien, self._eigen = medien, eigen
-        self._nutzbare = nutzbare
+        self._nutzbare, self._mischung, self._vorgewaehlt = nutzbare, mischung, vorgewaehlt
 
     async def _buecher(self, auswahl: list[str]) -> list[Buch]:
-        """Die gewählten Quellen (auch archivierte, wer sie ausdrücklich wählt), ohne Wahl die nutzbaren."""
+        """Die gewählten Quellen (auch archivierte, wer sie ausdrücklich wählt), ohne Wahl die aus der Einstellung Bücher
+        in der Suche, sonst die nutzbaren."""
+        if not auswahl and self._vorgewaehlt is not None:
+            auswahl = await self._vorgewaehlt()
         alle = (await self._bib.stand()).buecher if auswahl or self._nutzbare is None else await self._nutzbare()
         return [b for b in alle if (b.faehigkeiten.volltext or self._eigen.datei(b.kennung))
                 and (not auswahl or b.kennung in auswahl)]
@@ -109,8 +117,10 @@ class Suche:
             except BedeutungFehlt as f:
                 hinweis = f.meldung
 
+        w_index, w_bedeutung = MISCHUNG.get(self._mischung(), MISCHUNG["ausgewogen"])
         gemischt: dict[tuple[str, str], Treffer] = {}
         for t in index_treffer:
+            t.rang *= w_index
             gemischt[(t.buch, t.pfad)] = t
         beste: Treffer | None = None
         for platz, s in enumerate(stellen, 1):
@@ -119,13 +129,13 @@ class Suche:
             if schluessel in gemischt:
                 t = gemischt[schluessel]
                 t.wege = ["bedeutung", "index"]
-                t.rang += _rang(platz)
+                t.rang += w_bedeutung * _rang(platz)
                 if not t.abschnitt:
                     t.abschnitt, t.ausschnitt = s.abschnitt, stelle_text
             else:
                 gemischt[schluessel] = Treffer(buch=buch, pfad=s.pfad, titel=s.titel or s.pfad.replace("_", " "),
                                                abschnitt=s.abschnitt, ausschnitt=stelle_text, wege=["bedeutung"],
-                                               rang=_rang(platz))
+                                               rang=w_bedeutung * _rang(platz))
             if beste is None:
                 beste = gemischt[schluessel].model_copy()
         liste = sorted(gemischt.values(), key=lambda t: t.rang, reverse=True)[:anzahl]

@@ -11,6 +11,7 @@
   import Suchfeld from "../teile/Suchfeld.svelte";
   import Buchmarke from "../teile/Buchmarke.svelte";
   import { bibliothek, bibliothekLaden, zahl, nutzbar } from "../lib/bibliothek.svelte";
+  import { abschnittFuer, suchregelnLaden } from "../lib/suchregeln.svelte";
   import { artikelHolen, korrekturHolen, sucheHolen, uebersetzungHolen, uebersetzungKorrigieren, type Uebersetzung } from "../lib/schnittstelle";
   import type { Artikel, Buch, Suchergebnis, Treffer } from "../lib/typen";
   import { lesen, suchen } from "../lib/ziele";
@@ -182,7 +183,7 @@
   }
 
   function oeffnen(t: Treffer) {
-    lesen(t.buch, t.pfad, { frage, abschnitt: t.abschnitt, weg: t.wege.includes("bedeutung") ? "bedeutung" : "index" });
+    lesen(t.buch, t.pfad, { frage, abschnitt: abschnittFuer(t.abschnitt), weg: t.wege.includes("bedeutung") ? "bedeutung" : "index" });
   }
 
   function umschalten(kennung: string) {
@@ -192,6 +193,8 @@
   const istHandbuch = (kennung: string) => bibliothek.buecher.find((b) => b.kennung === kennung)?.art === "dokumentation";
 
   $effect(() => void bibliothekLaden());
+
+  void suchregelnLaden();      // ob Treffer an ihrer Stelle öffnen (Einstellung, WIKI-79)
 </script>
 
 <div class="inhalt-stufe" data-schrift="klein">

@@ -5,6 +5,7 @@
   // Taste / setzt die Schreibmarke hierher (nur das Feld im Kopf).
   import { onMount } from "svelte";
   import { sucheHolen, vorschlaegeHolen } from "../lib/schnittstelle";
+  import { abschnittFuer, suchregeln, suchregelnLaden } from "../lib/suchregeln.svelte";
   import type { Treffer, Vorschlag } from "../lib/typen";
   import { buchName } from "../lib/bibliothek.svelte";
   import { kontextBuch } from "../lib/suchkontext";
@@ -74,7 +75,8 @@
         /* abgebrochen oder ohne Antwort: die Liste bleibt, wie sie war */
       }
     }, TITEL_WARTEN_MS);
-    if (jetzt.length < STELLEN_AB_ZEICHEN) {
+    void suchregelnLaden();
+    if (jetzt.length < STELLEN_AB_ZEICHEN || suchregeln.vorschlaege === "titel") {   // Einstellung: nur Titel (WIKI-79)
       stellen = [];
       return;
     }
@@ -106,7 +108,7 @@
       const [pfad, anker = ""] = (e.v.weiterleitung || e.v.pfad).split("#");
       lesen(e.v.buch, pfad, {}, anker);
     } else {
-      lesen(e.t.buch, e.t.pfad, { frage: gesucht, abschnitt: e.t.abschnitt, weg: "bedeutung" });
+      lesen(e.t.buch, e.t.pfad, { frage: gesucht, abschnitt: abschnittFuer(e.t.abschnitt), weg: "bedeutung" });
     }
   }
 

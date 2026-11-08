@@ -55,6 +55,7 @@ from .themen import Themen
 from .themen.api import router as themen_router
 from .zitieren.api import router as zitieren_router
 from .fassung import FASSUNG, WURZEL
+from .modell.suche import Suchregeln
 from .suche import Suche
 from .suche.bedeutung import FundusBedeutung
 
@@ -80,8 +81,13 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
         """Die Quelle der Bedeutungssuche in ihrer jüngsten Fassung (die Einstellung nennt eine Datei mit Stand)."""
         return await bibliothek.juengste_fassung(e().bedeutung_buch) if e().bedeutung_buch else ""
 
+    async def vorgewaehlte_buecher() -> list[str]:
+        """Einstellung Bücher in der Suche (Namen, über Fassungen hinweg) als Kennungen der jüngsten Fassung (WIKI-79)."""
+        return [k for name in e().suche_buecher if (k := await bibliothek.kennung_von(name))]
+
     suche = Suche(bibliothek, bedeutung, lambda: e().bedeutung_warten_s, bedeutungsbuch,
-                  lambda buch, pfad: "", eigen, nutzbare=quellen.nutzbare)
+                  lambda buch, pfad: "", eigen, nutzbare=quellen.nutzbare, mischung=lambda: e().mischung,
+                  vorgewaehlt=vorgewaehlte_buecher)
     indexauftraege = Indexauftraege(eigen, bibliothek, geruest.auftraege, lambda: e().indexdienst_schluessel.get_secret_value(),
                                     lambda: ARTEN_JE_STUFE[e().eigene_indizes], lambda: e().eigenindex_hoechstens_gb,
                                     nutzbare=quellen.nutzbare)
@@ -108,6 +114,15 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
                                  for b in stand.buecher], eigener_wert=False, stand=f"{len(stand.buecher)} Quellen")
 
     geruest.einstellungen.anbieten("bedeutung_buch", buecher)
+
+    async def buchnamen() -> Angebot:
+        """Bücher in der Suche: je Buch einmal, über den Namen (gilt für jede Fassung)."""
+        stand = await bibliothek.stand()
+        je = {b.name: b for b in sorted(stand.buecher, key=lambda b: b.stand)}
+        return Angebot(optionen=[Option(wert=n, titel=b.titel, hinweis=f"{b.sprache}, {b.artikel} Artikel") for n, b in sorted(je.items())],
+                       eigener_wert=False, stand=f"{len(je)} Bücher")
+
+    geruest.einstellungen.anbieten("suche_buecher", buchnamen)
     geruest.einstellungen.anbieten("hoerdienst", geruest.leitstelle_angebot("hoeren"))
     geruest.einstellungen.anbieten("sprechdienst", geruest.leitstelle_angebot("stimme"))
     geruest.einstellungen.anbieten("klondienst", geruest.leitstelle_angebot("stimme_klonen"))
@@ -187,7 +202,8 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     app.state.geruest = geruest
     app.state.bibliothek = bibliothek
     app.state.indexauftraege = indexauftraege
-    app.include_router(router(geruest, bibliothek, leser, suche, quellen))
+    app.include_router(router(geruest, bibliothek, leser, suche, quellen,
+                              suchregeln=lambda: Suchregeln(vorschlaege=e().vorschlaege, an_der_stelle=e().an_der_stelle)))
     app.include_router(mcp_router(geruest, mcp_werkzeuge(bibliothek, suche, leser)))   # MCP-Werkzeuge für KI (WIKI-78)
     app.include_router(quellenarchiv_router(geruest, quellen))
     app.include_router(buecherlader_router(geruest, lader))
@@ -206,7 +222,8 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
                                            Stellenuebersetzer(lambda: geruest.leitstelle, lambda: e().suchmodell)))
     app.include_router(vorlesen_router(geruest, sprechdienst))     # Vorlesen über die Leitstelle (WIKI-43)
     app.include_router(sprache_router(geruest, lambda: e().hoerdienst))
-    app.include_router(korrektur_router(geruest, Korrektor(eigen.alle, lambda: geruest.leitstelle, lambda: e().suchmodell)))
+    app.include_router(korrektur_router(geruest, Korrektor(eigen.alle, lambda: geruest.leitstelle, lambda: e().suchmodell),
+                                         an=lambda: e().tippfehler))
     app.include_router(indexdienst_router(indexauftraege))           # nur mit dem Schlüssel des Index-Dienstes
     # unter /lesen trägt der Weg Pfade aus Büchern, oft mit Punkt (function.array-map.php): immer eine Seite
     geruest.oberflaeche_ausliefern(app, seiten=["lesen"])

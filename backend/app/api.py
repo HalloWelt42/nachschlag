@@ -4,6 +4,8 @@ Rahmen mit dem Lesezugang der Sitzung (Cookie, gilt nur für diesen Pfad), weil 
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import re
 from typing import Literal
 
@@ -16,7 +18,7 @@ from .artikel import Artikelleser
 from .bibliothek import Bibliothek, BuchFehlt, EintragFehlt
 from .modell.artikel import Artikel
 from .modell.buch import Bibliotheksstand, Buch
-from .modell.suche import Suchergebnis, Vorschlag
+from .modell.suche import Suchergebnis, Suchregeln, Vorschlag
 from .quellenarchiv import Quellenarchiv
 from .suche import Suche
 
@@ -31,7 +33,8 @@ def _fehlt(f: Exception) -> HTTPException:
     return HTTPException(status_code=404, detail=str(f))
 
 
-def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche: Suche, quellen: Quellenarchiv) -> APIRouter:
+def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche: Suche, quellen: Quellenarchiv,
+           suchregeln: Callable[[], Suchregeln] | None = None) -> APIRouter:
     r = APIRouter(prefix="/api/v1", tags=["nachschlag"])
     pflicht, lesen = [geruest.pflicht], [geruest.lesen]
 
@@ -69,6 +72,11 @@ def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche:
                           anzahl: int = Query(8, ge=1, le=30)) -> list[Vorschlag]:
         """Titel, die mit dem Getippten beginnen oder es enthalten (Titelindex der Bücher)."""
         return await suche.vorschlaege(anfang, buecher, anzahl)
+
+    @r.get("/suche/regeln", response_model=Suchregeln, dependencies=pflicht)
+    async def regeln() -> Suchregeln:
+        """Was die Oberfläche aus den Einstellungen der Suche braucht: Vorschläge beim Tippen, Treffer an der Stelle öffnen."""
+        return suchregeln() if suchregeln else Suchregeln(vorschlaege="titel_stellen", an_der_stelle=True)
 
     @r.get("/suche", response_model=Suchergebnis, dependencies=pflicht)
     async def suchen(frage: str = Query(min_length=1, max_length=400), buecher: list[str] = Query(default=[]),

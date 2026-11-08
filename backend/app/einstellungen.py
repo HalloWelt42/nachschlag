@@ -147,6 +147,25 @@ class AppEinstellungen(Grundeinstellungen):
     bedeutung_warten_s: float = Field(1.5, ge=0.2, le=10, title="Warten auf die Bedeutungssuche",
                                       json_schema_extra={**SUCHE, "schritt": 0.1, "einheit": "Sekunden"},
                                       description="Danach kommen die Treffer aus dem Index allein, mit Hinweis.")
+    # --- Suche: Mischung und Komfort (WIKI-79, Entwurf einstellungen-suche.html) ---------------------------------------
+    mischung: Literal["index", "ausgewogen", "bedeutung"] = Field(
+        "ausgewogen", title="Mischung", json_schema_extra={**SUCHE, "beschriftungen": {
+            "index": "Mehr Index", "ausgewogen": "Ausgewogen", "bedeutung": "Mehr Bedeutung"}},
+        description="Wie Treffer beider Wege zu einer Liste werden. Ausgewogen nutzt die Rangfolge beider gleich; mehr Index "
+                    "oder mehr Bedeutung zählt den einen Weg doppelt.")
+    vorschlaege: Literal["titel", "titel_stellen"] = Field(
+        "titel_stellen", title="Vorschläge beim Tippen", json_schema_extra={**SUCHE, "beschriftungen": {
+            "titel": "Nur Titel", "titel_stellen": "Titel und Stellen"}},
+        description="Titel mit Bild und Kurztext, auf Wunsch darunter passende Stellen (fragt die Suche schon beim Tippen).")
+    tippfehler: bool = Field(True, title="Tippfehler verzeihen", json_schema_extra=SUCHE,
+                             description="Schlägt bei einem Tippfehler die gemeinte Frage vor (\"Andromeda galaxie\" findet "
+                                         "Andromedagalaxie); ohne Treffer sucht die Suche gleich mit dem Vorschlag.")
+    suche_buecher: list[str] = Field(default_factory=list, title="Bücher in der Suche", json_schema_extra=SUCHE,
+                                     description="In welchen Büchern die Suche sucht, solange nichts anderes gewählt ist; leer: in "
+                                                 "allen. Gilt über neue Fassungen eines Buchs hinweg.")
+    an_der_stelle: bool = Field(True, title="Treffer direkt an der Stelle öffnen", json_schema_extra=SUCHE,
+                                description="Ein Bedeutungstreffer springt in seinen Abschnitt und markiert die Fundstelle; aus: "
+                                            "der Artikel öffnet oben.")
 
     @field_validator("suchmodell", mode="before")
     @classmethod

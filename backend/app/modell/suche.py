@@ -53,3 +53,9 @@ class Vorschlag(BaseModel):
     weiterleitung: str = Field("", description="Ziel, wenn der Titel eine Weiterleitung ist (etwa auf einen Abschnitt)")
     kurztext: str = Field("", description="Anfang der Einleitung")
     bild: str = ""
+
+
+class Suchregeln(BaseModel):
+    """Was die Oberfläche zur Suche aus den Einstellungen wissen muss (WIKI-79)."""
+    vorschlaege: Literal["titel", "titel_stellen"] = Field(description="Vorschläge beim Tippen: nur Titel oder auch Stellen")
+    an_der_stelle: bool = Field(description="Bedeutungstreffer öffnen in ihrem Abschnitt")
