@@ -706,7 +706,7 @@ class Buecher(Begleiter):
         try:
             v = await self._vorlage(s.vorlage)
             plan = await self._plan(konto, s.bestellung, v)
-        except LookupError:
+        except (LookupError, ValueError):                 # Vorlage gelöscht oder gerade nicht lesbar: ohne Hinweis
             return None
         jetzt = {x.id: x for x in plan.eintraege}
         neu = [x for i, x in jetzt.items() if i not in set(s.eintraege)]
