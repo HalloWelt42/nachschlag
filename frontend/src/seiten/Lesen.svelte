@@ -944,7 +944,7 @@
       <button class="knopf" title="Notiz zum ganzen Artikel; für eine Stelle den Text markieren" onclick={notizZumArtikel}>
         <i class="fa-regular fa-note-sticky"></i><span class="wort">Notiz</span>{#if artikelNotizen.length}<span class="zahl">{artikelNotizen.length}</span>{/if}</button>
       {#if buch}<ThemaWahl artikel={{ buch: artikel.buch, pfad: artikel.pfad, titel: artikel.titel, bild: artikel.bild }} buchName={buch.name} />{/if}
-      {#if artikel.darstellung !== "original"}
+      {#if artikel.darstellung !== "original" && artikel.original}<!-- ohne Original: Seiten, die das Buch nicht selbst hat (Kategorien aus den Datenabzügen) -->
         <button class="knopf" class:an={original} title="Die Seite so, wie sie in der Quelle steht" onclick={() => (original = !original)}>
           <i class="fa-solid fa-file-code"></i><span class="wort">Original</span></button>
       {/if}
