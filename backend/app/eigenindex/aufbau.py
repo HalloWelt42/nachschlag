@@ -22,6 +22,7 @@ from lxml import html as lhtml
 
 from ..bausteine import Wege, baustein_fuer
 from ..bibliothek import Eintrag
+from ..bibliothek.ordner import sprungziel
 from ..modell.anleitung import Anleitungsangaben, Geraeteangaben
 from ..modell.artikel import FrageAngaben
 from ..modell.buch import Buch
@@ -31,7 +32,6 @@ from . import schema
 STAPEL = 400
 #: So viel Text je Seite kommt in den Volltext (lange Seiten tragen ihr Thema vorn)
 TEXT_HOECHSTENS = 20_000
-_SPRUNG = re.compile(rb"http-equiv=[\"']?refresh", re.I)
 #: Steuerzeichen, die XML nicht erlaubt (in Seiten der Quellen vereinzelt vorhanden; lxml weist sie beim Setzen ab)
 _STEUERZEICHEN = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
 
@@ -336,7 +336,7 @@ def bauen(archiv: Archive, buch: Buch, wege: Wege, ziel: Path, melden: Callable[
             if not item.mimetype.startswith("text/html"):
                 continue
             inhalt = bytes(item.content)
-            if len(inhalt) < 4096 and _SPRUNG.search(inhalt):
+            if sprungziel(item.mimetype, inhalt):
                 continue                                    # Sprungseite: zeigt auf eine andere Seite
             ab = schema.abdruck(inhalt)
             gleich = quelle.seite(e.path, ab) if quelle else None

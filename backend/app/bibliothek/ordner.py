@@ -23,16 +23,27 @@ from ..modell.buch import Art, Bibliotheksstand, Buch, Faehigkeiten
 logger = logging.getLogger("nachschlag.bibliothek")
 #: Erzeuger und die Grundstruktur ihrer Bücher; erkannt am Anfang der Angabe Scraper
 ERZEUGER: tuple[tuple[str, Art], ...] = (("mwoffliner", "enzyklopaedie"), ("devdocs", "dokumentation"),
-                                        ("sotoki", "frage_antwort"), ("warc2zim", "webseite"), ("zimit", "webseite"))
+                                        ("sotoki", "frage_antwort"), ("fcc2zim", "uebung"), ("warc2zim", "webseite"),
+                                        ("zimit", "webseite"))
 #: Spiegel von Seiten (warc2zim, zimit), deren Inhalt eine bekannte Art ist: die Quelle (Metadatum Source) entscheidet
 QUELLEN: tuple[tuple[str, Art], ...] = (("php.net/manual", "dokumentation"),)
 #: Bücher ohne Angabe Scraper, deren Art die Kategorie in den Schlagworten (Tags `_category:...`) verrät (WIKI-64)
 KATEGORIEN: tuple[tuple[str, Art], ...] = (("ifixit", "anleitung"),)
 #: Arten mit eigenem Lesedesign (wächst mit den Bausteinen)
-MIT_LESEDESIGN: set[Art] = {"enzyklopaedie", "dokumentation", "frage_antwort", "anleitung"}
+MIT_LESEDESIGN: set[Art] = {"enzyklopaedie", "dokumentation", "frage_antwort", "anleitung", "uebung"}
 #: Stand am Ende eines Dateinamens (`_2026-10`); davor steht das Buch in seiner Ausgabe
 STAND = re.compile(r"_\d{4}-\d{2}$")
 UMLEITUNG_HTML = re.compile(rb"""<meta[^>]+http-equiv=["']refresh["'][^>]+URL=['"]?\.?/?([^'">]+)""", re.I)
+
+
+def sprungziel(mime: str, inhalt: bytes) -> tuple[str, str] | None:
+    """Ziel einer Sprungseite (Pfad und Anker, noch verschlüsselt), sonst None. So legt mwoffliner Weiterleitungen auf
+    Abschnitte an (`Seite#Abschnitt`). Ein Anker mit Schrägstrich ist dagegen eine Route einer Skript-Anwendung
+    (`index.html#kurs/block/aufgabe`, fcc2zim): die Seite ist dann sie selbst, kein Sprung (WIKI-66)."""
+    if not mime.startswith("text/html") or len(inhalt) >= 4096 or not (m := UMLEITUNG_HTML.search(inhalt)):
+        return None
+    ziel, _, anker = m.group(1).decode("utf-8", "replace").partition("#")
+    return None if "/" in anker else (ziel, anker)
 
 
 class BuchFehlt(LookupError):
@@ -184,9 +195,9 @@ class Bibliothek:
         item = e.get_item()
         inhalt = bytes(item.content)
         # Weiterleitung als HTML-Seite mit Sprung (so legt mwoffliner Weiterleitungen auf Abschnitte an)
-        if tiefe < 3 and item.mimetype.startswith("text/html") and len(inhalt) < 4096 and (m := UMLEITUNG_HTML.search(inhalt)):
-            # der Sprung steht als Adresse im HTML (verschlüsselt): einmal entschlüsseln, Anker abtrennen
-            ziel, _, ziel_anker = m.group(1).decode("utf-8", "replace").partition("#")
+        if tiefe < 3 and (sprung := sprungziel(item.mimetype, inhalt)):
+            # der Sprung steht als Adresse im HTML (verschlüsselt): einmal entschlüsseln
+            ziel, ziel_anker = sprung
             basis = e.path.rsplit("/", 1)[0] + "/" if "/" in e.path else ""
             weiter = self._eintrag(kennung, basis + unquote(ziel), tiefe + 1, unquote(ziel_anker))
             return weiter

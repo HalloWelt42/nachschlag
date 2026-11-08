@@ -1,6 +1,6 @@
 // Was die Schnittstelle von Nachschlag liefert (Spiegel der Modelle in backend/app/modell).
 
-export type Art = "enzyklopaedie" | "dokumentation" | "frage_antwort" | "anleitung" | "webseite" | "sonstiges";
+export type Art = "enzyklopaedie" | "dokumentation" | "frage_antwort" | "anleitung" | "uebung" | "webseite" | "sonstiges";
 
 export interface Faehigkeiten {
   titelindex: boolean;
@@ -88,7 +88,7 @@ export interface Artikel {
   angefragt: string;
   anker: string;
   titel: string;
-  darstellung: "lesedesign" | "uebersicht" | "original" | "anleitung" | "geraet" | "anleitungen";
+  darstellung: "lesedesign" | "uebersicht" | "original" | "anleitung" | "geraet" | "anleitungen" | "uebung" | "uebungen";
   baustein: string;
   html: string;
   einleitung: string;
@@ -111,6 +111,8 @@ export interface Artikel {
   weiter: string;
   anleitung: Anleitungsangaben | null;    // Anleitung oder Zerlegung (iFixit, WIKI-64)
   geraet: Geraeteangaben | null;          // Gerät, Kategorie oder Startseite (iFixit, WIKI-64)
+  uebung?: Uebungsangaben | null;         // Aufgabe eines Übungsbuchs (freeCodeCamp, WIKI-66)
+  kurse?: Kursangaben | null;             // Startseite eines Übungsbuchs
 }
 
 export type Weg = "bedeutung" | "index";
@@ -338,3 +340,16 @@ export interface Anleitungsfunde {
 }
 export interface Werkzeugeintrag { wort: string; anleitungen: number }
 export interface Einordnung { weg: Einordnungsschritt[]; bauteil: string }
+
+// --- Übungen (freeCodeCamp, WIKI-66): Aufgaben in Kursen und Blöcken ---
+export interface Uebungscode { sprache: string; code: string }
+export interface Pruefpunkt { html: string; test: string }
+export interface Aufgabenverweis { pfad: string; titel: string }
+export interface Uebungsangaben {
+  kurs: string; kurs_titel: string; block: string; block_titel: string; nr: number; anzahl: number; beschreibung: string;
+  anleitung: string; hinweise: Pruefpunkt[]; startcode: Uebungscode[]; loesungen: Uebungscode[];
+  vorige: Aufgabenverweis | null; naechste: Aufgabenverweis | null;
+}
+export interface Uebungsblock { kennung: string; titel: string; einleitung: string[]; aufgaben: Aufgabenverweis[] }
+export interface Uebungskurs { kennung: string; titel: string; einleitung: string[]; bloecke: Uebungsblock[] }
+export interface Kursangaben { kurse: Uebungskurs[] }

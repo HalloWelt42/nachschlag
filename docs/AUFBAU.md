@@ -27,6 +27,13 @@ Schlagworte), nie am Dateinamen. Suche, Merkzettel, Notizen und Themen kennen nu
 | Originalansicht | alle übrigen | Bau 1, Rückfall für jedes Buch |
 | Dokumentation | devdocs2zim | Bau 6 |
 | Frage und Antwort | sotoki | Bau 6 |
+| Anleitung, Gerät, Anleitungen finden | ohne Erzeuger, Kategorie iFixit | WIKI-64 |
+| Übung, Übungen (Kurse) | fcc2zim (freeCodeCamp) | WIKI-66 |
+
+Sprungseiten: eine kleine HTML-Seite mit `meta refresh` auf `Seite#Abschnitt` ist eine Weiterleitung (mwoffliner) und
+wird aufgelöst. Ein Sprung auf einen Anker mit Schrägstrich (`index.html#kurs/block/aufgabe`, fcc2zim) ist dagegen eine
+Route einer Skript-Anwendung: die Seite bleibt sie selbst, ihr Baustein liest den Inhalt aus den Dateien des Buchs
+(`bibliothek.ordner.sprungziel`, eine Regel für Lesen und Index).
 
 ## Suche
 

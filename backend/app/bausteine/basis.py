@@ -12,6 +12,7 @@ from typing import Protocol
 
 from ..bibliothek import Eintrag
 from ..modell.anleitung import Anleitungsangaben, Geraeteangaben
+from ..modell.uebung import Kursangaben, Uebungsangaben
 from ..modell.artikel import (Abschnitt, Beleg, Darstellung, FrageAngaben, Fragekarte, Gruppe, Kachel, Nachbar, Steckbrief,
                               Verweiszahlen)
 from ..modell.buch import Art, Buch
@@ -53,6 +54,8 @@ class Aufbereitet:
     belege: list[Beleg] = field(default_factory=list)   # Einzelnachweise (Enzyklopädie), Marken im Text: span.beleg
     anleitung: Anleitungsangaben | None = None    # Anleitung oder Zerlegung (iFixit, WIKI-64): Lesen, Werkstatt, Index
     geraet: Geraeteangaben | None = None          # Geräteseite oder Kategorie (iFixit, WIKI-64)
+    uebung: Uebungsangaben | None = None          # Aufgabe eines Übungsbuchs (freeCodeCamp, WIKI-66)
+    kurse: Kursangaben | None = None              # Startseite eines Übungsbuchs: Kurse, Blöcke, Aufgaben
 
 
 class Baustein(Protocol):

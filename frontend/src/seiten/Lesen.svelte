@@ -31,6 +31,8 @@
   import Fragekarte from "../teile/Fragekarte.svelte";
   import Anleitungssuche from "../teile/Anleitungssuche.svelte";
   import Geraeteseite from "../teile/Geraeteseite.svelte";
+  import Uebung from "../teile/Uebung.svelte";
+  import Uebungen from "../teile/Uebungen.svelte";
   import Codeansicht from "../teile/Codeansicht.svelte";
   import { ausprobierstand, beispieleHolen, beispielLoeschen, codeSprache, type Beispiel, type Codesprache,
            type Probe } from "../lib/ausprobieren";
@@ -1052,6 +1054,12 @@
   {:else if artikel.darstellung === "anleitungen" && artikel.geraet && !original}
     <!-- Startseite eines Anleitungsbuchs: Anleitungen finden, ohne Filter die Kategorien (WIKI-64) -->
     <Anleitungssuche {artikel} />
+  {:else if artikel.darstellung === "uebung" && artikel.uebung && !original}
+    <!-- Aufgabe eines Übungsbuchs (freeCodeCamp, WIKI-66) -->
+    <Uebung {artikel} />
+  {:else if artikel.darstellung === "uebungen" && artikel.kurse && !original}
+    <!-- Startseite eines Übungsbuchs: Kurse, Blöcke, Aufgaben -->
+    <Uebungen {artikel} />
   {:else if artikel.darstellung === "geraet" && artikel.geraet && !original}
     <!-- Gerät oder Kategorie eines Anleitungsbuchs (WIKI-64) -->
     <Geraeteseite {artikel} />

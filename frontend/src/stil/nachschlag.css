@@ -1437,3 +1437,43 @@ button.kachel:disabled { opacity: .6; cursor: default; }
   .anl-einordnung > a:last-child { margin-left: 0; }
 }
 @media (max-width: 900px) { .anl-g-kopf { grid-template-columns: minmax(0, 1fr); } .anl-g-kopf > .anl-bildknopf { width: 100%; max-width: 360px; } }
+
+/* ----- Übungen (teile/Uebung.svelte, teile/Uebungen.svelte; freeCodeCamp, WIKI-66) ----- */
+.ueb-seite { --ueb-rand: var(--a5); display: flex; flex-direction: column; gap: var(--a5); padding: var(--a4) var(--ueb-rand) var(--a6); max-width: 980px; }
+.ueb-seite.mit-kopf { padding-top: 0; }   /* der stehende Kopf sitzt bündig oben */
+.ueb-seite > *, .ueb-abschnitt > * { min-width: 0; max-width: 100%; }   /* breiter Code rollt in seinem Kasten, nie die Seite */
+.ueb-seite pre { overflow-x: auto; }
+.ueb-ort { display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--a2); font-size: var(--klein); color: var(--text-3); }
+.ueb-ort a { display: inline-flex; gap: 6px; align-items: center; color: var(--akzent); text-decoration: none; }
+.ueb-ort > i { font-size: var(--marke); }
+.ueb-stelle { margin-left: auto; font-family: var(--schrift-zahl); }
+.ueb-abschnitt { display: flex; flex-direction: column; gap: var(--a3); align-items: flex-start; }
+.ueb-abschnitt h2 { margin: 0; width: 100%; font-size: var(--titel); display: flex; gap: var(--a2); align-items: center; }
+.ueb-abschnitt h2 .ueb-kopieren { margin-left: auto; }
+.ueb-text { width: 100%; }
+.ueb-code { width: 100%; }
+.ueb-code pre, .ueb-test pre { margin: 0; }
+.ueb-pruefpunkte { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: var(--a3); width: 100%; }
+.ueb-pruefpunkte .ueb-text p { margin: 0; }
+.ueb-test summary { cursor: pointer; font-size: var(--klein); color: var(--text-3); margin-top: 4px; }
+.ueb-loesung { display: flex; flex-direction: column; gap: var(--a3); width: 100%; }
+.ueb-leise { font-size: var(--klein); color: var(--text-3); }
+.ueb-zeile { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a3); }
+.ueb-nachbarn { display: flex; justify-content: space-between; gap: var(--a3); flex-wrap: wrap; padding-top: var(--a3); border-top: 1px solid var(--rand); }
+.ueb-nachbarn a { max-width: min(100%, 420px); }
+.ueb-nachbarn a span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ueb-weiter { margin-left: auto; }
+.ueb-filter { max-width: 420px; }
+.ueb-kurs { display: flex; flex-direction: column; gap: var(--a3); }
+.ueb-kurs h2 { margin: 0; font-size: var(--titel); display: flex; gap: var(--a2); align-items: center; }
+.ueb-einleitung { margin: 0; color: var(--text-2); }
+.ueb-block { background: var(--flaeche); border-radius: var(--r2); }
+.ueb-block summary { display: flex; justify-content: space-between; gap: var(--a3); padding: var(--a3) var(--a4); cursor: pointer; font-weight: 600; }
+.ueb-zahl { font-family: var(--schrift-zahl); font-weight: 400; color: var(--text-3); }
+.ueb-aufgaben { list-style: none; margin: 0; padding: 0 var(--a2) var(--a3); columns: 2 320px; column-gap: var(--a4); }
+.ueb-aufgaben li { break-inside: avoid; }
+.ueb-aufgaben a { display: flex; gap: var(--a2); padding: 5px var(--a2); color: var(--text); text-decoration: none; border-radius: var(--r1); }
+.ueb-aufgaben a:hover { background: var(--flaeche-2); }
+.ueb-nr { font-family: var(--schrift-zahl); color: var(--text-3); min-width: 2.2em; text-align: right; flex: none; }
+.ueb-titel { min-width: 0; overflow-wrap: anywhere; }   /* lange Titel ohne Leerzeichen brechen statt die Seite zu verbreitern */
+@media (max-width: 700px) { .ueb-seite { --ueb-rand: var(--a3); } .ueb-stelle { margin-left: 0; } }

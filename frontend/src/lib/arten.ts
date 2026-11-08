@@ -2,11 +2,11 @@
 import type { Art } from "./typen";
 
 export const ART_SYMBOL: Record<Art, string> = {
-  enzyklopaedie: "fa-book", dokumentation: "fa-code", frage_antwort: "fa-comments", anleitung: "fa-screwdriver-wrench",
+  enzyklopaedie: "fa-book", dokumentation: "fa-code", frage_antwort: "fa-comments", anleitung: "fa-screwdriver-wrench", uebung: "fa-graduation-cap",
   webseite: "fa-globe", sonstiges: "fa-box-archive",
 };
 
 export const ART_NAME: Record<Art, string> = {
-  enzyklopaedie: "Nachschlagewerk", dokumentation: "Dokumentation", frage_antwort: "Frage und Antwort", anleitung: "Anleitungen",
+  enzyklopaedie: "Nachschlagewerk", dokumentation: "Dokumentation", frage_antwort: "Frage und Antwort", anleitung: "Anleitungen", uebung: "Übungen",
   webseite: "Webseite", sonstiges: "unbekannte Art",
 };

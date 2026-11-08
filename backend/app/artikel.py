@@ -56,6 +56,7 @@ class Artikelleser:
                        gruppen=fertig.gruppen, rubrik=fertig.rubrik, rubrik_pfad=fertig.rubrik_pfad, nachbarn=fertig.nachbarn, titelart=fertig.titelart,
                        fragen=fertig.fragen, zurueck=fertig.zurueck, weiter=fertig.weiter, belege=fertig.belege,
                        quelle_url=online_adresse(b, eintrag.pfad), anleitung=fertig.anleitung, geraet=fertig.geraet,
+                       uebung=fertig.uebung, kurse=fertig.kurse,
                        **_verfasser(fertig))
 
     async def zufall(self, buch: str) -> str:

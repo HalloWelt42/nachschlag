@@ -4,6 +4,7 @@ Koordinaten und ein Online-Verweis."""
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from libzim.writer import Creator, Hint, Item, StringProvider
@@ -345,4 +346,79 @@ def bauen_anleitungen(ordner: Path, name: str = "probefix_de_all_2026-03") -> Pa
         c.add_item(_Seite("User/1/x", "Tester", "<html><body><div class='aboutBox'>Tester</div></body></html>"))
         for bild in ("haupt", "w", "g", "s1a", "s1b", "s2a", "s2b"):
             c.add_item(_Seite(f"images/{bild}.png", "", PNG, "image/png", vorne=False))
+    return datei
+
+
+# ----- Probebuch Übungen (Aufbau fcc2zim, WIKI-66): Skript-Anwendung, Aufgaben als Markdown ---------------------------
+
+AUFGABE_1 = """---
+id: a1
+title: Summe bilden
+challengeType: 1
+---
+
+# --description--
+
+Schreiben Sie eine Funktion `summe`, die zwei Zahlen addiert.
+
+# --instructions--
+
+Nutzen Sie den Operator `+`.
+
+# --hints--
+
+`summe` sollte eine Funktion sein.
+
+```js
+assert(typeof summe === 'function');
+```
+
+`summe(1, 2)` sollte `3` ergeben.
+
+```js
+assert.strictEqual(summe(1, 2), 3);
+```
+
+# --seed--
+
+## --seed-contents--
+
+```js
+function summe(a, b) {
+
+}
+```
+
+# --solutions--
+
+```js
+function summe(a, b) { return a + b; }
+```
+"""
+AUFGABE_2 = AUFGABE_1.replace("Summe bilden", "Produkt bilden").replace("addiert", "multipliziert")
+
+
+def _sprung_in_anwendung(route: str) -> str:
+    return f"<html><head><title>x</title><meta http-equiv=\"refresh\" content=\"0;URL='../../../index.html#{route}'\" /></head><body></body></html>"
+
+
+def bauen_uebungen(ordner: Path, name: str = "probecamp_de_all_2026-10") -> Path:
+    ordner.mkdir(parents=True, exist_ok=True)
+    datei = ordner / f"{name}.zim"
+    gliederung = {"grundlagen": {"rechnen": [{"title": "Summe bilden", "slug": "a1"}, {"title": "Produkt bilden", "slug": "a2"}]}}
+    einfuehrung = {"grundlagen": {"title": "Grundlagen der Programmierung", "intro": ["Erste Schritte mit <b>JavaScript</b>."],
+                                  "blocks": {"rechnen": {"title": "Rechnen", "intro": ["Zahlen verknüpfen."]}}}}
+    with Creator(str(datei)).config_indexing(True, "deu") as c:
+        c.set_mainpath("index.html")
+        for schluessel, wert in (("Name", name.rsplit("_", 1)[0]), ("Title", "Probecamp"), ("Language", "deu"),
+                                 ("Description", "Übungen für die Tests"), ("Date", "2026-10-01"), ("Scraper", "fcc2zim v2.1.0"),
+                                 ("Creator", "freeCodeCamp"), ("Publisher", "openZIM"), ("Tags", "FCC;freeCodeCamp")):
+            c.add_metadata(schluessel, wert)
+        c.add_item(_Seite("index.html", "Probecamp", "<html><body><div id='app'></div><noscript>JavaScript nötig</noscript></body></html>"))
+        for slug, titel in (("a1", "Summe bilden"), ("a2", "Produkt bilden")):
+            c.add_item(_Seite(f"index/grundlagen/rechnen/{slug}.html", titel, _sprung_in_anwendung(f"grundlagen/rechnen/{slug}")))
+        c.add_item(_Seite("content/curriculum/grundlagen/rechnen/a1.md", "", AUFGABE_1, "text/markdown", vorne=False))
+        c.add_item(_Seite("content/curriculum/grundlagen/rechnen/a2.md", "", AUFGABE_2, "application/javascript", vorne=False))
+        c.add_item(_Seite("content/curriculum/index.json", "", json.dumps(gliederung), "application/json", vorne=False))
+        c.add_item(_Seite("content/locales/intro.json", "", json.dumps(einfuehrung), "application/json", vorne=False))
     return datei

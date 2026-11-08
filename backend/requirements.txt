@@ -9,3 +9,4 @@ soundfile>=0.12,<1           # Hördateien der Sammlungen als Opus oder MP3 (WIK
 numpy>=1.26
 tzdata                       # Nachtfenster in Ortszeit, auch ohne Zeitzonen im Abbild
 lxml>=5
+markdown-it-py>=3,<4        # Übungen (freeCodeCamp) liegen als Markdown im Buch (WIKI-66)
