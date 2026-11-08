@@ -1515,3 +1515,28 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 /* Verweist hierher (WIKI-20) in "Über diesen Artikel": lange Listen in Spalten */
 .artikel-ueber ul.hierher { columns: 2 220px; column-gap: var(--a4); margin: 0; padding-left: 1.2em; }
 .artikel-ueber ul.hierher li { break-inside: avoid; }
+
+/* ===== Einstellungen, Reiter Bildholer (WIKI-80) ===== */
+.bh-seite { display: flex; flex-direction: column; gap: var(--a3); padding: var(--a3) var(--a4) var(--a6); max-width: 980px; }
+.bh-lage { display: flex; flex-direction: column; gap: var(--a3); padding: var(--a4); }
+.bh-kopf { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a3); }
+.bh-kopf b { font-size: var(--titel); }
+.bh-zustand { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: var(--r2); background: var(--flaeche-2); font-size: var(--klein); }
+.bh-zustand.gut { background: var(--gut-weich); color: var(--gut); }
+.bh-zustand.warn { background: var(--warn-weich); color: var(--warn); }
+.bh-knopf { margin-left: auto; }
+.bh-grund { margin: 0; color: var(--text-2); font-size: var(--klein); }
+.bh-zahlen { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--a3); }
+.bh-zahlen div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bh-zahlen .k, .bh-zuletzt .k { font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; }
+.bh-zahlen .w { font-family: var(--schrift-zahl); font-size: var(--gross); }
+.bh-zahlen .u { font-size: var(--marke); color: var(--text-3); }
+.bh-stufen { display: flex; flex-direction: column; gap: 6px; }
+.bh-stufe { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: var(--a2); align-items: center; font-size: var(--klein); }
+.bh-stufe i { color: var(--akzent); text-align: center; }
+.bh-stufe .zahl { font-family: var(--schrift-zahl); color: var(--text-2); }
+.bh-zuletzt { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.bh-bild { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 2px 8px; border-radius: var(--r1); background: var(--flaeche-2); font-size: var(--marke); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bh-px { font-family: var(--schrift-zahl); color: var(--text-3); }
+.bh-hinweis { display: flex; gap: var(--a2); align-items: baseline; margin: 0; color: var(--text-2); font-size: var(--klein); }
+@media (max-width: 700px) { .bh-zahlen { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

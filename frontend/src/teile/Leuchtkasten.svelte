@@ -4,11 +4,12 @@
   // schließt. Die Bücher bringen meist nur Vorschaubilder mit; die Ansicht zeigt das ehrlich bei der Größe.
   // Telefon (WIKI-27, WIKI-69): nur das Bild über den ganzen Schirm, Angaben und Streifen hinter dem Knopf Info;
   // Wischen blättert. Vergrößern überall (Zoombild): zwei Finger, Doppeltippen, Mausrad; vergrößert verschiebt der
-  // Finger das Bild statt zu blättern.
+  // Finger das Bild statt zu blättern. Hat der Bildholer das große Bild schon geholt (WIKI-80), zeigt die Ansicht es mit
+  // Urheber und Lizenz; sonst das Vorschaubild aus dem Buch.
   import { onMount, tick } from "svelte";
   import { bibliothekLaden, buch as buchVon } from "../lib/bibliothek.svelte";
   import { themenLaden } from "../lib/themen.svelte";
-  import type { Medium } from "../lib/medien";
+  import { grossAdresse, grossAngaben, type Grossangaben, type Medium } from "../lib/medien";
   import { lesen } from "../lib/ziele";
   import ThemaWahl from "./ThemaWahl.svelte";
   import Zoombild from "./Zoombild.svelte";
@@ -44,6 +45,13 @@
   });
 
   const m = $derived(medien[index]);
+  let gross = $state<Grossangaben | null>(null);
+  $effect(() => {
+    const bild = m?.bild ?? "";
+    gross = null;
+    if (bild) void grossAngaben(bild).then((g) => { if (m?.bild === bild) gross = g; });
+  });
+  const zahl = (n: number) => n.toLocaleString("de-DE");
   const buch = $derived(m ? buchVon(m.buch) : undefined);
 
   async function gehe(neu: number) {
@@ -81,7 +89,7 @@
       </div>
       <div class="bild-b" onpointerdown={wischBeginn} onpointerup={wischEnde} role="presentation">
         {#if medien.length > 1}<button class="pfeil l" title="Voriges (Pfeil links)" onclick={() => gehe(index - 1)}><i class="fa-solid fa-chevron-left"></i></button>{/if}
-        <Zoombild src={m.bild} alt={m.unterschrift} bind:vergroessert />
+        <Zoombild src={gross ? grossAdresse(m.bild) : m.bild} alt={m.unterschrift} bind:vergroessert />
         {#if medien.length > 1}<button class="pfeil r" title="Nächstes (Pfeil rechts)" onclick={() => gehe(index + 1)}><i class="fa-solid fa-chevron-right"></i></button>{/if}
       </div>
       {#if medien.length > 1}
@@ -99,7 +107,11 @@
       <b class="titel">{m.unterschrift || m.datei}</b>
       <dl>
         <dt>Artikel</dt><dd>{m.artikel}{m.abschnitt ? `, Abschnitt ${m.abschnitt}` : ""}</dd>
-        {#if m.breite}<dt>Größe</dt><dd>{m.breite} x {m.hoehe} Pixel, wie in der Quelle</dd>{/if}
+        {#if gross}
+          <dt>Größe</dt><dd>{zahl(gross.breite)} x {zahl(gross.hoehe)} Pixel, groß aus der Bildquelle (Original {zahl(gross.original)} Pixel breit)</dd>
+          {#if gross.urheber}<dt>Urheber</dt><dd>{gross.urheber}</dd>{/if}
+          {#if gross.lizenz}<dt>Lizenz</dt><dd>{#if gross.lizenz_url}<a href={gross.lizenz_url} target="_blank" rel="noopener noreferrer">{gross.lizenz}</a>{:else}{gross.lizenz}{/if}</dd>{/if}
+        {:else if m.breite}<dt>Größe</dt><dd>{m.breite} x {m.hoehe} Pixel, wie in der Quelle</dd>{/if}
         <dt>Datei</dt><dd class="datei">{m.datei}</dd>
       </dl>
       <div class="angaben-knoepfe">

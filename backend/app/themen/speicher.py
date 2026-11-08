@@ -56,6 +56,11 @@ class Themen(Begleiter):
     async def starten(self) -> None:
         await self._db.einrichten("nachschlag_themen", STUFEN)
 
+    async def artikel_aller(self) -> list[tuple[str, str]]:
+        """Die Artikel aller Themen aller Konten als (Kennung der heutigen Fassung, Pfad), etwa für den Bildholer."""
+        zeilen = await self._db.zeilen("SELECT DISTINCT buch_name, pfad FROM themen_eintraege")
+        return [(k, z["pfad"]) for z in zeilen if (k := await self._kennung(z["buch_name"]))]
+
     async def _gehoert(self, konto: str, thema: str) -> bool:
         return await self._db.zeile("SELECT 1 AS ja FROM themen WHERE id=? AND konto=?", (thema, konto)) is not None
 

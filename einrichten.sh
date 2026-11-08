@@ -48,7 +48,7 @@ probe_aufbauen() {
   local ziel="$1" versatz="$2" port
   port=$(( $(grundport "$ziel") + versatz ))
   cd "$ziel"
-  mkdir -p daten zertifikate
+  mkdir -p daten zertifikate eigenindex bilder bildholer
   # Wegwerf-Hausstelle in DIR, nie die echte: das Blattzertifikat gilt nur für diesen Rechner
   # mit dem Namen, den der Vorschaltdienst ohne Servernamen nimmt (Zugriff über die Adresse prüft genau das)
   CAROOT="$ziel/hausstelle" mkcert -cert-file "zertifikate/$KENNUNG.pem" -key-file "zertifikate/$KENNUNG-schluessel.pem" \

@@ -1,7 +1,8 @@
 <script lang="ts">
   // Die Bereiche von Nachschlag in der gemeinsamen Schale; die Suche steht in der Mitte des Kopfs. Am Telefon als Reiter
   // Start, Stöbern, Merkzettel und Themen (Entwurf telefon-merkzettel.html), alles andere unter Mehr.
-  import { Schale, Schnittstelle, sitzung, type Bereich } from "appkern-oberflaeche";
+  import { Schale, Schnittstelle, sitzung, type Bereich, type EinstellungsReiter } from "appkern-oberflaeche";
+  import Bildholer from "./seiten/Bildholer.svelte";
   import Bibliothek from "./seiten/Bibliothek.svelte";
   import Lesen from "./seiten/Lesen.svelte";
   import Medien from "./seiten/Medien.svelte";
@@ -24,6 +25,8 @@
     if (sitzung.angemeldet) void laderLaden(true);
   });
 
+  // eigener Reiter in den Einstellungen: der Stand des Bildholers (WIKI-80); seine Regeln stehen im erzeugten Reiter Bilder
+  const einstellungen: EinstellungsReiter[] = [{ schluessel: "bildholer", titel: "Bildholer", seite: Bildholer }];
   const bereiche: Bereich[] = [
     { schluessel: "start", titel: "Start", symbol: "fa-house", seite: Start, reiter: true, hinweis: "Suchen, stöbern, die Quellen der Bibliothek" },
     { schluessel: "lesen", titel: "Artikel", symbol: "fa-book-open", seite: Lesen, reiter: false, hinweis: "Der zuletzt geöffnete Artikel" },
@@ -55,4 +58,4 @@
 {#snippet kopfMitte()}<Suchfeld taste />{/snippet}
 
 <!-- am Telefon unten: Start, Suche, Kategorie, Katalog, Mehr; Aufträge unter Mehr (WIKI-74) -->
-<Schale {bereiche} fassung={__APP_FASSUNG__} {kopfMitte} auftraegeReiter={false} />
+<Schale {bereiche} {einstellungen} fassung={__APP_FASSUNG__} {kopfMitte} auftraegeReiter={false} />

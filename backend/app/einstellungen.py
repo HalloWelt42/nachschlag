@@ -14,6 +14,7 @@ SUCHE = {"gruppe": "Suche"}
 VORLESEN = {"gruppe": "Vorlesen"}
 UEBER_NACHT = {"gruppe": "Über Nacht"}
 BUECHERLADER = {"gruppe": "Bücherlader"}
+BILDER = {"gruppe": "Bilder"}
 
 #: Wie oft der Bücherlader das Verzeichnis durchsieht (WIKI-57)
 DURCHSICHT = {"taeglich": "täglich", "woechentlich": "wöchentlich", "monatlich": "monatlich"}
@@ -171,6 +172,40 @@ class AppEinstellungen(Grundeinstellungen):
     an_der_stelle: bool = Field(True, title="Treffer direkt an der Stelle öffnen", json_schema_extra=SUCHE,
                                 description="Ein Bedeutungstreffer springt in seinen Abschnitt und markiert die Fundstelle; aus: "
                                             "der Artikel öffnet oben.")
+
+    # --- Bilder (WIKI-80): der Bildholer lädt große Bilder zu den Vorschaubildern (eigenes Programm, eigener Container) ---
+    bilder_an: bool = Field(True, title="Große Bilder nachladen", json_schema_extra=BILDER,
+                            description="Der Bildholer lädt zu den Vorschaubildern der Wikipedia (und anderer Wikis) das große "
+                                        "Bild aus der Bildquelle, mit Urheber und Lizenz. Bis es da ist, zeigt Nachschlag das "
+                                        "Vorschaubild. Stand und Anhalten: Reiter Bildholer.")
+    bilder_beim_oeffnen: bool = Field(True, title="Beim Öffnen eines Artikels zuerst", json_schema_extra=BILDER,
+                                      description="Die Bilder eines geöffneten Artikels kommen als Nächstes; danach geht es mit "
+                                                  "Gelesenem, Gemerktem und Themen weiter.")
+    bilder_abstand_s: float = Field(3, ge=1, le=3600, title="Abstand zwischen zwei Bildern",
+                                    json_schema_extra={**BILDER, "schritt": 1, "einheit": "Sekunden"},
+                                    description="Ein Bild nach dem anderen, nie gleichzeitig. Kleiner heißt schneller, aber mehr "
+                                                "Last bei der Bildquelle.")
+    bilder_wann: Literal["immer", "nachts"] = Field(
+        "immer", title="Wann laden", json_schema_extra={**BILDER, "beschriftungen": {"immer": "Immer", "nachts": "Nur nachts"}},
+        description="Nur nachts gilt das Zeitfenster für Nachtarbeit (Einstellungen, Über Nacht).")
+    bilder_breite: Literal["960", "1280", "1920"] = Field(
+        "1280", title="Größte Breite", json_schema_extra={**BILDER, "beschriftungen": {"960": "960 px", "1280": "1.280 px", "1920": "1.920 px"}},
+        description="Die Bildquelle hält diese Breiten vorrätig. Ist das Original schmaler, kommt das Original; nie aufgeblasen.")
+    bilder_platz_gb: float = Field(200, ge=1, title="Platz höchstens", json_schema_extra={**BILDER, "schritt": 10, "einheit": "GB"},
+                                   description="Ist die Grenze erreicht, hält der Bildholer an und meldet es; nichts wird gelöscht.")
+    bilder_bei_drosselung: Literal["langsamer", "anhalten"] = Field(
+        "langsamer", title="Wenn die Bildquelle drosselt", json_schema_extra={
+            **BILDER, "beschriftungen": {"langsamer": "Warten und langsamer", "anhalten": "Anhalten"}},
+        description="Bei zu vielen Anfragen wartet der Bildholer die verlangte Zeit und verdoppelt den Abstand (nach einer "
+                    "Stunde Ruhe gilt wieder der eingestellte), oder er hält an, bis du fortsetzt.")
+    bilder_absender: str = Field("Nachschlag-Bildholer/1.0 (https://github.com/HalloWelt42/nachschlag)", min_length=8, max_length=200,
+                                 title="Absender bei der Bildquelle", json_schema_extra=BILDER,
+                                 description="Die Bildquelle verlangt eine Kennung mit Kontakt (Webseite oder E-Mail), sonst "
+                                             "sperrt sie (gemessen 08.11.2026). Vorgabe: die Seite des Projekts.")
+    bildholer_adresse: str = Field("http://bildholer:8000", title="Adresse des Bildholers", json_schema_extra=BILDER,
+                                   description="Im eigenen Netz der Container. Leer: kein Bildholer.")
+    bilder_ordner: str = Field("/bilder", title="Ablage der großen Bilder", json_schema_extra=BILDER,
+                               description="Hier legt der Bildholer die Bilder ab; Nachschlag liest sie nur.")
 
     @field_validator("suchmodell", mode="before")
     @classmethod

@@ -23,6 +23,8 @@ from .api import router
 from .artikel import Artikelleser, wege
 from .bibliothek import Bibliothek
 from .buecherlader import Buecherlader, Regeln as Laderregeln
+from .bilder import Grossbilder
+from .bilder.api import router as bilder_router
 from .buecherlader.api import router as buecherlader_router
 from .eigenindex.ablage import Eigenindizes
 from .eigenindex.api import router as indexdienst_router
@@ -32,6 +34,7 @@ from .kategorien import schema as kategorienschema
 from .kategorien.abfrage import Kategorienindex
 from .kategorien.api import router as kategorien_router
 from .kategorien.wikis import wiki
+from bildholer.modelle import Regeln as Bildregeln
 from .meins import Meins
 from .meins.api import inhalt_router as notizbilder_router
 from .meins.api import router as meins_router
@@ -108,7 +111,15 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     meins = Meins(geruest.db, bibliothek.name_von, bibliothek.kennung_von)
     geruest.begleiter_anmelden(meins)
     themen = Themen(geruest.db, bibliothek.name_von, bibliothek.kennung_von)
+    # große Bilder (WIKI-80): Regeln aus den Einstellungen an den Bildholer, geöffnete und gelesene Artikel vormerken
+    grossbilder = Grossbilder(lambda: e().bilder_ordner, lambda: e().bildholer_adresse, lambda: Bildregeln(
+        an=e().bilder_an, abstand_s=e().bilder_abstand_s, wann=e().bilder_wann, nacht_von=e().nachts_von,
+        nacht_bis=e().nachts_bis, breite=int(e().bilder_breite), platz_gb=e().bilder_platz_gb,
+        bei_drosselung=e().bilder_bei_drosselung, absender=e().bilder_absender),
+        lambda: e().bilder_an and e().bilder_beim_oeffnen, leser, [meins.artikel_aller, themen.artikel_aller])
+    geruest.verbindung_anmelden("Bildholer", grossbilder.verbindung)
     geruest.begleiter_anmelden(themen)                   # nach Meins: Einträge lesen Lesestand und Notizen von dort
+    geruest.begleiter_anmelden(grossbilder)              # nach Meins und Themen: liest deren Artikel
     geruest.begleiter_anmelden(indexauftraege)
     kategorienauftraege = Indexauftraege(kategorienablage, bibliothek, geruest.auftraege,
                                          lambda: e().indexdienst_schluessel.get_secret_value(),
@@ -202,9 +213,11 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
             return None
 
     async def nach_loeschen(kennung: str, letzte: bool) -> None:
-        """Ein Buch ist gelöscht (WIKI-77): der Vermerk im Archiv geht; der eigene Index nur mit der letzten Fassung
-        (sonst bleibt er Vorlage für den Index einer anderen Fassung, WIKI-58)."""
+        """Ein Buch ist gelöscht (WIKI-77) oder seine vorige Fassung nach der Frist entfernt: der Vermerk im Archiv geht,
+        die Kategorien der Fassung auch (die neue Fassung baut ihre eigenen, WIKI-75); der eigene Index nur mit der
+        letzten Fassung (sonst bleibt er Vorlage für den Index einer anderen Fassung, WIKI-58)."""
         await quellen.vergessen(kennung)
+        kategorienablage.entfernen(kennung)
         if letzte:
             eigen.entfernen(kennung)
 
@@ -218,9 +231,10 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     app.state.geruest = geruest
     app.state.bibliothek = bibliothek
     app.state.indexauftraege = indexauftraege
+    app.state.kategorienauftraege = kategorienauftraege
     app.include_router(router(geruest, bibliothek, leser, suche, quellen,
                               suchregeln=lambda: Suchregeln(vorschlaege=e().vorschlaege, an_der_stelle=e().an_der_stelle),
-                              eigen=eigen))
+                              eigen=eigen, grossbilder=grossbilder))
     app.include_router(mcp_router(geruest, mcp_werkzeuge(bibliothek, suche, leser)))   # MCP-Werkzeuge für KI (WIKI-78)
     app.include_router(quellenarchiv_router(geruest, quellen))
     app.include_router(buecherlader_router(geruest, lader))
@@ -242,6 +256,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     app.include_router(korrektur_router(geruest, Korrektor(eigen.alle, lambda: geruest.leitstelle, lambda: e().suchmodell),
                                          an=lambda: e().tippfehler))
     app.include_router(kategorien_router(geruest, kategorien))
+    app.include_router(bilder_router(geruest, grossbilder))
     app.include_router(indexdienst_router([indexauftraege, kategorienauftraege]))   # nur mit dem Schlüssel des Index-Dienstes
     # unter /lesen trägt der Weg Pfade aus Büchern, oft mit Punkt (function.array-map.php): immer eine Seite
     geruest.oberflaeche_ausliefern(app, seiten=["lesen"])

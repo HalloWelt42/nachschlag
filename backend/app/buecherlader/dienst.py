@@ -549,6 +549,8 @@ class Buecherlader(Begleiter):
                 continue
             if ablage.entfernen(w.alt):
                 logger.info("Vorige Fassung %s entfernt (%s Tage nach dem Umschalten)", w.alt, r.vorige_tage)
+                if self._nach_loeschen:                     # was zur vorigen Fassung gehört (Kategorien, WIKI-75)
+                    await self._nach_loeschen(w.alt, False)
             await self._liste(r, austragen=f"{w.alt}.zim")
             await self._bestand.wechsel_beenden(w, "entfernt")
 

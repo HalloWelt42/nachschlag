@@ -20,7 +20,7 @@ GERADE = str.maketrans({0x201E: '"', 0x201C: '"', 0x201D: '"', 0x201A: "'", 0x20
 #: sicher tote Ziele (Platzhalter von Archivierungsdiensten)
 TOT = re.compile(r"\.invalid(/|$)", re.I)
 ERLAUBTE_ATTRIBUTE = {"href", "src", "alt", "title", "id", "width", "height", "colspan", "rowspan", "class", "lang", "dir",
-                      "data-geo", "data-buch", "data-pfad", "data-beleg", "data-sprache", "loading", "decoding"}
+                      "data-geo", "data-buch", "data-pfad", "data-beleg", "data-sprache", "loading", "decoding", "data-gross"}
 #: Klassen, die das Lesedesign kennt; alle Klassen der Quelle fallen weg
 EIGENE_KLASSEN = {"wl", "ort", "hinweis", "steckbrief", "steckbrief-kopf", "steckbrief-unter", "steckbrief-bild",
                   "steckbrief-gruppe", "steckbrief-werte", "steckbrief-name", "klade", "linie-unten", "linie-links",
@@ -164,8 +164,21 @@ def verweise_umschreiben(wurzel, buch: str, eintragspfad: str, wege: Wege) -> tu
     return zahlen, online
 
 
+#: ein großes Bild lohnt (WIKI-80), wenn das Original so viel breiter ist als gezeigt; Zeichen unter dieser Breite nie
+GROSS_FAKTOR = 1.5
+GROSS_AB_BREITE = 80
+
+
+def _zahl(wert: str | None) -> int:
+    try:
+        return int(float(wert or 0))
+    except ValueError:
+        return 0
+
+
 def bilder_umschreiben(wurzel, buch: str, eintragspfad: str, wege: Wege) -> str:
-    """Bilder auf den Medienweg legen (nie größer als die Datei); liefert das erste Bild des Inhalts. Ein Bild, dessen
+    """Bilder auf den Medienweg legen (nie größer als die Datei); liefert das erste Bild des Inhalts. Ist das Original
+    deutlich größer (Angabe der Quelle), trägt das Bild `data-gross` mit seiner Breite (WIKI-80). Ein Bild, dessen
     Datei das Buch nicht enthält (Bücher ohne Bilder, Ausschnitte), fällt weg, in einer Abbildung mit ihr: so fragt
     keine Seite ein Bild an, das es nicht gibt, und kein Leitbild zeigt ins Leere."""
     erstes = ""
@@ -180,6 +193,9 @@ def bilder_umschreiben(wurzel, buch: str, eintragspfad: str, wege: Wege) -> str:
             (abbildung if abbildung is not None and len(list(abbildung.iter("img"))) == 1 else img).drop_tree()
             continue
         adresse = wege.medien(buch, ziel)
+        original, breite = _zahl(img.get("data-file-width")), _zahl(img.get("width"))
+        if breite >= GROSS_AB_BREITE and original >= breite * GROSS_FAKTOR:    # WIKI-80: es gibt ein deutlich größeres Bild
+            img.set("data-gross", str(original))
         for name in ("srcset", "sizes", "style", "data-src"):
             img.attrib.pop(name, None)
         img.set("src", adresse)

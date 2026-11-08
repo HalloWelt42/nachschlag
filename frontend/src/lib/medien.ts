@@ -33,3 +33,22 @@ export function hervorheben(text: string, frage: string): { text: string; treffe
   // Teilen an einer Klammergruppe: die Treffer stehen an den ungeraden Stellen
   return text.split(muster).map((t, i) => ({ text: t, treffer: i % 2 === 1 })).filter((t) => t.text);
 }
+
+// --- Große Bilder des Bildholers (WIKI-80) ---
+export interface Grossangaben {
+  breite: number; hoehe: number; original: number; urheber: string; lizenz: string; lizenz_url: string; seite_url: string;
+}
+const MEDIENWEG = "/api/v1/inhalt/medien/";
+
+/** Angaben zum großen Bild hinter einer Bildadresse des Medienwegs; null, wenn es (noch) keins gibt. */
+export async function grossAngaben(bild: string): Promise<Grossangaben | null> {
+  if (!bild.startsWith(MEDIENWEG)) return null;
+  try {
+    return await hole<Grossangaben>(`/bilder/angaben/${bild.slice(MEDIENWEG.length).split("?")[0]}`);
+  } catch {
+    return null;
+  }
+}
+
+/** Die Adresse des großen Bilds zu einer Bildadresse des Medienwegs. */
+export const grossAdresse = (bild: string) => `${bild.split("?")[0]}?gross=1`;

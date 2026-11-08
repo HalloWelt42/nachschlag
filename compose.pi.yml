@@ -32,7 +32,30 @@ services:
       # eigene Indizes der Bücher (WIKI-17): der Index-Dienst auf dem Mac lädt sie hoch, Nachschlag tauscht sie aus;
       # selbst erzeugt und darum in der Sicherung, anders als die Bücher
       - ./eigenindex:/eigenindex
+      # große Bilder des Bildholers (WIKI-80): Nachschlag liest nur
+      - ./bilder:/bilder:ro
       # Ortszeit des Pi (sonst UTC)
+      - /etc/localtime:/etc/localtime:ro
+
+  # Bildholer (WIKI-80): eigenes Programm im eigenen Container, aus demselben Abbild. Holt große Bilder aus der Bildquelle
+  # der Wikis in ./bilder; Nachschlag spricht mit ihm nur im eigenen Netz der Container (kein Port nach außen) und
+  # schickt ihm seine Regeln aus den Einstellungen. Warteschlange und Zähler in ./bildholer.
+  bildholer:
+    image: nachschlag:aktuell
+    container_name: nachschlag-bildholer
+    restart: unless-stopped
+    user: "1000:1000"
+    depends_on: [nachschlag]
+    pull_policy: never                   # das Abbild baut der Dienst nachschlag; nie aus einem Verzeichnis holen
+    command: ["python", "-m", "bildholer"]
+    expose:
+      - "8000"
+    environment:
+      BILDHOLER_DATEN: /daten
+      BILDHOLER_ABLAGE: /bilder
+    volumes:
+      - ./bildholer:/daten
+      - ./bilder:/bilder
       - /etc/localtime:/etc/localtime:ro
 
   vorne:

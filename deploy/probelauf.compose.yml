@@ -16,3 +16,7 @@ services:
     networks: [abgeschottet, default]
     ports: !override
       - "127.0.0.1:${PROBE_PORT:?}:8711"
+  bildholer:
+    container_name: ${COMPOSE_PROJECT_NAME:?}-bildholer
+    image: ${COMPOSE_PROJECT_NAME:?}-nachschlag
+    networks: [abgeschottet]

@@ -166,3 +166,12 @@ export const kategorieSeitenHolen = (buch: string, kategorie: string, ab: number
 export interface Rueckverweise { bekannt: boolean; gesamt: number; seiten: { pfad: string; titel: string }[] }
 export const rueckverweiseHolen = (buch: string, pfad: string) =>
   hole<Rueckverweise>(`/rueckverweise/${encodeURIComponent(buch)}?${abfrage({ pfad })}`);
+
+// --- Bildholer (WIKI-80): Stand, anhalten, fortsetzen ---
+export interface Bildzeile { quelle: string; name: string; breite: number; original: number; am: string }
+export interface Bildholerstand {
+  zustand: "laeuft" | "wartet" | "ruht" | "angehalten" | "voll" | "aus"; grund: string; abstand_s: number; geladen: number;
+  heute: number; belegt_bytes: number; platz_bytes: number; fehlgeschlagen: number; offen: Record<string, number>; zuletzt: Bildzeile[];
+}
+export const bildholerStand = () => hole<Bildholerstand>("/bilder/stand");
+export const bildholerAnhalten = (an: boolean) => hole<Bildholerstand>(`/bilder/${an ? "anhalten" : "fortsetzen"}`, json("POST", {}));

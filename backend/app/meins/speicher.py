@@ -75,6 +75,12 @@ class Meins(Begleiter):
         """Begleiter des Gerüsts: das eigene Schema beim Start einrichten (nach der Datenbank, vor den Aufträgen)."""
         await self._db.einrichten("nachschlag_meins", STUFEN)
 
+    async def artikel_aller(self) -> list[tuple[str, str]]:
+        """Gelesene und gemerkte Artikel aller Konten als (Kennung der heutigen Fassung, Pfad), etwa für den Bildholer."""
+        zeilen = await self._db.zeilen("SELECT DISTINCT buch_name, pfad FROM verlauf WHERE art='artikel' AND pfad != '' "
+                                       "UNION SELECT buch_name, pfad FROM merkzettel")
+        return [(k, z["pfad"]) for z in zeilen if (k := await self._kennung_von(z["buch_name"]))]
+
     # --- Merkzettel -----------------------------------------------------------------------------------------------
     async def merkzettel(self, konto: str) -> list[Merkeintrag]:
         zeilen = await self._db.zeilen(

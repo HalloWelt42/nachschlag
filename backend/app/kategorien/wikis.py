@@ -17,3 +17,11 @@ def wiki(kennung: str) -> str | None:
     if not m or m["projekt"] not in PROJEKTE:
         return None
     return m["sprache"] + PROJEKTE[m["projekt"]]
+
+
+def host(kennung: str) -> str | None:
+    """Die Adresse des Wikis eines Buchs (wikipedia_de_all_maxi_2026-01 -> de.wikipedia.org), etwa für seine Bilder."""
+    m = _KENNUNG.match(kennung)
+    if not m or m["projekt"] not in PROJEKTE:
+        return None
+    return f"{m['sprache']}.{m['projekt']}.org"

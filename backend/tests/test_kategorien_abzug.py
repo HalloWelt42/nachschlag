@@ -115,3 +115,35 @@ def test_wiki_und_ordnung():
     assert wiki("wikipedia_de_all_maxi_2026-01") == "dewiki" and wiki("wikivoyage_en_all_2026-10") == "enwikivoyage"
     assert wiki("klexikon_de_all_maxi_2026-11") is None and wiki("devdocs_en_astro_2026-10") is None
     assert sorted(["Zebra", "Birne", "Ast", "Äpfel"], key=schema.ordnung) == ["Äpfel", "Ast", "Birne", "Zebra"]
+
+
+async def test_neue_fassungen_bekommen_ihre_kategorien_von_selbst(tmp_path):
+    """Nutzer 08.11.2026: jede neue Fassung eines Wikis kategorisiert sich selbst. Der Begleiter (stündlich) reiht für die
+    geltende Fassung ohne Kategoriendatei einen Auftrag ein, Bücher anderer Herkunft nicht, und nichts doppelt."""
+    import shutil
+
+    from test_eigenindex import kellerwolke
+
+    from app.main import app_bauen
+
+    buecher = tmp_path / "buecher"
+    buecher.mkdir()
+    probebuch.bauen(buecher)
+    for stand in ("2026-01", "2026-10"):
+        shutil.copy(buecher / f"{BUCH}.zim", buecher / f"wikipedia_de_probe_{stand}.zim")
+    app = app_bauen(tmp_path / "daten", transport=httpx.MockTransport(kellerwolke))
+    geruest = app.state.geruest
+    await geruest.starten()
+    try:
+        await geruest.einstellungen.aendern({"buecher_ordner": str(buecher), "eigenindex_ordner": str(tmp_path / "pi"),
+                                             "indexdienst_schluessel": "geheim"})
+        auftraege = app.state.kategorienauftraege
+        assert await auftraege.fehlende_einreihen() == ["wikipedia_de_probe_2026-10"]    # die geltende Fassung
+        assert await auftraege.fehlende_einreihen() == []                       # schon eingereiht: nicht doppelt
+        shutil.copy(buecher / f"{BUCH}.zim", buecher / "wikipedia_de_probe_2026-12.zim")
+        assert await auftraege.fehlende_einreihen() == ["wikipedia_de_probe_2026-12"]    # neue Fassung: von selbst
+        await geruest.einstellungen.aendern({"kategorien_aus_abzuegen": False})
+        shutil.copy(buecher / f"{BUCH}.zim", buecher / "wikipedia_de_probe_2027-01.zim")
+        assert await auftraege.fehlende_einreihen() == []                       # ausgeschaltet: nichts
+    finally:
+        await geruest.stoppen()

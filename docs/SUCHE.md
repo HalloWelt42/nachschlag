@@ -110,6 +110,9 @@ fehlenden Feldern (Schlagwörter, Stimmen, Autoren, Rubriken).
     versteckte Wartungskategorien fehlen. Übertragen wird sie wie ein Index in den Unterordner `kategorien` des Ordners der
     eigenen Indizes (auf dem Pi /mnt/data/nachschlag/eigenindex/kategorien). Ein- und ausschalten: Einstellungen, Suche,
     "Kategorien für Wikipedia". Große Kategorien zeigt die Kategorieseite seitenweise (2.000 Seiten je Schritt).
+    Neue Fassungen kategorisieren sich selbst (Nutzer 08.11.2026): der Begleiter sieht stündlich nach und reiht für jede
+    geltende Fassung ohne Kategoriendatei einen Auftrag ein; ein Abzug älter als 30 Tage wird dabei neu geladen. Wird
+    eine Fassung entfernt (gelöscht oder nach der Frist des Bücherladers), gehen ihre Kategorien mit.
 
 ## Reihenfolge des Baus
 

@@ -10,12 +10,13 @@ from collections.abc import Callable
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import Response
+from fastapi.responses import FileResponse, Response
 
 from appkern.app import Geruest
 
 from .artikel import Artikelleser
 from .bibliothek import Bibliothek, BuchFehlt, EintragFehlt
+from .bilder import Grossbilder
 from .eigenindex.abfrage import rueckverweise
 from .eigenindex.ablage import Eigenindizes
 from .modell.artikel import Artikel, Nachbar, Rueckverweise
@@ -31,12 +32,24 @@ SKRIPT = re.compile(rb"<script\b[^>]*>.*?</script\s*>|<script\b[^>]*/>", re.I | 
 DAUERHAFT = "private, max-age=604800, immutable"
 
 
+_HINTERGRUND: set[asyncio.Task] = set()
+
+
+def _nebenbei(aufruf) -> None:
+    """Läuft neben der Antwort her (die Antwort wartet nicht darauf); gehalten, bis es fertig ist."""
+    aufgabe = asyncio.create_task(aufruf)
+    _HINTERGRUND.add(aufgabe)
+    aufgabe.add_done_callback(_HINTERGRUND.discard)
+
+
 def _fehlt(f: Exception) -> HTTPException:
     return HTTPException(status_code=404, detail=str(f))
 
 
 def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche: Suche, quellen: Quellenarchiv,
-           suchregeln: Callable[[], Suchregeln] | None = None, eigen: Eigenindizes | None = None) -> APIRouter:
+           suchregeln: Callable[[], Suchregeln] | None = None, eigen: Eigenindizes | None = None,
+           grossbilder: Grossbilder | None = None) -> APIRouter:
+    """`grossbilder`: große Bilder des Bildholers (WIKI-80); geöffnete Artikel merken ihre Bilder vor."""
     r = APIRouter(prefix="/api/v1", tags=["nachschlag"])
     pflicht, lesen = [geruest.pflicht], [geruest.lesen]
 
@@ -58,9 +71,12 @@ def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche:
         """Ein Artikel, aufbereitet vom Baustein der Art des Buchs; Weiterleitungen sind aufgelöst (`anker` zeigt den
         Abschnitt). Ohne eigenes Lesedesign `darstellung: original` mit der Adresse der unveränderten Seite."""
         try:
-            return await leser.lesen(buch, pfad)
+            a = await leser.lesen(buch, pfad)
         except (BuchFehlt, EintragFehlt) as f:
             raise _fehlt(f)
+        if grossbilder:
+            _nebenbei(grossbilder.geoeffnet(a))
+        return a
 
     @r.get("/zufall/{buch}", dependencies=pflicht)
     async def zufall(buch: str) -> dict[str, str]:
@@ -99,8 +115,11 @@ def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche:
         return await suche.suchen(frage, buecher, anzahl, wege)
 
     @r.get("/inhalt/medien/{buch}/{pfad:path}", dependencies=lesen)
-    async def medien(buch: str, pfad: str) -> Response:
-        """Bilder und andere Medien aus dem Buch, unverändert."""
+    async def medien(buch: str, pfad: str, gross: bool = Query(False, description="das große Bild des Bildholers, wenn "
+                                                                                      "er es schon hat (WIKI-80)")) -> Response:
+        """Bilder und andere Medien aus dem Buch, unverändert; mit `gross` das große Bild, sonst das aus dem Buch."""
+        if gross and grossbilder and (gefunden := grossbilder.finden(buch, pfad)):
+            return FileResponse(gefunden[0], media_type=gefunden[1].mime, headers={"Cache-Control": DAUERHAFT})
         try:
             e = await bibliothek.eintrag(buch, pfad)
         except (BuchFehlt, EintragFehlt) as f:
