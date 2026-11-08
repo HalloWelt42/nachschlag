@@ -158,6 +158,15 @@ export async function notizLoeschen(id: string): Promise<void> {
 // dem Verlassen eines Artikels noch den alten Stand)
 let meldung: Promise<void> = Promise.resolve();
 
+// --- Eigene Bewertungen (WIKI-71): je Seite 1 bis 5 Sterne, über Fassungen des Buchs hinweg ---
+export interface Bewertung { buch_name: string; pfad: string; sterne: number; geaendert: string }
+
+export const bewertungenHolen = (buch: string) => hole<Bewertung[]>(`/meins/bewertungen?${new URLSearchParams({ buch })}`);
+
+export async function bewerten(buch: string, pfad: string, sterne: number): Promise<void> {
+  await hole(`/meins/bewertungen`, { method: "PUT", ...json({ buch, pfad, sterne }) });
+}
+
 export async function verlaufHolen(anzahl = 50, ab = 0, art = ""): Promise<Verlaufseintrag[]> {
   await meldung;
   return hole<Verlaufseintrag[]>(`/meins/verlauf?${new URLSearchParams({ anzahl: String(anzahl), ab: String(ab), art })}`);

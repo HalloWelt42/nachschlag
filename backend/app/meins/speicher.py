@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 from appkern.app.begleiter import Begleiter
 from appkern.datenbank import Datenbank
 
-from ..modell.meins import (Beispiel, BeispielAenderung, BeispielNeu, Lesestand, Merkeintrag, Merken, Notiz, NotizAenderung,
+from ..modell.meins import (Beispiel, BeispielAenderung, BeispielNeu, Bewertung, BewertungNeu, Lesestand, Merkeintrag, Merken, Notiz, NotizAenderung,
                             Notizbild, NotizNeu, Suchmeldung, Verlaufseintrag)
 
 STUFEN = ["""
@@ -50,6 +50,11 @@ ALTER TABLE beispiele ADD COLUMN fassung TEXT NOT NULL DEFAULT '';
 """, """
 -- Bilder an Notizen (WIKI-51): Liste als JSON, die Dateien liegen in der Kellerwolke
 ALTER TABLE notizen ADD COLUMN bilder TEXT NOT NULL DEFAULT '[]';
+""", """
+-- Eigene Bewertungen (WIKI-71): je Seite 1 bis 5 Sterne, über Fassungen des Buchs hinweg (Name ohne Stand)
+CREATE TABLE bewertungen (
+  konto TEXT NOT NULL, buch_name TEXT NOT NULL, pfad TEXT NOT NULL, sterne INTEGER NOT NULL CHECK (sterne BETWEEN 1 AND 5),
+  geaendert TEXT NOT NULL, PRIMARY KEY (konto, buch_name, pfad));
 """]
 
 #: Wie viele Einträge der Verlauf je Konto höchstens behält (älteste fallen beim Schreiben weg)
@@ -91,6 +96,26 @@ class Meins(Begleiter):
 
     async def vergessen(self, konto: str, kennung: str) -> bool:
         return await self._db.ausfuehren("DELETE FROM merkzettel WHERE konto=? AND id=?", (konto, kennung)) > 0
+
+    # --- Bewertungen (WIKI-71) -------------------------------------------------------------------------------------
+    async def bewertungen(self, konto: str, buch: str) -> list[Bewertung]:
+        """Die eigenen Bewertungen der Seiten eines Buchs (über alle Fassungen, die zum Namen gehören)."""
+        name = await self._name_von(buch)
+        return [Bewertung(**z) for z in await self._db.zeilen(
+            "SELECT buch_name, pfad, sterne, geaendert FROM bewertungen WHERE konto=? AND buch_name=?", (konto, name))]
+
+    async def bewerten(self, konto: str, eingabe: BewertungNeu) -> Bewertung | None:
+        """Sterne setzen; 0 nimmt die Bewertung weg (dann None)."""
+        name = await self._name_von(eingabe.buch)
+        if not eingabe.sterne:
+            await self._db.ausfuehren("DELETE FROM bewertungen WHERE konto=? AND buch_name=? AND pfad=?", (konto, name, eingabe.pfad))
+            return None
+        jetzt = _jetzt()
+        await self._db.ausfuehren(
+            "INSERT INTO bewertungen (konto, buch_name, pfad, sterne, geaendert) VALUES (?,?,?,?,?) "
+            "ON CONFLICT(konto, buch_name, pfad) DO UPDATE SET sterne=excluded.sterne, geaendert=excluded.geaendert",
+            (konto, name, eingabe.pfad, eingabe.sterne, jetzt))
+        return Bewertung(buch_name=name, pfad=eingabe.pfad, sterne=eingabe.sterne, geaendert=jetzt)
 
     # --- Notizen ---------------------------------------------------------------------------------------------------
     async def notizen(self, konto: str, buch: str = "", pfad: str = "") -> list[Notiz]:

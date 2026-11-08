@@ -355,6 +355,20 @@ async def test_merkzettel_verlauf_und_vorlieben(nachschlag):
     assert (await c.delete(f"/api/v1/meins/merkzettel/{m['id']}")).status_code == 404
 
 
+async def test_bewertungen(nachschlag):
+    """WIKI-71: eigene Sterne je Seite, über Fassungen hinweg (Name des Buchs), 0 nimmt sie weg; nur fürs eigene Konto."""
+    c, _, _ = nachschlag
+    buch = "probe_de_all_2026-01"
+    assert (await c.get("/api/v1/meins/bewertungen", params={"buch": buch})).json() == []
+    b = (await c.put("/api/v1/meins/bewertungen", json={"buch": buch, "pfad": "Rotfuchs", "sterne": 4})).json()
+    assert b["sterne"] == 4 and b["buch_name"] == "probe_de_all"
+    await c.put("/api/v1/meins/bewertungen", json={"buch": buch, "pfad": "Rotfuchs", "sterne": 5})
+    assert [(x["pfad"], x["sterne"]) for x in (await c.get("/api/v1/meins/bewertungen", params={"buch": buch})).json()] == [("Rotfuchs", 5)]
+    assert (await c.put("/api/v1/meins/bewertungen", json={"buch": buch, "pfad": "Rotfuchs", "sterne": 6})).status_code == 422
+    assert (await c.put("/api/v1/meins/bewertungen", json={"buch": buch, "pfad": "Rotfuchs", "sterne": 0})).json() is None
+    assert (await c.get("/api/v1/meins/bewertungen", params={"buch": buch})).json() == []
+
+
 async def test_notizen_an_stelle_und_artikel(nachschlag):
     """Notizen je Konto: an einer Stelle (Zitat mit Text davor) und am ganzen Artikel; je Artikel abfragbar, Ändern
     schiebt nach vorn, Löschen; unbekannte Notizen geben 404."""

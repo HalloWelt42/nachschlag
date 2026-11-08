@@ -7,12 +7,13 @@
   import { Auswahl, gehe, geraet, Nachladen, navigation, seitenFehler, Seitenkopf } from "appkern-oberflaeche";
   import { untrack } from "svelte";
   import { zahl } from "../lib/bibliothek.svelte";
-  import { meins, vorliebeSetzen } from "../lib/meins.svelte";
+  import { bewertungenHolen, meins, vorliebeSetzen } from "../lib/meins.svelte";
   import { anleitungenFinden, werkzeugeHolen } from "../lib/schnittstelle";
   import type { Anleitungsfrage, Anleitungsfunde, Anleitungsreihenfolge, Artikel, Suchart, Werkzeugeintrag } from "../lib/typen";
   import { lesen, lesenZiel } from "../lib/ziele";
   import Geraeteseite from "./Geraeteseite.svelte";
   import Kachel from "./Kachel.svelte";
+  import Sterne from "./Sterne.svelte";
   import Sprachmarke from "./Sprachmarke.svelte";
 
   let { artikel }: { artikel: Artikel } = $props();
@@ -49,6 +50,13 @@
     const s = p.toString();
     gehe(`${navigation.seite}/${navigation.teile.join("/")}${s ? "?" + s : ""}`, ersetzen);
   }
+
+  // eigene Bewertungen der Anleitungen dieses Buchs (WIKI-71), an den Treffern als kleine Sterne
+  let meineSterne = $state.raw<Map<string, number>>(new Map());
+  $effect(() => {
+    const b = artikel.buch;
+    bewertungenHolen(b).then((l) => { if (b === artikel.buch) meineSterne = new Map(l.map((x) => [x.pfad, x.sterne])); }).catch(() => {});
+  });
 
   // Suchfeld: tippt in die Adresse, kurz verzögert
   let eingabe = $state("");
@@ -227,6 +235,7 @@
                 <span class="werte">
                   {#if a.schwierigkeit}<span class="w"><span class="anl-stufe" title="Schwierigkeit {a.schwierigkeit} von 5">{#each [1, 2, 3, 4, 5] as i (i)}<span class:an={i <= a.schwierigkeit}></span>{/each}</span>{a.schwierigkeit_text}</span>{/if}
                   {#if a.zeit}<span class="w"><i class="fa-regular fa-clock"></i>{a.zeit}</span>{/if}
+                  <Sterne klein sterne={meineSterne.get(a.pfad) ?? 0} />
                   <span class="w"><i class="fa-solid fa-list-ol"></i>{a.schritte} {a.schritte === 1 ? "Schritt" : "Schritte"}</span>
                 </span>
                 {#if a.werkzeuge.length}

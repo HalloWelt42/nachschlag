@@ -151,3 +151,17 @@ class Beispiel(BaseModel):
     fassung: str = ""
     angelegt: str
     geaendert: str
+
+
+class BewertungNeu(BaseModel):
+    """Eingabe: eine Seite bewerten (WIKI-71), etwa eine Anleitung, die man gemacht hat; 0 Sterne nimmt die Bewertung weg."""
+    buch: str = Field(description="Kennung des Buchs")
+    pfad: str
+    sterne: int = Field(ge=0, le=5)
+
+
+class Bewertung(BaseModel):
+    buch_name: str = Field(description="Name des Buchs ohne Stand: die Bewertung gilt über neue Fassungen hinweg")
+    pfad: str
+    sterne: int = Field(ge=1, le=5)
+    geaendert: str

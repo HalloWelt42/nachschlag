@@ -1477,3 +1477,19 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .ueb-nr { font-family: var(--schrift-zahl); color: var(--text-3); min-width: 2.2em; text-align: right; flex: none; }
 .ueb-titel { min-width: 0; overflow-wrap: anywhere; }   /* lange Titel ohne Leerzeichen brechen statt die Seite zu verbreitern */
 @media (max-width: 700px) { .ueb-seite { --ueb-rand: var(--a3); } .ueb-stelle { margin-left: 0; } }
+
+/* ----- Eigene Bewertung (teile/Sterne.svelte) und Meine Erfahrung an Anleitungen (WIKI-71) ----- */
+.sterne { display: inline-flex; align-items: center; gap: 2px; }
+.sterne button { border: 0; background: transparent; padding: 4px; cursor: pointer; color: var(--text-3); font-size: var(--gross); }
+.sterne button.an { color: var(--warn); }
+.sterne-name { margin-left: var(--a2); font-size: var(--klein); color: var(--text-2); }
+.sterne-klein { display: inline-flex; align-items: center; gap: 3px; color: var(--warn); font-family: var(--schrift-zahl); font-size: var(--klein); }
+.anl-erfahrung { display: flex; flex-direction: column; gap: var(--a3); align-items: flex-start; margin-top: var(--a5); padding: var(--a4);
+                 background: var(--flaeche); border-radius: var(--r2); }
+.anl-erfahrung h2 { margin: 0; font-size: var(--titel); display: flex; gap: var(--a2); align-items: center; }
+.anl-erf-zeile { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a3); }
+.anl-erf-notiz { display: flex; flex-direction: column; gap: 4px; width: 100%; padding: var(--a3); border: 0; border-radius: var(--r2);
+                 background: var(--flaeche-2); color: var(--text); text-align: left; font: inherit; cursor: pointer; }
+.anl-erf-notiz .zitat { color: var(--text-2); font-style: italic; }
+.anl-erf-bilder { display: flex; flex-wrap: wrap; gap: 6px; }
+.anl-erf-bilder img { width: 96px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r1); }

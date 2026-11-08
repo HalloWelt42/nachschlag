@@ -8,7 +8,7 @@ from fastapi.responses import StreamingResponse
 from appkern.anmeldung import Konto
 from appkern.app import Geruest
 
-from ..modell.meins import (Beispiel, BeispielAenderung, BeispielNeu, Lesestand, Merkeintrag, Merken, Notiz, NotizAenderung,
+from ..modell.meins import (Beispiel, BeispielAenderung, BeispielNeu, Bewertung, BewertungNeu, Lesestand, Merkeintrag, Merken, Notiz, NotizAenderung,
                             NotizNeu, Suchmeldung, Verlaufseintrag, Vorliebe)
 from .bilder import HOECHSTENS_BYTES, BildFehler, Notizbilder
 from .speicher import Meins
@@ -97,6 +97,16 @@ def router(geruest: Geruest, meins: Meins, bilder: Notizbilder) -> APIRouter:
         if not await meins.beispiel_loeschen(konto.id, kennung):
             raise HTTPException(status_code=404, detail="Dieses Beispiel gibt es nicht")
         return Response(status_code=204)
+
+    @r.get("/bewertungen", response_model=list[Bewertung])
+    async def bewertungen(buch: str, konto: Konto = geruest.mensch) -> list[Bewertung]:
+        """Die eigenen Bewertungen der Seiten eines Buchs (WIKI-71)."""
+        return await meins.bewertungen(konto.id, buch)
+
+    @r.put("/bewertungen", response_model=Bewertung | None)
+    async def bewerten(eingabe: BewertungNeu, konto: Konto = geruest.mensch) -> Bewertung | None:
+        """1 bis 5 Sterne für eine Seite; 0 nimmt die Bewertung weg."""
+        return await meins.bewerten(konto.id, eingabe)
 
     @r.get("/verlauf", response_model=list[Verlaufseintrag])
     async def verlauf(anzahl: int = Query(50, ge=1, le=200), ab: int = Query(0, ge=0),

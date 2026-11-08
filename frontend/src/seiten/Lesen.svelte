@@ -1050,7 +1050,7 @@
     </div>
   {:else if artikel.darstellung === "anleitung" && artikel.anleitung && !original}
     <!-- Anleitung (iFixit, WIKI-64): Lesen oder Werkstatt -->
-    <Anleitung {artikel} />
+    <Anleitung {artikel} notizen={artikelNotizen} onnotiz={notizZumArtikel} onnotizzeigen={notizZeigen} />
   {:else if artikel.darstellung === "anleitungen" && artikel.geraet && !original}
     <!-- Startseite eines Anleitungsbuchs: Anleitungen finden, ohne Filter die Kategorien (WIKI-64) -->
     <Anleitungssuche {artikel} />

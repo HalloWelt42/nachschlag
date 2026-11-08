@@ -3,15 +3,37 @@
   // und gemerkt (Meins, auf allen Geräten): Lesen zeigt alle Schritte untereinander (Bild links mit weiteren Bildern,
   // Zeilen rechts mit Farbpunkt zur Markierung im Bild oder Marke Hinweis, Vorsicht, Erinnerung), links die Schritte als
   // Inhalt, rechts der Steckbrief. Werkstatt zeigt einen Schritt groß, die Leiste aller Schritte, Zurück und Weiter (auch
-  // Pfeiltasten und Leertaste) und merkt sich den Schritt über den Lesestand.
+  // Pfeiltasten und Leertaste) und merkt sich den Schritt über den Lesestand. Meine Erfahrung (WIKI-71): eigene Sterne,
+  // die eigenen Notizen samt Fotos (das Notizblatt hält Lesen, `onnotiz` öffnet es) am Ende und nach dem letzten Schritt.
   import { onMount, untrack } from "svelte";
-  import { lesestandHolen, lesestandMelden, meins, vorliebeSetzen } from "../lib/meins.svelte";
+  import { bewerten, bewertungenHolen, lesestandHolen, lesestandMelden, meins, notizBildAdresse, vorliebeSetzen, wann,
+           type Notiz } from "../lib/meins.svelte";
   import type { Anleitungsschritt, Anleitungszeile, Artikel } from "../lib/typen";
   import type { Medium } from "../lib/medien";
   import Einordnung from "./Einordnung.svelte";
   import Leuchtkasten from "./Leuchtkasten.svelte";
+  import Sterne from "./Sterne.svelte";
 
-  let { artikel }: { artikel: Artikel } = $props();
+  let { artikel, notizen = [], onnotiz, onnotizzeigen }: {
+    artikel: Artikel; notizen?: Notiz[]; onnotiz?: () => void; onnotizzeigen?: (n: Notiz) => void } = $props();
+
+  // Meine Bewertung dieser Anleitung (über Fassungen des Buchs hinweg)
+  let sterne = $state(0);
+  $effect(() => {
+    const [b, p] = [artikel.buch, artikel.pfad];
+    sterne = 0;
+    bewertungenHolen(b).then((l) => { if (b === artikel.buch && p === artikel.pfad) sterne = l.find((x) => x.pfad === p)?.sterne ?? 0; })
+      .catch(() => {});
+  });
+  async function sterneSetzen(n: number) {
+    const vorher = sterne;
+    sterne = n;
+    try {
+      await bewerten(artikel.buch, artikel.pfad, n);
+    } catch {
+      sterne = vorher;
+    }
+  }
   const a = $derived(artikel.anleitung!);
   const MARKE: Record<string, { symbol: string; wort: string }> = {
     hinweis: { symbol: "fa-circle-info", wort: "Hinweis" },
@@ -108,6 +130,24 @@
   {/if}
 {/snippet}
 
+{#snippet erfahrung()}
+  <section class="anl-erfahrung">
+    <h2><i class="fa-solid fa-user-pen"></i>Meine Erfahrung</h2>
+    <div class="anl-erf-zeile"><span class="blass">Wie lief es?</span><Sterne {sterne} onwahl={sterneSetzen} /></div>
+    {#each notizen as n (n.id)}
+      <button class="anl-erf-notiz" onclick={() => onnotizzeigen?.(n)}>
+        {#if n.zitat}<span class="zitat">"{n.zitat}"</span>{/if}
+        {#if n.text}<span class="text">{n.text}</span>{/if}
+        {#if n.bilder.length}<span class="anl-erf-bilder">{#each n.bilder as b (b.id)}<img src={notizBildAdresse(n.id, b.id)} alt={b.name} loading="lazy" />{/each}</span>{/if}
+        <span class="blass">{wann(n.geaendert)}</span>
+      </button>
+    {/each}
+    {#if onnotiz}
+      <button class="knopf still" onclick={onnotiz}><i class="fa-solid fa-camera"></i>{notizen.length ? "Notiz oder Foto ergänzen" : "Notiz oder Foto hinzufügen"}</button>
+    {/if}
+  </section>
+{/snippet}
+
 {#snippet stufe(n: number)}
   <span class="anl-stufe" title="Schwierigkeit {n} von 5">{#each [1, 2, 3, 4, 5] as i (i)}<span class:an={i <= n}></span>{/each}</span>
 {/snippet}
@@ -145,8 +185,9 @@
         {#if a.schritte[nr]}
           <button class="anl-w-naechster" onclick={() => gehe(nr + 1)}><span class="blass">Als Nächstes</span>
             {(a.schritte[nr].zeilen[0]?.text ?? "").slice(0, 140)}{(a.schritte[nr].zeilen[0]?.text ?? "").length > 140 ? " ..." : ""}</button>
-        {:else if a.abschluss}
-          <div class="anl-w-naechster"><span class="blass">Abschluss</span>{a.abschluss}</div>
+        {:else}
+          {#if a.abschluss}<div class="anl-w-naechster"><span class="blass">Abschluss</span>{a.abschluss}</div>{/if}
+          {@render erfahrung()}
         {/if}
       </div>
     </div>
@@ -199,6 +240,7 @@
           </section>
         {/each}
         {#if a.abschluss}<section class="anl-abschluss"><h2><i class="fa-solid fa-flag-checkered"></i>Abschluss</h2><p>{a.abschluss}</p></section>{/if}
+        {@render erfahrung()}
       </article>
     </div>
   </div>
