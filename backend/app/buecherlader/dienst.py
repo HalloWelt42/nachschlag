@@ -165,14 +165,18 @@ class Buecherlader(Begleiter):
 
     async def takt(self) -> None:
         """Was der Zeitplan tut: vorige Fassungen nach der Frist entfernen, Abos nachholen, die zuletzt nicht laden
-        konnten (etwa weil der Platz fehlte oder die Regel nur melden hieß), und eine fällige Durchsicht anstoßen."""
+        konnten (etwa weil der Platz fehlte oder die Regel nur melden hieß), und eine fällige Durchsicht anstoßen.
+        Fällig ist sie nach der eingestellten Zeit, und sofort, solange eine eingeschaltete Quelle noch nie gelesen
+        wurde (neu angelegt, oder die Quellen kamen nach der letzten Durchsicht dazu): ohne ihre Bezüge findet ein
+        Ladeauftrag keine Adresse (WIKI-72)."""
         r = self._regeln()
         if await self._grund(r):
             return
         await self._aufraeumen(r)
         await self._abos_pruefen("Zeitplan")
         letzter = await self._bestand.letzter_durchgang()
-        if letzter and self._uhr() < self._naechste(letzter[1], r):
+        ungelesen = any(not q.zuletzt for q in await self._bestand.quellen(nur_an=True))
+        if letzter and self._uhr() < self._naechste(letzter[1], r) and not ungelesen:
             return
         if not await self._offene(DURCHSEHEN):
             await self._auftraege.einreihen(DURCHSEHEN, von="Zeitplan")

@@ -428,3 +428,21 @@ async def test_laden_ohne_bezugsquellen_ueber_die_ladedatei(umgebung):
     [a] = await fertig(auftraege, "buch_laden")
     assert a.zustand == "fertig", a.fehler
     assert (buecher / "neues_de_all_2026-10.zim").is_file()
+
+
+async def test_ungelesene_quelle_macht_die_durchsicht_faellig(umgebung):
+    """Kam eine Quelle nach der letzten Durchsicht dazu (oder alle, wie bei der Umstellung auf Quellen), sieht der
+    Zeitplan sofort durch statt nach einer Woche; danach kennt der Ladeauftrag ihre Bezüge (WIKI-72)."""
+    lader, auftraege, *_ = umgebung
+    await lader.durchsehen("probe")
+    await fertig(auftraege)
+    await lader.takt()
+    assert len(await fertig(auftraege, "verzeichnis_durchsehen")) == 1          # alle gelesen, Woche nicht um: nichts
+    spiegel = next(q for q in await lader.quellen() if q.adresse == VERZEICHNIS)
+    await lader.quelle_entfernen(spiegel.nr)                                     # wieder angelegt: noch nie gelesen
+    await lader.quelle_anlegen(NeueQuelle(art="verzeichnis", adresse=VERZEICHNIS, name="Spiegel"))
+    await lader.takt()
+    assert len(await fertig(auftraege, "verzeichnis_durchsehen")) == 2          # die neue: gleich durchgesehen
+    assert all(q.zuletzt for q in await lader.quellen())
+    await lader.takt()
+    assert len(await fertig(auftraege, "verzeichnis_durchsehen")) == 2          # und dann wieder Ruhe
