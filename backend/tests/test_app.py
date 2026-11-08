@@ -355,6 +355,35 @@ async def test_merkzettel_verlauf_und_vorlieben(nachschlag):
     assert (await c.delete(f"/api/v1/meins/merkzettel/{m['id']}")).status_code == 404
 
 
+async def test_mcp_werkzeuge(nachschlag):
+    """WIKI-78: MCP über HTTP: Anmeldung wie jeder Weg, initialize, Werkzeuge auflisten und rufen; falsche Eingabe ist ein
+    Ergebnis mit isError, Unbekanntes ein JSON-RPC-Fehler, eine Benachrichtigung bekommt 202."""
+    c, _, _ = nachschlag
+    rpc = lambda nr, methode, **p: {"jsonrpc": "2.0", "id": nr, "method": methode, "params": p}  # noqa: E731
+    assert (await c.post("/api/v1/mcp", json=rpc(1, "ping"), headers={"X-Kellerwolke-Sitzung": "falsch"})).status_code == 401
+    init = (await c.post("/api/v1/mcp", json=rpc(1, "initialize", protocolVersion="2025-06-18", capabilities={},
+                                                  clientInfo={"name": "probe", "version": "1"}))).json()["result"]
+    assert init["serverInfo"]["name"] == "nachschlag" and "tools" in init["capabilities"]
+    assert (await c.post("/api/v1/mcp", json={"jsonrpc": "2.0", "method": "notifications/initialized"})).status_code == 202
+    werkzeuge = (await c.post("/api/v1/mcp", json=rpc(2, "tools/list"))).json()["result"]["tools"]
+    assert [w["name"] for w in werkzeuge] == ["nachschlag_buecher", "nachschlag_suchen", "nachschlag_lesen"]
+    assert werkzeuge[1]["inputSchema"]["required"] == ["frage"]
+
+    async def rufen(name: str, **argumente) -> dict:
+        return (await c.post("/api/v1/mcp", json=rpc(3, "tools/call", name=name, arguments=argumente))).json()
+
+    buecher = (await rufen("nachschlag_buecher"))["result"]["content"][0]["text"]
+    assert "probe_de_all_2026-01: Probelexikon (enzyklopaedie" in buecher
+    funde = (await rufen("nachschlag_suchen", frage="Rotfuchs", buecher=["probe_de_all_2026-01"]))["result"]
+    assert not funde["isError"] and "[buch=probe_de_all_2026-01 pfad=Rotfuchs]" in funde["content"][0]["text"]
+    gelesen = (await rufen("nachschlag_lesen", buch="probe_de_all_2026-01", pfad="Rotfuchs"))["result"]["content"][0]["text"]
+    assert gelesen.startswith("Rotfuchs [buch=probe_de_all_2026-01 pfad=Rotfuchs]") and "<" not in gelesen
+    falsch = (await rufen("nachschlag_suchen"))["result"]
+    assert falsch["isError"] and "frage" in falsch["content"][0]["text"]
+    assert (await rufen("gibt_es_nicht"))["error"]["code"] == -32602
+    assert (await c.post("/api/v1/mcp", json=rpc(4, "resources/list"))).json()["error"]["code"] == -32601
+
+
 async def test_bewertungen(nachschlag):
     """WIKI-71: eigene Sterne je Seite, über Fassungen hinweg (Name des Buchs), 0 nimmt sie weg; nur fürs eigene Konto."""
     c, _, _ = nachschlag

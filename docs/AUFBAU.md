@@ -36,6 +36,14 @@ wird aufgelöst. Ein Sprung auf einen Anker mit Schrägstrich (`index.html#kurs/
 Route einer Skript-Anwendung: die Seite bleibt sie selbst, ihr Baustein liest den Inhalt aus den Dateien des Buchs
 (`bibliothek.ordner.sprungziel`, eine Regel für Lesen und Index).
 
+## Schnittstelle und MCP
+
+Alle Wege liegen unter `/api/v1`; die Oberfläche nutzt nur diese. Der Bereich Schnittstelle (Baustein des Appkerns)
+zeigt sie angemeldeten Menschen aus dem eigenen OpenAPI-Schema (`/api/v1/schnittstelle`), mit Ausprobieren für GET.
+Für KI gibt es MCP über HTTP: `POST /api/v1/mcp` (JSON-RPC, zustandslos, Anmeldung wie jeder Weg) mit den Werkzeugen
+`nachschlag_buecher`, `nachschlag_suchen` und `nachschlag_lesen` (`backend/app/mcp/`, je Werkzeug Eingabemodell und
+eine dünne Schicht über den Diensten).
+
 ## Suche
 
 Der Index des Buchs antwortet immer. Ist die Bedeutungssuche angebunden, läuft sie gleichzeitig mit einer Wartezeit;

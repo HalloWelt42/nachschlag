@@ -15,6 +15,8 @@ from appkern.leitstelle import LeitstellenFehler
 from appkern.verbund import VerbundFehler
 
 from .anleitungen.api import router as anleitungen_router
+from .mcp.api import router as mcp_router
+from .mcp.werkzeuge import werkzeuge as mcp_werkzeuge
 from .anleitungen.dienst import Anleitungen
 from .api import router
 from .artikel import Artikelleser, wege
@@ -186,6 +188,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     app.state.bibliothek = bibliothek
     app.state.indexauftraege = indexauftraege
     app.include_router(router(geruest, bibliothek, leser, suche, quellen))
+    app.include_router(mcp_router(geruest, mcp_werkzeuge(bibliothek, suche, leser)))   # MCP-Werkzeuge für KI (WIKI-78)
     app.include_router(quellenarchiv_router(geruest, quellen))
     app.include_router(buecherlader_router(geruest, lader))
     app.include_router(sammlung_router(geruest, sammlungen, stimmen))
