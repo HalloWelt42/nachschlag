@@ -42,7 +42,7 @@ from .markdownablage import Markdownablage
 from .themen.ordnen import ThemenOrdner
 from .meins import Meins
 from .stoebern.dienst import buchseite
-from .zeitfenster import ZONE, nachts
+from .zeitfenster import ZONE, Nachtfenster, Nachtwecker, nachts
 from .meins.api import inhalt_router as notizbilder_router
 from .meins.api import router as meins_router
 from .meins.bilder import Notizbilder
@@ -209,6 +209,9 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
                                    geruest.verbund.angebot("Codeschmiede", "codeschmiede", lambda: e().codeschmiede_adresse))
     geruest.verbund.anmelden("Vertonung", lambda: e().vertonung_adresse)   # nur Proben eigener Stimmen
 
+    # Nachtfenster (Über Nacht): ein Wecker für alle Dienste, die Aufträge für heute Nacht zurückstellen
+    nacht = Nachtfenster(lambda: (e().nachts_von, e().nachts_bis))
+    geruest.begleiter_anmelden(Nachtwecker(geruest.auftraege, nacht))
     # Stapelarbeit je Sammlung (WIKI-44): jede Arbeit mit eigener Stimme spricht über einen eigenen Sprechdienst
     sammlungen = Sammlungen(geruest.db, geruest.auftraege, themen, bibliothek, leser, artikeluebersetzer,
                             lambda stimme: Sprechdienst(lambda: geruest.leitstelle, lambda: e().sprechdienst,

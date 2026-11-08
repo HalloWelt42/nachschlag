@@ -32,7 +32,7 @@ from ..bibliothek import Bibliothek, BuchFehlt, EintragFehlt
 from ..modell.themen import Thema, Themeneintrag
 from ..themen import Themen
 from ..uebersetzung.anweisungen import html_sprache
-from ..zeitfenster import ZONE, nachts
+from ..zeitfenster import ZONE, Nachtfenster, nachts  # noqa: F401 (nachts: Tests lesen es hier)
 from ..uebersetzung.artikel import Artikeluebersetzer, braucht_uebersetzung
 from ..vorlesen import NichtBereit, Sprechdienst
 from .texte import HOECHSTENS_ZEICHEN, KARTENFORM, LERNFRAGEN, TEXTFORM, UEBERBLICK, ZUSAMMENFASSUNG, lesetext
@@ -44,7 +44,6 @@ ART = "sammlungsarbeit"
 Arbeit = Literal["uebersetzen", "vertonen", "zusammenfassen", "lernfragen"]
 TITEL: dict[str, str] = {"uebersetzen": "Übersetzen", "vertonen": "Vertonen", "zusammenfassen": "Zusammenfassen",
                          "lernfragen": "Lernfragen"}
-WECKER_S = 60
 NACHSEHEN_S = 3.0
 
 STUFEN = ["""
@@ -104,35 +103,18 @@ class Sammlungen(Begleiter):
                  uhr: Callable[[], datetime] = lambda: datetime.now(ZONE)) -> None:
         self._db, self._auftraege, self._themen, self._bib, self._leser = db, auftraege, themen, bibliothek, leser
         self._artikel, self._sprechdienst_fuer, self._ls, self._modell = artikel, sprechdienst_fuer, leitstelle, modell
-        self._kw, self._fenster, self._uhr = kellerwolke, fenster, uhr
-        self._wecker: asyncio.Task | None = None
+        self._kw, self._nacht = kellerwolke, Nachtfenster(fenster, uhr)
         auftraege.anmelden(Art(name=ART, titel="Sammlung bearbeiten", arbeit=self._arbeit, eingabe=SammlungsEingabe,
                                fortsetzbar=True, nach_neustart="fortsetzen", hoechstens=1,
                                herkunft=lambda e: Herkunft(titel="Zum Thema", ziel=f"themen/{e['thema']}")))   # WIKI-50
 
     async def starten(self) -> None:
         await self._db.einrichten("nachschlag_sammlungen", STUFEN)
-        self._wecker = asyncio.create_task(self._wecken(), name="sammlungen-nacht")
-
-    async def stoppen(self) -> None:
-        if self._wecker:
-            self._wecker.cancel()
-
-    async def _wecken(self) -> None:
-        """Beginnt die Nacht, sehen die Aufträge nach, ob Zurückgestelltes jetzt darf."""
-        war = None
-        while True:
-            jetzt = nachts(self._uhr(), *self._fenster())
-            if jetzt and war is False:
-                self._auftraege.wecken()
-            war = jetzt
-            await asyncio.sleep(WECKER_S)
 
     def zurueckstellen(self, a: Auftrag) -> str:
+        """Für heute Nacht Bestelltes wartet auf das Fenster; geweckt wird es vom Nachtwecker (zeitfenster.py)."""
         if a.art == ART and a.eingabe.get("wann") == "nachts":
-            von, bis = self._fenster()
-            if not nachts(self._uhr(), von, bis):
-                return f"wartet auf die Nacht ({von} bis {bis} Uhr)"
+            return self._nacht.warten()
         return ""
 
     # ----- Anstoßen und Stand ----------------------------------------------------------------------------------------
