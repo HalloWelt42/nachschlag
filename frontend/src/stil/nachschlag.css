@@ -1416,8 +1416,11 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .anl-zeile-liste .w { display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); white-space: nowrap; }
 .anl-zeile-liste .anl-chips { grid-area: c; }
 .anl-symbolwahl button { flex: none; display: inline-flex; align-items: center; min-height: 28px; min-width: 0; padding-inline: 8px; }
-.anl-symbolwahl .anl-stufe { margin-right: 0; gap: 2px; }
-.anl-symbolwahl .anl-stufe span { width: 7px; height: 7px; }
+.anl-symbolwahl { flex: none; }
+/* Punkte der Stufen als i/b: die Schale gibt jedem span in einer Umschaltleiste Innenabstand (sonst Ovale) */
+.anl-stufenwahl { display: inline-flex; gap: 2px; }
+.anl-stufenwahl b { display: block; width: 7px; height: 7px; border-radius: 50%; background: var(--warn); }
+.anl-symbolwahl:has(.aktiv) button:not(.aktiv) .anl-stufenwahl b { opacity: .35; }   /* die gewählte Stufe sticht heraus */
 .anl-geraet .katalog-filter .segment.anl-symbolwahl { flex-wrap: nowrap; }
 .faehigkeit.fehlt { background: var(--warn-weich); color: var(--warn); }
 @media (max-width: 1100px) {

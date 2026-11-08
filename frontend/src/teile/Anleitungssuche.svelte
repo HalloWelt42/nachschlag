@@ -145,7 +145,7 @@
               <!-- noch einmal getippt: wieder jede Schwierigkeit -->
               <button class:aktiv={frage.schwierigkeit[0] === i + 1} title={s} aria-label={s} aria-checked={frage.schwierigkeit[0] === i + 1} role="radio"
                       onclick={() => setze({ stufe: frage.schwierigkeit[0] === i + 1 ? null : String(i + 1) })}>
-                <span class="anl-stufe">{#each { length: i + 1 } as _, k (k)}<span class="an"></span>{/each}</span></button>
+                <i class="anl-stufenwahl">{#each { length: i + 1 } as _, k (k)}<b></b>{/each}</i></button>
             {/each}
           </div>
           <Auswahl wert={String(frage.zeit_bis ?? "")} symbol="fa-clock" titel="Zeitaufwand" optionen={ZEITEN} onwahl={(w: string) => setze({ zeit: w || null })} />
@@ -201,7 +201,7 @@
       {/if}
       <div class="anl-treffer">
         <div class="anl-trefferzahl">
-          <b>{zahl(funde.gesamt)}</b> {einheitZahl} {frage.art !== "geraet" ? sprachText : ""}{#if frage.text} zu <b>{frage.text}</b>{/if}{#if frage.bauteil}, Bauteil <b>{frage.bauteil}</b>{/if}{#if stufeText}, <b>{stufeText}</b>{/if}{#if ich && !frage.mehr_noetig}, für die deine Werkzeuge reichen{/if}
+          <b>{zahl(funde.gesamt)}</b> {einheitZahl} {frage.art !== "geraet" ? sprachText : ""}{#if frage.text}{" zu "}<b>{frage.text}</b>{/if}{#if frage.bauteil}, Bauteil <b>{frage.bauteil}</b>{/if}{#if stufeText}, <b>{stufeText}</b>{/if}{#if ich && !frage.mehr_noetig}, für die deine Werkzeuge reichen{/if}
           {#if ich && funde.brauchen_mehr}
             · <button class="knopf still" onclick={() => setze({ mehr: frage.mehr_noetig ? null : "1" })}>
               {frage.mehr_noetig ? "nur die, für die meine Werkzeuge reichen" : `weitere ${zahl(funde.brauchen_mehr)} brauchen mehr`}</button>

@@ -36,8 +36,10 @@ def _treffer(f: Anleitungsfrage, nur_passend: bool) -> _Treffer:
     von, bedingungen, werte = "anleitungen a", ["a.art = ?"], [f.art]
     rang = "0"
     if f.text.strip() and (frage := ausdruck(f.text)):
-        von += (f" JOIN (SELECT rowid AS nr, bm25(volltext, {', '.join(map(str, GEWICHTE))}) AS rang FROM volltext "
-                f"WHERE volltext MATCH ?) t ON t.nr = a.nr")
+        # erst der Volltext, dann die Filter (CROSS JOIN legt die Reihenfolge fest); sonst sucht SQLite den Volltext
+        # für jede Anleitung neu (gemessen: 18 s statt Bruchteilen einer Sekunde bei 10.000 Anleitungen)
+        von = (f"(SELECT rowid AS nr, bm25(volltext, {', '.join(map(str, GEWICHTE))}) AS rang FROM volltext "
+               f"WHERE volltext MATCH ?) t CROSS JOIN anleitungen a ON a.nr = t.nr")
         werte.insert(0, frage)
         rang = "t.rang"
     if f.sprachen:
@@ -112,9 +114,10 @@ def _unter(v: sqlite3.Connection, knoten: str, t: _Treffer) -> list[Facette]:
 
 
 def _bauteile(v: sqlite3.Connection, t: _Treffer) -> list[Facette]:
-    zeilen = v.execute(f"SELECT g.bauteil, COUNT(DISTINCT x.nr) AS n FROM geraet_anleitung g JOIN seiten x ON x.pfad = g.anleitung "
-                       f"WHERE x.nr IN (SELECT nr FROM ({t.sql})) AND g.bauteil != '' GROUP BY g.bauteil HAVING n >= ? "
-                       f"ORDER BY n DESC, g.bauteil LIMIT ?", [*t.werte, BAUTEIL_AB, BAUTEILE]).fetchall()
+    # von den Treffern aus: Seite, dann ihre Einträge auf Geräteseiten (Index über die Anleitung)
+    zeilen = v.execute(f"SELECT g.bauteil, COUNT(DISTINCT h.nr) AS n FROM ({t.sql}) h CROSS JOIN seiten x ON x.nr = h.nr "
+                       f"CROSS JOIN geraet_anleitung g ON g.anleitung = x.pfad WHERE g.bauteil != '' GROUP BY g.bauteil "
+                       f"HAVING n >= ? ORDER BY n DESC, g.bauteil LIMIT ?", [*t.werte, BAUTEIL_AB, BAUTEILE]).fetchall()
     return [Facette(wert=b, titel=b, zahl=n) for b, n in zeilen]
 
 
@@ -136,22 +139,26 @@ def weg(v: sqlite3.Connection, pfad: str) -> list[Einordnungsschritt]:
 
 
 def _geraete(v: sqlite3.Connection, f: Anleitungsfrage, knoten: str, medien: Callable[[str], str]) -> tuple[list[Geraetetreffer], int]:
-    """Geräteseiten im Ast des Knotens, mit Volltext nach Passung, sonst nach Titel; je mit Zahl der Anleitungen."""
-    ast = ("WITH RECURSIVE ast(pfad) AS (SELECT ? UNION SELECT k.kind FROM geraet_kind k JOIN seiten s ON s.nr = k.nr "
-           "JOIN ast ON ast.pfad = s.pfad) ")
-    von, werte, ordnung = "geraete g JOIN seiten s ON s.nr = g.nr", [knoten], "s.titel COLLATE NOCASE"
-    if f.text.strip() and (frage := ausdruck(f.text)):
-        von += " JOIN volltext ON volltext.rowid = g.nr AND volltext MATCH ?"
-        werte.append(frage)
-        ordnung = f"bm25(volltext, {', '.join(map(str, GEWICHTE))}), {ordnung}"
-    bedingung = "s.pfad IN (SELECT pfad FROM ast) AND s.pfad != ?"
-    werte.append(knoten)
-    gesamt = v.execute(f"{ast} SELECT COUNT(*) FROM {von} WHERE {bedingung}", werte).fetchone()[0]
+    """Geräteseiten (mit gewähltem Gerät nur sein Ast), mit Volltext nach Passung, sonst nach Titel; je mit der Zahl der
+    Anleitungen darunter in den gewählten Sprachen."""
+    mit, werte_mit = "", []
+    von, werte_von, ordnung = "geraete g CROSS JOIN seiten s ON s.nr = g.nr", [], "s.titel COLLATE NOCASE"
+    if f.text.strip() and (frage := ausdruck(f.text)):          # erst der Volltext, dann die Geräte (wie bei _treffer)
+        von = (f"(SELECT rowid AS nr, bm25(volltext, {', '.join(map(str, GEWICHTE))}) AS rang FROM volltext WHERE volltext MATCH ?) t "
+               f"CROSS JOIN geraete g ON g.nr = t.nr CROSS JOIN seiten s ON s.nr = g.nr")
+        werte_von, ordnung = [frage], f"t.rang, {ordnung}"
+    bedingung, werte_bed = "s.pfad != ?", [knoten]
+    if f.geraet:                                               # die Startseite umfasst ohnehin alles
+        mit = ("WITH RECURSIVE ast(pfad) AS (SELECT ? UNION SELECT k.kind FROM geraet_kind k JOIN seiten s ON s.nr = k.nr "
+               "JOIN ast ON ast.pfad = s.pfad) ")
+        werte_mit = [knoten]
+        bedingung += " AND s.pfad IN (SELECT pfad FROM ast)"
+    gesamt = v.execute(f"{mit}SELECT COUNT(*) FROM {von} WHERE {bedingung}", [*werte_mit, *werte_von, *werte_bed]).fetchone()[0]
     sprachen = f.sprachen or ["de", "en"]
-    zeilen = v.execute(f"{ast} SELECT s.pfad, s.titel, g.bild, g.kurz, (SELECT COUNT(*) FROM register_einordnung e "
+    zeilen = v.execute(f"{mit}SELECT s.pfad, s.titel, g.bild, g.kurz, (SELECT COUNT(*) FROM register_einordnung e "
                        f"JOIN anleitungen a ON a.nr = e.nr WHERE e.oben = s.pfad AND a.sprache IN ({_liste(sprachen)})) AS n "
                        f"FROM {von} WHERE {bedingung} ORDER BY {ordnung} LIMIT ? OFFSET ?",
-                       [knoten, *sprachen, *werte[1:], f.anzahl, f.ab]).fetchall()
+                       [*werte_mit, *sprachen, *werte_von, *werte_bed, f.anzahl, f.ab]).fetchall()
     return [Geraetetreffer(pfad=z["pfad"], titel=z["titel"], bild=medien(z["bild"]) if z["bild"] else "", kurz=z["kurz"],
                            anleitungen=z["n"]) for z in zeilen], gesamt
 
