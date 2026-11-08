@@ -91,7 +91,8 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     geruest = Geruest(name="Nachschlag", kennung="nachschlag", rolle="liest jede Quelle der Bibliothek", symbol="fa-book-open", symbolbild="/favicon.svg",
                       farbe="#08758b", fassung=FASSUNG, daten=daten, einstellungen=AppEinstellungen,
                       oberflaeche=WURZEL / "frontend" / "dist", transport=transport,
-                      gleichzeitig=3)                    # Indexbau, Übersetzungen und Sammlungen nebeneinander, je Art höchstens einer
+                      gleichzeitig=3,                    # Indexbau, Übersetzungen und Sammlungen nebeneinander, je Art höchstens einer
+                      leitstelle_wahlweise=True)         # Nachschlag liest auch ohne KI (WIKI-11); was sie braucht, fehlt dann
     e = lambda: geruest.einstellungen.stand  # noqa: E731
 
     bibliothek = Bibliothek(lambda: e().buecher_ordner)
@@ -151,7 +152,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
         steckbriefe=Steckbriefstufe(
             lambda: e().bilder_an and e().bilder_steckbriefe and nachts(datetime.now(ZONE), e().nachts_von, e().nachts_bis),
             buchkennungen, artikel_ab, daten / "bilder_steckbriefe.json"))
-    geruest.verbindung_anmelden("Bildholer", grossbilder.verbindung)
+    geruest.verbindung_anmelden("Bildholer", grossbilder.verbindung, wahlweise=True)
     geruest.begleiter_anmelden(themen)                   # nach Meins: Einträge lesen Lesestand und Notizen von dort
     geruest.begleiter_anmelden(grossbilder)              # nach Meins und Themen: liest deren Artikel
     geruest.begleiter_anmelden(indexauftraege)
@@ -166,7 +167,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     artikeluebersetzer = Artikeluebersetzer(geruest.db, geruest.auftraege, bibliothek, leser, lambda: geruest.leitstelle,
                                             lambda: e().suchmodell)
     geruest.begleiter_anmelden(artikeluebersetzer)
-    geruest.verbindung_anmelden("Index-Dienst", indexauftraege.verbindung)
+    geruest.verbindung_anmelden("Index-Dienst", indexauftraege.verbindung, wahlweise=True)
 
     # Was das System kennt, ist kein Textfeld: die Bücher der Bibliothek als Auswahl, der Fundus aus dem Verzeichnis
     async def buecher() -> Angebot:
@@ -211,11 +212,12 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     geruest.einstellungen.anbieten("vorlesestimme", stimmen)
     geruest.einstellungen.anbieten("suchmodell", geruest.leitstelle_angebot("text"))
     geruest.einstellungen.anbieten("fundus_adresse", geruest.verbund.angebot("Fundus", "fundus", lambda: e().fundus_adresse))
-    geruest.verbund.anmelden("Fundus", lambda: e().fundus_adresse)
-    geruest.verbund.anmelden("Codeschmiede", lambda: e().codeschmiede_adresse)   # Ausprobieren (WIKI-48)
+    # alle Anbindungen sind wahlweise (WIKI-11): nicht eingerichtet zeigt die Oberfläche sie nicht
+    geruest.verbund.anmelden("Fundus", lambda: e().fundus_adresse, wahlweise=True)
+    geruest.verbund.anmelden("Codeschmiede", lambda: e().codeschmiede_adresse, wahlweise=True)   # Ausprobieren (WIKI-48)
     geruest.einstellungen.anbieten("codeschmiede_adresse",
                                    geruest.verbund.angebot("Codeschmiede", "codeschmiede", lambda: e().codeschmiede_adresse))
-    geruest.verbund.anmelden("Vertonung", lambda: e().vertonung_adresse)   # nur Proben eigener Stimmen
+    geruest.verbund.anmelden("Vertonung", lambda: e().vertonung_adresse, wahlweise=True)   # nur Proben eigener Stimmen
 
     # Nachtfenster (Über Nacht): ein Wecker für alle Dienste, die Aufträge für heute Nacht zurückstellen
     nacht = Nachtfenster(lambda: (e().nachts_von, e().nachts_bis))

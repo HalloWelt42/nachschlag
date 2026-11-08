@@ -43,6 +43,7 @@ async def test_frisch_ohne_anmeldung_und_ohne_kellerwolke(frisch):
     assert (await c.post("/api/v1/anmeldung", json={"kennung": "probe", "passwort": "geheim"})).status_code == 409
     verbindungen = {v["name"]: v for v in (await c.get("/api/v1/verbindungen")).json()}
     assert all(not v["ok"] and v["meldung"] == "nicht eingerichtet" for v in verbindungen.values()), verbindungen
+    assert all(v["wahlweise"] for v in verbindungen.values())                  # alle Anbindungen sind wahlweise
 
 
 async def test_meins_gehoert_dem_festen_nutzer(frisch):
