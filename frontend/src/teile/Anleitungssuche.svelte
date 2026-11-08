@@ -35,7 +35,7 @@
   const ich = $derived(q.get("ich") === "1" && meine.length > 0);
   const frage = $derived<Anleitungsfrage>({
     text: q.get("text") ?? "", art: (q.get("art") as Suchart) || "anleitung", sprachen: q.get("en") === "1" ? ["de", "en"] : ["de"],
-    schwierigkeit: q.get("stufe") ? [Number(q.get("stufe"))] : [], zeit_bis: Number(q.get("zeit")) || null,
+    schwierigkeit: (q.get("stufe") ?? "").split(",").map(Number).filter((n) => n >= 1 && n <= 5), zeit_bis: Number(q.get("zeit")) || null,
     werkzeuge: ich ? meine : [], mehr_noetig: q.get("mehr") === "1", geraet: q.get("geraet") ?? "", bauteil: q.get("bauteil") ?? "",
     reihenfolge: (q.get("folge") as Anleitungsreihenfolge) || "passend", ab: 0, anzahl: ANZAHL });
 
@@ -108,7 +108,12 @@
   const einheit = $derived(frage.art === "geraet" ? "Geräte" : frage.art === "zerlegung" ? "Zerlegungen" : "Anleitungen");
   const einheitZahl = $derived(funde?.gesamt === 1 ? (frage.art === "geraet" ? "Gerät" : frage.art === "zerlegung" ? "Zerlegung" : "Anleitung") : einheit);
   const sprachText = $derived(frage.sprachen.length > 1 ? "auf Deutsch und Englisch" : "auf Deutsch");
-  const stufeText = $derived(frage.schwierigkeit.length ? STUFEN[frage.schwierigkeit[0] - 1] : "");
+  const stufeText = $derived(frage.schwierigkeit.map((n) => STUFEN[n - 1]).join(" oder "));
+  /** Mehrfachwahl: eine Stufe dazu oder weg; keine gewählt heißt jede */
+  function stufeUmschalten(n: number) {
+    const neu = frage.schwierigkeit.includes(n) ? frage.schwierigkeit.filter((x) => x !== n) : [...frage.schwierigkeit, n];
+    setze({ stufe: neu.sort().join(",") || null });
+  }
   const ziel = (pfad: string) => "/" + lesenZiel(artikel.buch, pfad);
 
   // Am Telefon stehen die Filter hinter einem Knopf (sonst füllt der Kopf den Schirm); die Zahl nennt die gesetzten
@@ -140,12 +145,10 @@
       </div>
       {#if frage.art !== "geraet" && filterZeigen}
         <div class="katalog-filter">
-          <div class="segment anl-symbolwahl" role="radiogroup" aria-label="Schwierigkeit">
+          <div class="segment anl-symbolwahl anl-zahlwahl" role="group" aria-label="Schwierigkeit, mehrere wählbar">
             {#each STUFEN as s, i (s)}
-              <!-- noch einmal getippt: wieder jede Schwierigkeit -->
-              <button class:aktiv={frage.schwierigkeit[0] === i + 1} title={s} aria-label={s} aria-checked={frage.schwierigkeit[0] === i + 1} role="radio"
-                      onclick={() => setze({ stufe: frage.schwierigkeit[0] === i + 1 ? null : String(i + 1) })}>
-                <i class="anl-stufenwahl">{#each { length: i + 1 } as _, k (k)}<b></b>{/each}</i></button>
+              <button class:aktiv={frage.schwierigkeit.includes(i + 1)} title="Schwierigkeit {i + 1}: {s}" aria-pressed={frage.schwierigkeit.includes(i + 1)}
+                      onclick={() => stufeUmschalten(i + 1)}>{i + 1}</button>
             {/each}
           </div>
           <Auswahl wert={String(frage.zeit_bis ?? "")} symbol="fa-clock" titel="Zeitaufwand" optionen={ZEITEN} onwahl={(w: string) => setze({ zeit: w || null })} />
