@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import re
 from collections.abc import Awaitable, Callable
@@ -53,14 +54,53 @@ def grosse_bilder(html: str) -> list[str]:
     return [unquote(m.group(1)) for img in _GROSS.finditer(html) if (m := _SRC.search(img.group(0)))]
 
 
+#: So viele Steckbriefbilder dürfen beim Bildholer höchstens warten, bevor die Nachtstufe nachlegt (WIKI-81)
+OFFEN_STECKBRIEFE = 300
+#: So viele Artikel liest die Nachtstufe je Takt
+STECKBRIEFE_JE_TAKT = 100
+
+
+class Steckbriefstufe:
+    """Steckbriefbilder aller Artikel (WIKI-81): geht die Wikis der Bibliothek der Reihe nach durch, je Buch ab einer
+    gemerkten Stelle in der Reihenfolge der Datei; die Stellen liegen in einer kleinen Datei bei den Daten der App, so
+    geht es nach einem Neustart dort weiter. -1 heißt: Buch ganz durch."""
+
+    def __init__(self, an: Callable[[], bool], buecher: Callable[[], Awaitable[list[str]]],
+                 artikel_ab: Callable[[str, int, int], Awaitable[tuple[list[str], int]]], datei: Path) -> None:
+        """`an()`: Einstellung an und gerade Nacht; `artikel_ab(buch, stelle, anzahl)`: Pfade der nächsten Artikel und
+        die Stelle danach (-1 am Ende)."""
+        self.an, self.buecher, self._ab, self._datei = an, buecher, artikel_ab, datei
+        try:
+            self._stellen: dict[str, int] = json.loads(datei.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            self._stellen = {}
+
+    async def weiter(self, buch: str) -> tuple[list[str], int]:
+        stelle = self._stellen.get(buch, 0)
+        if stelle < 0:
+            return [], -1
+        return await self._ab(buch, stelle, STECKBRIEFE_JE_TAKT)
+
+    def merken(self, buch: str, stelle: int) -> None:
+        self._stellen[buch] = stelle
+        self._datei.parent.mkdir(parents=True, exist_ok=True)
+        self._datei.write_text(json.dumps(self._stellen), encoding="utf-8")
+
+    def stand(self) -> dict[str, int]:
+        return dict(self._stellen)
+
+
 class Grossbilder(Begleiter):
     def __init__(self, ordner: Callable[[], str], adresse: Callable[[], str], regeln: Callable[[], Regeln],
                  beim_oeffnen: Callable[[], bool], leser: Artikelleser,
                  artikelquellen: list[Callable[[], Awaitable[list[tuple[str, str]]]]],
-                 client: httpx.AsyncClient | None = None, *, takt_s: float = TAKT_S, stufe_s: float = STUFE_S) -> None:
-        """`artikelquellen`: liefern (Buch, Pfad) gelesener, gemerkter und thematisierter Artikel (Vorrang 1)."""
+                 client: httpx.AsyncClient | None = None, *, takt_s: float = TAKT_S, stufe_s: float = STUFE_S,
+                 steckbriefe: Steckbriefstufe | None = None) -> None:
+        """`artikelquellen`: liefern (Buch, Pfad) gelesener, gemerkter und thematisierter Artikel (Vorrang 1);
+        `steckbriefe`: die Stufe der Steckbriefbilder aller Artikel (Vorrang 2, nachts, WIKI-81)."""
         self._ordner, self._adresse, self._regeln = ordner, adresse, regeln
         self._beim_oeffnen, self._leser, self._quellen = beim_oeffnen, leser, artikelquellen
+        self._steckbriefe = steckbriefe
         self._client = client or httpx.AsyncClient(timeout=httpx.Timeout(5.0))
         self._takt, self._stufe = takt_s, stufe_s
         self._geschickt: Regeln | None = None
@@ -152,9 +192,42 @@ class Grossbilder(Begleiter):
                 if self._erreicht and asyncio.get_running_loop().time() >= naechste_stufe:
                     await self.gelesene_vormerken()
                     naechste_stufe = asyncio.get_running_loop().time() + self._stufe
+                if self._erreicht and self._steckbriefe:
+                    await self.steckbriefe_vormerken()
             except Exception:  # noqa: BLE001 - beim nächsten Takt wieder
                 logger.exception("Bilder vormerken gescheitert")
             await asyncio.sleep(self._takt)
+
+    async def steckbriefe_vormerken(self) -> int:
+        """Steckbriefbilder aller Artikel (Vorrang 2): nur nachts, nur solange Platz ist, und nur so viel, wie der Bildholer
+        bald holen kann (höchstens `OFFEN_STECKBRIEFE` warten)."""
+        s = self._steckbriefe
+        if s is None or not s.an():
+            return 0
+        stand = await self.stand()
+        if stand is None or stand.zustand in ("voll", "aus", "angehalten") or stand.offen.get("2", 0) >= OFFEN_STECKBRIEFE:
+            return 0
+        neu = 0
+        for buch in await s.buecher():
+            if not host(buch):
+                continue
+            pfade, ende = await s.weiter(buch)
+            namen: list[str] = []
+            for pfad in pfade:
+                try:
+                    artikel = await self._leser.lesen(buch, pfad)
+                except (BuchFehlt, EintragFehlt):
+                    continue
+                kasten = artikel.steckbrief.html if artikel.steckbrief and artikel.steckbrief.html else ""
+                namen += (grosse_bilder(kasten) or grosse_bilder(artikel.html))[:1]
+            if namen:
+                neu += await self.vormerken(buch, namen, 2)
+                if not self._erreicht:
+                    return neu
+            s.merken(buch, ende)
+            if pfade:
+                return neu                          # ein Buch je Takt; das nächste kommt, wenn dieses durch ist
+        return neu
 
     async def gelesene_vormerken(self) -> int:
         """Gelesenes, Gemerktes und Themen (Vorrang 1): je Artikel einmal je Lauf von Nachschlag."""

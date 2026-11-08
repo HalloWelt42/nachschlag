@@ -82,3 +82,34 @@ async def test_ablage_lesen_und_ohne_bildholer(tmp_path: Path):
     assert g.finden(BUCH, "_assets_/x/Fehlt.jpg") is None and g.finden("klexikon_de_all_maxi_2026-11", "_assets_/x/Saturn.svg.png") is None
     assert await g.stand() is None and await g.vormerken(BUCH, ["_assets_/x/A.jpg"], 0) == 0
     assert not (await g.verbindung()).ok
+
+
+async def test_steckbriefe_nachts_der_reihe_nach(tmp_path: Path):
+    """WIKI-81: je Takt die nächsten Artikel eines Wikis, je Artikel ein Bild mit Vorrang 2; die Stelle bleibt über einen
+    Neustart gemerkt; aus (oder am Tag) geschieht nichts; ein Buch ohne Wiki bleibt aus."""
+    from app.bilder.dienst import Steckbriefstufe
+
+    bildholer = app_bauen(tmp_path / "daten", tmp_path / "bilder", arbeiten=False)
+    client = httpx.AsyncClient(transport=httpx.ASGITransport(app=bildholer))
+    artikel = [f"A{i}" for i in range(5)]
+    an = {"wert": False}
+
+    async def buecher() -> list[str]:
+        return ["klexikon_de_all_maxi_2026-11", BUCH]
+
+    async def ab(buch: str, stelle: int, anzahl: int) -> tuple[list[str], int]:
+        teil = artikel[stelle:stelle + 3]
+        return teil, stelle + 3 if stelle + 3 < len(artikel) else -1
+
+    datei = tmp_path / "stellen.json"
+    stufe = Steckbriefstufe(lambda: an["wert"], buecher, ab, datei)
+    g = Grossbilder(lambda: str(tmp_path / "bilder"), lambda: "http://bildholer", lambda: Regeln(), lambda: True, Leser(), [],
+                    client, steckbriefe=stufe)
+    await g.regeln_schicken()
+    assert await g.steckbriefe_vormerken() == 0                       # aus: nichts
+    an["wert"] = True
+    assert await g.steckbriefe_vormerken() == 3 and stufe.stand() == {BUCH: 3}
+    assert Steckbriefstufe(lambda: True, buecher, ab, datei).stand() == {BUCH: 3}    # nach einem Neustart weiter dort
+    assert await g.steckbriefe_vormerken() == 2 and stufe.stand() == {BUCH: -1}
+    assert await g.steckbriefe_vormerken() == 0                       # durch
+    assert (await g.stand()).offen == {"2": 5}

@@ -3,7 +3,9 @@
     uvicorn app.main:app --port 8711
 """
 
+import asyncio
 import os
+from datetime import datetime
 from pathlib import Path
 from typing import get_args
 
@@ -24,6 +26,7 @@ from .artikel import Artikelleser, wege
 from .bibliothek import Bibliothek
 from .buecherlader import Buecherlader, Regeln as Laderregeln
 from .bilder import Grossbilder
+from .bilder.dienst import Steckbriefstufe
 from .bilder.api import router as bilder_router
 from .buecherlader.api import router as buecherlader_router
 from .eigenindex.ablage import Eigenindizes
@@ -38,6 +41,8 @@ from bildholer.modelle import Regeln as Bildregeln
 from .markdownablage import Markdownablage
 from .themen.ordnen import ThemenOrdner
 from .meins import Meins
+from .stoebern.dienst import buchseite
+from .zeitfenster import ZONE, nachts
 from .meins.api import inhalt_router as notizbilder_router
 from .meins.api import router as meins_router
 from .meins.bilder import Notizbilder
@@ -124,11 +129,20 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     geruest.begleiter_anmelden(meins)
     themen = Themen(geruest.db, bibliothek.name_von, bibliothek.kennung_von)
     # große Bilder (WIKI-80): Regeln aus den Einstellungen an den Bildholer, geöffnete und gelesene Artikel vormerken
+    async def artikel_ab(buch: str, stelle: int, anzahl: int) -> tuple[list[str], int]:
+        """Die nächsten Artikel eines Buchs in der Reihenfolge der Datei (Steckbriefbilder aller Artikel, WIKI-81)."""
+        seite = await asyncio.to_thread(buchseite, bibliothek.archiv(buch), stelle, "vor", anzahl,
+                                        lambda pfad: bool(bibliothek.weiterleitung(buch, pfad)))
+        return [x.pfad for x in seite.eintraege], seite.naechste
+
     grossbilder = Grossbilder(lambda: e().bilder_ordner, lambda: e().bildholer_adresse, lambda: Bildregeln(
         an=e().bilder_an, abstand_s=e().bilder_abstand_s, wann=e().bilder_wann, nacht_von=e().nachts_von,
         nacht_bis=e().nachts_bis, breite=int(e().bilder_breite), platz_gb=e().bilder_platz_gb,
         bei_drosselung=e().bilder_bei_drosselung, absender=e().bilder_absender),
-        lambda: e().bilder_an and e().bilder_beim_oeffnen, leser, [meins.artikel_aller, themen.artikel_aller])
+        lambda: e().bilder_an and e().bilder_beim_oeffnen, leser, [meins.artikel_aller, themen.artikel_aller],
+        steckbriefe=Steckbriefstufe(
+            lambda: e().bilder_an and e().bilder_steckbriefe and nachts(datetime.now(ZONE), e().nachts_von, e().nachts_bis),
+            buchkennungen, artikel_ab, daten / "bilder_steckbriefe.json"))
     geruest.verbindung_anmelden("Bildholer", grossbilder.verbindung)
     geruest.begleiter_anmelden(themen)                   # nach Meins: Einträge lesen Lesestand und Notizen von dort
     geruest.begleiter_anmelden(grossbilder)              # nach Meins und Themen: liest deren Artikel

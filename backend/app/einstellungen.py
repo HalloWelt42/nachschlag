@@ -183,6 +183,10 @@ class AppEinstellungen(Grundeinstellungen):
                             description="Der Bildholer lädt zu den Vorschaubildern der Wikipedia (und anderer Wikis) das große "
                                         "Bild aus der Bildquelle, mit Urheber und Lizenz. Bis es da ist, zeigt Nachschlag das "
                                         "Vorschaubild. Stand und Anhalten: Reiter Bildholer.")
+    bilder_steckbriefe: bool = Field(True, title="Steckbriefbilder aller Artikel", json_schema_extra=BILDER,
+                                     description="Nachts holt der Bildholer nach und nach das Leitbild jedes Artikels der "
+                                                 "Wikis, nur innerhalb der Platzgrenze; die übrigen Bilder weiter nur beim "
+                                                 "Lesen.")
     bilder_beim_oeffnen: bool = Field(True, title="Beim Öffnen eines Artikels zuerst", json_schema_extra=BILDER,
                                       description="Die Bilder eines geöffneten Artikels kommen als Nächstes; danach geht es mit "
                                                   "Gelesenem, Gemerktem und Themen weiter.")

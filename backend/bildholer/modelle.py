@@ -11,8 +11,9 @@ from pydantic import BaseModel, Field
 #: Breiten, die die Bildquelle als Vorschaubild vorrätig hält; andere rechnet sie neu und drosselt dann schnell
 BREITEN = (960, 1280, 1920)
 
-#: Vorrang einer Vormerkung: 0 gerade geöffnet, 1 gelesen, gemerkt oder in einem Thema
-Vorrang = Literal[0, 1]
+#: Vorrang einer Vormerkung: 0 gerade geöffnet, 1 gelesen, gemerkt oder in einem Thema, 2 Steckbriefbild eines
+#: beliebigen Artikels (nachts nach und nach, WIKI-81)
+Vorrang = Literal[0, 1, 2]
 
 
 class Regeln(BaseModel):

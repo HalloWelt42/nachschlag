@@ -34,7 +34,15 @@ Die Bildquelle verlangt einen Absender mit Kontakt (gemessen 08.11.2026: ohne Ko
 für Roboter). Vorgabe ist die Seite des Projekts. Lehnt sie ab, hält der Bildholer an und nennt den Grund; neue Regeln
 setzen ihn fort.
 
+## Steckbriefbilder aller Artikel (WIKI-81)
+
+Entscheidung 08.11.2026: nur das Leitbild jedes Artikels, nur nachts, innerhalb der Platzgrenze; übrige Bilder weiter nur
+beim Lesen. Nachschlag geht die Wikis der Bibliothek der Reihe nach durch (Reihenfolge der Datei, je Takt 100 Artikel),
+nimmt je Artikel das erste große Bild des Steckbriefs, sonst des Texts, und merkt es mit Vorrang 2 vor. Nachgelegt wird
+nur, solange höchstens 300 solcher Bilder warten, der Bildholer läuft und Platz hat. Die Stelle je Buch steht in
+`daten/bilder_steckbriefe.json`, so geht es nach einem Neustart dort weiter. Eine Liste aller Bilder vom Mac braucht es
+dafür nicht: der Bildholer holt ohnehin nur ein Bild alle paar Sekunden, so viel liest der Pi nebenher.
+
 ## Später
 
-Stufen für alle Bilder eines Buchs (Steckbriefbilder, übrige) brauchen eine Liste aller Bilder je Artikel; die entsteht
-am besten auf dem Mac beim Bau des eigenen Index (der Pi liefert nur Daten).
+Übrige Bilder aller Artikel (nicht nur das Leitbild): erst nach Abstimmung von Platz und Tempo.
