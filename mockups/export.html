@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Als Buch</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Als Buch hinaus (WIKI-45): ein Thema wird ein EPUB oder PDF. Eine Seite, vier Schritte untereinander (Inhalt, Vorlage,
+       Umformung, Format), rechts immer die Vorschau und die Zeitschätzung aus der Hausmessung. Die Vorlage bestimmt Aufbau und
+       Form; die KI (über die Leitstelle) formt die Artikel nach der Vorlage um, nur aus dem, was in den Artikeln steht, mit
+       Beleg je Absatz. Erst ein Probekapitel ansehen, dann alles bauen, gern über Nacht. Erreichbar aus dem Thema
+       (Knopf "Als Buch") und aus dem Merkzettel (Auswahl). -->
+  <body>
+    <div class="fenster-voll">
+      <div data-teil="kopf"></div>
+      <div></div>
+      <div class="geruest">
+        <div data-teil="nav:themen"></div>
+        <section class="seite">
+          <div class="seiten-kopf">
+            <button class="rund still" title="Zurück zum Thema" onclick="location.href='themen.html'"><i class="fa-solid fa-chevron-left"></i></button>
+            <h1>Als Buch: Sternenhimmel</h1>
+            <span class="pille"><i class="fa-solid fa-layer-group"></i>aus dem Thema, 23 Artikel</span>
+          </div>
+          <div class="rollfeld">
+            <div class="exp-buehne">
+              <div class="exp-schritte">
+
+                <div class="karte">
+                  <h2><span class="exp-nr fertig">1</span>Inhalt<span class="neben">7 Artikel in 3 Kapiteln</span></h2>
+                  <div class="karte-unter">Jeder Bereich des Themas wird ein Kapitel, in seiner Reihenfolge. Ziehen ändert die Reihenfolge nur im Buch.</div>
+                  <div class="exp-kapitel">
+                    <div class="zeile"><i class="fa-solid fa-grip-vertical griff"></i><i class="fa-solid fa-square-check wahl"></i><span class="nr">1</span><b>Planeten</b>
+                      <span class="u">4 Artikel<span class="bilder"><img src="beispiel/saturn_planet_.jpg" alt=""><img src="beispiel/jupiter_planet_.png" alt=""><img src="beispiel/mars_planet_.png" alt=""></span></span></div>
+                    <div class="zeile"><i class="fa-solid fa-grip-vertical griff"></i><i class="fa-solid fa-square-check wahl"></i><span class="nr">2</span><b>Galaxien und Nebel</b>
+                      <span class="u">2 Artikel<span class="bilder"><img src="beispiel/andromedagalaxie.jpg" alt=""><img src="beispiel/schwarzes_loch.jpg" alt=""></span></span></div>
+                    <div class="zeile"><i class="fa-solid fa-grip-vertical griff"></i><i class="fa-solid fa-square-check wahl"></i><span class="nr">3</span><b>Monde</b>
+                      <span class="u">1 Artikel<span class="bilder"><img src="beispiel/mond.jpg" alt=""></span></span></div>
+                    <div class="zeile aus"><i class="fa-solid fa-grip-vertical griff"></i><i class="fa-regular fa-square wahl"></i><span class="nr"></span><b>Ohne Bereich</b><span class="u">16 Artikel, nicht im Buch</span></div>
+                  </div>
+                  <div class="feld"><div class="was"><div class="name">Mit hinein</div><div class="beschreibung">Notizen stehen als Randnotiz an ihrer Stelle, gemerkte Stellen als Hervorhebung.</div></div>
+                    <span class="wert-rechts"><span class="chip an"><i class="fa-solid fa-square-check"></i>Notizen (4)</span><span class="chip an"><i class="fa-solid fa-square-check"></i>Gemerkte Stellen (6)</span>
+                      <span class="chip an"><i class="fa-solid fa-square-check"></i>Bilder (31)</span><span class="chip"><i class="fa-regular fa-square"></i>Steckbriefe</span></span></div>
+                  <div class="feld"><div class="was"><div class="name">Englische Artikel</div><div class="beschreibung">"Ringe des Saturn" ist schon übersetzt; die Übersetzung geht ins Buch.</div></div>
+                    <span class="segment"><span class="aktiv">Übersetzung nehmen</span><span>Original lassen</span></span></div>
+                  <div class="feld"><div class="was"><div class="name">Quellen und Lizenzen</div><div class="beschreibung">Am Ende des Buchs, je Artikel Buch, Fassung, Urheber und Lizenz; die Lizenz der Bücher verlangt das.</div></div>
+                    <span class="exp-regeln"><span class="chip"><i class="fa-solid fa-lock"></i>immer dabei</span></span></div>
+                </div>
+
+                <div class="karte">
+                  <h2><span class="exp-nr fertig">2</span>Vorlage<span class="neben">bestimmt Aufbau, Ton und Gestaltung</span></h2>
+                  <div class="exp-vorlagen">
+                    <div class="exp-vorlage">
+                      <div class="exp-blatt"><i class="h"></i><i></i><i></i><i class="k"></i><div class="bild"></div><i></i><i></i><i class="kurz"></i></div>
+                      <b>Sachbuch<span class="ki">KI</span></b><span class="u">Kapitel mit Einleitung, Text in einem Ton, Glossar</span></div>
+                    <div class="exp-vorlage aktiv">
+                      <div class="exp-blatt"><i class="h"></i><div class="kasten"><i></i><i class="k"></i></div><i></i><i class="k"></i><i></i><i class="frage"></i><i class="frage"></i></div>
+                      <b><i class="fa-solid fa-circle-check"></i>Lernheft<span class="ki">KI</span></b><span class="u">kurze Abschnitte, Auf einen Blick, Fragen am Kapitelende</span></div>
+                    <div class="exp-vorlage">
+                      <div class="exp-blatt"><i class="h"></i><div class="spalten"><span><i></i><i></i><i class="k"></i><i></i></span><span><i></i><i class="k"></i><i></i><i></i></span></div><i class="h" style="margin-top: 3px"></i><div class="spalten"><span><i></i><i class="k"></i></span><span><i></i><i></i></span></div></div>
+                      <b>Nachschlagewerk</b><span class="u">Artikel wie in den Büchern, von A bis Z, ohne Umformung</span></div>
+                    <div class="exp-vorlage">
+                      <div class="exp-blatt"><i class="h"></i><i></i><i class="k"></i><i></i><i class="kurz"></i><i></i><i class="k"></i><i></i></div>
+                      <b>Vorlesebuch<span class="ki">KI</span></b><span class="u">für das Ohr: kurze Sätze, Zahlen in Worten, keine Tabellen</span></div>
+                    <div class="exp-vorlage">
+                      <div class="exp-blatt"><i class="h"></i><div class="bild" style="height: 26px"></div><i></i><i class="k"></i><i class="kurz"></i></div>
+                      <b>Einfache Sprache<span class="ki">KI</span></b><span class="u">kurze Sätze, schwere Wörter erklärt, viel Bild</span></div>
+                    <div class="exp-vorlage">
+                      <div class="exp-blatt"><i class="h"></i><div class="kasten"><i></i><i class="kurz"></i></div><i></i><i></i><div class="bild"></div><i class="frage"></i></div>
+                      <b>Beobachtungsheft<span class="ki">KI</span></b><span class="u">eigene Vorlage, aus Lernheft</span></div>
+                    <a class="exp-vorlage neu" href="export-vorlage.html"><i class="fa-solid fa-pen-ruler"></i><b>Vorlagen bearbeiten</b></a>
+                  </div>
+                </div>
+
+                <div class="karte">
+                  <h2><span class="exp-nr">3</span>Umformung<span class="neben">über die Leitstelle, Qwen3 80B</span></h2>
+                  <div class="feld"><div class="was"><div class="name">Für wen</div><div class="beschreibung">Wortwahl und wie viel vorausgesetzt wird.</div></div>
+                    <span class="segment"><span class="aktiv">Erwachsene</span><span>Jugendliche</span><span>Kinder ab 10</span></span></div>
+                  <div class="feld"><div class="was"><div class="name">Länge</div><div class="beschreibung">Gekürzt wird an Einzelheiten, nie an den Aussagen, die in Auf einen Blick stehen.</div></div>
+                    <span class="segment"><span>Wie im Original</span><span class="aktiv">Etwa die Hälfte</span><span>Nur das Wichtigste</span></span></div>
+                  <div class="feld"><div class="was"><div class="name">Fragen je Kapitel</div><div class="beschreibung">Mit Antwort zum Aufklappen (EPUB) oder hinten im Heft (PDF).</div></div>
+                    <span class="wert-zahl"><button class="knopf"><i class="fa-solid fa-minus"></i></button><b>5</b><button class="knopf"><i class="fa-solid fa-plus"></i></button></span></div>
+                  <div class="feld"><div class="was"><div class="name">Feste Regeln</div><div class="beschreibung">Gelten für jede Vorlage. Die Prüfung nach dem Umformen zeigt jede Abweichung im Probekapitel und im Auftrag.</div></div>
+                    <span class="exp-regeln"><span class="chip"><i class="fa-solid fa-check"></i>nur was in den Artikeln steht</span><span class="chip"><i class="fa-solid fa-check"></i>Beleg je Absatz</span><span class="chip"><i class="fa-solid fa-check"></i>Zahlen gegen das Original geprüft</span></span></div>
+                </div>
+
+                <div class="karte">
+                  <h2><span class="exp-nr">4</span>Format und Ablage</h2>
+                  <div class="feld"><div class="was"><div class="name">Formate</div><div class="beschreibung">EPUB für Lesegerät und Telefon, PDF zum Drucken.</div></div>
+                    <span class="wert-rechts"><span class="chip an"><i class="fa-solid fa-square-check"></i>EPUB</span><span class="chip an"><i class="fa-solid fa-square-check"></i>PDF</span></span></div>
+                  <div class="feld"><div class="was"><div class="name">Seitengröße des PDF</div></div>
+                    <span class="segment"><span class="aktiv">A5</span><span>A4</span><span>Zwei Seiten je A4</span></span></div>
+                  <div class="feld"><div class="was"><div class="name">Titelbild</div><div class="beschreibung">Aus den Bildern der Artikel; groß, sobald der Bildholer es geladen hat.</div></div>
+                    <span class="exp-titelbilder"><img class="an" src="beispiel/milchstra_e.jpg" alt=""><img src="beispiel/saturn_planet_.jpg" alt=""><img src="beispiel/orionnebel.jpg" alt=""><img src="beispiel/andromedagalaxie.jpg" alt=""><img src="beispiel/mond.jpg" alt=""></span></div>
+                  <div class="feld"><div class="was"><div class="name">Ablage</div><div class="beschreibung">Fertige Bücher liegen in der Kellerwolke und unter Eigene Bücher zum Herunterladen.</div></div>
+                    <span class="eingabe-schein"><i class="fa-solid fa-cloud" style="margin-right: 8px; color: var(--text-3)"></i>Nachschlag / Bücher / Sternenhimmel</span></div>
+                </div>
+              </div>
+
+              <aside class="exp-vorschau">
+                <div class="karte">
+                  <h3>Vorschau</h3>
+                  <div class="exp-buch">
+                    <div class="exp-titel"><img src="beispiel/milchstra_e.jpg" alt=""><span><b>Sternenhimmel</b><small>Ein Lernheft</small></span></div>
+                    <div class="exp-seite">
+                      <b>1 Planeten</b>
+                      <div class="kasten"><em>Auf einen Blick</em>Saturn ist der sechste Planet und der zweitgrößte; leichter als Wasser.</div>
+                      <span>Saturn umrundet die Sonne in gut 29 Jahren. Als Gasplanet hat er keine feste Oberfläche ...</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="karte">
+                  <h3>Dauer</h3>
+                  <div class="exp-zahlen">
+                    <div class="kennzahl"><span class="k">Text</span><span class="w">452.000</span><span style="font-size: var(--marke); color: var(--text-3)">Zeichen in 7 Artikeln</span></div>
+                    <div class="kennzahl"><span class="k">Etwa</span><span class="w">1 h 2 min</span><span style="font-size: var(--marke); color: var(--text-3)">im Buch rund 120 Seiten A5</span></div>
+                  </div>
+                  <div class="exp-zeitleiste">
+                    <div class="z"><span>Artikel umformen, auf die Hälfte</span><span>52 min</span></div>
+                    <div class="z"><span>Auf einen Blick und Fragen, 3 Kapitel</span><span>4 min</span></div>
+                    <div class="z"><span>Glossar</span><span>2 min</span></div>
+                    <div class="z"><span>Prüfen, Satz EPUB und PDF, Bilder</span><span>4 min</span></div>
+                    <div class="z summe"><span>Zusammen</span><span>1 h 2 min</span></div>
+                  </div>
+                  <div class="exp-grundlage">Grundlage: Hausmessung über die Leitstelle, Qwen3 80B schreibt rund 75 Zeichen je Sekunde; nach jedem Auftrag misst Nachschlag neu.</div>
+                </div>
+                <div class="karte">
+                  <h3>Wann</h3>
+                  <div class="exp-wann">
+                    <span class="segment"><span>Jetzt</span><span class="aktiv">Heute Nacht</span></span>
+                    <span class="fertig-um">Beginnt um <b>1:00</b>, fertig gegen <b>2:05</b>. Das Zeitfenster für Nachtarbeit steht in den Einstellungen.</span>
+                  </div>
+                </div>
+                <div class="exp-knoepfe">
+                  <button class="knopf" onclick="location.href='export-probe.html'"><i class="fa-solid fa-flask"></i>Probekapitel ansehen (Saturn, etwa 2 min)</button>
+                  <button class="knopf primaer" onclick="location.href='export-buecher.html'"><i class="fa-solid fa-moon"></i>Heute Nacht bauen</button>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div data-teil="fuss"></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

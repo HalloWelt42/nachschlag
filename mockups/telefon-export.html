@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Telefon, Als Buch</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Telefon (WIKI-45): das Telefon unterstützt. Links ein Thema als Buch bestellen (Vorlage, Formate, Dauer, über Nacht),
+       Kapitel und Feinheiten bleiben wie im Thema; Vorlagen bearbeiten gibt es am Rechner. Rechts Eigene Bücher: was
+       gerade entsteht, und die fertigen zum Lesen im EPUB-Leser des Telefons. -->
+  <body style="background: var(--hg)">
+    <div class="telefone">
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>22:14</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf">
+          <button class="rund still" title="Zurück"><i class="fa-solid fa-chevron-left"></i></button>
+          <h1>Als Buch</h1>
+        </div>
+        <div class="t-inhalt">
+          <div class="exp-buch" style="grid-template-columns: 72px minmax(0, 1fr); align-items: center">
+            <div class="exp-titel" style="height: 100px"><img src="beispiel/milchstra_e.jpg" alt=""><span><b style="font-size: 12px">Sternenhimmel</b></span></div>
+            <div><b style="font-size: 18px">Sternenhimmel</b><div style="color: var(--text-3); font-size: 15px">7 Artikel in 3 Kapiteln, Notizen und Bilder dabei</div></div>
+          </div>
+          <h2 class="exp-t-h2">Vorlage</h2>
+          <div class="exp-t-wahl">
+            <div class="zeile"><i class="fa-regular fa-circle"></i><span>Sachbuch</span><span class="u">KI</span></div>
+            <div class="zeile an"><i class="fa-solid fa-circle-dot"></i><span>Lernheft</span><span class="u">KI</span></div>
+            <div class="zeile"><i class="fa-regular fa-circle"></i><span>Nachschlagewerk</span><span class="u"></span></div>
+            <div class="zeile"><i class="fa-regular fa-circle"></i><span>Vorlesebuch</span><span class="u">KI</span></div>
+            <div class="zeile"><i class="fa-regular fa-circle"></i><span>Beobachtungsheft</span><span class="u">KI</span></div>
+          </div>
+          <h2 class="exp-t-h2">Formate</h2>
+          <span class="wert-rechts" style="display: flex; gap: 8px"><span class="chip an" style="font-size: 16px"><i class="fa-solid fa-square-check"></i>EPUB</span><span class="chip an" style="font-size: 16px"><i class="fa-solid fa-square-check"></i>PDF A5</span></span>
+          <h2 class="exp-t-h2">Dauer</h2>
+          <div class="exp-t-schaetzung"><b>etwa 1 h 2 min</b><span>Heute Nacht ab 1:00, fertig gegen 2:05</span></div>
+        </div>
+        <div class="exp-t-steuer">
+          <button class="knopf gross" title="Probekapitel"><i class="fa-solid fa-flask"></i></button>
+          <button class="knopf primaer gross"><i class="fa-solid fa-moon"></i>Heute Nacht bauen</button>
+        </div>
+      </div></div>
+
+      <div class="telefon"><div class="schirm">
+        <div class="statusleiste"><span>7:32</span><span><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></span></div>
+        <div class="t-kopf">
+          <button class="rund still" title="Zurück"><i class="fa-solid fa-chevron-left"></i></button>
+          <h1>Eigene Bücher</h1>
+        </div>
+        <div class="t-inhalt">
+          <div class="exp-t-buch">
+            <div class="exp-titel"><img src="beispiel/milchstra_e.jpg" alt=""><span><b>Sternenhimmel</b></span></div>
+            <div><div class="t">Sternenhimmel</div><div class="u">Lernheft, entsteht: Kapitel 2 von 3</div><div class="spur"><span style="width: 58%"></span></div></div>
+          </div>
+          <div class="exp-t-buch">
+            <div class="exp-titel"><img src="beispiel/fuchs.jpg" alt=""><span><b>Füchse</b></span></div>
+            <div><div class="t">Füchse</div><div class="u">Nachschlagewerk, 64 Seiten</div><div class="u" style="color: var(--info)"><i class="fa-solid fa-circle-info"></i> 2 neue Artikel, nachbauen</div></div>
+          </div>
+          <div class="exp-t-buch">
+            <div class="exp-titel"><img src="beispiel/photosynthese.jpeg" alt=""><span><b>Klima und Pflanzen</b></span></div>
+            <div><div class="t">Klima und Pflanzen</div><div class="u">Sachbuch, 182 Seiten</div></div>
+          </div>
+          <div class="exp-t-buch">
+            <div class="exp-titel"><img src="beispiel/tollwut.jpg" alt=""><span><b>Gesundheit Haustiere</b></span></div>
+            <div><div class="t">Gesundheit Haustiere</div><div class="u">Vorlesebuch, 21 Seiten</div></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

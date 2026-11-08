@@ -1301,3 +1301,176 @@ body.nur-index .treffer.weit { opacity: 1; }
 .ifx-abhaken li { display: flex; gap: 10px; align-items: center; color: var(--text-2); }
 .ifx-abhaken li.da { color: var(--text); }
 .ifx-abhaken li.da i { color: var(--gut); }
+
+/* ===== Als Buch hinaus (WIKI-45) ===== */
+.exp-buehne { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--a4); max-width: 1240px; align-items: start; padding-bottom: var(--a6); }
+.exp-schritte { display: flex; flex-direction: column; gap: var(--a4); min-width: 0; }
+.exp-schritte .karte { max-width: none; margin-bottom: 0; padding-bottom: var(--a2); }
+.karte h2 .exp-nr { width: 26px; height: 26px; border-radius: var(--r2); display: grid; place-items: center; background: var(--akzent-weich); color: var(--akzent); font-family: var(--schrift-zahl); font-size: var(--klein); flex: none; }
+.karte h2 .exp-nr.fertig { background: var(--gut-weich); color: var(--gut); }
+.karte h2 .neben { margin-left: auto; font-size: var(--klein); font-weight: 400; color: var(--text-3); }
+.exp-kapitel { display: flex; flex-direction: column; gap: 4px; padding: var(--a2) 0 var(--a3); }
+.exp-kapitel .zeile { display: grid; grid-template-columns: 18px 22px 28px minmax(0, 1fr) auto; gap: var(--a2); align-items: center; padding: 6px 10px; border-radius: var(--r2); background: var(--flaeche-2); font-size: var(--klein); }
+.exp-kapitel .zeile .griff { color: var(--text-3); }
+.exp-kapitel .zeile .wahl { color: var(--akzent); }
+.exp-kapitel .zeile .nr { font-family: var(--schrift-zahl); color: var(--text-3); }
+.exp-kapitel .zeile b { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.exp-kapitel .zeile .u { color: var(--text-3); white-space: nowrap; display: flex; align-items: center; gap: var(--a3); }
+.exp-kapitel .zeile.aus { background: transparent; box-shadow: inset 0 0 0 1px var(--rand); color: var(--text-2); }
+.exp-kapitel .zeile.aus .wahl { color: var(--text-3); }
+.exp-kapitel .zeile .bilder { display: flex; gap: 3px; }
+.exp-kapitel .zeile .bilder img { width: 26px; height: 20px; object-fit: cover; border-radius: 3px; }
+.exp-vorlagen { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--a3); padding: var(--a2) 0 var(--a3); }
+.exp-vorlage { display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: var(--r3); background: var(--flaeche-2); cursor: pointer; text-decoration: none; color: inherit; min-width: 0; }
+.exp-vorlage b { font-size: var(--klein); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.exp-vorlage .u { font-size: var(--marke); color: var(--text-3); line-height: 1.35; }
+.exp-vorlage.aktiv { background: var(--akzent-weich); box-shadow: inset 0 0 0 2px var(--akzent-flaeche); }
+.exp-vorlage.aktiv b { color: var(--akzent); }
+.exp-vorlage.neu { background: transparent; box-shadow: inset 0 0 0 1px var(--rand-stark); align-items: center; justify-content: center; color: var(--text-2); min-height: 150px; }
+.exp-vorlage .ki { margin-left: auto; font-size: var(--marke); font-weight: 600; color: var(--violett); }
+/* Kleines Blatt als Andeutung der Seitenform einer Vorlage */
+.exp-blatt { aspect-ratio: 3 / 4; height: 84px; align-self: center; background: var(--flaeche); border-radius: 3px; box-shadow: var(--schatten); padding: 8px 7px; display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
+.exp-blatt i { display: block; height: 3px; border-radius: 2px; background: var(--rand-stark); font-style: normal; }
+.exp-blatt i.h { height: 5px; width: 60%; background: var(--text-2); margin-bottom: 2px; }
+.exp-blatt i.k { width: 70%; }
+.exp-blatt i.kurz { width: 45%; }
+.exp-blatt .kasten { display: flex; flex-direction: column; gap: 2px; padding: 3px; border-radius: 2px; background: var(--akzent-weich); }
+.exp-blatt .kasten i { background: var(--akzent-flaeche); }
+.exp-blatt .bild { height: 18px; border-radius: 2px; background: var(--mulde); }
+.exp-blatt .spalten { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+.exp-blatt .spalten > span { display: flex; flex-direction: column; gap: 3px; }
+.exp-blatt i.frage { width: 80%; background: var(--violett); opacity: .5; }
+.exp-regeln { display: flex; flex-wrap: wrap; gap: 6px; }
+.exp-regeln .chip i { color: var(--gut); }
+.exp-titelbilder { display: flex; gap: 6px; flex-wrap: wrap; }
+.exp-titelbilder img { width: 54px; height: 40px; object-fit: cover; border-radius: var(--r1); opacity: .7; }
+.exp-titelbilder img.an { opacity: 1; box-shadow: 0 0 0 2px var(--flaeche), 0 0 0 4px var(--akzent); }
+
+.exp-vorschau { position: sticky; top: 0; display: flex; flex-direction: column; gap: var(--a3); }
+.exp-vorschau .karte { max-width: none; margin-bottom: 0; padding: var(--a3) var(--a4); }
+.exp-vorschau h3 { margin: 0 0 var(--a2); font-size: var(--klein); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; }
+.exp-buch { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: var(--a3); align-items: end; }
+.exp-titel { position: relative; height: 136px; border-radius: 3px 6px 6px 3px; overflow: hidden; box-shadow: var(--schatten); background: #10161f; color: #fff; }
+.exp-titel::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: rgba(0, 0, 0, .25); }
+.exp-titel img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .85; }
+.exp-titel span { position: absolute; left: 8px; right: 6px; bottom: 8px; display: flex; flex-direction: column; gap: 2px; text-shadow: 0 1px 3px rgba(0, 0, 0, .6); }
+.exp-titel b { font-size: 13px; line-height: 1.1; hyphens: auto; }
+.exp-titel small { font-size: 9px; opacity: .9; }
+.exp-seite { height: 136px; border-radius: 2px; background: var(--flaeche); box-shadow: var(--schatten); padding: 10px; display: flex; flex-direction: column; gap: 4px; overflow: hidden; font-size: 8px; line-height: 1.35; color: var(--text-2); font-family: Georgia, serif; }
+.exp-seite b { font-size: 10px; color: var(--text); font-family: var(--schrift); }
+.exp-seite .kasten { padding: 4px 5px; border-radius: 2px; background: var(--akzent-weich); color: var(--text); }
+.exp-seite .kasten em { font-style: normal; font-weight: 600; color: var(--akzent); display: block; }
+.exp-zahlen { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--a3); }
+.exp-zeitleiste { display: flex; flex-direction: column; gap: 6px; margin-top: var(--a3); font-size: var(--klein); }
+.exp-zeitleiste .z { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--a2); color: var(--text-2); }
+.exp-zeitleiste .z span:last-child { font-family: var(--schrift-zahl); color: var(--text); }
+.exp-zeitleiste .z.summe { padding-top: 6px; border-top: 1px solid var(--rand); font-weight: 600; color: var(--text); }
+.exp-grundlage { font-size: var(--marke); color: var(--text-3); margin-top: var(--a2); line-height: 1.4; }
+.exp-wann { display: flex; flex-direction: column; gap: var(--a2); }
+.exp-wann .segment { align-self: flex-start; }
+.exp-wann .fertig-um { font-size: var(--klein); color: var(--text-2); }
+.exp-wann .fertig-um b { font-family: var(--schrift-zahl); color: var(--text); }
+.exp-knoepfe { display: flex; flex-direction: column; gap: var(--a2); }
+.exp-knoepfe .knopf { justify-content: center; }
+
+/* Probekapitel: Original und Ergebnis nebeneinander */
+.exp-werkzeuge { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2); padding: 0 16px 10px; }
+.exp-werkzeuge .rechts { margin-left: auto; display: flex; gap: var(--a2); flex-wrap: wrap; }
+.exp-pruefung { display: flex; flex-wrap: wrap; gap: var(--a2) var(--a4); align-items: center; padding: var(--a3) var(--a4); border-radius: var(--r3); background: var(--flaeche); box-shadow: var(--schatten); font-size: var(--klein); max-width: 1240px; }
+.exp-pruefung b { font-weight: 600; }
+.exp-pruefung .ok { color: var(--gut); }
+.exp-pruefung .hinweis { color: var(--warn); }
+.exp-pruefung .rechts { margin-left: auto; display: flex; gap: var(--a2); }
+.exp-vergleich { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--a4); max-width: 1240px; margin-top: var(--a4); padding-bottom: var(--a6); }
+.exp-spalte { background: var(--flaeche); border-radius: var(--r3); box-shadow: var(--schatten); padding: var(--a4) var(--a5); min-width: 0; }
+.exp-spalte > .kopf { display: flex; align-items: center; gap: var(--a2); font-size: var(--klein); color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; margin-bottom: var(--a3); }
+.exp-spalte > .kopf .rechts { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 400; }
+.exp-spalte p { margin: 0 0 var(--a3); line-height: 1.6; }
+.exp-spalte h2 { margin: 0 0 var(--a3); font-size: var(--seitentitel); }
+.exp-spalte h3 { margin: var(--a4) 0 var(--a2); font-size: var(--titel); }
+.exp-original p { color: var(--text-2); }
+.exp-original p.belegt { color: var(--text); background: var(--akzent-weich); box-shadow: inset 3px 0 0 var(--akzent); border-radius: 0; padding: 6px 10px; margin-left: -10px; margin-right: -10px; }
+.exp-original mark { background: var(--warn-weich); color: inherit; padding: 0 2px; border-radius: 2px; }
+.beleg { display: inline-grid; place-items: center; min-width: 18px; height: 16px; padding: 0 4px; margin-left: 3px; border-radius: var(--r1); background: var(--flaeche-2); color: var(--text-3); font-family: var(--schrift-zahl); font-size: var(--marke); vertical-align: 2px; cursor: pointer; }
+.beleg.an { background: var(--akzent); color: var(--auf-akzent); }
+.ohne-beleg { text-decoration: underline wavy var(--warn); text-underline-offset: 4px; }
+.exp-blick { padding: var(--a3) var(--a4); border-radius: var(--r2); background: var(--akzent-weich); margin: 0 0 var(--a4); }
+.exp-blick b { display: block; color: var(--akzent); margin-bottom: 6px; }
+.exp-blick ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; }
+.exp-randnotiz { display: flex; gap: var(--a2); padding: var(--a2) var(--a3); margin: 0 0 var(--a3); border-radius: 0; background: var(--warn-weich); box-shadow: inset 3px 0 0 var(--honig); font-size: var(--klein); }
+.exp-randnotiz i { color: var(--honig); margin-top: 3px; }
+.exp-fragen { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: var(--a2); }
+.exp-fragen li::marker { font-family: var(--schrift-zahl); color: var(--violett); }
+.exp-fragen .antwort { display: block; font-size: var(--klein); color: var(--text-3); }
+.exp-hinweisblase { display: inline-flex; align-items: center; gap: 6px; margin-left: 6px; padding: 2px 8px; border-radius: var(--r1); background: var(--warn-weich); color: var(--warn); font-size: var(--marke); vertical-align: 2px; }
+
+/* Vorlage bearbeiten */
+.exp-vorlagenwahl { display: flex; flex-direction: column; gap: 4px; }
+.exp-vorlagenwahl .gruppe { font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; margin: var(--a3) 0 2px; }
+.exp-vorlagenwahl .eintrag { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: var(--a2); align-items: center; padding: 8px 10px; border-radius: var(--r2); font-size: var(--klein); cursor: pointer; }
+.exp-vorlagenwahl .eintrag i { color: var(--text-3); text-align: center; }
+.exp-vorlagenwahl .eintrag .u { color: var(--text-3); font-size: var(--marke); }
+.exp-vorlagenwahl .eintrag.aktiv { background: var(--akzent-weich); color: var(--akzent); font-weight: 600; }
+.exp-vorlagenwahl .eintrag.aktiv i { color: var(--akzent); }
+.exp-teile { display: flex; flex-direction: column; gap: 4px; padding: var(--a2) 0 var(--a3); }
+.exp-teile .teil { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto auto; gap: var(--a2); align-items: center; padding: 7px 10px; border-radius: var(--r2); background: var(--flaeche-2); font-size: var(--klein); }
+.exp-teile .teil .griff { color: var(--text-3); }
+.exp-teile .teil.innen { margin-left: 28px; }
+.exp-teile .teil.fest { background: transparent; box-shadow: inset 0 0 0 1px var(--rand); }
+.exp-teile .teil.fest .griff { visibility: hidden; }
+.exp-teile .herkunft { font-size: var(--marke); padding: 1px 7px; border-radius: var(--r1); background: var(--flaeche); color: var(--text-3); white-space: nowrap; }
+.exp-teile .herkunft.ki { color: var(--violett); font-weight: 600; }
+.exp-teile .rund { width: 28px; height: 28px; }
+.exp-freitext { width: 100%; min-height: 84px; padding: 10px 12px; border-radius: var(--r2); background: var(--flaeche); border: 1px solid var(--rand); font-size: var(--klein); line-height: 1.5; color: var(--text); }
+.exp-farben { display: flex; gap: 8px; }
+.exp-farben span { width: 26px; height: 26px; border-radius: var(--r2); cursor: pointer; }
+.exp-farben span.an { box-shadow: 0 0 0 2px var(--flaeche), 0 0 0 4px var(--text); }
+.exp-datei { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a3); padding: var(--a3) var(--a4); border-radius: var(--r3); background: var(--flaeche-2); font-size: var(--klein); color: var(--text-2); }
+.exp-datei code { font-family: var(--schrift-code); color: var(--text); }
+.exp-datei .rechts { margin-left: auto; display: flex; gap: var(--a2); }
+.exp-zweispaltig { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: var(--a4); max-width: 1240px; align-items: start; padding-bottom: var(--a6); }
+.exp-zweispaltig > .exp-vorlagenwahl { position: sticky; top: 0; }
+
+/* Eigene Bücher */
+.exp-regal { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: var(--a4); }
+.exp-buchkarte { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: var(--a3); padding: var(--a3); border-radius: var(--r3); background: var(--flaeche); box-shadow: var(--schatten); min-width: 0; }
+.exp-buchkarte .koerper { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.exp-buchkarte .t { font-weight: 600; font-size: var(--titel); line-height: 1.2; }
+.exp-buchkarte .u { font-size: var(--klein); color: var(--text-2); }
+.exp-buchkarte .formate { display: flex; gap: 4px; flex-wrap: wrap; }
+.exp-buchkarte .formate span { font-size: var(--marke); font-weight: 600; padding: 1px 7px; border-radius: var(--r1); background: var(--flaeche-2); color: var(--text-2); }
+.exp-buchkarte .aktionen { display: flex; gap: 6px; margin-top: auto; flex-wrap: wrap; }
+.exp-buchkarte .veraltet { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2); padding: 6px 10px; border-radius: var(--r2); background: var(--akzent-weich); font-size: var(--klein); }
+.exp-buchkarte .veraltet .knopf { margin-left: auto; }
+.exp-abschnitt { display: flex; align-items: baseline; gap: var(--a3); margin: var(--a5) 0 var(--a3); }
+.exp-abschnitt h2 { margin: 0; font-size: var(--titel); }
+.exp-abschnitt span { color: var(--text-3); font-size: var(--klein); }
+
+/* Telefon */
+.telefon .exp-t-wahl { display: flex; flex-direction: column; gap: 6px; }
+.telefon .exp-t-wahl .zeile { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 12px; border-radius: var(--r2); background: var(--flaeche-2); font-size: 17px; }
+.telefon .exp-t-wahl .zeile i { color: var(--text-3); }
+.telefon .exp-t-wahl .zeile.an { background: var(--akzent-weich); color: var(--akzent); font-weight: 600; }
+.telefon .exp-t-wahl .zeile.an i { color: var(--akzent); }
+.telefon .exp-t-wahl .zeile .u { font-size: 15px; color: var(--text-3); font-weight: 400; }
+.telefon .exp-t-h2 { font-size: 17px; margin: 16px 0 8px; }
+.telefon .exp-t-schaetzung { padding: 12px; border-radius: var(--r2); background: var(--flaeche-2); font-size: 15px; color: var(--text-2); display: flex; flex-direction: column; gap: 4px; }
+.telefon .exp-t-schaetzung b { color: var(--text); font-size: 17px; }
+.telefon .exp-t-steuer { padding: 10px 14px 28px; background: var(--leiste); box-shadow: 0 -1px 0 var(--rand); display: flex; gap: 10px; }
+.telefon .exp-t-steuer .knopf { justify-content: center; }
+.telefon .exp-t-steuer .knopf.primaer { flex: 1; }
+.telefon .exp-t-buch { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--rand); align-items: center; }
+.telefon .exp-t-buch .exp-titel { height: 88px; }
+.telefon .exp-t-buch .exp-titel span { display: none; }
+.telefon .exp-t-buch .t { font-weight: 600; font-size: 17px; }
+.telefon .exp-t-buch .u { font-size: 15px; color: var(--text-3); }
+.telefon .exp-t-buch .spur { height: 6px; border-radius: 3px; background: var(--mulde); overflow: hidden; margin-top: 6px; }
+.telefon .exp-t-buch .spur span { display: block; height: 100%; background: var(--akzent-flaeche); }
+
+@media (max-width: 1100px) {
+  .exp-buehne { grid-template-columns: minmax(0, 1fr); }
+  .exp-vorschau { position: static; }
+  .exp-vergleich { grid-template-columns: minmax(0, 1fr); }
+  .exp-zweispaltig { grid-template-columns: minmax(0, 1fr); }
+  .exp-zweispaltig > .exp-vorlagenwahl { position: static; }
+}

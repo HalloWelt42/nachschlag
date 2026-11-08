@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Eigene Bücher</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Eigene Bücher (WIKI-45): oben das Buch, das gerade entsteht (ein Auftrag wie jeder andere, auch unter Aufträge, mit
+       Schritten je Kapitel, Tempo und Hinweisen der Prüfung), darunter das Regal der fertigen Bücher. Hat sich ein Thema seit
+       dem Bau geändert, bietet die Karte das Nachbauen an: nur neue und geänderte Artikel werden neu umgeformt. -->
+  <body>
+    <div class="fenster-voll">
+      <div data-teil="kopf"></div>
+      <div></div>
+      <div class="geruest">
+        <div data-teil="nav:buecher"></div>
+        <section class="seite">
+          <div class="seiten-kopf"><h1>Eigene Bücher</h1></div>
+          <div class="rollfeld">
+            <div class="einstellungen-seite">
+              <div class="lagekarte">
+                <div>
+                  <div class="zustand"><b>Sternenhimmel als Lernheft</b><span class="pille aktiv"><i class="fa-solid fa-circle-play"></i>läuft seit 1:00</span></div>
+                  <div style="color: var(--text-2); font-size: var(--klein); margin-top: 4px">EPUB und PDF A5, 7 Artikel in 3 Kapiteln, über die Leitstelle mit Qwen3 80B.</div>
+                </div>
+                <div class="aktionen"><button class="knopf"><i class="fa-solid fa-pause"></i>Anhalten</button><button class="rund" title="Im Auftrag ansehen"><i class="fa-solid fa-list-check"></i></button></div>
+                <div class="zahlen">
+                  <div class="kennzahl"><span class="k">Umgeformt</span><span class="w">58 %</span><span class="spur"><span style="width: 58%"></span></span></div>
+                  <div class="kennzahl"><span class="k">Tempo</span><span class="w">74 Z/s</span></div>
+                  <div class="kennzahl"><span class="k">Fertig gegen</span><span class="w">2:07</span></div>
+                  <div class="kennzahl"><span class="k">Prüfung</span><span class="w">2 Hinweise</span></div>
+                </div>
+                <div class="stufenliste">
+                  <div class="stufenzeile fertig"><i class="fa-solid fa-circle-check"></i><span>1 Planeten</span><span class="spur"><span style="width: 100%"></span></span><span class="zahl">4 von 4 Artikeln</span></div>
+                  <div class="stufenzeile jetzt"><i class="fa-solid fa-circle-play"></i><span>2 Galaxien und Nebel</span><span class="spur"><span style="width: 40%"></span></span><span class="zahl">Schwarzes Loch</span></div>
+                  <div class="stufenzeile"><i class="fa-regular fa-circle"></i><span>3 Monde</span><span class="spur"><span style="width: 0%"></span></span><span class="zahl">0 von 1</span></div>
+                  <div class="stufenzeile"><i class="fa-regular fa-circle"></i><span>Glossar und Fragen</span><span class="spur"><span style="width: 0%"></span></span><span class="zahl"></span></div>
+                  <div class="stufenzeile"><i class="fa-regular fa-circle"></i><span>Satz EPUB und PDF</span><span class="spur"><span style="width: 0%"></span></span><span class="zahl"></span></div>
+                </div>
+              </div>
+
+              <div class="exp-abschnitt"><h2>Fertig</h2><span>3 Bücher, in der Kellerwolke unter Nachschlag / Bücher</span></div>
+              <div class="exp-regal">
+                <div class="exp-buchkarte">
+                  <div class="exp-titel"><img src="beispiel/fuchs.jpg" alt=""><span><b>Füchse</b><small>Nachschlagewerk</small></span></div>
+                  <div class="koerper">
+                    <span class="t">Füchse</span>
+                    <span class="u">9 Artikel, 64 Seiten, 07.11.2026</span>
+                    <span class="formate"><span>EPUB</span><span>PDF A4</span></span>
+                    <span class="aktionen"><button class="knopf"><i class="fa-solid fa-book-open"></i>Lesen</button><button class="rund" title="Herunterladen"><i class="fa-solid fa-download"></i></button><button class="rund" title="Mehr"><i class="fa-solid fa-ellipsis"></i></button></span>
+                  </div>
+                  <div class="veraltet"><i class="fa-solid fa-circle-info" style="color: var(--info)"></i><span>Thema geändert: 2 neue Artikel</span><button class="knopf still"><i class="fa-solid fa-rotate"></i>Nachbauen, etwa 3 min</button></div>
+                </div>
+                <div class="exp-buchkarte">
+                  <div class="exp-titel"><img src="beispiel/photosynthese.jpeg" alt=""><span><b>Klima und Pflanzen</b><small>Sachbuch</small></span></div>
+                  <div class="koerper">
+                    <span class="t">Klima und Pflanzen</span>
+                    <span class="u">14 Artikel, 182 Seiten, 04.11.2026</span>
+                    <span class="formate"><span>EPUB</span><span>PDF A5</span></span>
+                    <span class="aktionen"><button class="knopf"><i class="fa-solid fa-book-open"></i>Lesen</button><button class="rund" title="Herunterladen"><i class="fa-solid fa-download"></i></button><button class="rund" title="Mehr"><i class="fa-solid fa-ellipsis"></i></button></span>
+                  </div>
+                </div>
+                <div class="exp-buchkarte">
+                  <div class="exp-titel"><img src="beispiel/tollwut.jpg" alt=""><span><b>Gesundheit Haustiere</b><small>Vorlesebuch</small></span></div>
+                  <div class="koerper">
+                    <span class="t">Gesundheit Haustiere</span>
+                    <span class="u">3 Artikel, 21 Seiten, 02.11.2026</span>
+                    <span class="formate"><span>EPUB</span></span>
+                    <span class="aktionen"><button class="knopf"><i class="fa-solid fa-book-open"></i>Lesen</button><button class="rund" title="Vorlesen lassen"><i class="fa-solid fa-volume-high"></i></button><button class="rund" title="Herunterladen"><i class="fa-solid fa-download"></i></button></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div data-teil="fuss"></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>

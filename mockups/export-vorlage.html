@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="de" data-theme="hell" data-schrift="klein">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nachschlag - Vorlagen</title>
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/400.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/barlow/600.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fontsource/chakra-petch/500.css" />
+    <link rel="stylesheet" href="/Appkern/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/marken.css" />
+    <link rel="stylesheet" href="/Appkern/oberflaeche/stil/schale.css" />
+    <link rel="stylesheet" href="stil.css" />
+  </head>
+  <!-- Vorlagen (WIKI-45): eine Vorlage beschreibt ein Buch in drei Teilen. Aufbau (welche Teile in welcher Reihenfolge, je Teil
+       ob er aus den Büchern kommt oder die KI ihn schreibt), Anweisung an die KI (Ton, für wen, Länge, eigener Zusatz) und
+       Gestaltung (Schrift, Farbe, Kästen). Mitgelieferte Vorlagen lassen sich als eigene kopieren und dann ändern. Jede
+       Vorlage ist eine Datei in der Kellerwolke, also weitergebbar. Gezeigt: die eigene Vorlage Beobachtungsheft. -->
+  <body>
+    <div class="fenster-voll">
+      <div data-teil="kopf"></div>
+      <div></div>
+      <div class="geruest">
+        <div data-teil="nav:themen"></div>
+        <section class="seite">
+          <div class="seiten-kopf">
+            <button class="rund still" title="Zurück zu Als Buch" onclick="location.href='export.html'"><i class="fa-solid fa-chevron-left"></i></button>
+            <h1>Vorlagen</h1>
+          </div>
+          <div class="rollfeld">
+            <div class="exp-zweispaltig">
+              <div class="exp-vorlagenwahl">
+                <div class="gruppe">Mitgeliefert</div>
+                <div class="eintrag"><i class="fa-solid fa-book"></i><span>Sachbuch</span><span class="u">KI</span></div>
+                <div class="eintrag"><i class="fa-solid fa-graduation-cap"></i><span>Lernheft</span><span class="u">KI</span></div>
+                <div class="eintrag"><i class="fa-solid fa-book-atlas"></i><span>Nachschlagewerk</span><span class="u"></span></div>
+                <div class="eintrag"><i class="fa-solid fa-volume-high"></i><span>Vorlesebuch</span><span class="u">KI</span></div>
+                <div class="eintrag"><i class="fa-solid fa-child-reaching"></i><span>Einfache Sprache</span><span class="u">KI</span></div>
+                <div class="gruppe">Eigene</div>
+                <div class="eintrag aktiv"><i class="fa-solid fa-binoculars"></i><span>Beobachtungsheft</span><span class="u">KI</span></div>
+                <button class="knopf still" style="margin-top: var(--a2)"><i class="fa-solid fa-plus"></i>Neue Vorlage</button>
+              </div>
+
+              <div class="exp-schritte">
+                <div class="exp-datei">
+                  <i class="fa-solid fa-binoculars" style="color: var(--akzent)"></i><b style="color: var(--text)">Beobachtungsheft</b><span>kopiert aus Lernheft am 08.11.2026</span>
+                  <span class="rechts"><button class="knopf still"><i class="fa-solid fa-copy"></i>Kopieren</button><button class="knopf still"><i class="fa-solid fa-trash"></i>Löschen</button></span>
+                </div>
+
+                <div class="karte">
+                  <h2><i class="fa-solid fa-list-ol"></i>Aufbau<span class="neben">Ziehen ändert die Reihenfolge</span></h2>
+                  <div class="exp-teile">
+                    <div class="teil"><i class="fa-solid fa-grip-vertical griff"></i><span>Titelseite mit Titelbild</span><span class="herkunft">aus dem Thema</span><button class="rund still" title="Entfernen"><i class="fa-solid fa-xmark"></i></button></div>
+                    <div class="teil"><i class="fa-solid fa-grip-vertical griff"></i><span>Inhaltsverzeichnis</span><span class="herkunft">von selbst</span><button class="rund still" title="Entfernen"><i class="fa-solid fa-xmark"></i></button></div>
+                    <div class="teil"><i class="fa-solid fa-grip-vertical griff"></i><span><b>Je Bereich ein Kapitel</b></span><span class="herkunft">aus dem Thema</span><span></span></div>
+                    <div class="teil innen"><i class="fa-solid fa-grip-vertical griff"></i><span>Einleitung des Kapitels</span><span class="herkunft ki">KI</span><button class="rund still" title="Entfernen"><i class="fa-solid fa-xmark"></i></button></div>
+                    <div class="teil innen"><i class="fa-solid fa-grip-vertical griff"></i><span>Je Artikel: Auf einen Blick</span><span class="herkunft ki">KI</span><button class="rund still" title="Entfernen"><i class="fa-solid fa-xmark"></i></button></div>
+                    <div class="teil innen"><i class="fa-solid fa-grip-vertical griff"></i><span>Je Artikel: Text, umgeformt</span><span class="herkunft ki">KI</span><button class="rund still" title="Entfernen"><i class="fa-solid fa-xmark"></i></button></div>
+                    <div class="teil innen"><i class="fa-solid fa-grip-vertical griff"></i><span>Je Artikel: So beobachtest du es</span><span class="herkunft ki">KI</span><button class="rund still" title="Entfernen"><i class="fa-solid fa-xmark"></i></button></div>
+                    <div class="teil innen"><i class="fa-solid fa-grip-vertical griff"></i><span>Meine Notizen als Randnotiz</span><span class="herkunft">aus Meins</span><button class="rund still" title="Entfernen"><i class="fa-solid fa-xmark"></i></button></div>
+                    <div class="teil innen"><i class="fa-solid fa-grip-vertical griff"></i><span>Fragen zum Kapitel</span><span class="herkunft ki">KI</span><button class="rund still" title="Entfernen"><i class="fa-solid fa-xmark"></i></button></div>
+                    <div class="teil"><i class="fa-solid fa-grip-vertical griff"></i><span>Glossar</span><span class="herkunft ki">KI</span><button class="rund still" title="Entfernen"><i class="fa-solid fa-xmark"></i></button></div>
+                    <div class="teil fest"><i class="fa-solid fa-grip-vertical griff"></i><span>Quellen und Lizenzen</span><span class="herkunft"><i class="fa-solid fa-lock"></i> immer am Ende</span><span></span></div>
+                  </div>
+                  <button class="knopf still" style="margin-bottom: var(--a3)"><i class="fa-solid fa-plus"></i>Teil hinzufügen</button>
+                </div>
+
+                <div class="karte">
+                  <h2><i class="fa-solid fa-wand-magic-sparkles"></i>Anweisung an die KI</h2>
+                  <div class="feld"><div class="was"><div class="name">Ton</div></div>
+                    <span class="segment"><span>Sachlich</span><span class="aktiv">Erzählend</span><span>Locker</span></span></div>
+                  <div class="feld"><div class="was"><div class="name">Vorgabe für wen und Länge</div><div class="beschreibung">Vorgabe; beim Bauen eines Buchs änderbar.</div></div>
+                    <span class="wert-rechts"><span class="chip">Erwachsene</span><span class="chip">Etwa die Hälfte</span><span class="chip">5 Fragen</span></span></div>
+                  <div class="feld"><div class="was"><div class="name">Zusatz in eigenen Worten</div><div class="beschreibung">Geht so an das Modell, nach den festen Regeln.</div></div>
+                    <div class="exp-freitext">Bei jedem Himmelsobjekt sagen, ob und womit man es selbst sieht: mit bloßem Auge, Fernglas oder kleinem Fernrohr, und zu welcher Jahreszeit am besten. Steht dazu nichts im Artikel, den Teil weglassen.</div></div>
+                  <div class="feld"><div class="was"><div class="name">Feste Regeln</div><div class="beschreibung">Gelten für jede Vorlage und lassen sich nicht abschalten.</div></div>
+                    <span class="exp-regeln"><span class="chip"><i class="fa-solid fa-check"></i>nur was in den Artikeln steht</span><span class="chip"><i class="fa-solid fa-check"></i>Beleg je Absatz</span><span class="chip"><i class="fa-solid fa-check"></i>Zahlen geprüft</span></span></div>
+                </div>
+
+                <div class="karte">
+                  <h2><i class="fa-solid fa-palette"></i>Gestaltung</h2>
+                  <div class="feld"><div class="was"><div class="name">Schrift im Text</div></div>
+                    <span class="segment"><span class="aktiv">Mit Serifen</span><span>Ohne Serifen</span></span></div>
+                  <div class="feld"><div class="was"><div class="name">Farbe der Kästen</div><div class="beschreibung">Für Auf einen Blick, Fragen und Überschriften; im PDF auch druckbar in Grau.</div></div>
+                    <span class="exp-farben"><span class="an" style="background: var(--petrol)"></span><span style="background: var(--violett)"></span><span style="background: var(--honig)"></span><span style="background: var(--koralle)"></span><span style="background: var(--stahl)"></span></span></div>
+                  <div class="feld"><div class="was"><div class="name">Bilder</div></div>
+                    <span class="segment"><span>Im Text</span><span class="aktiv">Eins groß je Artikel</span><span>Ohne</span></span></div>
+                  <div class="feld"><div class="was"><div class="name">So sieht eine Seite aus</div></div>
+                    <div class="exp-buch" style="grid-template-columns: 96px 150px"><div class="exp-titel"><img src="beispiel/milchstra_e.jpg" alt=""><span><b>Sternenhimmel</b><small>Beobachtungsheft</small></span></div>
+                      <div class="exp-seite"><b>Saturn</b><div class="kasten"><em>So beobachtest du es</em>Mit bloßem Auge als heller Punkt; die Ringe schon im kleinen Fernrohr.</div><span>Saturn ist von der Sonne aus der sechste Planet ...</span></div></div></div>
+                </div>
+
+                <div class="exp-datei">
+                  <i class="fa-solid fa-file-code"></i><span>Liegt als Datei</span><code>Kellerwolke / Nachschlag / Vorlagen / beobachtungsheft.toml</code>
+                  <span class="rechts"><button class="knopf still"><i class="fa-solid fa-share-nodes"></i>Weitergeben</button></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div data-teil="fuss"></div>
+    </div>
+    <script src="mockup.js"></script>
+  </body>
+</html>
