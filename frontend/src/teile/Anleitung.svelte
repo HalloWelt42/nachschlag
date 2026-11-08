@@ -90,7 +90,7 @@
     ...a.schritte.flatMap((s) => s.bilder.map((b, i) => ({ bild: b, abschnitt: `Schritt ${s.nr}`,
                                                             unterschrift: `${titelVon(s)}${s.bilder.length > 1 ? `, Bild ${i + 1}` : ""}` }))),
   ].map((m) => ({ ...m, buch: artikel.buch, pfad: artikel.pfad, artikel: artikel.titel, breite: 0, hoehe: 0,
-                  datei: decodeURIComponent(m.bild.split("/").pop() ?? "") })));
+                  datei: decodeURIComponent(m.bild.split("/").pop() ?? ""), art: "bild" as const, gross: false })));
   function grossZeigen(b: string) {
     grossbild = Math.max(0, medien.findIndex((m) => m.bild === b));
   }

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import html
+import random
 import re
 from collections.abc import Awaitable, Callable
 from urllib.parse import quote, unquote
@@ -20,7 +21,7 @@ from libzim.reader import Archive
 from lxml import html as lhtml
 
 from ..artikel import Artikelleser
-from ..bibliothek import Bibliothek
+from ..bibliothek import Bibliothek, BuchFehlt, EintragFehlt
 from ..eigenindex import schema as indexschema
 from ..eigenindex.abfrage import rueckverweise
 from ..eigenindex.ablage import Eigenindizes
@@ -34,6 +35,8 @@ ZUFALL_VERSUCHE = 25
 AUSZUG_ZEICHEN = 420
 #: Wie viele Schritte je Spalte des Entdeckungspfads
 SCHRITTE_JE_SPALTE = 6
+#: Ab so vielen Zeichen Text gilt ein Artikel als lang (Filter "lang", WIKI-24)
+LANG_ZEICHEN = 15000
 #: Höchstens so viele Einträge der Datei werden für eine Buchseite angesehen (Bilder und Beiwerk liegen dazwischen)
 BLAETTERN_HOECHSTENS = 4000
 
@@ -43,6 +46,10 @@ _EM = re.compile(r"</?em>")
 def _auszug(text: str) -> str:
     text = " ".join(text.split())
     return text if len(text) <= AUSZUG_ZEICHEN else text[:AUSZUG_ZEICHEN].rsplit(" ", 1)[0] + " ..."
+
+
+def _textlaenge(artikel: Artikel) -> int:
+    return len(lhtml.fragment_fromstring(artikel.html, create_parent="div").text_content()) if artikel.html else 0
 
 
 def fund_aus(artikel: Artikel) -> Fund:
@@ -145,25 +152,53 @@ def platz_ab(v, buchstabe: str) -> int:
 
 class Stoebern:
     def __init__(self, bibliothek: Bibliothek, leser: Artikelleser, suche: Suche,
-                 gelesen: Callable[[str, str, str], Awaitable[bool]], eigen: Eigenindizes | None = None) -> None:
+                 gelesen: Callable[[str, str, str], Awaitable[bool]], eigen: Eigenindizes | None = None,
+                 themenartikel: Callable[[str], Awaitable[list[tuple[str, str]]]] | None = None) -> None:
         """`gelesen(konto, buch, pfad)`: hat das Konto die Seite schon geöffnet (Verlauf)? `eigen`: die eigenen
-        Indizes; kennt der des Buchs die Verweise, sind "erwähnt in" echte Rückverweise (WIKI-20)."""
+        Indizes; kennt der des Buchs die Verweise, sind "erwähnt in" echte Rückverweise (WIKI-20). `themenartikel(konto)`:
+        Buch und Pfad jedes Artikels in den Themen des Kontos (Filter "nahe an meinen Themen", WIKI-24)."""
         self._bib, self._leser, self._suche, self._gelesen, self._eigen = bibliothek, leser, suche, gelesen, eigen
+        self._themenartikel = themenartikel
 
     async def fund(self, buch: str, pfad: str) -> Fund:
         return fund_aus(await self._leser.lesen(buch, pfad))
 
-    async def zufall(self, konto: str, buch: str, mit_bild: bool, ungelesen: bool) -> Fund:
-        """Ein Zufallsfund, der zu den Filtern passt; nach so vielen Versuchen ohne passenden der letzte gezogene."""
+    async def zufall(self, konto: str, buch: str, mit_bild: bool, ungelesen: bool, lang: bool = False,
+                     nahe: bool = False) -> Fund:
+        """Ein Zufallsfund, der zu den Filtern passt; nach so vielen Versuchen ohne passenden der letzte gezogene.
+        `lang`: nur Artikel mit viel Text; `nahe`: ein Artikel, auf den ein Artikel der eigenen Themen verweist und der
+        selbst in keinem Thema steht (ohne Themen wie sonst)."""
+        nachbarn = await self._nahe(konto, buch) if nahe else []
         fund: Fund | None = None
         for _ in range(ZUFALL_VERSUCHE):
-            artikel = await self._leser.lesen(buch, await self._leser.zufall(buch))
+            if nachbarn:
+                von, pfad = random.choice(nachbarn)
+                artikel = await self._leser.lesen(von, pfad)
+            else:
+                artikel = await self._leser.lesen(buch, await self._leser.zufall(buch))
             fund = fund_aus(artikel)
-            if (mit_bild and not fund.bild) or (ungelesen and await self._gelesen(konto, buch, fund.pfad)):
+            if ((mit_bild and not fund.bild) or (lang and _textlaenge(artikel) < LANG_ZEICHEN)
+                    or (ungelesen and await self._gelesen(konto, artikel.buch, fund.pfad))):
                 continue
             return fund
         assert fund is not None
         return fund
+
+    async def _nahe(self, konto: str, buch: str) -> list[tuple[str, str]]:
+        """Artikel, auf die Artikel der eigenen Themen verweisen (im gewählten Buch zuerst), ohne die schon in Themen."""
+        if not self._themenartikel:
+            return []
+        alle = await self._themenartikel(konto)
+        drin = set(alle)
+        quellen = [a for a in alle if a[0] == buch] or alle
+        nachbarn: list[tuple[str, str]] = []
+        for von, pfad in random.sample(quellen, min(len(quellen), 5)):
+            try:
+                artikel = await self._leser.lesen(von, pfad)
+            except (BuchFehlt, EintragFehlt):
+                continue
+            nachbarn += [(von, n.pfad) for n in verweise_aus(artikel, 40) if (von, n.pfad) not in drin]
+        return nachbarn
 
     async def schritt(self, buch: str, pfad: str) -> Pfadschritt:
         artikel = await self._leser.lesen(buch, pfad)

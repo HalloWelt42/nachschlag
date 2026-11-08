@@ -840,6 +840,12 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .trefferzeile.laedt { opacity: .6; }
 .trefferzeile .weg { color: var(--petrol); }
 .mediengitter { columns: 4 230px; column-gap: var(--a3); }
+/* Töne der Mediensuche (WIKI-24): je Ton eine Zeile mit Abspieler */
+.toene { display: flex; flex-direction: column; gap: var(--a2); margin-bottom: var(--a3); }
+.toene .ton { display: flex; align-items: center; gap: var(--a3); padding: var(--a2) var(--a3); border-radius: var(--r2);
+  background: var(--flaeche); border: 1px solid var(--rand); flex-wrap: wrap; }
+.toene .ton-text { display: flex; flex-direction: column; min-width: 0; flex: 1 1 200px; }
+.toene audio { flex: 1 1 260px; max-width: 100%; }
 .medium { display: block; width: 100%; break-inside: avoid; margin: 0 0 var(--a3); padding: 0; border: 0; background: var(--flaeche); border-radius: var(--r3);
           box-shadow: var(--schatten); overflow: hidden; cursor: zoom-in; position: relative; color: var(--text); font: inherit; text-align: left; }
 .medium img { display: block; width: 100%; height: auto; background: var(--mulde); }

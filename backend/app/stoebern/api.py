@@ -19,10 +19,14 @@ def router(geruest: Geruest, stoebern: Stoebern) -> APIRouter:
         return HTTPException(status_code=404, detail=str(f) or "Gibt es nicht")
 
     @r.get("/zufall/{buch}", response_model=Fund)
-    async def zufall(buch: str, mit_bild: bool = False, ungelesen: bool = False, konto: Konto = geruest.mensch) -> Fund:
-        """Ein zufälliger Artikel mit Bild und erstem Absatz; auf Wunsch nur mit Bild, nur noch nicht gelesene."""
+    async def zufall(buch: str, mit_bild: bool = False, ungelesen: bool = False,
+                     lang: bool = Query(False, description="nur Artikel mit viel Text"),
+                     nahe: bool = Query(False, description="nahe an meinen Themen: ein Artikel, auf den einer der Themen verweist"),
+                     konto: Konto = geruest.mensch) -> Fund:
+        """Ein zufälliger Artikel mit Bild und erstem Absatz; auf Wunsch nur mit Bild, nur noch nicht gelesene, nur lange,
+        nur nahe an den eigenen Themen."""
         try:
-            return await stoebern.zufall(konto.id, buch, mit_bild, ungelesen)
+            return await stoebern.zufall(konto.id, buch, mit_bild, ungelesen, lang, nahe)
         except (BuchFehlt, EintragFehlt) as f:
             raise fehlt(f)
 

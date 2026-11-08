@@ -11,7 +11,13 @@ export interface Medium {
   hoehe: number;
   unterschrift: string;
   datei: string;
+  /** bild, karte oder ton (WIKI-24); beim Ton ist `bild` die Adresse des Tons */
+  art: "bild" | "karte" | "ton";
+  /** der Bildholer hat das große Bild schon geholt */
+  gross: boolean;
 }
+
+export type Medienart = "" | "bild" | "karte" | "ton";
 
 export interface Medienergebnis {
   frage: string;
@@ -20,7 +26,8 @@ export interface Medienergebnis {
   passend: number;
 }
 
-export const medienSuchen = (frage: string) => hole<Medienergebnis>(`/medien?${new URLSearchParams({ frage })}`);
+export const medienSuchen = (frage: string, art: Medienart = "", gross = false) =>
+  hole<Medienergebnis>(`/medien?${new URLSearchParams({ frage, ...(art ? { art } : {}), ...(gross ? { gross: "true" } : {}) })}`);
 
 export const medienImArtikel = (buch: string, pfad: string) =>
   hole<Medium[]>(`/medien/artikel/${encodeURIComponent(buch)}/${pfad.split("/").map(encodeURIComponent).join("/")}`);

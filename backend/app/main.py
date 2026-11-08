@@ -257,8 +257,12 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     app.include_router(notizbilder_router(geruest, notizbilder))                 # Bilder für <img> (Cookie)
     app.include_router(themen_router(geruest, themen, suche, bibliothek, meins, leser, markdown))
     app.include_router(zitieren_router(geruest, bibliothek, leser))
-    app.include_router(medien_router(geruest, Medien(leser, suche)))
-    app.include_router(stoebern_router(geruest, Stoebern(bibliothek, leser, suche, meins.gelesen, eigen)))
+    app.include_router(medien_router(geruest, Medien(leser, suche, lambda buch, pfad: grossbilder.finden(buch, pfad) is not None)))
+    async def themenartikel(konto: str) -> list[tuple[str, str]]:
+        """Buch (heutige Fassung) und Pfad jedes Artikels in den Themen des Kontos (Stöbern: nahe an meinen Themen)."""
+        return [(k, z.pfad) for z in await themen.zuordnung(konto) if (k := await bibliothek.kennung_von(z.buch_name))]
+
+    app.include_router(stoebern_router(geruest, Stoebern(bibliothek, leser, suche, meins.gelesen, eigen, themenartikel)))
     app.include_router(register_router(geruest, Register(bibliothek, eigen)))
     app.include_router(anleitungen_router(geruest, Anleitungen(bibliothek, eigen, wege(bibliothek))))
     app.include_router(uebersetzung_router(geruest, uebersetzer, artikeluebersetzer,

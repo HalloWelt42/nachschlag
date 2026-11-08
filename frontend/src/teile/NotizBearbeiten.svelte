@@ -79,7 +79,7 @@
   const bilder = $derived(meins.notizen.find((n) => n.id === id)?.bilder ?? (notiz?.id === id ? notiz?.bilder : null) ?? []);
   const medien = $derived<Medium[]>(bilder.map((b) => ({
     buch: notiz?.buch ?? entwurf?.buch ?? "", pfad: notiz?.pfad ?? entwurf?.pfad ?? "", artikel: titel, abschnitt,
-    bild: notizBildAdresse(id, b.id), breite: 0, hoehe: 0, unterschrift: b.name, datei: b.name })));
+    bild: notizBildAdresse(id, b.id), breite: 0, hoehe: 0, unterschrift: b.name, datei: b.name, art: "bild" as const, gross: false })));
 
   /** Bilder an die Notiz; einen Entwurf legt das erste Bild an (mit dem Text, der schon da ist). */
   async function bilderAnfuegen(dateien: File[]) {

@@ -23,7 +23,7 @@
     if (!stoebern.buch || zieht) return;
     zieht = true;
     try {
-      const neu = await zufallHolen(stoebern.buch, stoebern.mitBild, stoebern.ungelesen);
+      const neu = await zufallHolen(stoebern.buch, stoebern.mitBild, stoebern.ungelesen, stoebern.lang, stoebern.nahe);
       if (stoebern.fund) stoebern.eben = [stoebern.fund, ...stoebern.eben.filter((f) => f.pfad !== stoebern.fund!.pfad)].slice(0, EBEN_HOECHSTENS);
       stoebern.fund = neu;
       fehler = "";
@@ -50,7 +50,7 @@
     void zufall();
   }
 
-  function filterUmschalten(welcher: "mitBild" | "ungelesen") {
+  function filterUmschalten(welcher: "mitBild" | "ungelesen" | "lang" | "nahe") {
     stoebern[welcher] = !stoebern[welcher];
     void zufall();
   }
@@ -160,13 +160,17 @@
             <i class="fa-solid fa-image"></i>nur mit Bild</button>
           <button class="chip" class:an={stoebern.ungelesen} aria-pressed={stoebern.ungelesen} onclick={() => filterUmschalten("ungelesen")}>
             <i class="fa-solid fa-eye-slash"></i>noch nicht gelesen</button>
+          <button class="chip" class:an={stoebern.lang} aria-pressed={stoebern.lang} onclick={() => filterUmschalten("lang")}
+                  title="Nur Artikel mit viel Text"><i class="fa-solid fa-align-left"></i>lang</button>
+          <button class="chip" class:an={stoebern.nahe} aria-pressed={stoebern.nahe} onclick={() => filterUmschalten("nahe")}
+                  title="Ein Artikel, auf den ein Artikel deiner Themen verweist und der selbst in keinem Thema steht"><i class="fa-solid fa-layer-group"></i>nahe an meinen Themen</button>
         </div>
       </div>
       {#if fehler}<div class="fehlertext">{fehler}</div>{/if}
 
       <section>
         <div class="abschnitt-kopf"><h2><i class="fa-solid fa-dice"></i>Zufall</h2>
-          <span class="neben">aus {buch ? bezeichnung(buch) : "der Quelle"}{stoebern.mitBild ? ", mit Bild" : ""}{stoebern.ungelesen ? ", noch nicht gelesen" : ""}</span></div>
+          <span class="neben">aus {buch ? bezeichnung(buch) : "der Quelle"}{stoebern.mitBild ? ", mit Bild" : ""}{stoebern.ungelesen ? ", noch nicht gelesen" : ""}{stoebern.lang ? ", lang" : ""}{stoebern.nahe ? ", nahe an deinen Themen" : ""}</span></div>
         <div class="zufall-buehne" class:mit-eben={stoebern.eben.length > 0}>
           {#if stoebern.fund}
             {@const f = stoebern.fund}

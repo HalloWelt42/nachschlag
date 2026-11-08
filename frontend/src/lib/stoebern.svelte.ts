@@ -42,8 +42,9 @@ export const SEITE_EINTRAEGE = 13;
 
 const pfadWeg = (buch: string, pfad: string) => `${encodeURIComponent(buch)}/${pfad.split("/").map(encodeURIComponent).join("/")}`;
 
-export const zufallHolen = (buch: string, mitBild: boolean, ungelesen: boolean) =>
-  hole<Fund>(`/stoebern/zufall/${encodeURIComponent(buch)}?${new URLSearchParams({ mit_bild: String(mitBild), ungelesen: String(ungelesen) })}`);
+export const zufallHolen = (buch: string, mitBild: boolean, ungelesen: boolean, lang = false, nahe = false) =>
+  hole<Fund>(`/stoebern/zufall/${encodeURIComponent(buch)}?${new URLSearchParams({ mit_bild: String(mitBild), ungelesen: String(ungelesen),
+                                                                                  lang: String(lang), nahe: String(nahe) })}`);
 
 export const schrittHolen = (buch: string, pfad: string) => hole<Pfadschritt>(`/stoebern/schritt/${pfadWeg(buch, pfad)}`);
 
@@ -59,6 +60,8 @@ export const stoebern = $state<{
   buch: string;
   mitBild: boolean;
   ungelesen: boolean;
+  lang: boolean;
+  nahe: boolean;
   fund: Fund | null;
   eben: Fund[];
   pfad: Fund[];                 // die Schritte bis hierher, der letzte ist der aktuelle
@@ -66,4 +69,4 @@ export const stoebern = $state<{
   seite: Buchseite | null;
   buchstabe: string;
   vorschau: Fund | null;
-}>({ buch: "", mitBild: true, ungelesen: false, fund: null, eben: [], pfad: [], schritt: null, seite: null, buchstabe: "", vorschau: null });
+}>({ buch: "", mitBild: true, ungelesen: false, lang: false, nahe: false, fund: null, eben: [], pfad: [], schritt: null, seite: null, buchstabe: "", vorschau: null });

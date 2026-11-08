@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
+
+Medienart = Literal["bild", "karte", "ton"]
 
 
 class Medium(BaseModel):
@@ -15,6 +19,8 @@ class Medium(BaseModel):
     hoehe: int = 0
     unterschrift: str = Field("", description="Bildunterschrift oder Alternativtext als reiner Text")
     datei: str = Field("", description="Dateiname des Bilds")
+    art: Medienart = Field("bild", description="bild, karte (Landkarte, Lageplan) oder ton (Hörbeispiel; `bild` ist dann die Adresse des Tons)")
+    gross: bool = Field(False, description="der Bildholer hat das große Bild schon geholt (WIKI-80)")
 
 
 class Medienergebnis(BaseModel):

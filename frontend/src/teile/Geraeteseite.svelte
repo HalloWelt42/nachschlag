@@ -92,6 +92,6 @@
 
 {#if gross && g.bild}
   <Leuchtkasten medien={[{ buch: artikel.buch, pfad: artikel.pfad, artikel: artikel.titel, abschnitt: "", bild: g.bild, breite: 0, hoehe: 0,
-                           unterschrift: artikel.titel, datei: decodeURIComponent(g.bild.split("/").pop() ?? "") }]}
+                           unterschrift: artikel.titel, datei: decodeURIComponent(g.bild.split("/").pop() ?? ""), art: "bild", gross: false }]}
                onzu={() => (gross = false)} />
 {/if}
