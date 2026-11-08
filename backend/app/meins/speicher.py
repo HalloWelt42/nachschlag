@@ -48,7 +48,7 @@ CREATE INDEX beispiele_artikel ON beispiele (konto, buch_name, pfad);
 -- PHP-Fassung, in der ein eigenes Beispiel lief (WIKI-52)
 ALTER TABLE beispiele ADD COLUMN fassung TEXT NOT NULL DEFAULT '';
 """, """
--- Bilder an Notizen (WIKI-51): Liste als JSON, die Dateien liegen in der Kellerwolke
+-- Bilder an Notizen (WIKI-51): Liste als JSON, die Dateien liegen in der Ablage (Kellerwolke oder Datenordner)
 ALTER TABLE notizen ADD COLUMN bilder TEXT NOT NULL DEFAULT '[]';
 """, """
 -- Eigene Bewertungen (WIKI-71): je Seite 1 bis 5 Sterne, über Fassungen des Buchs hinweg (Name ohne Stand)
