@@ -30,6 +30,11 @@ im Repo) mit `KELLERWOLKE_ADRESSE`, `KELLERWOLKE_SCHLUESSEL`, `KELLERWOLKE_KENNU
 Zugang nur für Tests, nicht der der Entwicklungsinstanz. Aufräumen und Zurückziehen der Aktionen kommen aus
 `appkern.testen`.
 
+## Als Buch
+
+Ein Thema als Buch (EPUB und PDF) nach einer Vorlage, umgeformt über die Leitstelle: `docs/ALS_BUCH.md`. Der Satz als
+PDF braucht Pango (im Abbild über apt; am Mac aus Homebrew mit `DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib`).
+
 ## Prüfungen
 
 Vor jedem Commit (Hook in `tools/git-hooks`, eingerichtet von `einrichten.sh`): Fassung hochzählen, nur gerade

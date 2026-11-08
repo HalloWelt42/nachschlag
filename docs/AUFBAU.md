@@ -12,6 +12,7 @@ Entwürfe unter `mockups/` sind der Leitfaden für die Oberfläche.
 | Bibliothek | `backend/app/bibliothek/` | Ordner lesen, Bücher öffnen (libzim), Fähigkeiten aus den Angaben der Datei, Einträge, Weiterleitungen, Medien |
 | Bausteine | `backend/app/bausteine/` | je Grundstruktur eines Buchs ein Baustein mit eigenen Methoden: erkennen, Inhalt lösen, säubern, gliedern |
 | Suche | `backend/app/suche/` | Index des Buchs (Volltext und Titel), Bedeutungssuche als Anbindung, Mischen, Rückfall |
+| Als Buch | `backend/app/alsbuch/` | ein Thema als Buch (EPUB und PDF) nach einer Vorlage, umgeformt über die Leitstelle, geprüft gegen das Original (docs/ALS_BUCH.md) |
 | Bücherlader | `backend/app/buecherlader/` | Verzeichnis der Bücher durchsehen, Neues melden, Abos laden, Fassungen umschalten; schreibt als Einziger in den Ordner der Bücher (docs/BUECHERLADER.md) |
 | Schnittstelle | `backend/app/api/` | REST unter `/api/v1`; die Oberfläche nutzt nur diese Wege |
 | Oberfläche | `frontend/src/` | Svelte in der Schale des Appkerns |
@@ -57,6 +58,6 @@ die Oberfläche sagt es.
 | Fundus | Bedeutungssuche | nur Index |
 | Kellerwolke | Konten, Ablage | ein Nutzer, eigene Datenbank (Betriebsart ohne Anmeldung, Bau 8) |
 | Verzeichnis der Bücher | Bücherlader: Neues melden, Abos laden | Bibliothek ohne Katalog und Laden |
-| Leitstelle | Übersetzen (Suche und Artikel, als Auftrag), Korrektur, Spracheingabe (Hördienst), Vorlesen (Sprechdienst) | ausgeblendet |
+| Leitstelle | Übersetzen (Suche und Artikel, als Auftrag), Korrektur, Spracheingabe (Hördienst), Vorlesen (Sprechdienst), Bücher umformen (als Auftrag) | ausgeblendet; Bücher nur mit Vorlagen ohne KI |
 
 Hausinternes (Adressen, Schlüssel, Ausrollen) gehört nicht in dieses Repo.
