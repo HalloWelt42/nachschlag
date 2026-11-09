@@ -15,6 +15,8 @@
   import { Auswahl } from "appkern-oberflaeche";
   import { ART_SYMBOL } from "../lib/arten";
   import Buchkachel from "../teile/Buchkachel.svelte";
+  import Buendelebene from "../teile/Buendelebene.svelte";
+  import { buendelHinweis, ordnen, reihenfolge } from "../lib/buendel";
   import type { Art, Buch } from "../lib/typen";
   import { lesen } from "../lib/ziele";
   import { gehe } from "appkern-oberflaeche";
@@ -229,8 +231,9 @@
         <p class="leer-hinweis">Im Ordner der ZIM-Libs liegt noch keine ZIM-Datei. Den Ordner nennen die Einstellungen unter Bibliothek.</p>
       {/if}
       <div class="buecher">
-        {#each aktive as b (b.kennung)}
-          <Buchkachel buch={b} />
+        {#each ordnen(aktive) as e (e.art === "buch" ? e.buch.kennung : e.kennung)}
+          {#if e.art === "buch"}<Buchkachel buch={e.buch} />
+          {:else}<Buendelebene titel={e.titel} gesamt={e.gesamt} themen={e.themen} />{/if}
         {/each}
       </div>
       {#each bibliothek.fehler as f}<div class="fehlertext buchfehler">{f}</div>{/each}
@@ -263,7 +266,7 @@
           {#if aktive.length}
             <div class="archiv-ablegen">
               <Auswahl wert="" symbol="fa-box-archive" titel="Eine aktive Quelle von Hand ins Archiv legen"
-                       optionen={[{ wert: "", titel: "Quelle ins Archiv legen" }, ...aktive.map((b) => ({ wert: b.kennung, titel: bezeichnung(b) }))]}
+                       optionen={[{ wert: "", titel: "Quelle ins Archiv legen" }, ...reihenfolge(aktive).map((b) => ({ wert: b.kennung, titel: bezeichnung(b), hinweis: buendelHinweis(b) }))]}
                        onwahl={(k) => k && archiv(k, { zustand: "archiv" })} />
             </div>
           {/if}

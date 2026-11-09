@@ -8,10 +8,11 @@
   import Kachel from "./Kachel.svelte";
   import Sprachmarke from "./Sprachmarke.svelte";
 
-  let { buch: b }: { buch: Buch } = $props();
+  // `titel`: ein anderer Name, etwa ein Thema im Bündel ohne den Namen der Ebene davor (WIKI-83)
+  let { buch: b, titel = "" }: { buch: Buch; titel?: string } = $props();
 </script>
 
-<Kachel art="quer" symbol={ART_SYMBOL[b.art]} titel={b.titel} untertitel={`${zahl(b.artikel)} Artikel · Stand ${datum(b.stand)}`}
+<Kachel art="quer" symbol={ART_SYMBOL[b.art]} titel={titel || b.titel} untertitel={`${zahl(b.artikel)} Artikel · Stand ${datum(b.stand)}`}
         hinweis="Startseite der Quelle öffnen" ziel={() => lesen(b.kennung, b.startseite)}>
   {#snippet ecke()}<Sprachmarke kuerzel={b.sprache} />{/snippet}
   {#snippet fuss()}

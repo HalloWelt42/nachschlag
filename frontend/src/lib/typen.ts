@@ -25,6 +25,10 @@ export interface Buch {
   faehigkeiten: Faehigkeiten;
   startseite: string;
   archiv: Archivstand | null;        // im Archiv (WIKI-46); null: aktive Quelle
+  buendel: string;                   // Bündel (WIKI-83, etwa freecodecamp_de); leer: steht für sich
+  buendel_titel: string;             // Name der Ebene (Titel des Gesamtbuchs)
+  buendel_gesamt: boolean;           // das Gesamtbuch: die Ebene öffnet es
+  buendel_im_gesamt: boolean;        // Thema, das im Gesamtbuch steckt: in Suche und Zählung nur einmal
 }
 
 /** Eine Quelle im Archiv: ersetzt durch eine neuere Fassung oder von Hand; ohne "mitnutzen" nicht in Suche und Stöbern. */

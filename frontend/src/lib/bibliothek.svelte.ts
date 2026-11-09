@@ -65,7 +65,9 @@ export const sprache = spracheInWorten;
 
 // --- Archiv der Quellen (WIKI-46) ---
 /** Zählt in Suche, Stöbern und Startseite mit: aktiv oder im Archiv mit "mitnutzen". */
-export const nutzbar = (b: Buch): boolean => !b.archiv || b.archiv.mitnutzen;
+/** Zählt in Suche, Stöbern und Startseite mit: aktiv oder mitgenutzt, und kein Thema, das sein Gesamtbuch schon enthält
+ *  (Bündel, WIKI-83; eine Regel mit dem Backend). */
+export const nutzbar = (b: Buch): boolean => (!b.archiv || b.archiv.mitnutzen) && !b.buendel_im_gesamt;
 
 /** Archivieren (zustand archiv), wieder aktiv setzen (aktiv), wie von selbst (null) oder mitnutzen; danach die
  *  Bibliothek neu, damit jede Seite den neuen Stand sieht. */

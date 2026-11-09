@@ -41,6 +41,11 @@ class Buch(BaseModel):
     faehigkeiten: Faehigkeiten
     startseite: str = Field("", description="Pfad der Startseite im Buch")
     archiv: Archivstand | None = Field(None, description="im Archiv (WIKI-46); leer: aktive Quelle")
+    buendel: str = Field("", description="Bündel, zu dem das Buch gehört (WIKI-83, etwa freecodecamp_de); leer: steht für sich")
+    buendel_titel: str = Field("", description="Name der Ebene des Bündels (der Titel des Gesamtbuchs)")
+    buendel_gesamt: bool = Field(False, description="das Gesamtbuch des Bündels: die Ebene öffnet es, die übrigen sind Themen")
+    buendel_im_gesamt: bool = Field(False, description="ein Thema, dessen Inhalt das Gesamtbuch schon enthält: in Suche, "
+                                                       "Stöbern und Zählung nur einmal (über das Gesamtbuch), lesbar bleibt es")
 
 
 class Bibliotheksstand(BaseModel):

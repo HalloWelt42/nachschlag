@@ -8,6 +8,7 @@
   import { groesse, lader, laderLaden, monat, ZUSTAND } from "../lib/buecherlader.svelte";
   import { abbestellen, abonnieren, bestandAbonnieren, buchLoeschen } from "../lib/schnittstelle";
   import { ART_NAME, ART_SYMBOL } from "../lib/arten";
+  import { ordnen } from "../lib/buendel";
   import type { Buch } from "../lib/typen";
   import { lesen } from "../lib/ziele";
   import Ladebalken from "./Ladebalken.svelte";
@@ -80,7 +81,7 @@
         sie öffnen in der Originalansicht: {ohneAnsicht.map(([e, l]) => `${e} (${l.map((b) => b.titel).join(", ")})`).join("; ")}</span></div>
   {/if}
 
-  {#each buecher as b (b.kennung)}
+{#snippet karte(b: Buch)}
     {@const abo = abos.get(stamm(b))}
     <div class="buch-gross" class:archiviert={!!b.archiv}>
       <span class="sym"><i class="fa-solid {SYMBOL[b.art]}"></i></span>
@@ -127,6 +128,19 @@
         <span class="faehigkeit"><i class="fa-solid fa-gears"></i>Erzeuger {b.erzeuger || "unbekannt"}</span>
       </div>
     </div>
+{/snippet}
+
+  {#each ordnen(buecher) as e (e.art === "buch" ? e.buch.kennung : e.kennung)}
+    {#if e.art === "buch"}{@render karte(e.buch)}
+    {:else}
+      <!-- Bündel (WIKI-83): eine Ebene, das Gesamtbuch zuerst, die Themen darunter; jede Datei behält ihre Knöpfe -->
+      <section class="buendel-ebene in-bibliothek" aria-label={`Bündel ${e.titel}`}>
+        <div class="buendel-kopf"><i class="fa-solid fa-layer-group"></i><b>{e.titel}</b>
+          <span class="buendel-angabe">Bündel aus {(e.gesamt ? 1 : 0) + e.themen.length} Dateien{e.gesamt ? ": das Gesamtbuch und seine Themen" : ""}</span></div>
+        {#if e.gesamt}{@render karte(e.gesamt)}{/if}
+        {#each e.themen as t (t.kennung)}{@render karte(t)}{/each}
+      </section>
+    {/if}
   {/each}
   {#each bibliothek.fehler as f}<div class="fehlertext buchfehler">{f}</div>{/each}
 </div>

@@ -2,6 +2,7 @@
   // Ein Thema (Entwurf mockups/themen.html, rechte Seite): Kopf mit Beschreibung und Regel, Angebote der gespeicherten
   // Suche, Bereiche mit Artikeln als Karten oder Liste. Ziehen ordnet Artikel und Bereiche (am Rechner); in der Liste
   // wählt man den Bereich (überall, auch am Telefon).
+  import { buendelHinweis, reihenfolge } from "../lib/buendel";
   import Buchmarke from "./Buchmarke.svelte";
   import { Auswahl, beiAuftrag, gehe, geraet, hole, json, kopieren, navigation, Rueckfrage, seitenFehler, type Auftrag } from "appkern-oberflaeche";
   import { onMount } from "svelte";
@@ -261,7 +262,7 @@
           <input class="eingabe" bind:value={bearbeiten.regel} maxlength="400" placeholder="leer: nur von Hand" /></label>
         <div><span class="feld-titel">In welchen Quellen</span>
           <Auswahl bind:wert={bearbeiten.regel_buch} symbol="fa-book"
-                   optionen={[{ wert: "", titel: "Alle Quellen" }, ...bibliothek.buecher.map((b) => ({ wert: b.kennung, titel: bezeichnung(b) }))]} /></div>
+                   optionen={[{ wert: "", titel: "Alle Quellen" }, ...reihenfolge(bibliothek.buecher).map((b) => ({ wert: b.kennung, titel: bezeichnung(b), hinweis: buendelHinweis(b) }))]} /></div>
         <div class="thema-knoepfe">
           <button class="knopf primaer" disabled={!bearbeiten.titel.trim()} onclick={speichern}><i class="fa-solid fa-check"></i>Speichern</button>
           <button class="knopf still" onclick={() => (bearbeiten = null)}>Abbrechen</button>

@@ -15,6 +15,7 @@ from appkern.app.begleiter import Begleiter
 from appkern.datenbank import Datenbank
 
 from ..bibliothek import Bibliothek
+from ..bibliothek.buendel import buendeln
 from ..modell.buch import Archivstand, Bibliotheksstand, Buch
 
 STUFEN = ["""
@@ -49,8 +50,9 @@ def einordnen(buecher: list[Buch], entscheidungen: dict[str, tuple[str | None, b
 
 
 def nutzbar(b: Buch) -> bool:
-    """Zählt in Suche, Stöbern und Startseite mit: aktiv oder im Archiv mit "mitnutzen"."""
-    return b.archiv is None or b.archiv.mitnutzen
+    """Zählt in Suche, Stöbern und Startseite mit: aktiv oder im Archiv mit "mitnutzen"; ein Thema eines Bündels nicht,
+    wenn sein Gesamtbuch es schon enthält (WIKI-83)."""
+    return (b.archiv is None or b.archiv.mitnutzen) and not b.buendel_im_gesamt
 
 
 class Quellenarchiv(Begleiter):
@@ -67,7 +69,8 @@ class Quellenarchiv(Begleiter):
     async def stand(self) -> Bibliotheksstand:
         """Die Bibliothek mit dem Archivstand jeder Quelle."""
         s = await self._bib.stand()
-        return s.model_copy(update={"buecher": einordnen(s.buecher, await self._entscheidungen())})
+        # Bündel erst nach dem Archiv: nur aktive Quellen bilden eins (WIKI-83)
+        return s.model_copy(update={"buecher": buendeln(einordnen(s.buecher, await self._entscheidungen()))})
 
     async def buch(self, kennung: str) -> Buch:
         """Eine Quelle mit ihrem Archivstand; `BuchFehlt`, wenn es sie nicht gibt."""

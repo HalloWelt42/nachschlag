@@ -8,6 +8,8 @@
   import { bibliothek, bibliothekLaden, zahl } from "../lib/bibliothek.svelte";
   import type { Art, Buch } from "../lib/typen";
   import Buchkachel from "../teile/Buchkachel.svelte";
+  import Buendelebene from "../teile/Buendelebene.svelte";
+  import { ordnen } from "../lib/buendel";
 
   onMount(() => void bibliothekLaden());
 
@@ -43,7 +45,9 @@
       {#each sichtbar as [art, buecher] (art)}
         <section class="kat-gruppe">
           {#if !gewaehlt}<h2><i class="fa-solid {ART_SYMBOL[art]}"></i>{ART_NAME[art]}<span class="kat-zahl">{zahl(buecher.length)}</span></h2>{/if}
-          <div class="buecher">{#each buecher as b (b.kennung)}<Buchkachel buch={b} />{/each}</div>
+          <div class="buecher">{#each ordnen(buecher) as e (e.art === "buch" ? e.buch.kennung : e.kennung)}
+            {#if e.art === "buch"}<Buchkachel buch={e.buch} />{:else}<Buendelebene titel={e.titel} gesamt={e.gesamt} themen={e.themen} />{/if}
+          {/each}</div>
         </section>
       {/each}
     </div>

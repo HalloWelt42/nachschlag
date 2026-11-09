@@ -284,6 +284,17 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .kat-zahl { font-family: var(--schrift-zahl); opacity: .7; }
 .kat-gruppe h2 { margin: 0 0 var(--a3); font-size: var(--titel); display: flex; gap: var(--a2); align-items: center; }
 .buecher { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: var(--a4); }
+/* Bündel als eigene Ebene (WIKI-83): über die volle Breite, Kopf öffnet das Gesamtbuch, darunter die Themen */
+.buendel-ebene { grid-column: 1 / -1; display: flex; flex-direction: column; gap: var(--a3); padding: var(--a3); border-radius: var(--r3);
+  background: var(--flaeche); box-shadow: 0 0 0 1px var(--rand); }
+.buendel-kopf { display: flex; flex-wrap: wrap; align-items: center; gap: 6px var(--a3); padding: 6px var(--a2); border: 0; background: transparent;
+  font: inherit; color: var(--text); text-align: left; border-radius: var(--r2); }
+button.buendel-kopf { cursor: pointer; }
+button.buendel-kopf:hover { background: var(--flaeche-2); }
+.buendel-kopf > i { color: var(--akzent); }
+.buendel-kopf b { font-size: var(--titel); }
+.buendel-angabe { color: var(--text-3); font-size: var(--klein); font-family: var(--schrift-zahl); }
+.buendel-oeffnen { margin-left: auto; color: var(--akzent); font-size: var(--klein); display: inline-flex; gap: 6px; align-items: center; }
 .faehigkeit { font-size: var(--marke); padding: 2px 8px; border-radius: var(--r1); background: var(--flaeche-2); color: var(--text-2); display: inline-flex; gap: 5px; align-items: center; }
 .faehigkeit.an { background: var(--gut-weich); color: var(--gut); }
 

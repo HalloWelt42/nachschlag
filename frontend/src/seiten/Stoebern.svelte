@@ -2,6 +2,7 @@
   // Stöbern (Entwurf mockups/stoebern.html): drei Arten zu blättern. Zufall mit Filtern (Leertaste für den nächsten),
   // der Entdeckungspfad (von hier weiter über Verweise, Nennungen und Bedeutung; der Weg bleibt sichtbar) und Blättern
   // wie im gedruckten Lexikon (Titel in der Reihenfolge des Buchs um den Fund herum).
+  import { buendelHinweis, reihenfolge } from "../lib/buendel";
   import { onMount } from "svelte";
   import { Auswahl, gehe, geraet, seitenFehler } from "appkern-oberflaeche";
   import { bezeichnung, bibliothek, bibliothekLaden, hauptbuch, nutzbar } from "../lib/bibliothek.svelte";
@@ -16,7 +17,8 @@
   let zieht = $state(false);
   let schrittLaedt = $state(false);
 
-  const buecher = $derived(bibliothek.buecher.filter((b) => b.faehigkeiten.lesedesign && nutzbar(b)));   // ohne Archiv (WIKI-46)
+  // ohne Archiv (WIKI-46); Themen eines Bündels (WIKI-83) gezielt wählbar, in der Reihenfolge ihrer Ebene
+  const buecher = $derived(reihenfolge(bibliothek.buecher.filter((b) => b.faehigkeiten.lesedesign && (nutzbar(b) || (b.buendel_im_gesamt && !b.archiv)))));
   const buch = $derived(bibliothek.buecher.find((b) => b.kennung === stoebern.buch));
 
   async function zufall() {
@@ -154,7 +156,7 @@
         <div class="filterzeile">
           {#if buecher.length > 1}
             <Auswahl wert={stoebern.buch} symbol="fa-book" titel="Quelle zum Stöbern" onwahl={buchWaehlen}
-                     optionen={buecher.map((b) => ({ wert: b.kennung, titel: bezeichnung(b) }))} />
+                     optionen={buecher.map((b) => ({ wert: b.kennung, titel: bezeichnung(b), hinweis: buendelHinweis(b) }))} />
           {/if}
           <button class="chip" class:an={stoebern.mitBild} aria-pressed={stoebern.mitBild} onclick={() => filterUmschalten("mitBild")}>
             <i class="fa-solid fa-image"></i>nur mit Bild</button>
