@@ -1,7 +1,7 @@
 """Schnittstelle von Nachschlag unter /api/v1 (die Oberfläche nutzt nur diese Wege). Lesen von Büchern, Artikeln,
 Vorschlägen und Suche braucht die Anmeldung; Medien liegen unter /api/v1/inhalt und laden mit dem Lesezugang der Sitzung
-(Cookie, gilt nur für diesen Pfad), weil `<img>` keine Köpfe sendet. Originalseiten haben eine eigene Herkunft
-(originalansicht, WIKI-85)."""
+(Cookie, gilt nur für diesen Pfad), weil `<img>` keine Köpfe sendet. Originalseiten laufen abgeschirmt mit einem Schein
+im Weg (originalansicht, WIKI-85)."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import asyncio
 from collections.abc import Callable
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse, Response
 
 from appkern.app import Geruest
@@ -22,7 +22,6 @@ from .eigenindex.ablage import Eigenindizes
 from .modell.artikel import Artikel, Nachbar, Rueckverweise
 from .modell.buch import Bibliotheksstand, Buch
 from .modell.suche import Suchergebnis, Suchregeln, Vorschlag
-from .originalansicht import Originalherkunft
 from .quellenarchiv import Quellenarchiv
 from .suche import Suche
 
@@ -46,9 +45,8 @@ def _fehlt(f: Exception) -> HTTPException:
 
 def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche: Suche, quellen: Quellenarchiv,
            suchregeln: Callable[[], Suchregeln] | None = None, eigen: Eigenindizes | None = None,
-           grossbilder: Grossbilder | None = None, original: Originalherkunft | None = None) -> APIRouter:
-    """`grossbilder`: große Bilder des Bildholers (WIKI-80); geöffnete Artikel merken ihre Bilder vor. `original`: die
-    eigene Herkunft der Originalseiten (WIKI-85); ohne sie bleibt der Weg zur Originalseite relativ (Tests)."""
+           grossbilder: Grossbilder | None = None) -> APIRouter:
+    """`grossbilder`: große Bilder des Bildholers (WIKI-80); geöffnete Artikel merken ihre Bilder vor."""
     r = APIRouter(prefix="/api/v1", tags=["nachschlag"])
     pflicht, lesen = [geruest.pflicht], [geruest.lesen]
 
@@ -66,16 +64,14 @@ def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche:
             raise _fehlt(f)
 
     @r.get("/artikel/{buch}/{pfad:path}", response_model=Artikel, dependencies=pflicht)
-    async def artikel(request: Request, buch: str, pfad: str) -> Artikel:
+    async def artikel(buch: str, pfad: str) -> Artikel:
         """Ein Artikel, aufbereitet vom Baustein der Art des Buchs; Weiterleitungen sind aufgelöst (`anker` zeigt den
-        Abschnitt). Ohne eigenes Lesedesign `darstellung: original` mit der Adresse der unveränderten Seite (auf der
-        eigenen Herkunft der Originalseiten, derselbe Rechner wie diese Anfrage)."""
+        Abschnitt). Ohne eigenes Lesedesign `darstellung: original` mit der Adresse der unveränderten Seite
+        (Originalansicht mit Schein, WIKI-85)."""
         try:
             a = await leser.lesen(buch, pfad)
         except (BuchFehlt, EintragFehlt) as f:
             raise _fehlt(f)
-        if original and a.original:
-            a.original = original.adresse(request.url, a.original)
         if grossbilder:
             _nebenbei(grossbilder.geoeffnet(a))
         return a

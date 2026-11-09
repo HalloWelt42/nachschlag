@@ -12,10 +12,6 @@ services:
     restart: unless-stopped
     ports:
       - "${PORT:-8711}:8000"
-      # Originalseiten der Bücher auf eigener Herkunft (WIKI-85): dieselbe App, auf diesem Port nur die Originalseiten
-      - "${ORIGINAL_PORT:-8712}:8000"
-    environment:
-      NACHSCHLAG_ORIGINAL_PORT: ${ORIGINAL_PORT:-8712}
     volumes:
       # Datenbank, Einstellungen und die Ablage (Notizen als Markdown, Bilder an Notizen, eigene Bücher und Vorlagen)
       - ./daten:/app/daten

@@ -1,9 +1,12 @@
-// Originalseite im Rahmen (WIKI-85): sie läuft mit ihren Skripten auf der eigenen Herkunft der Bücher und spricht mit
-// der App nur über die Brücke (backend/app/originalansicht/bruecke.js). Ein Ort ist, was nach dem Schein im Weg steht:
+// Originalseite im Rahmen (WIKI-85): sie läuft mit ihren Skripten abgeschirmt ohne eigene Herkunft und spricht mit der
+// App nur über die Brücke (backend/app/originalansicht/bruecke.js). Ein Ort ist, was nach dem Schein im Weg steht:
 // Buch und Pfad, Abfrage und Anker, etwa "lastcodex.org_de_all_2026-11/de/atlas/index.html?filters=open#liste".
 
 /** Nachricht der Brücke: die Seite ist an einem Ort (geladen, aus dem Verlauf, neuer Anker) oder will zu einem Verweis. */
 export interface Rahmenmeldung { nachschlag: 1; art: "ort" | "verweis"; ort: string }
+
+/** So nennt der Browser die Herkunft einer abgeschirmten Seite ohne eigene Herkunft (Absender ihrer Nachrichten). */
+export const OHNE_HERKUNFT = "null";
 
 /** Teile der Adresse einer Originalseite vor dem Ort: "", api, v1, original, Schein. */
 const VOR_DEM_ORT = 5;
@@ -18,9 +21,9 @@ export function ortNormal(ort: string): string {
   return entschluesselt(u.pathname.slice(1)) + u.search + entschluesselt(u.hash);
 }
 
-/** Der Ort einer Adresse der Originalseiten, normal. */
+/** Der Ort einer Adresse der Originalseiten (auch relativ zur App), normal. */
 export function ortVon(adresse: string): string {
-  const u = new URL(adresse);
+  const u = new URL(adresse, location.href);
   return ortNormal(u.pathname.split("/").slice(VOR_DEM_ORT).join("/") + u.search + u.hash);
 }
 

@@ -23,22 +23,29 @@ def bruecke_einsetzen(html: bytes) -> bytes:
     return BRUECKE_TAG + html
 
 
+#: abgeschirmt ohne eigene Herkunft (kein allow-same-origin): Skripte, Formulare, neue Fenster und Hinweisfenster
+#: dürfen sein, die Seite oben im Browser wechseln nie. Dieselben Rechte trägt der Rahmen in der App
+SANDBOX = "allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-downloads"
+
+
 def inhaltsregeln(anfrage: URL) -> str:
-    """Die Seite lädt und verbindet sich nur mit ihrer eigenen Herkunft (nichts nach außen), Skripte des Buchs laufen,
-    wie sie sind, und einbetten dürfen sie nur Seiten desselben Rechners (die App, gleich auf welchem Port)."""
-    rechner = f"{anfrage.scheme}://{anfrage.hostname}:*"
+    """Die Seite läuft abgeschirmt ohne eigene Herkunft (auch allein geöffnet), lädt und verbindet sich nur mit den
+    Wegen der Originalseiten (nicht mit der Schnittstelle der App, nichts nach außen), Skripte des Buchs laufen, wie
+    sie sind, und einbetten darf sie nur die App."""
+    wege = f"{anfrage.scheme}://{anfrage.netloc}{PRAEFIX}/"
     return "; ".join([
-        "default-src 'self' data: blob:",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:",
-        "style-src 'self' 'unsafe-inline'",
-        "img-src 'self' data: blob:",
-        "media-src 'self' data: blob:",
-        "font-src 'self' data:",
-        "connect-src 'self' data: blob:",
-        "worker-src 'self' blob:",
-        "frame-src 'self' data: blob:",
+        f"sandbox {SANDBOX}",
+        f"default-src {wege} data: blob:",
+        f"script-src {wege} 'unsafe-inline' 'unsafe-eval' blob:",
+        f"style-src {wege} 'unsafe-inline'",
+        f"img-src {wege} data: blob:",
+        f"media-src {wege} data: blob:",
+        f"font-src {wege} data:",
+        f"connect-src {wege} data: blob:",
+        f"worker-src {wege} blob:",
+        f"frame-src {wege} data: blob:",
         "object-src 'none'",
-        "base-uri 'self'",
-        "form-action 'self'",
-        f"frame-ancestors 'self' {rechner}",
+        f"base-uri {wege}",
+        f"form-action {wege}",
+        "frame-ancestors 'self'",
     ])

@@ -1,8 +1,7 @@
 # Probelauf des Handbuchs (einrichten.sh --probe), zusätzlich zu compose.pi.yml: eigene Namen statt der festen des
 # Betriebs, die App ohne Weg nach draußen (das Netz "abgeschottet" hat keinen Ausgang; nur der Vorschaltdienst hängt
 # zusätzlich am üblichen Netz, damit sein Port auf diesem Rechner erreichbar ist) und der Port nur an 127.0.0.1,
-# verschoben um den Versatz (PROBE_PORT und PROBE_ORIGINAL_PORT für die Originalseiten setzt das Einrichtungsskript
-# in die .env des Probeordners).
+# verschoben um den Versatz (PROBE_PORT setzt das Einrichtungsskript in die .env des Probeordners).
 networks:
   abgeschottet:
     internal: true
@@ -12,14 +11,11 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME:?}-nachschlag
     image: ${COMPOSE_PROJECT_NAME:?}-nachschlag
     networks: [abgeschottet]
-    environment:
-      NACHSCHLAG_ORIGINAL_PORT: ${PROBE_ORIGINAL_PORT:?}
   vorne:
     container_name: ${COMPOSE_PROJECT_NAME:?}-vorne
     networks: [abgeschottet, default]
     ports: !override
       - "127.0.0.1:${PROBE_PORT:?}:8711"
-      - "127.0.0.1:${PROBE_ORIGINAL_PORT:?}:8712"
   bildholer:
     container_name: ${COMPOSE_PROJECT_NAME:?}-bildholer
     image: ${COMPOSE_PROJECT_NAME:?}-nachschlag

@@ -12,7 +12,7 @@ from .bausteine.html import online_adresse
 from .bibliothek import Bibliothek, EintragFehlt
 from .kategorien.abfrage import Kategorienindex
 from .modell.artikel import Artikel
-from .originalansicht import Originalherkunft
+from .originalansicht import Originalscheine
 
 
 #: so oft zieht der Zufall neu, wenn er eine Sprungseite ohne Ziel in der Quelle trifft
@@ -40,9 +40,9 @@ def _verfasser(fertig: Aufbereitet) -> dict[str, str]:
     return {"autor": frage.autor if frage else "", "datum": fertig.frage.gefragt}
 
 
-def original_weg(herkunft: Originalherkunft) -> Callable[[str, str], str]:
-    """(buch, pfad) -> Weg der unveränderten Seite auf der eigenen Herkunft der Originalseiten (WIKI-85)."""
-    return lambda buch, pfad: herkunft.weg(buch, f"{quote(buch)}/{_pfad(pfad)}")
+def original_weg(scheine: Originalscheine) -> Callable[[str, str], str]:
+    """(buch, pfad) -> Weg der unveränderten Seite mit ihrem Schein (Originalansicht, WIKI-85)."""
+    return lambda buch, pfad: scheine.weg(buch, f"{quote(buch)}/{_pfad(pfad)}")
 
 
 class Artikelleser:

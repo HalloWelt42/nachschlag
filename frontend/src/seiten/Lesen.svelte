@@ -26,7 +26,7 @@
   import ThemaWahl from "../teile/ThemaWahl.svelte";
   import Lesegroesse from "../teile/Lesegroesse.svelte";
   import { groesseFuer } from "../lib/lesegroesse.svelte";
-  import { istRahmenmeldung, lesenWeg, ortNormal, ortVon, rahmenZiel } from "../lib/originalrahmen";
+  import { istRahmenmeldung, lesenWeg, OHNE_HERKUNFT, ortNormal, ortVon, rahmenZiel } from "../lib/originalrahmen";
   import Kachel from "../teile/Kachel.svelte";
   import Anleitung from "../teile/Anleitung.svelte";
   import Fragekarte from "../teile/Fragekarte.svelte";
@@ -859,15 +859,14 @@
     }
   }
 
-  // Originalseite (WIKI-85): sie läuft mit ihren Skripten auf der eigenen Herkunft der Bücher und kommt nicht an die
-  // App; beide sprechen nur über die Brücke (lib/originalrahmen.ts). Die App setzt den Rahmen an ihren Ort, ohne neuen
+  // Originalseite (WIKI-85): sie läuft mit ihren Skripten abgeschirmt ohne eigene Herkunft und kommt nicht an die App;
+  // beide sprechen nur über die Brücke (lib/originalrahmen.ts). Die App setzt den Rahmen an ihren Ort, ohne neuen
   // Eintrag im Verlauf (den hat die App schon); geht die Seite selbst weiter (eigene Skripte, Formulare), folgt die App.
   // Der Rahmen füllt die Fläche und rollt selbst, auch am Telefon: Seiten mit eigener Bedienung (feste Kopfzeilen,
   // Dialoge, Höhen nach dem Fenster) brauchen ein Fenster wie im Browser.
   let rahmen = $state<HTMLIFrameElement>();
   const kopfSchmal = $derived(artikel?.darstellung === "original");
   let kopfOffen = $state(false);
-  const rahmenHerkunft = $derived(artikel?.original ? new URL(artikel.original).origin : "");
   const rahmenAdresse = $derived(zeigeOriginal && artikel?.original
     ? rahmenZiel(artikel.original, zusatz.get("abfrage") ?? "", anker || artikel.anker) : "");
 
@@ -883,13 +882,14 @@
     untrack(() => rahmenSenden({ art: "zoom", wert: z }));
   });
 
+  // die Seite hat keine Herkunft, an die man schreiben könnte: Nachrichten gehen an den Rahmen selbst, und nur seine zählen
   function rahmenSenden(nachricht: Record<string, unknown>) {
-    if (rahmen?.contentWindow && rahmenHerkunft) rahmen.contentWindow.postMessage({ nachschlag: 1, ...nachricht }, rahmenHerkunft);
+    rahmen?.contentWindow?.postMessage({ nachschlag: 1, ...nachricht }, "*");
   }
 
   function rahmenNachricht(e: MessageEvent) {
     const r = rahmen;
-    if (!r || e.source !== r.contentWindow || e.origin !== rahmenHerkunft || !istRahmenmeldung(e.data)) return;
+    if (!r || e.source !== r.contentWindow || e.origin !== OHNE_HERKUNFT || !istRahmenmeldung(e.data)) return;
     const ort = ortNormal(e.data.ort);
     if (e.data.art === "verweis") {
       gehe(lesenWeg(e.data.ort));
@@ -1099,10 +1099,10 @@
     <!-- Gerät oder Kategorie eines Anleitungsbuchs (WIKI-64) -->
     <Geraeteseite {artikel} />
   {:else if zeigeOriginal}
-    <!-- mit ihren Skripten auf der eigenen Herkunft der Bücher (WIKI-85): ihr "same-origin" ist diese Herkunft, nie die
-         der App; die App setzt den Ort, die Seite meldet sich über die Brücke -->
+    <!-- mit ihren Skripten, abgeschirmt ohne eigene Herkunft (WIKI-85; dieselben Rechte setzt die Seite selbst): sie kommt
+         nicht an Speicher und Cookies der App; die App setzt den Ort, die Seite meldet sich über die Brücke -->
     <iframe class="original" title="Originalseite: {artikel.titel}" bind:this={rahmen} allow="fullscreen; clipboard-write"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"></iframe>
+            sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-downloads"></iframe>
   {:else}
     <div class="rollfeld" style="padding: 0" bind:this={rollfeld}>
       <div class="lesen" class:ohne-inhalt={!inhalt.length && !artikel.nachbarn.length} class:mit-wissen={mitWissen} data-art={buch?.art} style:zoom={zoom}>

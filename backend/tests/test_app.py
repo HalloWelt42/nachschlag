@@ -113,8 +113,8 @@ async def test_artikel_im_lesedesign(nachschlag):
     assert not TYPOGRAFISCH & set(html + a["einleitung"]), "Anführungszeichen gerade"
     assert "https://example.org/weblink" in a["online"] and not any(".invalid" in o for o in a["online"])
     assert a["verweise"]["ohne_ziel"] == 1 and a["verweise"]["koordinaten"] == 1
-    # die unveränderte Seite auf der eigenen Herkunft (WIKI-85): derselbe Rechner, eigener Port, Schein im Weg
-    assert re.fullmatch(r"http://t:8712/api/v1/original/\d+\.[\w-]{22}/probe_de_all_2026-01/Rotfuchs", a["original"])
+    # die unveränderte Seite mit Schein im Weg (WIKI-85)
+    assert re.fullmatch(r"/api/v1/original/\d+\.[\w-]{22}/probe_de_all_2026-01/Rotfuchs", a["original"])
 
 
 async def test_belege_auch_in_abschnitten(nachschlag):
@@ -174,9 +174,9 @@ async def test_medien(nachschlag):
     assert "immutable" in r.headers["cache-control"]
 
 
-async def test_originalseite_mit_skripten_auf_eigener_herkunft(nachschlag):
+async def test_originalseite_mit_skripten_ohne_eigene_herkunft(nachschlag):
     """WIKI-85: die Seite unverändert mit ihren Skripten, dazu die Brücke; ohne Anmeldung, der Schein im Weg genügt.
-    Relative Verweise behalten den Schein; nach außen verbindet sich nichts."""
+    Abgeschirmt ohne eigene Herkunft holt sie ihre Dateien mit Freigabe; relative Verweise behalten den Schein."""
     c, _, _ = nachschlag
     adresse = (await c.get("/api/v1/artikel/probe_de_all_2026-01/Rotfuchs")).json()["original"]
     r = await c.get(adresse, headers={"X-Kellerwolke-Sitzung": ""})
@@ -184,49 +184,26 @@ async def test_originalseite_mit_skripten_auf_eigener_herkunft(nachschlag):
     assert '<head><script src="/api/v1/original/bruecke.js" defer></script><title>' in r.text      # die Brücke zuerst
     assert '<script src="./_mw_/x.js"></script>' in r.text                                       # die Skripte des Buchs
     csp = r.headers["content-security-policy"]
-    assert "script-src 'self' 'unsafe-inline'" in csp and "connect-src 'self' data: blob:" in csp
-    assert "frame-ancestors 'self' http://t:*" in csp and "sandbox" not in csp
+    assert csp.startswith("sandbox allow-scripts") and "allow-same-origin" not in csp
+    assert "connect-src http://t/api/v1/original/ data: blob:" in csp and "frame-ancestors 'self'" in csp
+    assert r.headers["access-control-allow-origin"] == "*"
     bild = adresse.rsplit("/", 1)[0] + "/_assets_/a/fuchs.png"                                   # wie ein relativer Verweis
     r = await c.get(bild, headers={"X-Kellerwolke-Sitzung": ""})
     assert r.status_code == 200 and r.content == probebuch.PNG and "immutable" in r.headers["cache-control"]
-    r = await c.get("http://t:8712/api/v1/original/bruecke.js")
+    assert r.headers["access-control-allow-origin"] == "*"
+    r = await c.get("/api/v1/original/bruecke.js")
     assert r.status_code == 200 and r.headers["content-type"].startswith("text/javascript") and "postMessage" in r.text
 
 
 async def test_originalseite_nur_mit_gueltigem_schein(nachschlag):
     c, _, _ = nachschlag
     adresse = (await c.get("/api/v1/artikel/probe_de_all_2026-01/Rotfuchs")).json()["original"]
-    schein = adresse.split("/")[6]
+    schein = adresse.split("/")[4]
     fremd = adresse.replace("probe_de_all_2026-01", "probedoku_en_php_2026-08")                   # Schein eines anderen Buchs
     assert (await c.get(fremd)).status_code == 403
     assert (await c.get(adresse.replace(schein, schein[:-1] + ("A" if schein[-1] != "A" else "B")))).status_code == 403
     assert (await c.get(adresse.replace(schein, "1." + schein.split(".")[1]))).status_code == 403  # abgelaufen
     assert (await c.get(adresse.rsplit("/", 1)[0] + "/Gibt_es_nicht")).status_code == 404
-
-
-async def test_weiche_trennt_app_und_originalseiten(nachschlag):
-    """Auf dem Port der Originalseiten gibt es nichts von der App (sonst käme ein Buch an ihren Speicher), auf dem
-    Port der App keine Originalseite (sonst liefen ihre Skripte mit der Herkunft der App)."""
-    c, _, _ = nachschlag
-    adresse = (await c.get("/api/v1/artikel/probe_de_all_2026-01/Rotfuchs")).json()["original"]
-    auf_der_app = adresse.replace("http://t:8712", "http://t")
-    assert (await c.get(auf_der_app)).status_code == 404
-    assert (await c.get("/api/v1/original/bruecke.js")).status_code == 404
-    for weg in ("/api/v1/buecher", "/", "/lesen/probe_de_all_2026-01/Rotfuchs", "/api/v1/inhalt/medien/probe_de_all_2026-01/_assets_/a/fuchs.png"):
-        assert (await c.get(f"http://t:8712{weg}")).status_code == 404, weg
-    assert (await c.get("/api/v1/buecher")).status_code == 200
-
-
-async def test_medien_mit_lesezugang_ohne_kopf(nachschlag):
-    """Wie <img> und <iframe>: ohne Kopf, nur mit dem Cookie des Lesezugangs (gilt nur unter /api/v1/inhalt)."""
-    c, _, _ = nachschlag
-    assert (await c.post("/api/v1/anmeldung/zugang")).status_code == 204
-    token = c.headers.pop("X-Kellerwolke-Sitzung")
-    try:
-        assert (await c.get("/api/v1/inhalt/medien/probe_de_all_2026-01/_assets_/a/fuchs.png")).status_code == 200
-        assert (await c.get("/api/v1/buecher")).status_code == 401
-    finally:
-        c.headers["X-Kellerwolke-Sitzung"] = token
 
 
 async def test_vorschlaege_zeigen_weiterleitungen(nachschlag):

@@ -5,26 +5,22 @@ Oberfläche ohne echte Konten entwickeln und prüfen lässt. Bücher aus `NACHSC
 Mit Anmeldung (wie ein Betrieb mit Kellerwolke): `NACHSCHLAG_ANMELDUNG=kellerwolke`, einmal einrichten (Adresse und
 Schlüssel sind nur Platzhalter), anmelden mit Kennung `probe` und Passwort `probe`. Ohne diese Angabe beginnt ein frischer
 Datenordner wie Nachschlag aus dem öffentlichen Repo ohne Anmeldung (WIKI-11); ein Datenordner, in dem schon eine
-Kellerwolke eingetragen ist, bleibt mit Anmeldung. Die Originalseiten der Bücher kommen über einen zweiten Port
-(`NACHSCHLAG_ORIGINAL_PORT`, Vorgabe 8712), auf dem derselbe Prozess mitlauscht (WIKI-85).
+Kellerwolke eingetragen ist, bleibt mit Anmeldung.
 
     NACHSCHLAG_ANMELDUNG=kellerwolke NACHSCHLAG_BUECHER_ORDNER=/pfad/zu/zims .venv/bin/uvicorn probebetrieb:app --port 8711
     curl -X POST localhost:8711/api/v1/einrichtung -H 'Content-Type: application/json' \
          -d '{"kellerwolke_adresse": "http://kellerwolke.probe", "kellerwolke_schluessel": "kw_app_probe"}'
 """
 
-import asyncio
 import json
 import os
-from contextlib import asynccontextmanager
 from pathlib import Path
 
 import httpx
-import uvicorn
 
 from ablage_nachbau import Ablage
 from app.fassung import WURZEL
-from app.main import app_bauen, original_port
+from app.main import app_bauen
 
 KONTO = {"id": "1", "name": "probe", "rolle": "mitglied", "aktiv": True}
 SITZUNG = "probe-sitzung"
@@ -53,25 +49,5 @@ def kellerwolke(request: httpx.Request) -> httpx.Response:
 
 
 daten = Path(os.environ.get("NACHSCHLAG_DATEN") or WURZEL / "daten-probe")
-ORIGINAL_PORT = original_port()
 # der Bücherlader liest das echte Verzeichnis der Bücher (laden nur, was man im Probebetrieb abonniert)
-app = app_bauen(daten, transport=httpx.MockTransport(kellerwolke), lader_transport=httpx.AsyncHTTPTransport(),
-                original_port=ORIGINAL_PORT)
-
-# Originalseiten auf eigener Herkunft (WIKI-85): im Betrieb reicht der Vorschaltdienst einen zweiten Port an die App,
-# hier lauscht dieselbe App im selben Prozess zusätzlich auf diesem Port (nur 127.0.0.1)
-_lebenslauf = app.router.lifespan_context
-
-
-@asynccontextmanager
-async def _mit_originalport(a):
-    zweiter = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=ORIGINAL_PORT, lifespan="off", log_level="warning"))
-    lauf = asyncio.create_task(zweiter.serve())
-    try:
-        async with _lebenslauf(a) as zustand:
-            yield zustand
-    finally:
-        zweiter.should_exit = True
-        await lauf
-
-app.router.lifespan_context = _mit_originalport
+app = app_bauen(daten, transport=httpx.MockTransport(kellerwolke), lader_transport=httpx.AsyncHTTPTransport())

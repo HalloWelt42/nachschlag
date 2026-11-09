@@ -48,18 +48,19 @@ höchstens 5 Sekunden). Der eigene Code und gelöste Aufgaben bleiben im Browser
 ## Originalansicht (WIKI-85)
 
 Manche Bücher sind ganze Webseiten mit eigener Bedienung (etwa The Last Codex: Atlas, Zeitleiste, Graph, Modelle, Suche).
-Ihre Seiten laufen unverändert mit ihren Skripten, aber nie mit der Herkunft der App (`backend/app/originalansicht/`):
+Ihre Seiten laufen unverändert mit ihren Skripten über den Port der App, aber nie mit ihrer Herkunft
+(`backend/app/originalansicht/`):
 
-- **eigene Herkunft:** derselbe Rechner, ein eigener Port (`NACHSCHLAG_ORIGINAL_PORT`, Vorgabe 8712); der
-  Vorschaltdienst reicht ihn an dieselbe App. Die Anmeldung der App liegt im Speicher ihrer Herkunft, ihre Cookies gelten
-  nur unter `/api/v1/inhalt`: beides erreicht ein Buch nicht.
-- **Weiche** (`Herkunftsweiche`): auf diesem Port gibt es nur die Originalseiten, auf jedem anderen nie. Welcher Port, sagt
-  der Rechner mit Port der Anfrage (der Vorschaltdienst reicht ihn unverändert durch).
+- **ohne eigene Herkunft:** Sandbox ohne `allow-same-origin`, im Rahmen der App und als Inhaltsregel der Seite selbst
+  (auch allein geöffnet). Speicher und Anmeldung der App erreicht ein Buch so nicht, seine Anfragen tragen keine Cookies
+  der App. Speicher hat die Seite damit keinen (das Codex-Buch fängt das ab und merkt sich nur seine Designwahl nicht).
+  Zuerst lief die Ansicht auf einem eigenen Port; den erreichten manche Geräte nicht (ein iPhone im Heimnetz).
 - **Schein statt Cookie:** `/api/v1/original/<schein>/<buch>/<pfad>`; der Schein ist signiert (Geheimnis im Datenordner,
   `originalansicht.geheim`), gilt für ein Buch und sieben Tage und ist einen Tag lang gleich (der Zwischenspeicher des
-  Browsers hält). Relative Verweise der Seite behalten ihn.
-- **Inhaltsregeln:** laden und verbinden nur mit der eigenen Herkunft, nichts nach außen; einbetten nur Seiten desselben
-  Rechners.
+  Browsers hält). Relative Verweise der Seite behalten ihn. Ohne eigene Herkunft holen Skripte Module und Daten nur mit
+  Freigabe: die Originalseiten geben sie (`Access-Control-Allow-Origin: *`), der Schein ist der Zugang.
+- **Inhaltsregeln:** laden und verbinden nur mit den Wegen der Originalseiten (nicht mit der Schnittstelle der App,
+  nichts nach außen); einbetten nur die App.
 - **Brücke** (`bruecke.js`, als erstes Skript jeder Seite, ändert nichts am Aussehen): meldet der App den Ort (Buch, Pfad,
   Abfrage, Anker), reicht Verweise im Buch an die App weiter (sie öffnet sie im Lesen, mit eigenem Lesedesign, wenn es
   eines gibt), öffnet Verweise nach außen in einem neuen Tab und nimmt die Lesegröße an. Die App setzt den Rahmen an
