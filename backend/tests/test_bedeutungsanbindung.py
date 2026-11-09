@@ -1,6 +1,8 @@
 """WIKI-56: die Bedeutungssuche bindet sich selbst an, solange in den Einstellungen nichts gewählt ist (Sammlung mit der
 Lexikon-Quelle des Fundus, Buch, dessen Datei der Fundus einliest); Gewähltes geht immer vor."""
 
+import asyncio
+
 import httpx
 
 from appkern.verbund import VerbundFehler
@@ -13,15 +15,21 @@ SAMMLUNGEN = {"eintraege": [
 
 
 class Fundus:
-    """Nachgestellter Verbund zum Fundus: antwortet wie dessen Wege, oder ist weg."""
+    """Nachgestellter Verbund zum Fundus: antwortet wie dessen Wege, oder ist weg; `zoegern` hält die Liste der
+    Sammlungen auf (der echte Fundus braucht dafür bisweilen eine halbe Minute)."""
 
     def __init__(self) -> None:
         self.da = True
+        self.zoegern = asyncio.Event()
+        self.zoegern.set()
+        self.listen = 0
 
     async def anfrage(self, methode: str, adresse: str, pfad: str, **art) -> httpx.Response:
         if not self.da:
             raise VerbundFehler("Fundus nicht erreichbar")
         if pfad == "/api/v1/sammlungen":
+            self.listen += 1
+            await self.zoegern.wait()
             return httpx.Response(200, json=SAMMLUNGEN)
         if pfad == "/api/v1/quellenstand/dateien":
             return httpx.Response(200, json={"dateien": ["wikipedia_de_all_maxi_2026-01.zim", "fremd_2025-01.zim"]})
@@ -57,3 +65,23 @@ async def test_ohne_fundus_bleibt_es_beim_letzten_stand():
     f.da = False
     await a.abgleichen()
     assert a.sammlung() == "s-wiki"                 # ein kurzer Ausfall nimmt die Anbindung nicht weg
+
+
+async def test_start_wartet_nicht_auf_den_fundus():
+    """WIKI-86: der Start ist sofort fertig, auch wenn der Fundus lange braucht; der Abgleich kommt im Hintergrund nach.
+    Neue Zugänge beim Start stoßen keinen zweiten Abgleich an, einer danach schon."""
+    f = Fundus()
+    f.zoegern.clear()
+    a = anbindung(f, {})
+    await asyncio.wait_for(a.starten(), 0.1)
+    await asyncio.sleep(0.01)                           # wie beim Start: andere Dienste warten, der Abgleich beginnt
+    await asyncio.wait_for(a.verbunden(), 0.1)
+    await asyncio.sleep(0.01)
+    assert a.sammlung() == "" and f.listen == 1         # bis zum ersten Abgleich: nur der Index
+    f.zoegern.set()
+    await asyncio.sleep(0.01)
+    assert a.sammlung() == "s-wiki" and f.listen == 1
+    await a.verbunden()
+    await asyncio.sleep(0.01)
+    assert f.listen == 2
+    await a.stoppen()

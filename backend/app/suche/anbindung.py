@@ -2,7 +2,11 @@
 Einstellungen (Suche), die Sammlung aus der Liste des Fundus. Solange dort nichts steht, findet Nachschlag beides
 selbst: die Sammlung, in die die Lexikon-Quelle des Fundus schreibt, und das Buch, dessen Datei der Fundus gerade
 einliest. Das Gefundene gilt bis zum nächsten Abgleich (beim Start, nach jedem Neuaufbau der Zugänge, dann alle zehn
-Minuten); ohne Fundus bleibt die Suche beim Index."""
+Minuten); ohne Fundus bleibt die Suche beim Index.
+
+Der Abgleich läuft immer im Hintergrund, auch der erste (WIKI-86): die Liste der Sammlungen braucht beim Fundus bisweilen
+eine halbe Minute und länger (gemessen 09.11.2026: 25 bis 50 s), und solange der Start nicht fertig ist, nimmt die App
+keine Anfrage an. Bis zum ersten Abgleich sucht Nachschlag nur im Index, wie ohne Fundus."""
 
 from __future__ import annotations
 
@@ -37,6 +41,8 @@ class Bedeutungsanbindung(Begleiter):
         self._auto_sammlung = ""
         self._auto_buch = ""
         self._aufgabe: asyncio.Task | None = None
+        self._anstoss = asyncio.Event()          # neu abgleichen, ohne den Takt abzuwarten (etwa nach neuen Zugängen)
+        self._abgeglichen = False                # der erste Abgleich ist durch
 
     # --- was gilt ----------------------------------------------------------------------------------------------------
 
@@ -67,16 +73,28 @@ class Bedeutungsanbindung(Begleiter):
         self._auto_buch = await self._juengste(gelesen[-1]) if gelesen else ""
 
     async def _takt(self) -> None:
+        """Gleicht ab, dann wieder nach dem Takt oder sobald etwas anstößt; ein Anstoß während eines Abgleichs gilt für
+        den nächsten, einer davor erledigt sich mit ihm."""
         while True:
-            await asyncio.sleep(self._takt_s)
-            await self.abgleichen()
+            self._anstoss.clear()
+            try:
+                await self.abgleichen()
+            except Exception:  # noqa: BLE001 - die Anbindung versucht es zum nächsten Takt wieder
+                logger.exception("Bedeutungssuche: Abgleich gescheitert")
+            self._abgeglichen = True
+            try:
+                await asyncio.wait_for(self._anstoss.wait(), self._takt_s)
+            except TimeoutError:
+                pass
 
     async def starten(self) -> None:
-        await self.abgleichen()
         self._aufgabe = asyncio.create_task(self._takt(), name="bedeutungsanbindung")
 
     async def verbunden(self) -> None:
-        await self.abgleichen()
+        """Neue Zugänge: bald neu abgleichen. Beim Start nicht, dort stehen die Zugänge vor dem ersten Abgleich fest (ein
+        zweiter hieße noch einmal eine halbe Minute Arbeit für den Fundus)."""
+        if self._abgeglichen:
+            self._anstoss.set()
 
     async def stoppen(self) -> None:
         if self._aufgabe:
