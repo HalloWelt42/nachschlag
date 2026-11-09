@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from urllib.parse import quote
 
 from .bausteine import Wege, baustein_fuer
@@ -11,6 +12,7 @@ from .bausteine.html import online_adresse
 from .bibliothek import Bibliothek, EintragFehlt
 from .kategorien.abfrage import Kategorienindex
 from .modell.artikel import Artikel
+from .originalansicht import Originalherkunft
 
 
 #: so oft zieht der Zufall neu, wenn er eine Sprungseite ohne Ziel in der Quelle trifft
@@ -25,7 +27,6 @@ def wege(bibliothek: Bibliothek) -> Wege:
     """Die Adressen der App für Verweise und Medien, an einer Stelle."""
     return Wege(artikel=lambda buch, pfad: f"/lesen/{quote(buch)}/{_pfad(pfad)}",
                 medien=lambda buch, pfad: f"/api/v1/inhalt/medien/{quote(buch)}/{_pfad(pfad)}",
-                original=lambda buch, pfad: f"/api/v1/inhalt/original/{quote(buch)}/{_pfad(pfad)}",
                 gibt_es=bibliothek.gibt_es, datei=bibliothek.datei,
                 schlagwort=lambda buch, wort: f"/register/schlagwoerter/{quote(wort, safe='')}?buch={quote(buch)}",
                 autor=lambda buch, nr: f"/register/autoren/{quote(buch)}/{quote(nr, safe='')}")
@@ -39,12 +40,20 @@ def _verfasser(fertig: Aufbereitet) -> dict[str, str]:
     return {"autor": frage.autor if frage else "", "datum": fertig.frage.gefragt}
 
 
+def original_weg(herkunft: Originalherkunft) -> Callable[[str, str], str]:
+    """(buch, pfad) -> Weg der unveränderten Seite auf der eigenen Herkunft der Originalseiten (WIKI-85)."""
+    return lambda buch, pfad: herkunft.weg(buch, f"{quote(buch)}/{_pfad(pfad)}")
+
+
 class Artikelleser:
-    def __init__(self, bibliothek: Bibliothek, kategorien: Kategorienindex | None = None) -> None:
-        """`kategorien`: Kategorien aus den Datenabzügen für Bücher, die keine mitbringen (WIKI-75)."""
+    def __init__(self, bibliothek: Bibliothek, kategorien: Kategorienindex | None = None,
+                 original: Callable[[str, str], str] = lambda buch, pfad: "") -> None:
+        """`kategorien`: Kategorien aus den Datenabzügen für Bücher, die keine mitbringen (WIKI-75). `original`: der Weg
+        der unveränderten Seite (`original_weg`); ohne ihn haben Artikel keine Originalseite."""
         self._bib = bibliothek
         self._wege = wege(bibliothek)
         self._kategorien = kategorien
+        self._original = original
 
     async def lesen(self, buch: str, pfad: str) -> Artikel:
         b = await self._bib.buch(buch)
@@ -63,7 +72,7 @@ class Artikelleser:
                        darstellung=fertig.darstellung or baustein.darstellung, baustein=baustein.kennung,
                        html=fertig.html, einleitung=fertig.einleitung, abschnitte=fertig.abschnitte,
                        steckbrief=fertig.steckbrief, bild=fertig.bild, verweise=fertig.verweise, online=fertig.online,
-                       original=self._wege.original(buch, eintrag.pfad), kacheln=fertig.kacheln,
+                       original=self._original(buch, eintrag.pfad), kacheln=fertig.kacheln,
                        gruppen=fertig.gruppen, rubrik=fertig.rubrik, rubrik_pfad=fertig.rubrik_pfad, nachbarn=fertig.nachbarn, titelart=fertig.titelart,
                        fragen=fertig.fragen, zurueck=fertig.zurueck, weiter=fertig.weiter, belege=fertig.belege,
                        quelle_url=online_adresse(b, eintrag.pfad), anleitung=fertig.anleitung, geraet=fertig.geraet,

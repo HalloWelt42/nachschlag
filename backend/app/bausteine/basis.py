@@ -23,7 +23,6 @@ class Wege:
     """Wohin Verweise zeigen; eine Stelle für alle Bausteine (die Pfade der Oberfläche und der Schnittstelle)."""
     artikel: Callable[[str, str], str]           # (buch, pfad) -> Adresse der Leseseite
     medien: Callable[[str, str], str]            # (buch, pfad) -> Adresse des Mediums
-    original: Callable[[str, str], str]          # (buch, pfad) -> Adresse der unveränderten Seite
     gibt_es: Callable[[str, str], bool]          # (buch, pfad) -> steht der Pfad im Buch?
     datei: Callable[[str, str], bytes | None] = lambda buch, pfad: None   # (buch, pfad) -> Inhalt einer Nebendatei (etwa die Gliederung)
     schlagwort: Callable[[str, str], str] = lambda buch, wort: ""   # (buch, wort) -> Registerseite des Schlagworts

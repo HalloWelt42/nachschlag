@@ -1,6 +1,9 @@
 """Nachschlag: liest jedes Buch der Bibliothek. Backend auf dem Gerüst des Appkerns.
 
     uvicorn app.main:app --port 8711
+
+Die Originalseiten der Bücher haben eine eigene Herkunft (WIKI-85): derselbe Rechner, ein eigener Port
+(`NACHSCHLAG_ORIGINAL_PORT`, Vorgabe 8712), den der Vorschaltdienst ebenfalls an dieses Backend reicht.
 """
 
 import asyncio
@@ -22,7 +25,7 @@ from .mcp.api import router as mcp_router
 from .mcp.werkzeuge import werkzeuge as mcp_werkzeuge
 from .anleitungen.dienst import Anleitungen
 from .api import router
-from .artikel import Artikelleser, wege
+from .artikel import Artikelleser, original_weg, wege
 from .bibliothek import Bibliothek
 from .buecherlader import Buecherlader, Regeln as Laderregeln
 from .bilder import Grossbilder
@@ -39,6 +42,8 @@ from .kategorien.api import router as kategorien_router
 from .kategorien.wikis import wiki
 from bildholer.modelle import Regeln as Bildregeln
 from .markdownablage import Markdownablage
+from .originalansicht import Herkunftsweiche, Originalherkunft
+from .originalansicht.api import router as originalansicht_router
 from .themen.ordnen import ThemenOrdner
 from .themen.literatur import fuer_thema as literatur_fuer_thema
 from .alsbuch.ablage import Buchablage
@@ -84,10 +89,15 @@ from .suche.anbindung import Bedeutungsanbindung
 from .suche.bedeutung import FundusBedeutung
 
 
+#: Port der Originalseiten, wenn die Umgebung nichts sagt (WIKI-85)
+ORIGINAL_PORT = 8712
+
+
 def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
-              lader_transport: httpx.AsyncBaseTransport | None = None) -> FastAPI:
+              lader_transport: httpx.AsyncBaseTransport | None = None, original_port: int = ORIGINAL_PORT) -> FastAPI:
     """`transport` nur für Tests (Kellerwolke, Leitstelle und Fundus nachgestellt); der Bücherlader nimmt ihn mit, außer
-    `lader_transport` ist gesetzt (der Probebetrieb stellt nur die Kellerwolke nach und liest das echte Verzeichnis)."""
+    `lader_transport` ist gesetzt (der Probebetrieb stellt nur die Kellerwolke nach und liest das echte Verzeichnis).
+    `original_port`: der Port der Originalseiten (eigene Herkunft, WIKI-85)."""
     geruest = Geruest(name="Nachschlag", kennung="nachschlag", rolle="liest jede Quelle der Bibliothek", symbol="fa-book-open", symbolbild="/favicon.svg",
                       farbe="#08758b", fassung=FASSUNG, daten=daten, einstellungen=AppEinstellungen,
                       oberflaeche=WURZEL / "frontend" / "dist", transport=transport,
@@ -100,7 +110,8 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     kategorienablage = Eigenindizes(lambda: str(Path(e().eigenindex_ordner) / "kategorien") if e().eigenindex_ordner else "",
                                     gueltig=kategorienschema.gueltig)
     kategorien = Kategorienindex(kategorienablage)
-    leser = Artikelleser(bibliothek, kategorien)
+    original = Originalherkunft.im_ordner(original_port, daten)
+    leser = Artikelleser(bibliothek, kategorien, original_weg(original))
     async def buchkennungen() -> list[str]:
         return [b.kennung for b in (await bibliothek.stand()).buecher]
 
@@ -285,7 +296,8 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     app.state.kategorienauftraege = kategorienauftraege
     app.include_router(router(geruest, bibliothek, leser, suche, quellen,
                               suchregeln=lambda: Suchregeln(vorschlaege=e().vorschlaege, an_der_stelle=e().an_der_stelle),
-                              eigen=eigen, grossbilder=grossbilder))
+                              eigen=eigen, grossbilder=grossbilder, original=original))
+    app.include_router(originalansicht_router(bibliothek, original))
     app.include_router(mcp_router(geruest, mcp_werkzeuge(bibliothek, suche, leser)))   # MCP-Werkzeuge für KI (WIKI-78)
     app.include_router(quellenarchiv_router(geruest, quellen))
     app.include_router(buecherlader_router(geruest, lader))
@@ -318,6 +330,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     app.include_router(indexdienst_router([indexauftraege, kategorienauftraege]))   # nur mit dem Schlüssel des Index-Dienstes
     # unter /lesen trägt der Weg Pfade aus Büchern, oft mit Punkt (function.array-map.php): immer eine Seite
     geruest.oberflaeche_ausliefern(app, seiten=["lesen"])
+    app.add_middleware(Herkunftsweiche, herkunft=original)     # außen: trennt App und Originalseiten nach dem Port
     return app
 
 
@@ -326,4 +339,9 @@ def daten_ordner() -> Path:
     return Path(os.environ.get("NACHSCHLAG_DATEN") or WURZEL / "daten")
 
 
-app = app_bauen(daten_ordner())
+def original_port() -> int:
+    """Port der Originalseiten: `NACHSCHLAG_ORIGINAL_PORT`, sonst ORIGINAL_PORT."""
+    return int(os.environ.get("NACHSCHLAG_ORIGINAL_PORT") or ORIGINAL_PORT)
+
+
+app = app_bauen(daten_ordner(), original_port=original_port())

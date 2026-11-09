@@ -113,7 +113,8 @@ async def test_artikel_im_lesedesign(nachschlag):
     assert not TYPOGRAFISCH & set(html + a["einleitung"]), "Anführungszeichen gerade"
     assert "https://example.org/weblink" in a["online"] and not any(".invalid" in o for o in a["online"])
     assert a["verweise"]["ohne_ziel"] == 1 and a["verweise"]["koordinaten"] == 1
-    assert a["original"] == "/api/v1/inhalt/original/probe_de_all_2026-01/Rotfuchs"
+    # die unveränderte Seite auf der eigenen Herkunft (WIKI-85): derselbe Rechner, eigener Port, Schein im Weg
+    assert re.fullmatch(r"http://t:8712/api/v1/original/\d+\.[\w-]{22}/probe_de_all_2026-01/Rotfuchs", a["original"])
 
 
 async def test_belege_auch_in_abschnitten(nachschlag):
@@ -166,15 +167,54 @@ async def test_weiterleitung_auf_abschnitt(nachschlag):
     assert (await c.get("/api/v1/artikel/probe_de_all_2026-01/Gibt_es_nicht")).status_code == 404
 
 
-async def test_medien_und_original(nachschlag):
+async def test_medien(nachschlag):
     c, _, _ = nachschlag
     r = await c.get("/api/v1/inhalt/medien/probe_de_all_2026-01/_assets_/a/fuchs.png")
     assert r.status_code == 200 and r.headers["content-type"] == "image/png" and r.content == probebuch.PNG
     assert "immutable" in r.headers["cache-control"]
-    r = await c.get("/api/v1/inhalt/original/probe_de_all_2026-01/Rotfuchs")
+
+
+async def test_originalseite_mit_skripten_auf_eigener_herkunft(nachschlag):
+    """WIKI-85: die Seite unverändert mit ihren Skripten, dazu die Brücke; ohne Anmeldung, der Schein im Weg genügt.
+    Relative Verweise behalten den Schein; nach außen verbindet sich nichts."""
+    c, _, _ = nachschlag
+    adresse = (await c.get("/api/v1/artikel/probe_de_all_2026-01/Rotfuchs")).json()["original"]
+    r = await c.get(adresse, headers={"X-Kellerwolke-Sitzung": ""})
+    assert r.status_code == 200 and "Rotfuchs" in r.text
+    assert '<head><script src="/api/v1/original/bruecke.js" defer></script><title>' in r.text      # die Brücke zuerst
+    assert '<script src="./_mw_/x.js"></script>' in r.text                                       # die Skripte des Buchs
     csp = r.headers["content-security-policy"]
-    assert r.status_code == 200 and "sandbox" in csp and "allow-scripts" not in csp and "script-src 'none'" in csp
-    assert "<script" not in r.text and "Rotfuchs" in r.text
+    assert "script-src 'self' 'unsafe-inline'" in csp and "connect-src 'self' data: blob:" in csp
+    assert "frame-ancestors 'self' http://t:*" in csp and "sandbox" not in csp
+    bild = adresse.rsplit("/", 1)[0] + "/_assets_/a/fuchs.png"                                   # wie ein relativer Verweis
+    r = await c.get(bild, headers={"X-Kellerwolke-Sitzung": ""})
+    assert r.status_code == 200 and r.content == probebuch.PNG and "immutable" in r.headers["cache-control"]
+    r = await c.get("http://t:8712/api/v1/original/bruecke.js")
+    assert r.status_code == 200 and r.headers["content-type"].startswith("text/javascript") and "postMessage" in r.text
+
+
+async def test_originalseite_nur_mit_gueltigem_schein(nachschlag):
+    c, _, _ = nachschlag
+    adresse = (await c.get("/api/v1/artikel/probe_de_all_2026-01/Rotfuchs")).json()["original"]
+    schein = adresse.split("/")[6]
+    fremd = adresse.replace("probe_de_all_2026-01", "probedoku_en_php_2026-08")                   # Schein eines anderen Buchs
+    assert (await c.get(fremd)).status_code == 403
+    assert (await c.get(adresse.replace(schein, schein[:-1] + ("A" if schein[-1] != "A" else "B")))).status_code == 403
+    assert (await c.get(adresse.replace(schein, "1." + schein.split(".")[1]))).status_code == 403  # abgelaufen
+    assert (await c.get(adresse.rsplit("/", 1)[0] + "/Gibt_es_nicht")).status_code == 404
+
+
+async def test_weiche_trennt_app_und_originalseiten(nachschlag):
+    """Auf dem Port der Originalseiten gibt es nichts von der App (sonst käme ein Buch an ihren Speicher), auf dem
+    Port der App keine Originalseite (sonst liefen ihre Skripte mit der Herkunft der App)."""
+    c, _, _ = nachschlag
+    adresse = (await c.get("/api/v1/artikel/probe_de_all_2026-01/Rotfuchs")).json()["original"]
+    auf_der_app = adresse.replace("http://t:8712", "http://t")
+    assert (await c.get(auf_der_app)).status_code == 404
+    assert (await c.get("/api/v1/original/bruecke.js")).status_code == 404
+    for weg in ("/api/v1/buecher", "/", "/lesen/probe_de_all_2026-01/Rotfuchs", "/api/v1/inhalt/medien/probe_de_all_2026-01/_assets_/a/fuchs.png"):
+        assert (await c.get(f"http://t:8712{weg}")).status_code == 404, weg
+    assert (await c.get("/api/v1/buecher")).status_code == 200
 
 
 async def test_medien_mit_lesezugang_ohne_kopf(nachschlag):
@@ -621,7 +661,7 @@ def test_stimmen_zaehlen_als_zahl_trotz_tausenderpunkt():
     from app.modell.buch import Buch, Faehigkeiten
     buch = Buch(kennung="q", name="q", titel="Q", art="frage_antwort", eintraege=0, artikel=0, medien=0, groesse=0,
                 faehigkeiten=Faehigkeiten(titelindex=False, volltext=False, bilder=False, lesedesign=True))
-    wege = Wege(artikel=lambda b, p: "", medien=lambda b, p: "", original=lambda b, p: "", gibt_es=lambda b, p: False)
+    wege = Wege(artikel=lambda b, p: "", medien=lambda b, p: "", gibt_es=lambda b, p: False)
     kasten, beitrag = _beitrag(lhtml.fromstring('<div data-score="27527"><div class="js-post-body"><p>x</p></div></div>'), "gefragt", buch, wege)
     assert beitrag.stimmen == 27527 and kasten.xpath("string(.//span[@class='zahl'])") == "27.527"
     assert _beitrag(lhtml.fromstring('<div data-score="-3"></div>'), "beantwortet", buch, wege)[1].stimmen == -3
@@ -647,7 +687,7 @@ def test_alle_codebloecke_nach_verschachteltem():
     from app.modell.buch import Buch, Faehigkeiten
     buch = Buch(kennung="q", name="q", titel="Q", art="frage_antwort", eintraege=0, artikel=0, medien=0, groesse=0,
                 faehigkeiten=Faehigkeiten(titelindex=False, volltext=False, bilder=False, lesedesign=True))
-    wege = Wege(artikel=lambda b, p: "", medien=lambda b, p: "", original=lambda b, p: "", gibt_es=lambda b, p: False)
+    wege = Wege(artikel=lambda b, p: "", medien=lambda b, p: "", gibt_es=lambda b, p: False)
     quelle = lhtml.fromstring('<div data-score="1"><div class="js-post-body"><pre><code>a\n<pre><code>b</code></pre></code></pre>'
                               '<p>dann</p><pre><code>c = 1</code></pre><pre><code>d = 2</code></pre></div></div>')
     kasten, _ = _beitrag(quelle, "beantwortet", buch, wege)
@@ -665,7 +705,7 @@ def test_selbstdarstellung_der_quelle_faellt_weg():
     from app.modell.buch import Buch, Faehigkeiten
     buch = Buch(kennung="k", name="k", titel="K", art="enzyklopaedie", eintraege=0, artikel=0, medien=0, groesse=0,
                 faehigkeiten=Faehigkeiten(titelindex=False, volltext=False, bilder=False, lesedesign=True))
-    wege = Wege(artikel=lambda b, p: "", medien=lambda b, p: "", original=lambda b, p: "", gibt_es=lambda b, p: False)
+    wege = Wege(artikel=lambda b, p: "", medien=lambda b, p: "", gibt_es=lambda b, p: False)
     werbung = ('<div style="font: 12pt Arial; padding:5px;"><p>Klexikon.de ist die Wikipedia für Kinder zwischen 5 und 15 '
                'Jahren.</p><p>Das Kinderlexikon ist auf <a href="https://example.org">Spenden</a> angewiesen.</p></div>')
     seite = ('<html><body><h1>Dachs</h1><div id="mw-content-text"><div class="mw-parser-output">'
@@ -711,7 +751,7 @@ def test_fehlende_bilder_fallen_weg():
     from lxml import html as lhtml
     from app.bausteine import html as h
     from app.bausteine.basis import Wege
-    wege = Wege(artikel=lambda b, p: f"/lesen/{b}/{p}", medien=lambda b, p: f"/m/{b}/{p}", original=lambda b, p: "",
+    wege = Wege(artikel=lambda b, p: f"/lesen/{b}/{p}", medien=lambda b, p: f"/m/{b}/{p}",
                 gibt_es=lambda b, p: p == "_assets_/da.jpg", datei=lambda b, p: None)
     wurzel = lhtml.fragment_fromstring('<div><figure><img src="./_assets_/fehlt.jpg" width="300"><figcaption>weg</figcaption></figure>'
                                        '<p>Text <img src="./_assets_/fehlt2.png" width="200"> mehr</p>'

@@ -186,10 +186,20 @@
 .artikel-ueber dd a { color: var(--verweis); }
 .artikel-ueber ul { margin: 0; padding-left: 1.2em; }
 
-/* Originalansicht: die Seite des Buchs unverändert, abgeschirmt */
+/* Originalansicht: die Seite des Buchs unverändert, mit ihren Skripten auf eigener Herkunft (WIKI-85); sie rollt selbst,
+   wie in einem eigenen Browserfenster */
 /* Ausnahme: Originalseiten setzen weißes Papier voraus, auch im dunklen Thema */
 .original { flex: 1; width: 100%; border: 0; background: #fff; min-height: 0; }
-.original.mit-inhalt { flex: none; min-height: 60dvh; }   /* Telefon: so hoch wie die Seite darin, die Schale rollt */
+/* Telefon: dort rollt sonst der Inhalt der Schale; mit einer Originalseite rollt nur sie und füllt den Rest bis zur
+   Fußleiste, von Rand zu Rand */
+[data-rahmen="inhalt"]:has(> .inhalt-stufe > .original) { display: flex; flex-direction: column; overflow: hidden; padding-bottom: 0; }
+[data-rahmen="inhalt"] > .inhalt-stufe > .original { margin-inline: calc(-1 * var(--rahmen-rand)); width: auto; }
+/* schmaler Kopf (Bücher nur im Original): eine Zeile mit dem Pfad, Titel und Werkzeuge hinter dem Knopf */
+.artikel-kopf.schmal { padding-block: var(--a1); }
+.artikel-kopf.schmal:not(.offen) > :is(h1, .werkzeuge) { display: none; }
+.artikel-kopf.schmal.offen { padding-bottom: var(--a2); }
+.artikel-kopf .kopf-schalter { margin-left: auto; flex: none; }
+.artikel-kopf .kopf-schalter[aria-expanded="true"] { color: var(--akzent); }
 
 /* ----- Übersicht (Kacheln einer Startseite eines Buchs), Karten wie "Weiterlesen" im Entwurf start-a.html ----- */
 .uebersicht { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: var(--a4); padding: var(--a4) var(--a5) var(--a6);

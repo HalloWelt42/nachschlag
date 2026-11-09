@@ -45,6 +45,29 @@ Worker der Quelle), über den Medienweg des Buchs mit dem Lesezugang; das Protok
 (`frontend/src/lib/pruefen.ts`: einrichten mit Code davor, eigenem Code und Code danach, dann je Prüfpunkt sein Test,
 höchstens 5 Sekunden). Der eigene Code und gelöste Aufgaben bleiben im Browser (`lib/uebungsstand.ts`).
 
+## Originalansicht (WIKI-85)
+
+Manche Bücher sind ganze Webseiten mit eigener Bedienung (etwa The Last Codex: Atlas, Zeitleiste, Graph, Modelle, Suche).
+Ihre Seiten laufen unverändert mit ihren Skripten, aber nie mit der Herkunft der App (`backend/app/originalansicht/`):
+
+- **eigene Herkunft:** derselbe Rechner, ein eigener Port (`NACHSCHLAG_ORIGINAL_PORT`, Vorgabe 8712); der
+  Vorschaltdienst reicht ihn an dieselbe App. Die Anmeldung der App liegt im Speicher ihrer Herkunft, ihre Cookies gelten
+  nur unter `/api/v1/inhalt`: beides erreicht ein Buch nicht.
+- **Weiche** (`Herkunftsweiche`): auf diesem Port gibt es nur die Originalseiten, auf jedem anderen nie. Welcher Port, sagt
+  der Rechner mit Port der Anfrage (der Vorschaltdienst reicht ihn unverändert durch).
+- **Schein statt Cookie:** `/api/v1/original/<schein>/<buch>/<pfad>`; der Schein ist signiert (Geheimnis im Datenordner,
+  `originalansicht.geheim`), gilt für ein Buch und sieben Tage und ist einen Tag lang gleich (der Zwischenspeicher des
+  Browsers hält). Relative Verweise der Seite behalten ihn.
+- **Inhaltsregeln:** laden und verbinden nur mit der eigenen Herkunft, nichts nach außen; einbetten nur Seiten desselben
+  Rechners.
+- **Brücke** (`bruecke.js`, als erstes Skript jeder Seite, ändert nichts am Aussehen): meldet der App den Ort (Buch, Pfad,
+  Abfrage, Anker), reicht Verweise im Buch an die App weiter (sie öffnet sie im Lesen, mit eigenem Lesedesign, wenn es
+  eines gibt), öffnet Verweise nach außen in einem neuen Tab und nimmt die Lesegröße an. Die App setzt den Rahmen an
+  ihren Ort ohne neuen Eintrag im Verlauf; geht die Seite selbst weiter, folgt die App (`frontend/src/lib/originalrahmen.ts`).
+
+Der Rahmen füllt die Fläche und rollt selbst, auch am Telefon. Bücher, die nur im Original laufen, haben einen schmalen
+Kopf: der Pfad in einer Zeile, Titel und Werkzeuge hinter einem Knopf.
+
 ## Schnittstelle und MCP
 
 Alle Wege liegen unter `/api/v1`; die Oberfläche nutzt nur diese. Der Bereich Schnittstelle (Baustein des Appkerns)

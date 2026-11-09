@@ -37,16 +37,19 @@ entwicklung() {
   echo "Nachschlag eingerichtet. Start: im Stellwerk oder backend/.venv/bin/uvicorn app.main:app --port 8711"
 }
 
-# veröffentlichter Port des Vorschaltdienstes laut compose.pi.yml (er steht nur dort)
-grundport() {
+# veröffentlichte Ports des Vorschaltdienstes laut compose.pi.yml (sie stehen nur dort): die App, dann die
+# Originalseiten der Bücher (WIKI-85)
+grundports() {
   docker compose -f "$1/compose.pi.yml" config --format json | python3 -c '
 import json, sys
-print(json.load(sys.stdin)["services"]["vorne"]["ports"][0]["published"])'
+print(*[p["published"] for p in json.load(sys.stdin)["services"]["vorne"]["ports"]])'
 }
 
 probe_aufbauen() {
-  local ziel="$1" versatz="$2" port
-  port=$(( $(grundport "$ziel") + versatz ))
+  local ziel="$1" versatz="$2" port original app_port original_port
+  read -r app_port original_port <<<"$(grundports "$ziel")"
+  port=$(( app_port + versatz ))
+  original=$(( original_port + versatz ))
   cd "$ziel"
   mkdir -p daten zertifikate eigenindex bilder bildholer
   # Wegwerf-Zertifizierungsstelle in DIR, nie die echte: das Blattzertifikat gilt nur für diesen Rechner
@@ -54,12 +57,13 @@ probe_aufbauen() {
   CAROOT="$ziel/hausstelle" mkcert -cert-file "zertifikate/$KENNUNG.pem" -key-file "zertifikate/$KENNUNG-schluessel.pem" \
     127.0.0.1 localhost "$KENNUNG.local" >/dev/null 2>&1
   cp hausstelle/rootCA.pem zertifikate/rootCA.pem
-  ( umask 077; printf 'PROBE_PORT=%s\nAPPKERN_KELLERWOLKE_GEDULD_S=0\n' "$port" > .env )
+  ( umask 077; printf 'PROBE_PORT=%s\nPROBE_ORIGINAL_PORT=%s\nAPPKERN_KELLERWOLKE_GEDULD_S=0\n' "$port" "$original" > .env )
   docker compose "${PROBE_COMPOSE[@]}" up -d --build --quiet-pull
   local ende=$(( $(date +%s) + PROBE_WARTEN_S ))
   while [ "$(date +%s)" -lt "$ende" ]; do
-    if curl -sf --cacert zertifikate/rootCA.pem "https://127.0.0.1:$port/api/v1/app" >/dev/null; then
-      echo "ANTWORTET https://127.0.0.1:$port/api/v1/app"
+    if curl -sf --cacert zertifikate/rootCA.pem "https://127.0.0.1:$port/api/v1/app" >/dev/null &&
+       curl -sf --cacert zertifikate/rootCA.pem "https://127.0.0.1:$original/api/v1/original/bruecke.js" >/dev/null; then
+      echo "ANTWORTET https://127.0.0.1:$port/api/v1/app (Originalseiten auf $original)"
       return 0
     fi
     sleep 2

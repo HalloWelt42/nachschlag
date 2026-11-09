@@ -28,7 +28,7 @@ def test_wiki_name():
 
 def test_bilder_mit_grossem_original_markiert():
     wege = Wege(artikel=lambda b, p: f"/lesen/{b}/{p}", medien=lambda b, p: f"/api/v1/inhalt/medien/{b}/{p}",
-                original=lambda b, p: "", gibt_es=lambda b, p: True)
+                gibt_es=lambda b, p: True)
     wurzel = lhtml.fragment_fromstring(
         '<div><img src="./_assets_/x/Gross.jpg" width="310" data-file-width="8888">'
         '<img src="./_assets_/x/Klein.png" width="200" data-file-width="278">'

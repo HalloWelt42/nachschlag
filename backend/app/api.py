@@ -1,15 +1,15 @@
 """Schnittstelle von Nachschlag unter /api/v1 (die Oberfläche nutzt nur diese Wege). Lesen von Büchern, Artikeln,
-Vorschlägen und Suche braucht die Anmeldung; Medien und Originalseiten liegen unter /api/v1/inhalt und laden Bilder und
-Rahmen mit dem Lesezugang der Sitzung (Cookie, gilt nur für diesen Pfad), weil `<img>` und `<iframe>` keine Köpfe senden."""
+Vorschlägen und Suche braucht die Anmeldung; Medien liegen unter /api/v1/inhalt und laden mit dem Lesezugang der Sitzung
+(Cookie, gilt nur für diesen Pfad), weil `<img>` keine Köpfe sendet. Originalseiten haben eine eigene Herkunft
+(originalansicht, WIKI-85)."""
 
 from __future__ import annotations
 
 import asyncio
-import re
 from collections.abc import Callable
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import FileResponse, Response
 
 from appkern.app import Geruest
@@ -22,11 +22,9 @@ from .eigenindex.ablage import Eigenindizes
 from .modell.artikel import Artikel, Nachbar, Rueckverweise
 from .modell.buch import Bibliotheksstand, Buch
 from .modell.suche import Suchergebnis, Suchregeln, Vorschlag
+from .originalansicht import Originalherkunft
 from .quellenarchiv import Quellenarchiv
 from .suche import Suche
-
-#: Skripte einer Originalseite; sie dürften im abgeschirmten Rahmen ohnehin nicht laufen und kommen gar nicht erst mit
-SKRIPT = re.compile(rb"<script\b[^>]*>.*?</script\s*>|<script\b[^>]*/>", re.I | re.S)
 
 #: Inhalte eines Buchs ändern sich nie (neue Fassung = neue Datei, neue Kennung)
 DAUERHAFT = "private, max-age=604800, immutable"
@@ -48,8 +46,9 @@ def _fehlt(f: Exception) -> HTTPException:
 
 def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche: Suche, quellen: Quellenarchiv,
            suchregeln: Callable[[], Suchregeln] | None = None, eigen: Eigenindizes | None = None,
-           grossbilder: Grossbilder | None = None) -> APIRouter:
-    """`grossbilder`: große Bilder des Bildholers (WIKI-80); geöffnete Artikel merken ihre Bilder vor."""
+           grossbilder: Grossbilder | None = None, original: Originalherkunft | None = None) -> APIRouter:
+    """`grossbilder`: große Bilder des Bildholers (WIKI-80); geöffnete Artikel merken ihre Bilder vor. `original`: die
+    eigene Herkunft der Originalseiten (WIKI-85); ohne sie bleibt der Weg zur Originalseite relativ (Tests)."""
     r = APIRouter(prefix="/api/v1", tags=["nachschlag"])
     pflicht, lesen = [geruest.pflicht], [geruest.lesen]
 
@@ -67,13 +66,16 @@ def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche:
             raise _fehlt(f)
 
     @r.get("/artikel/{buch}/{pfad:path}", response_model=Artikel, dependencies=pflicht)
-    async def artikel(buch: str, pfad: str) -> Artikel:
+    async def artikel(request: Request, buch: str, pfad: str) -> Artikel:
         """Ein Artikel, aufbereitet vom Baustein der Art des Buchs; Weiterleitungen sind aufgelöst (`anker` zeigt den
-        Abschnitt). Ohne eigenes Lesedesign `darstellung: original` mit der Adresse der unveränderten Seite."""
+        Abschnitt). Ohne eigenes Lesedesign `darstellung: original` mit der Adresse der unveränderten Seite (auf der
+        eigenen Herkunft der Originalseiten, derselbe Rechner wie diese Anfrage)."""
         try:
             a = await leser.lesen(buch, pfad)
         except (BuchFehlt, EintragFehlt) as f:
             raise _fehlt(f)
+        if original and a.original:
+            a.original = original.adresse(request.url, a.original)
         if grossbilder:
             _nebenbei(grossbilder.geoeffnet(a))
         return a
@@ -125,20 +127,5 @@ def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche:
         except (BuchFehlt, EintragFehlt) as f:
             raise _fehlt(f)
         return Response(e.inhalt, media_type=e.mime, headers={"Cache-Control": DAUERHAFT})
-
-    @r.get("/inhalt/original/{buch}/{pfad:path}", dependencies=lesen)
-    async def original(buch: str, pfad: str) -> Response:
-        """Die Seite unverändert (Originalansicht), mit allen Dateien, die sie lädt. Abgeschirmt ohne Skripte: so behält
-        sie die Herkunft der App (Stile und Bilder laden mit dem Lesezugang), kann aber nichts in der App tun."""
-        try:
-            e = await bibliothek.eintrag(buch, pfad)
-        except (BuchFehlt, EintragFehlt) as f:
-            raise _fehlt(f)
-        koepfe = {"Cache-Control": DAUERHAFT}
-        inhalt = e.inhalt
-        if e.mime.startswith("text/html"):
-            inhalt = SKRIPT.sub(b"", inhalt)
-            koepfe["Content-Security-Policy"] = "sandbox allow-same-origin allow-popups; script-src 'none'; frame-ancestors 'self'"
-        return Response(inhalt, media_type=e.mime, headers=koepfe)
 
     return r

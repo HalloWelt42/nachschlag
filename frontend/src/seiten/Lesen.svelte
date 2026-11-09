@@ -26,6 +26,7 @@
   import ThemaWahl from "../teile/ThemaWahl.svelte";
   import Lesegroesse from "../teile/Lesegroesse.svelte";
   import { groesseFuer } from "../lib/lesegroesse.svelte";
+  import { istRahmenmeldung, lesenWeg, ortNormal, ortVon, rahmenZiel } from "../lib/originalrahmen";
   import Kachel from "../teile/Kachel.svelte";
   import Anleitung from "../teile/Anleitung.svelte";
   import Fragekarte from "../teile/Fragekarte.svelte";
@@ -858,39 +859,45 @@
     }
   }
 
-  const ORIGINAL = "/api/v1/inhalt/original/";
-
-  /** Verweise in der Originalseite führen in die App: eine Seite desselben Buchs öffnet im Lesen (mit eigenem
-   *  Baustein, wenn sie einer liest); Online-Verweise öffnen neu. Der Rahmen hat die Herkunft der App, aber keine
-   *  Skripte; darum hört die App selbst auf seine Klicks. */
-  // Am Telefon rollt der Inhalt der Schale, nicht der Rahmen: dort bekommt die Originalseite die Höhe ihres Inhalts
-  // (beim Laden und nach jedem nachgeladenen Bild gemessen); am Rechner füllt sie die Fläche und rollt selbst
-  let rahmenHoehe = $state(0);
-
+  // Originalseite (WIKI-85): sie läuft mit ihren Skripten auf der eigenen Herkunft der Bücher und kommt nicht an die
+  // App; beide sprechen nur über die Brücke (lib/originalrahmen.ts). Die App setzt den Rahmen an ihren Ort, ohne neuen
+  // Eintrag im Verlauf (den hat die App schon); geht die Seite selbst weiter (eigene Skripte, Formulare), folgt die App.
+  // Der Rahmen füllt die Fläche und rollt selbst, auch am Telefon: Seiten mit eigener Bedienung (feste Kopfzeilen,
+  // Dialoge, Höhen nach dem Fenster) brauchen ein Fenster wie im Browser.
   let rahmen = $state<HTMLIFrameElement>();
+  const kopfSchmal = $derived(artikel?.darstellung === "original");
+  let kopfOffen = $state(false);
+  const rahmenHerkunft = $derived(artikel?.original ? new URL(artikel.original).origin : "");
+  const rahmenAdresse = $derived(zeigeOriginal && artikel?.original
+    ? rahmenZiel(artikel.original, zusatz.get("abfrage") ?? "", anker || artikel.anker) : "");
 
   $effect(() => {
-    const z = zoom, doc = rahmen?.contentDocument;
-    if (!doc?.documentElement) return;
-    doc.documentElement.style.zoom = String(z);
-    rahmenHoehe = doc.documentElement.scrollHeight;
+    const r = rahmen, ziel = rahmenAdresse;
+    if (!r || !ziel || laedt || r.dataset.ort === ortVon(ziel)) return;   // die Seite ist schon dort (ging selbst hin)
+    r.dataset.ort = ortVon(ziel);
+    r.contentWindow?.location.replace(ziel);
   });
 
-  function rahmenGeladen(e: Event) {
-    const doc = (e.currentTarget as HTMLIFrameElement).contentDocument;
-    const messen = () => (rahmenHoehe = doc?.documentElement.scrollHeight ?? 0);
-    if (doc) doc.documentElement.style.zoom = String(zoom);
-    messen();
-    doc?.addEventListener("load", messen, true);          // Bilder laden nach; "load" steigt nicht auf, im Einfangen kommt es an
-    doc?.addEventListener("click", (k) => {
-      const a = (k.target as Element | null)?.closest("a");
-      if (!a || k.ctrlKey || k.metaKey || k.shiftKey) return;
-      const url = new URL(a.getAttribute("href") ?? "", doc.baseURI);
-      if (url.origin !== location.origin || !url.pathname.startsWith(ORIGINAL)) return;
-      k.preventDefault();
-      const anker = decodeURIComponent(url.hash.slice(1));
-      gehe(`lesen/${url.pathname.slice(ORIGINAL.length)}${anker ? "?" + new URLSearchParams({ anker }) : ""}`);
-    });
+  $effect(() => {
+    const z = zoom;
+    untrack(() => rahmenSenden({ art: "zoom", wert: z }));
+  });
+
+  function rahmenSenden(nachricht: Record<string, unknown>) {
+    if (rahmen?.contentWindow && rahmenHerkunft) rahmen.contentWindow.postMessage({ nachschlag: 1, ...nachricht }, rahmenHerkunft);
+  }
+
+  function rahmenNachricht(e: MessageEvent) {
+    const r = rahmen;
+    if (!r || e.source !== r.contentWindow || e.origin !== rahmenHerkunft || !istRahmenmeldung(e.data)) return;
+    const ort = ortNormal(e.data.ort);
+    if (e.data.art === "verweis") {
+      gehe(lesenWeg(e.data.ort));
+      return;
+    }
+    r.dataset.ort = ort;
+    rahmenSenden({ art: "zoom", wert: zoom });
+    if (rahmenAdresse && ort !== ortVon(rahmenAdresse)) gehe(lesenWeg(e.data.ort), true);
   }
 
   async function zufall() {
@@ -924,7 +931,9 @@
 {:else if !artikel}
   <div class="laden">Lädt ...</div>
 {:else}
-  <div class="artikel-kopf">
+  <!-- Bücher, die nur im Original laufen (eigene Seite mit eigener Bedienung, WIKI-85): der Kopf ist eine schmale Zeile mit
+       dem Pfad, Titel und Werkzeuge klappt ein Knopf auf (wie ein Menü), damit die Seite fast die ganze Fläche hat -->
+  <div class="artikel-kopf" class:schmal={kopfSchmal} class:offen={kopfOffen}>
     <!-- der Pfad ist anklickbar (WIKI-49): Quelle zur Startseite, Rubrik zu ihrer Seite (oder gefiltert auf der Startseite),
          der Titel nach oben -->
     <nav class="pfad" aria-label="Pfad"><i class="fa-solid fa-book"></i>
@@ -936,7 +945,12 @@
         <a href={rubrikZiel ? "/" + rubrikZiel : undefined} onclick={(e) => { if (!rubrikZiel) return; e.preventDefault(); gehe(rubrikZiel); }}>{artikel.rubrik}</a>
         <i class="fa-solid fa-chevron-right"></i>
       {/if}
-      <a href="#oben" onclick={(e) => { e.preventDefault(); roller().scrollTo({ top: 0, behavior: "smooth" }); }}>{artikel.titel}</a></nav>
+      <a href="#oben" onclick={(e) => { e.preventDefault(); roller().scrollTo({ top: 0, behavior: "smooth" }); }}>{artikel.titel}</a>
+      {#if kopfSchmal}
+        <button class="knopf still kopf-schalter" aria-expanded={kopfOffen} onclick={() => (kopfOffen = !kopfOffen)}
+                title={kopfOffen ? "Titel und Werkzeuge einklappen" : "Titel und Werkzeuge zeigen: Merken, Notiz, Thema, Zufall, Lesegröße"}>
+          <i class="fa-solid {kopfOffen ? 'fa-xmark' : 'fa-bars'}"></i></button>
+      {/if}</nav>
     <h1 class:code-titel={artikel.titelart === "code"}>{artikel.titel}</h1>
     <div class="werkzeuge">
       <button class="knopf" class:an={!!eintrag} title={eintrag ? "Vom Merkzettel nehmen" : "Auf den Merkzettel"} onclick={merkenUmschalten}>
@@ -1085,10 +1099,10 @@
     <!-- Gerät oder Kategorie eines Anleitungsbuchs (WIKI-64) -->
     <Geraeteseite {artikel} />
   {:else if zeigeOriginal}
-    <!-- ohne Skripte, mit Herkunft der App: Stile und Bilder laden mit dem Lesezugang, die Seite kann nichts in der App tun -->
-    <iframe class="original" class:mit-inhalt={geraet.mobil} src={artikel.original} title="Originalseite: {artikel.titel}"
-            sandbox="allow-same-origin allow-popups" style:height={geraet.mobil && rahmenHoehe ? `${rahmenHoehe}px` : undefined}
-            bind:this={rahmen} onload={rahmenGeladen}></iframe>
+    <!-- mit ihren Skripten auf der eigenen Herkunft der Bücher (WIKI-85): ihr "same-origin" ist diese Herkunft, nie die
+         der App; die App setzt den Ort, die Seite meldet sich über die Brücke -->
+    <iframe class="original" title="Originalseite: {artikel.titel}" bind:this={rahmen} allow="fullscreen; clipboard-write"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"></iframe>
   {:else}
     <div class="rollfeld" style="padding: 0" bind:this={rollfeld}>
       <div class="lesen" class:ohne-inhalt={!inhalt.length && !artikel.nachbarn.length} class:mit-wissen={mitWissen} data-art={buch?.art} style:zoom={zoom}>
@@ -1271,6 +1285,7 @@
 </div>
 
 <svelte:document onselectionchange={auswahlGeaendert} />
+<svelte:window onmessage={rahmenNachricht} />
 {#if textwahl}
   <!-- die Auswahl bleibt beim Tippen auf die Leiste bestehen -->
   <div class="auswahl-leiste" class:unten={textwahl.unten} bind:this={wahlLeiste} role="toolbar" tabindex="-1" aria-label="Stelle"

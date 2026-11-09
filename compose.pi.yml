@@ -1,4 +1,4 @@
-# Nachschlag auf einem Server im eigenen Netz (etwa einem Pi), Port 8711, mit Bildholer. Vorne Caddy mit dem Zertifikat
+# Nachschlag auf einem Server im eigenen Netz (etwa einem Pi), Port 8711 (Originalseiten 8712), mit Bildholer. Vorne Caddy mit dem Zertifikat
 # einer eigenen Zertifizierungsstelle (tools/ausrollen.sh stellt es aus), dahinter die App ohne TLS, von außen nicht
 # erreichbar. Daten in ./daten. Für den einfachen Start ohne all das: compose.yml.
 services:
@@ -25,6 +25,9 @@ services:
       NACHSCHLAG_EINRICHTUNGSCODE_ORT: ${EINRICHTUNGSCODE_ORT:-daten/einrichtungscode im Ordner der App}
       # der Bildholer dieser Datei (unten), im eigenen Netz der Container
       NACHSCHLAG_BILDHOLER_ADRESSE: http://bildholer:8000
+      # Port der Originalseiten (WIKI-85): ihre Skripte laufen auf dieser eigenen Herkunft, nie auf der der App; vorne
+      # reicht ihn an dieselbe App, die dort nur Originalseiten ausliefert. Muss dem Port unter vorne gleichen
+      NACHSCHLAG_ORIGINAL_PORT: "8712"
     volumes:
       - ./daten:/app/daten
       # Sicherungen der Datenbank nach der Regel des Appkerns: wöchentlich von der App, vor dem Neustart vom Ausrollen
@@ -71,6 +74,7 @@ services:
     depends_on: [nachschlag]
     ports:
       - "8711:8711"
+      - "8712:8712"                        # Originalseiten der Bücher, eigene Herkunft (WIKI-85)
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./zertifikate:/zertifikate:ro

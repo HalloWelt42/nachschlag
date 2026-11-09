@@ -1,4 +1,5 @@
-# Vorschaltdienst: TLS mit dem Blattzertifikat der eigenen Zertifizierungsstelle und HTTP/2 auf 8711, die App dahinter ohne
+# Vorschaltdienst: TLS mit dem Blattzertifikat der eigenen Zertifizierungsstelle und HTTP/2 auf 8711 (und 8712 für die
+# Originalseiten), die App dahinter ohne
 # TLS und von außen nicht erreichbar; jeder Zugriff als JSON im Protokoll (docker compose -f compose.pi.yml logs vorne),
 # damit sich messen lässt, was Geräte wirklich abfragen. Beim Zugriff per IP steht kein Servername im Handschlag, darum
 # default_sni: der Name nachschlag.local steht in jedem Zertifikat der App (das Ausrollen nimmt ihn immer auf), so
@@ -10,7 +11,7 @@
 	default_sni nachschlag.local
 }
 
-:8711 {
+(nachschlag) {
 	tls /zertifikate/nachschlag.pem /zertifikate/nachschlag-schluessel.pem
 	log {
 		output stdout
@@ -21,8 +22,19 @@
 		Referrer-Policy same-origin
 		-Server
 	}
-	# Ereignisströme, Ton und Hochladen gehen ungepuffert durch
+	# Ereignisströme, Ton und Hochladen gehen ungepuffert durch; der Rechner mit Port geht unverändert mit (die App
+	# erkennt daran, über welchen der beiden Ports eine Anfrage kam)
 	reverse_proxy nachschlag:8000 {
 		flush_interval -1
 	}
+}
+
+:8711 {
+	import nachschlag
+}
+
+# Originalseiten der Bücher (WIKI-85): eigene Herkunft, damit ihre Skripte laufen können, ohne an die App zu kommen.
+# Dieselbe App dahinter; über diesen Port liefert sie nur Originalseiten aus.
+:8712 {
+	import nachschlag
 }

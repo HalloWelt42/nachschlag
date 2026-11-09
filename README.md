@@ -42,8 +42,10 @@ BUECHER=/pfad/zu/den/zim-dateien docker compose up -d --build
 ```
 
 Dann im Browser `http://<rechner>:8711` öffnen. Ohne `BUECHER` nimmt Nachschlag den Ordner `buecher` neben
-`compose.yml`; einen anderen Port wählt `PORT=8800`. Daten und Einstellungen liegen in `daten/`, Sicherungen der
-Datenbank in `sicherungen/` (wöchentlich, höchstens drei). Alles Weitere steht in der App unter Einstellungen.
+`compose.yml`; einen anderen Port wählt `PORT=8800`. Die Originalseiten der Bücher laufen auf einem eigenen Port
+(`ORIGINAL_PORT`, Vorgabe 8712), damit ihre Skripte nicht an die App kommen; er muss ebenso erreichbar sein. Daten und
+Einstellungen liegen in `daten/`, Sicherungen der Datenbank in `sicherungen/` (wöchentlich, höchstens drei). Alles
+Weitere steht in der App unter Einstellungen.
 
 Neue Fassung holen: `git pull && docker compose up -d --build`.
 
@@ -90,8 +92,8 @@ Legt die Python-Umgebung an, holt die Pakete der Oberfläche, baut sie und richt
 
 | Teil | Befehl |
 |---|---|
-| Backend | `cd backend && .venv/bin/uvicorn app.main:app --port 8711 --reload` |
-| Probebetrieb | `cd backend && .venv/bin/uvicorn probebetrieb:app --port 8711 --reload` (nachgestellte Kellerwolke, Daten in `daten-probe/`) |
+| Backend | `cd backend && .venv/bin/uvicorn app.main:app --port 8711 --reload` (Originalseiten nur hinter einem Vorschaltdienst, der auch Port 8712 an die App reicht) |
+| Probebetrieb | `cd backend && .venv/bin/uvicorn probebetrieb:app --port 8711 --reload` (nachgestellte Kellerwolke, Daten in `daten-probe/`, Originalseiten auf 8712 im selben Prozess) |
 | Oberfläche | `cd frontend && npm run dev` (Port 9711, leitet `/api` ans Backend) |
 | Tests | `cd backend && .venv/bin/python -m pytest` |
 | Symbole | `python3 tools/symbole.py` nach einer Änderung an `frontend/public/symbol.svg` |
