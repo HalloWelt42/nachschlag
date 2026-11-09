@@ -3,7 +3,9 @@
   // Anleitung. Der Kern ist das Selbertesten wie in der Original-Anwendung des Buchs: den Code im Editor selbst schreiben
   // (er beginnt mit dem Startcode), "Tests ausführen" (Strg + Eingabe) lässt jeden Prüfpunkt gegen ihn laufen, und
   // jeder Prüfpunkt zeigt, ob er erfüllt ist; die Ausgabe des eigenen Codes steht darunter. Der Editor ist der des
-  // Hausstils (appkern-oberflaeche/code, wie beim Ausprobieren in den Handbüchern). Sind alle erfüllt, gilt die
+  // Hausstils (appkern-oberflaeche/code, wie beim Ausprobieren in den Handbüchern). Breite Fenster teilen die Seite (Wunsch
+  // des Nutzers): links die Aufgabe, rechts Code, Prüfpunkte und Ergebnis, jede Seite rollt für sich; schmale Fenster
+  // zeigen beides untereinander in derselben Reihenfolge (Aufgabe, Code, Prüfpunkte). Sind alle erfüllt, gilt die
   // Aufgabe als gelöst. Die Lösung bleibt hinter einem Knopf (erst selbst probieren). Bringt das Buch keinen Testläufer
   // mit, stehen Prüfpunkte und Startcode nur zum Lesen da. Unten die Nachbarn im Block; Pfeiltasten blättern.
   import { kopieren } from "appkern-oberflaeche";
@@ -53,7 +55,7 @@
     void tick().then(() => {
       if (!feld) return;
       for (const el of feld.querySelectorAll<HTMLElement>("[data-sprache-hinweis]")) codeEinfaerben(el, el.dataset.spracheHinweis);
-      feld.scrollTop = 0;
+      for (const r of [feld, ...feld.querySelectorAll<HTMLElement>(".ueb-links, .ueb-rechts")]) r.scrollTop = 0;
     });
   });
   $effect(() => {
@@ -118,7 +120,8 @@
 <svelte:window onkeydowncapture={tasteVorab} onkeydown={taste} />
 
 <div class="rollfeld" style="padding: 0" bind:this={feld}>
-  <article class="ueb-seite artikel-text">
+  <article class="ueb-seite artikel-text" class:ueb-geteilt={selbertesten}>
+   <div class="ueb-links">
     <nav class="ueb-ort" aria-label="Einordnung">
       <a href={ziel("index.html")} onclick={(e) => folgen(e, "index.html")}><i class="fa-solid fa-graduation-cap"></i>{u.kurs_titel}</a>
       <i class="fa-solid fa-chevron-right"></i><span>{u.block_titel}</span>
@@ -137,6 +140,8 @@
       </section>
     {/if}
 
+   </div>
+   <div class="ueb-rechts">
     {#if selbertesten}
       <section class="ueb-abschnitt">
         <h2><i class="fa-solid fa-code"></i>Dein Code
@@ -223,5 +228,6 @@
       {#if u.naechste}<a class="knopf ueb-weiter" href={ziel(u.naechste.pfad)} onclick={(e) => folgen(e, u.naechste!.pfad)} title="Nächste (Pfeil rechts)">
         <span>{u.naechste.titel}</span><i class="fa-solid fa-arrow-right"></i></a>{/if}
     </nav>
+   </div>
   </article>
 </div>

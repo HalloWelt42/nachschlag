@@ -3,7 +3,7 @@
   // darunter passende Stellen aus der Bedeutungssuche (nur, wenn sie antwortet). Pfeiltasten wählen, Enter öffnet;
   // ohne Wahl führt Enter zur Suche mit allen Treffern. `gross`: Form der Startseite und der Suchseite; `taste`: die
   // Taste / setzt die Schreibmarke hierher (nur das Feld im Kopf).
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import { sucheHolen, vorschlaegeHolen } from "../lib/schnittstelle";
   import { abschnittFuer, suchregeln, suchregelnLaden } from "../lib/suchregeln.svelte";
   import type { Treffer, Vorschlag } from "../lib/typen";
@@ -127,6 +127,8 @@
       offen = true;
       const n = eintraege.length;
       if (n) gewaehlt = e.key === "ArrowDown" ? (gewaehlt + 1) % n : (gewaehlt - 1 + n) % n;
+      // die gewählte Zeile bleibt sichtbar, auch wenn die Liste rollt (WIKI-84)
+      void tick().then(() => document.querySelector(".vorschlaege .gewaehlt")?.scrollIntoView({ block: "nearest" }));
     } else if (e.key === "Enter") {
       e.preventDefault();
       if (gewaehlt >= 0) oeffnen(gewaehlt);

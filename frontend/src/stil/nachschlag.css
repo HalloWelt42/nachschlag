@@ -26,7 +26,9 @@
 
 /* Vorschläge beim Tippen: Titel, darunter Stellen aus der Bedeutungssuche, unten Tasten und alle Treffer */
 .vorschlaege { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 20; background: var(--flaeche); border-radius: var(--r3);
-               box-shadow: 0 16px 40px color-mix(in srgb, var(--schattenfarbe) 26%, transparent), 0 0 0 1px var(--rand); overflow: hidden; font-size: var(--klein); }
+               box-shadow: 0 16px 40px color-mix(in srgb, var(--schattenfarbe) 26%, transparent), 0 0 0 1px var(--rand); font-size: var(--klein);
+               /* rollt in einem niedrigen Fenster, statt die unteren Vorschläge abzuschneiden (WIKI-84) */
+               max-height: calc(100dvh - 140px); overflow-y: auto; overscroll-behavior: contain; }
 .vorschlaege .gruppe { padding: 10px 14px 4px; font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600;
                        display: flex; gap: var(--a2); align-items: center; }
 .vorschlaege .gruppe .weg { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--petrol); }
@@ -1507,6 +1509,15 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .ueb-aufgaben a:hover { background: var(--flaeche-2); }
 .ueb-nr { font-family: var(--schrift-zahl); color: var(--text-3); min-width: 2.2em; text-align: right; flex: none; }
 .ueb-titel { min-width: 0; overflow-wrap: anywhere; }   /* lange Titel ohne Leerzeichen brechen statt die Seite zu verbreitern */
+.ueb-links, .ueb-rechts { display: flex; flex-direction: column; gap: var(--a5); min-width: 0; }
+/* Geteilte Übungsseite (WIKI-66): links die Aufgabe, rechts Code, Prüfpunkte und Ergebnis; jede Seite rollt für sich */
+@media (min-width: 1200px) {
+  .rollfeld:has(> .ueb-geteilt) { overflow: hidden; }
+  .ueb-seite.ueb-geteilt { max-width: none; height: 100%; box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    gap: 0; padding: 0; }
+  .ueb-geteilt > .ueb-links, .ueb-geteilt > .ueb-rechts { overflow-y: auto; overscroll-behavior: contain; padding: var(--a4) var(--ueb-rand) var(--a6); }
+  .ueb-geteilt > .ueb-rechts { box-shadow: inset 1px 0 0 var(--rand); }
+}
 @media (max-width: 700px) { .ueb-seite { --ueb-rand: var(--a3); } .ueb-stelle { margin-left: 0; } }
 
 /* ----- Eigene Bewertung (teile/Sterne.svelte) und Meine Erfahrung an Anleitungen (WIKI-71) ----- */
