@@ -350,6 +350,8 @@ export interface Aufgabenverweis { pfad: string; titel: string }
 export interface Uebungsangaben {
   kurs: string; kurs_titel: string; block: string; block_titel: string; nr: number; anzahl: number; beschreibung: string;
   anleitung: string; hinweise: Pruefpunkt[]; startcode: Uebungscode[]; loesungen: Uebungscode[];
+  vorher: string; nachher: string;   // Code, der im Test vor und nach dem eigenen läuft
+  pruefer: string;                   // Testläufer des Buchs (Web Worker); leer: nur die Prüfpunkte zum Lesen
   vorige: Aufgabenverweis | null; naechste: Aufgabenverweis | null;
 }
 export interface Uebungsblock { kennung: string; titel: string; einleitung: string[]; aufgaben: Aufgabenverweis[] }

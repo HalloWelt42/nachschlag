@@ -39,6 +39,12 @@ wird aufgelöst. Ein Sprung auf einen Anker mit Schrägstrich (`index.html#kurs/
 Route einer Skript-Anwendung: die Seite bleibt sie selbst, ihr Baustein liest den Inhalt aus den Dateien des Buchs
 (`bibliothek.ordner.sprungziel`, eine Regel für Lesen und Index).
 
+Übungen (fcc2zim) leben vom Selbertesten: man schreibt den Code selbst, und jeder Prüfpunkt läuft als Test gegen ihn.
+Dafür nutzt die Oberfläche den Testläufer, den das Buch mitbringt (`test-runner/javascript-test-evaluator.js`, ein Web
+Worker der Quelle), über den Medienweg des Buchs mit dem Lesezugang; das Protokoll ist das der Original-Anwendung
+(`frontend/src/lib/pruefen.ts`: einrichten mit Code davor, eigenem Code und Code danach, dann je Prüfpunkt sein Test,
+höchstens 5 Sekunden). Der eigene Code und gelöste Aufgaben bleiben im Browser (`lib/uebungsstand.ts`).
+
 ## Schnittstelle und MCP
 
 Alle Wege liegen unter `/api/v1`; die Oberfläche nutzt nur diese. Der Bereich Schnittstelle (Baustein des Appkerns)

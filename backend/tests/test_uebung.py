@@ -48,6 +48,11 @@ async def test_aufgabe_und_startseite(ordner):
     assert "return a + b" in u.loesungen[0].code and "return" not in u.startcode[0].code
     zwei = (await leser.lesen(BUCH, "index/grundlagen/rechnen/a2.html")).uebung   # Markdown mit anderer Dateiart
     assert zwei.nr == 2 and zwei.vorige.titel == "Summe bilden" and "multipliziert" in zwei.beschreibung
+    # Selbertesten: der Testläufer des Buchs und der Code vor und nach dem eigenen (nicht im Startcode)
+    assert u.pruefer.endswith("/test-runner/javascript-test-evaluator.js") and BUCH in u.pruefer
+    assert (u.vorher, u.nachher) == ("", "")
+    assert (zwei.vorher, zwei.nachher) == ("const start = 1;", "const ende = 2;")
+    assert [c.code for c in zwei.startcode] == [c.code for c in u.startcode], "Code davor und danach ist kein Startcode"
     s = await leser.lesen(BUCH, "index.html")
     assert s.darstellung == "uebungen" and s.rubrik == "2 Aufgaben"
     [k] = s.kurse.kurse

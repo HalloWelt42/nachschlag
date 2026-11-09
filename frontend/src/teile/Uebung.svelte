@@ -1,11 +1,18 @@
 <script lang="ts">
   // Eine Aufgabe eines Übungsbuchs (freeCodeCamp, WIKI-66): oben Kurs, Block und Stelle im Block, dann Beschreibung und
-  // Anleitung, die Prüfpunkte (was erfüllt sein muss, der Test dazu aufklappbar), der Startcode zum Kopieren und die
-  // Lösung hinter einem Knopf (erst selbst probieren). Unten die Nachbarn im Block; Pfeiltasten blättern.
+  // Anleitung. Der Kern ist das Selbertesten wie in der Original-Anwendung des Buchs: den Code im Editor selbst schreiben
+  // (er beginnt mit dem Startcode), "Tests ausführen" (Strg + Eingabe) lässt jeden Prüfpunkt gegen ihn laufen, und
+  // jeder Prüfpunkt zeigt, ob er erfüllt ist; die Ausgabe des eigenen Codes steht darunter. Der Editor ist der des
+  // Hausstils (appkern-oberflaeche/code, wie beim Ausprobieren in den Handbüchern). Sind alle erfüllt, gilt die
+  // Aufgabe als gelöst. Die Lösung bleibt hinter einem Knopf (erst selbst probieren). Bringt das Buch keinen Testläufer
+  // mit, stehen Prüfpunkte und Startcode nur zum Lesen da. Unten die Nachbarn im Block; Pfeiltasten blättern.
   import { kopieren } from "appkern-oberflaeche";
+  import { EditorBereich } from "appkern-oberflaeche/code";
   import { tick } from "svelte";
   import { codeEinfaerben } from "../lib/einfaerben";
+  import { pruefen, type Lauf } from "../lib/pruefen";
   import type { Artikel, Uebungscode } from "../lib/typen";
+  import { codeMerken, eigenerCode, geloestMerken } from "../lib/uebungsstand";
   import { lesen, lesenZiel } from "../lib/ziele";
 
   let { artikel }: { artikel: Artikel } = $props();
@@ -19,10 +26,30 @@
   let loesungOffen = $state(false);
   let kopiert = $state(-1);
 
-  // nach jedem Wechsel der Aufgabe: Lösung wieder zu, Code eingefärbt, oben anfangen
+  // Selbertesten: nur mit Testläufer des Buchs, Prüfpunkten mit Test und einem Startcode
+  const tests = $derived(u.hinweise.filter((h) => h.test));
+  const startcode = $derived(u.startcode[0]?.code ?? "");
+  const selbertesten = $derived(!!u.pruefer && tests.length > 0 && u.startcode.length > 0);
+  let code = $state("");
+  let geladenFuer = $state("");                     // für welche Aufgabe `code` gilt (erst dann wird gemerkt)
+  let lauf = $state<Lauf | null>(null);
+  const KUERZEL = /Mac|iPhone|iPad/.test(navigator.userAgent) ? "Cmd Enter" : "Strg Enter";
+  let laeuft = $state(false);
+  const erfuellt = $derived(lauf ? lauf.punkte.filter((p) => p.bestanden).length : 0);
+  const geloest = $derived(!!lauf && !lauf.fehler && lauf.punkte.length === tests.length && erfuellt === tests.length);
+  /** Ergebnis je Prüfpunkt (in der Reihenfolge aller Hinweise; Hinweise ohne Test haben keins) */
+  const ergebnis = $derived.by(() => {
+    let i = 0;
+    return u.hinweise.map((h) => (h.test && lauf ? lauf.punkte[i++] ?? null : null));
+  });
+
+  // nach jedem Wechsel der Aufgabe: Lösung wieder zu, eigener Code oder Startcode, kein altes Ergebnis, oben anfangen
   $effect(() => {
     void artikel.pfad;
     loesungOffen = false;
+    code = eigenerCode(artikel.buch, artikel.pfad) ?? startcode;
+    geladenFuer = artikel.pfad;
+    lauf = null;
     void tick().then(() => {
       if (!feld) return;
       for (const el of feld.querySelectorAll<HTMLElement>("[data-sprache-hinweis]")) codeEinfaerben(el, el.dataset.spracheHinweis);
@@ -33,10 +60,44 @@
     if (loesungOffen) void tick().then(() => feld && codeEinfaerben(feld.querySelector<HTMLElement>(".ueb-loesung") ?? feld, sprache(u.loesungen[0])));
   });
 
-  async function codeKopieren(i: number, code: string) {
-    await kopieren(code);
+  async function codeKopieren(i: number, text: string) {
+    await kopieren(text);
     kopiert = i;
     setTimeout(() => (kopiert = -1), 1500);
+  }
+
+  async function testen() {
+    if (laeuft || !selbertesten) return;
+    laeuft = true;
+    const pfad = artikel.pfad;
+    try {
+      const ergebnis = await pruefen(u.pruefer, u.vorher, code, u.nachher, tests.map((h) => h.test));
+      if (pfad !== artikel.pfad) return;              // inzwischen eine andere Aufgabe
+      lauf = ergebnis;
+      if (!ergebnis.fehler && ergebnis.punkte.length && ergebnis.punkte.every((p) => p.bestanden)) geloestMerken(artikel.buch, pfad);
+    } finally {
+      laeuft = false;
+    }
+  }
+
+  function zuruecksetzen() {
+    code = startcode;
+    lauf = null;
+  }
+
+  // der eigene Code bleibt im Browser, sobald er zur geladenen Aufgabe gehört
+  $effect(() => {
+    if (geladenFuer === artikel.pfad) codeMerken(artikel.buch, artikel.pfad, code, startcode);
+  });
+
+  /** Tests mit Strg oder Cmd und Enter: vor dem Editor abgefangen, der damit sonst eine Zeile einfügt */
+  function tasteVorab(e: KeyboardEvent) {
+    if (e.key !== "Enter" || !(e.ctrlKey || e.metaKey) || !(e.target as HTMLElement)?.closest?.(".ueb-editor")) return;
+    e.preventDefault();
+    e.stopPropagation();
+    // erst wenn der Editor die letzte Eingabe übernommen hat (er liest sie gleich nach dem Ereignis), sonst liefe der
+    // Test mit dem Stand davor
+    setTimeout(() => void testen(), 0);
   }
 
   function taste(e: KeyboardEvent) {
@@ -54,7 +115,7 @@
   }
 </script>
 
-<svelte:window onkeydown={taste} />
+<svelte:window onkeydowncapture={tasteVorab} onkeydown={taste} />
 
 <div class="rollfeld" style="padding: 0" bind:this={feld}>
   <article class="ueb-seite artikel-text">
@@ -76,18 +137,54 @@
       </section>
     {/if}
 
+    {#if selbertesten}
+      <section class="ueb-abschnitt">
+        <h2><i class="fa-solid fa-code"></i>Dein Code
+          <button class="knopf still ueb-kopieren" onclick={() => codeKopieren(0, code)}>
+            <i class="fa-{kopiert === 0 ? 'solid fa-check' : 'regular fa-copy'}"></i>Kopieren</button></h2>
+        <div class="ueb-editor">
+          <div class="ueb-editor-reiter"><span class="aktiv"><i class="fa-brands fa-js" aria-hidden="true"></i>loesung.js</span>
+            {#if code !== startcode}<span class="geaendert">geändert</span>{/if}</div>
+          <div class="ueb-editor-code">{#key artikel.pfad}<EditorBereich sprache="javascript" bind:code />{/key}</div>
+        </div>
+        <div class="ueb-zeile">
+          <button class="knopf" onclick={testen} disabled={laeuft} title={KUERZEL}>
+            <i class="fa-solid {laeuft ? 'fa-spinner fa-spin' : 'fa-play'}"></i>Tests ausführen</button>
+          <button class="knopf still" onclick={zuruecksetzen} disabled={laeuft || code === startcode} title="Zurück zum Startcode">
+            <i class="fa-solid fa-rotate-left"></i>Zurücksetzen</button>
+          {#if lauf && !lauf.fehler}
+            <span class="ueb-stand" class:ueb-geloest={geloest} role="status">
+              {#if geloest}<i class="fa-solid fa-circle-check"></i>Alle Prüfpunkte erfüllt, Aufgabe gelöst
+              {:else}<i class="fa-solid fa-circle-xmark"></i>{erfuellt} von {tests.length} Prüfpunkten erfüllt{/if}</span>
+          {:else if !lauf}<span class="ueb-leise"><kbd>{KUERZEL}</kbd></span>{/if}
+        </div>
+        {#if lauf?.fehler}<p class="ueb-meldung" role="alert"><i class="fa-solid fa-triangle-exclamation"></i>{lauf.fehler}</p>{/if}
+        {#if lauf?.ausgabe.length}
+          <div class="ueb-ausgabe" aria-label="Ausgabe"><span class="ueb-leise">Ausgabe</span><pre>{lauf.ausgabe.join("\n")}</pre></div>
+        {/if}
+      </section>
+    {/if}
+
     {#if u.hinweise.length}
       <section class="ueb-abschnitt">
         <h2><i class="fa-solid fa-circle-check"></i>Prüfpunkte</h2>
-        <ol class="ueb-pruefpunkte">
+        <ol class="ueb-pruefpunkte" class:mit-stand={selbertesten}>
           {#each u.hinweise as p, i (i)}
-            <li>
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -- vom Baustein gesäubert -->
-              <div class="ueb-text">{@html p.html}</div>
-              {#if p.test}
-                <details class="ueb-test"><summary>Test ansehen</summary>
-                  <div data-sprache-hinweis="javascript"><pre><code>{p.test}</code></pre></div></details>
+            {@const e = ergebnis[i]}
+            <li class:ueb-ok={e?.bestanden} class:ueb-nein={e && !e.bestanden}>
+              {#if selbertesten && p.test}
+                <i class="ueb-marke fa-{e ? (e.bestanden ? 'solid fa-circle-check' : 'solid fa-circle-xmark') : 'regular fa-circle'}"
+                   aria-label={e ? (e.bestanden ? "erfüllt" : "nicht erfüllt") : "noch nicht geprüft"}></i>
               {/if}
+              <div class="ueb-punkt">
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -- vom Baustein gesäubert -->
+                <div class="ueb-text">{@html p.html}</div>
+                {#if e && !e.bestanden && e.meldung}<p class="ueb-leise ueb-grund">{e.meldung}</p>{/if}
+                {#if p.test}
+                  <details class="ueb-test"><summary>Test ansehen</summary>
+                    <div data-sprache-hinweis="javascript"><pre><code>{p.test}</code></pre></div></details>
+                {/if}
+              </div>
             </li>
           {/each}
         </ol>
@@ -95,12 +192,14 @@
     {/if}
 
     {#each u.startcode as c, i (i)}
-      <section class="ueb-abschnitt">
-        <h2><i class="fa-solid fa-code"></i>Startcode{#if u.startcode.length > 1} {i + 1}{/if}
-          <button class="knopf still ueb-kopieren" onclick={() => codeKopieren(i, c.code)}>
-            <i class="fa-{kopiert === i ? 'solid fa-check' : 'regular fa-copy'}"></i>Kopieren</button></h2>
-        <div class="ueb-code" data-sprache-hinweis={sprache(c)}><pre><code>{c.code}</code></pre></div>
-      </section>
+      {#if !selbertesten || i > 0}
+        <section class="ueb-abschnitt">
+          <h2><i class="fa-solid fa-code"></i>Startcode{#if u.startcode.length > 1} {i + 1}{/if}
+            <button class="knopf still ueb-kopieren" onclick={() => codeKopieren(i + 1, c.code)}>
+              <i class="fa-{kopiert === i + 1 ? 'solid fa-check' : 'regular fa-copy'}"></i>Kopieren</button></h2>
+          <div class="ueb-code" data-sprache-hinweis={sprache(c)}><pre><code>{c.code}</code></pre></div>
+        </section>
+      {/if}
     {/each}
 
     {#if u.loesungen.length}

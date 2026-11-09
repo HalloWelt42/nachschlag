@@ -395,7 +395,11 @@ function summe(a, b) {
 function summe(a, b) { return a + b; }
 ```
 """
-AUFGABE_2 = AUFGABE_1.replace("Summe bilden", "Produkt bilden").replace("addiert", "multipliziert")
+AUFGABE_2 = AUFGABE_1.replace("Summe bilden", "Produkt bilden").replace("addiert", "multipliziert").replace(
+    "## --seed-contents--", "## --before-user-code--\n\n```js\nconst start = 1;\n```\n\n## --after-user-code--\n\n"
+    "```js\nconst ende = 2;\n```\n\n## --seed-contents--")
+#: Testläufer der Quelle (ein Web Worker); hier nur ein Platzhalter
+PRUEFER = "self.onmessage = () => {};"
 
 
 def _sprung_in_anwendung(route: str) -> str:
@@ -421,6 +425,7 @@ def bauen_uebungen(ordner: Path, name: str = "probecamp_de_all_2026-10") -> Path
         c.add_item(_Seite("content/curriculum/grundlagen/rechnen/a2.md", "", AUFGABE_2, "application/javascript", vorne=False))
         c.add_item(_Seite("content/curriculum/index.json", "", json.dumps(gliederung), "application/json", vorne=False))
         c.add_item(_Seite("content/locales/intro.json", "", json.dumps(einfuehrung), "application/json", vorne=False))
+        c.add_item(_Seite("test-runner/javascript-test-evaluator.js", "", PRUEFER, "application/javascript", vorne=False))
     return datei
 
 

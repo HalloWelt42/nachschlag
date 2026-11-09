@@ -1466,6 +1466,29 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .ueb-test summary { cursor: pointer; font-size: var(--klein); color: var(--text-3); margin-top: 4px; }
 .ueb-loesung { display: flex; flex-direction: column; gap: var(--a3); width: 100%; }
 .ueb-leise { font-size: var(--klein); color: var(--text-3); }
+/* Selbertesten (WIKI-66): Editor, Ergebnis je Prüfpunkt, Ausgabe */
+.ueb-editor { width: 100%; border-radius: var(--r2); overflow: hidden; background: var(--ed-grund); box-shadow: 0 0 0 1px var(--rand); }
+.ueb-editor:focus-within { box-shadow: 0 0 0 2px var(--akzent); }
+.ueb-editor-reiter { display: flex; align-items: center; gap: var(--a3); padding: 6px 12px; font-size: var(--klein); color: var(--ed-nr); background: var(--ed-rand); }
+.ueb-editor-reiter .aktiv { color: var(--ed-text); display: inline-flex; gap: 6px; align-items: center; font-family: var(--schrift-editor); }
+.ueb-editor-reiter .geaendert { margin-left: auto; color: var(--warn); }
+.ueb-editor-code { height: clamp(220px, 42vh, 480px); }
+.ueb-seite kbd { font-family: var(--schrift-zahl); font-size: var(--marke); opacity: .75; }
+.ueb-stand { display: inline-flex; gap: 6px; align-items: center; color: var(--warn); font-weight: 600; }
+.ueb-stand.ueb-geloest { color: var(--gut); }
+.ueb-meldung { margin: 0; color: var(--warn); display: flex; gap: var(--a2); align-items: center; }
+.ueb-ausgabe { width: 100%; display: flex; flex-direction: column; gap: 4px; }
+.ueb-ausgabe pre { margin: 0; padding: 10px 12px; background: var(--ed-konsole); color: var(--ed-konsole-text); border-radius: var(--r2);
+  font-family: var(--schrift-editor); font-size: var(--klein); max-height: 240px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ueb-pruefpunkte.mit-stand { list-style: none; padding-left: 0; }
+.ueb-pruefpunkte li { display: flex; gap: var(--a2); align-items: flex-start; }
+.ueb-pruefpunkte:not(.mit-stand) li { display: list-item; }
+.ueb-punkt { min-width: 0; flex: 1; }
+.ueb-marke { margin-top: 3px; color: var(--text-3); flex: none; }
+.ueb-ok .ueb-marke { color: var(--gut); }
+.ueb-nein .ueb-marke { color: var(--warn); }
+.ueb-grund { margin: 4px 0 0; color: var(--warn); }
+.ueb-aufgaben .ueb-geloest-marke { color: var(--gut); margin-left: auto; flex: none; }
 .ueb-zeile { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a3); }
 .ueb-nachbarn { display: flex; justify-content: space-between; gap: var(--a3); flex-wrap: wrap; padding-top: var(--a3); border-top: 1px solid var(--rand); }
 .ueb-nachbarn a { max-width: min(100%, 420px); }

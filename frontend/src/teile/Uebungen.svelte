@@ -1,13 +1,16 @@
 <script lang="ts">
   // Startseite eines Übungsbuchs (freeCodeCamp, WIKI-66): die Kurse mit ihrer Einführung, darunter je Block die Aufgaben
   // als nummerierte Liste (aufklappbar; ein Kurs mit nur einem Block steht offen). Oben ein Filter über die Titel aller
-  // Aufgaben, der die passenden Blöcke aufklappt.
+  // Aufgaben, der die passenden Blöcke aufklappt. Gelöste Aufgaben (in diesem Browser, alle Prüfpunkte erfüllt) tragen
+  // ein Häkchen, der Block zählt sie.
   import { Seitenkopf } from "appkern-oberflaeche";
   import type { Artikel, Uebungsblock } from "../lib/typen";
+  import { geloeste } from "../lib/uebungsstand";
   import { lesen, lesenZiel } from "../lib/ziele";
 
   let { artikel }: { artikel: Artikel } = $props();
   const kurse = $derived(artikel.kurse?.kurse ?? []);
+  const geloest = $derived(geloeste(artikel.buch));
   let filter = $state("");
   const f = $derived(filter.trim().toLowerCase());
   const passend = (b: Uebungsblock) => (f ? b.aufgaben.map((a, i) => ({ a, i })).filter(({ a }) => a.titel.toLowerCase().includes(f))
@@ -36,10 +39,12 @@
           {@const liste = passend(b)}
           {#if liste.length}
             <details class="ueb-block" open={k.bloecke.length === 1 || !!f}>
-              <summary><span>{b.titel}</span><span class="ueb-zahl">{f ? `${liste.length} von ${b.aufgaben.length}` : b.aufgaben.length}</span></summary>
+              <summary><span>{b.titel}</span><span class="ueb-zahl">{f ? `${liste.length} von ${b.aufgaben.length}`
+                : geloest.size ? `${b.aufgaben.filter((a) => geloest.has(a.pfad)).length} von ${b.aufgaben.length} gelöst` : b.aufgaben.length}</span></summary>
               <ol class="ueb-aufgaben">
                 {#each liste as { a, i } (a.pfad)}
-                  <li><a href={ziel(a.pfad)} onclick={(e) => folgen(e, a.pfad)}><span class="ueb-nr">{i + 1}</span><span class="ueb-titel">{a.titel}</span></a></li>
+                  <li><a href={ziel(a.pfad)} onclick={(e) => folgen(e, a.pfad)}><span class="ueb-nr">{i + 1}</span><span class="ueb-titel">{a.titel}</span>{#if geloest.has(a.pfad)}<i
+                    class="fa-solid fa-circle-check ueb-geloest-marke" aria-label="gelöst"></i>{/if}</a></li>
                 {/each}
               </ol>
             </details>

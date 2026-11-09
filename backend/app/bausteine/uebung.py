@@ -5,7 +5,9 @@ mit festen Abschnitten (`# --description--`, `# --instructions--`, `# --hints--`
 die Gliederung in `content/curriculum/index.json`, deutsche Titel und Einleitungen in `content/locales/intro.json`.
 
 - Uebung: die Seite einer Aufgabe; liest ihr Markdown und zeigt Beschreibung, Anleitung, Prüfpunkte mit Tests,
-  Startcode und Lösung, dazu die Nachbarn im Block.
+  Startcode und Lösung, dazu die Nachbarn im Block. Zum Selbertesten kommen der Code vor und nach dem eigenen
+  (`## --before-user-code--`, `## --after-user-code--` unter `# --seed--`) und die Adresse des Testläufers, den das Buch
+  mitbringt (`test-runner/javascript-test-evaluator.js`, ein Web Worker der Quelle).
 - Uebungsstart: die Startseite (`index.html`); zeigt alle Kurse mit Blöcken und Aufgaben."""
 
 from __future__ import annotations
@@ -30,6 +32,8 @@ ABSCHNITT = re.compile(r"^# --([\w-]+)--[ \t]*$", re.M)
 UNTERABSCHNITT = re.compile(r"^## --([\w-]+)--[ \t]*$", re.M)
 CODEBLOCK = re.compile(r"^```([\w+-]*)[^\n]*\n(.*?)^```[ \t]*$", re.M | re.S)
 KOPF = re.compile(r"\A---\n.*?\n---\n", re.S)
+#: Testläufer der Quelle im Buch (fcc2zim): führt Prüfpunkte gegen den eigenen Code aus
+PRUEFER = "test-runner/javascript-test-evaluator.js"
 
 _md = MarkdownIt("commonmark", {"html": True})
 
@@ -88,11 +92,19 @@ def hinweise(text: str, buch: Buch, pfad: str, wege: Wege) -> list[Hinweis]:
     return aus
 
 
+def _unterabschnitt(text: str, name: str, sonst: str = "") -> str:
+    teile = UNTERABSCHNITT.split(text)
+    return next((teile[i + 1] for i in range(1, len(teile) - 1, 2) if teile[i] == name), sonst)
+
+
 def startcode(text: str) -> list[Code]:
     """Der Startcode: die Blöcke unter `## --seed-contents--` (Code davor und danach läuft nur im Test)."""
-    teile = UNTERABSCHNITT.split(text)
-    inhalt = next((teile[i + 1] for i in range(1, len(teile) - 1, 2) if teile[i] == "seed-contents"), text if len(teile) == 1 else "")
-    return codebloecke(inhalt)
+    return codebloecke(_unterabschnitt(text, "seed-contents", text if len(UNTERABSCHNITT.split(text)) == 1 else ""))
+
+
+def testrahmen(text: str) -> tuple[str, str]:
+    """Code, der im Test vor und nach dem eigenen läuft (`## --before-user-code--`, `## --after-user-code--`)."""
+    return tuple("\n".join(c.code for c in codebloecke(_unterabschnitt(text, name))) for name in ("before-user-code", "after-user-code"))
 
 
 @lru_cache(maxsize=32)
@@ -148,6 +160,7 @@ class Uebung:
         stelle = next((i for i, a in enumerate(liste) if a.pfad == eintrag.pfad), -1)
         pfad = eintrag.pfad
         titel = (liste[stelle].titel if stelle >= 0 else "") or eintrag.titel
+        vorher, nachher = testrahmen(teile.get("seed", ""))
         angaben = Uebungsangaben(
             kurs=kurs, kurs_titel=k.titel if k else kurs, block=block, block_titel=b.titel if b else block,
             nr=stelle + 1, anzahl=len(liste),
@@ -155,6 +168,8 @@ class Uebung:
             anleitung=_html(teile.get("instructions", ""), buch, pfad, wege),
             hinweise=hinweise(teile.get("hints", ""), buch, pfad, wege),
             startcode=startcode(teile.get("seed", "")), loesungen=codebloecke(teile.get("solutions", "")),
+            vorher=vorher, nachher=nachher,
+            pruefer=wege.medien(buch.kennung, PRUEFER) if wege.gibt_es(buch.kennung, PRUEFER) else "",
             vorige=liste[stelle - 1] if stelle > 0 else None,
             naechste=liste[stelle + 1] if 0 <= stelle < len(liste) - 1 else None)
         einleitung = lhtml.fragment_fromstring(angaben.beschreibung, create_parent="div").text_content().strip()[:400] \
