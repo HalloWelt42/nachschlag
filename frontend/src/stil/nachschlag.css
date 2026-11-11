@@ -219,6 +219,9 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .kachel.quer .kachel-bild.zeichen { width: 44px; height: 44px; border-radius: var(--r2); background: var(--flaeche-2); color: var(--petrol); font-size: var(--titel); }
 /* Buchzeichen (WIKI-88): das Symbol, das ein Buch mitbringt, in jedem Rahmen ganz und unverzerrt, höchstens 48 Pixel */
 .buchzeichen { width: 72%; height: 72%; max-width: 48px; max-height: 48px; object-fit: contain; }
+/* ein echtes Symbol steht frei, ohne Fläche dahinter (Nutzer 11.11.2026: "möglichst ohne Box freigestellt") */
+.kachel-bild.zeichen.echt:has(> .buchzeichen), .sym:has(> .buchzeichen), .ohne-bild:has(> .buchzeichen) { background: none; }
+.kachel-bild.zeichen.echt .buchzeichen, .sym .buchzeichen, .ohne-bild .buchzeichen { width: 100%; height: 100%; }
 .kachel-koerper { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: var(--a3) var(--a4); }   /* füllt die Karte: der Fuß sitzt am Boden */
 .kachel.quer .kachel-koerper { padding: 0; align-self: stretch; justify-content: center; }
 .kachel.text .kachel-koerper { padding: var(--a4); gap: var(--a2); }
