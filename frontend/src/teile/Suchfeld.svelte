@@ -4,6 +4,7 @@
   // ohne Wahl führt Enter zur Suche mit allen Treffern. `gross`: Form der Startseite und der Suchseite; `taste`: die
   // Taste / setzt die Schreibmarke hierher (das Feld im Kopf; ein großes Feld immer, dann tritt die Kopfsuche zurück).
   import { onMount, tick } from "svelte";
+  import { geraet } from "appkern-oberflaeche";
   import { seitensuche } from "../lib/ansicht.svelte";
   import { sucheHolen, vorschlaegeHolen } from "../lib/schnittstelle";
   import { abschnittFuer, suchregeln, suchregelnLaden } from "../lib/suchregeln.svelte";
@@ -174,7 +175,7 @@
     {/if}
     <!-- Spracheingabe (WIKI-42): der Text steht im Feld, wächst beim Sprechen; am Ende läuft die Suche, er bleibt änderbar -->
     <Sprechknopf titel="Frage sprechen" live={(t) => (frage = t)} fertig={(t) => { frage = t; alleTreffer(); }} />
-    {#if taste || gross}<kbd title="Taste / setzt die Schreibmarke ins Suchfeld">/</kbd>{/if}
+    {#if (taste || gross) && !geraet.mobil}<kbd title="Taste / setzt die Schreibmarke ins Suchfeld">/</kbd>{/if}
   </label>
   {#if offen && frage.trim()}
     <!-- Auswahl mit der Maus ohne den Fokus zu verlieren (sonst schließt das Feld vor dem Klick) -->
