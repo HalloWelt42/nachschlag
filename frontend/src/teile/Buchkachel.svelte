@@ -2,7 +2,7 @@
   // Ein Buch als Kachel (Startseite, Kategorien): Symbol der Art, Titel, Artikel und Stand, Sprache, ob es einen Index
   // und eine eigene Ansicht hat; ein Tipp öffnet seine Startseite. Eine Stelle für beide Seiten.
   import { datum, zahl } from "../lib/bibliothek.svelte";
-  import { ART_SYMBOL } from "../lib/arten";
+  import Buchzeichen from "./Buchzeichen.svelte";
   import type { Buch } from "../lib/typen";
   import { lesen } from "../lib/ziele";
   import Kachel from "./Kachel.svelte";
@@ -12,8 +12,9 @@
   let { buch: b, titel = "" }: { buch: Buch; titel?: string } = $props();
 </script>
 
-<Kachel art="quer" symbol={ART_SYMBOL[b.art]} titel={titel || b.titel} untertitel={`${zahl(b.artikel)} Artikel · Stand ${datum(b.stand)}`}
+<Kachel art="quer" titel={titel || b.titel} untertitel={`${zahl(b.artikel)} Artikel · Stand ${datum(b.stand)}`}
         hinweis="Startseite der Quelle öffnen" ziel={() => lesen(b.kennung, b.startseite)}>
+  {#snippet zeichen()}<Buchzeichen buch={b} />{/snippet}
   {#snippet ecke()}<Sprachmarke kuerzel={b.sprache} />{/snippet}
   {#snippet fuss()}
     <span class="faehig">

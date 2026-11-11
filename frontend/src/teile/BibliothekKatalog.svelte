@@ -4,12 +4,14 @@
   // Bibliothek; abonnieren je Ausgabe. Neues seit der letzten Durchsicht steht oben; wer den Reiter öffnet, hat es gesehen.
   import { Auswahl, gehe, Nachladen, Seitenkopf, seitenFehler } from "appkern-oberflaeche";
   import { onMount, untrack } from "svelte";
-  import { datum, zahl } from "../lib/bibliothek.svelte";
+  import { katalogZeichen } from "../lib/arten";
+  import { buch, datum, zahl } from "../lib/bibliothek.svelte";
   import { AUSGABE, groesse, lader, laderLaden, monat, ZUSTAND } from "../lib/buecherlader.svelte";
   import { abbestellen, abonnieren, durchsichtStarten, neuesGesehen, verzeichnisHolen } from "../lib/schnittstelle";
   import type { Katalogfilter, Variante, Verzeichnisbuch } from "../lib/typen";
   import Ladebalken from "./Ladebalken.svelte";
   import Sprachmarke from "./Sprachmarke.svelte";
+  import Buchzeichen from "./Buchzeichen.svelte";
 
   const ANZAHL = 60;
   const KUERZEL: Record<string, string> = { de: "deu", en: "eng", mul: "mul" };
@@ -28,6 +30,11 @@
 
   let filter = $state<Katalogfilter>({ suche: "", bereich: "", sprache: "", ausgabe: "", groesse_bis: 0, bibliothek: "",
                                        nur_neu: false, nur_abonniert: false, kategorie: "", sortierung: "titel" });
+  /** Das Buch in der Bibliothek, wenn eine Ausgabe dort liegt: seine Karte zeigt dann sein eigenes Symbol (WIKI-88). */
+  const lokal = (b: Verzeichnisbuch) => {
+    const v = b.varianten.find((x) => x.lokal_stand);
+    return v ? buch(`${v.stamm}_${v.lokal_stand}`) : undefined;
+  };
   let buecher = $state.raw<Verzeichnisbuch[]>([]);
   let bereiche = $state.raw<string[]>([]);
   let sprachen = $state.raw<string[]>([]);
@@ -154,7 +161,7 @@
       {@const a = b.angaben}
       <div class="katkarte {karteKlasse(b)}" data-karte>
         <div class="kopf-k">
-          <span class="sym"><i class="fa-solid fa-book"></i></span>
+          <span class="sym">{#if lokal(b)}<Buchzeichen buch={lokal(b)!} />{:else}<i class="fa-solid {katalogZeichen(a.kategorie, b.ordner)}"></i>{/if}</span>
           <div>
             <span class="t">{b.titel}</span>
             <span class="u">{b.beschreibung ? `${b.beschreibung} · ` : ""}{b.ordner.replace(/_/g, " ")}</span>

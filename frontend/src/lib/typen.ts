@@ -24,6 +24,7 @@ export interface Buch {
   groesse: number;
   faehigkeiten: Faehigkeiten;
   startseite: string;
+  symbol: string;          // Adresse des Symbols, das das Buch mitbringt; leer: Zeichen der Art (WIKI-88)
   archiv: Archivstand | null;        // im Archiv (WIKI-46); null: aktive Quelle
   buendel: string;                   // Bündel (WIKI-83, etwa freecodecamp_de); leer: steht für sich
   buendel_titel: string;             // Name der Ebene (Titel des Gesamtbuchs)

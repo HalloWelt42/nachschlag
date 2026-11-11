@@ -217,6 +217,8 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .kachel.quer { flex-direction: row; align-items: center; gap: var(--a3); padding: var(--a2) var(--a3) var(--a2) var(--a2); }
 .kachel.quer .kachel-bild { width: 64px; height: 50px; border-radius: var(--r1); }
 .kachel.quer .kachel-bild.zeichen { width: 44px; height: 44px; border-radius: var(--r2); background: var(--flaeche-2); color: var(--petrol); font-size: var(--titel); }
+/* Buchzeichen (WIKI-88): das Symbol, das ein Buch mitbringt, in jedem Rahmen ganz und unverzerrt, höchstens 48 Pixel */
+.buchzeichen { width: 72%; height: 72%; max-width: 48px; max-height: 48px; object-fit: contain; }
 .kachel-koerper { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: var(--a3) var(--a4); }   /* füllt die Karte: der Fuß sitzt am Boden */
 .kachel.quer .kachel-koerper { padding: 0; align-self: stretch; justify-content: center; }
 .kachel.text .kachel-koerper { padding: var(--a4); gap: var(--a2); }
@@ -987,7 +989,9 @@ button.buendel-kopf:hover { background: var(--flaeche-2); }
   .suchstand .buchstaende { display: none; }              /* der Stand je Buch steht im Kopf seines Blocks */
   .treffer, .angebot-artikel { display: block; }
   .treffer .ohne-bild, .angebot-artikel .ohne-bild, .liste-ziel .ohne-bild, .vorschlag .ohne-bild,
-  .notiz-gruppe .gruppenkopf .ohne-bild, .kachel.quer .kachel-bild.zeichen { display: none; }
+  .notiz-gruppe .gruppenkopf .ohne-bild, .kachel.quer .kachel-bild.zeichen:not(.echt) { display: none; }
+  /* das echte Buchzeichen ist Inhalt, kein Platzhalter: klein links, der Text umfließt es */
+  .kachel.quer .kachel-bild.zeichen.echt { float: left; width: 32px; height: 32px; margin-right: var(--a2); }
   .treffer img, .angebot-artikel img { float: left; margin: 2px var(--a2) var(--a1) 0; }
   .angebot-artikel .ja-nein { float: right; margin-left: var(--a2); }
   .angebot-ziel { display: block; }

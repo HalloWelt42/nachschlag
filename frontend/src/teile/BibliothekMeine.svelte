@@ -8,14 +8,15 @@
   import { bibliothek, bibliothekLaden, datum, zahl } from "../lib/bibliothek.svelte";
   import { groesse, lader, laderLaden, monat, ZUSTAND } from "../lib/buecherlader.svelte";
   import { abbestellen, abonnieren, bestandAbonnieren, buchLoeschen } from "../lib/schnittstelle";
-  import { ART_NAME, ART_SYMBOL } from "../lib/arten";
+  import { ART_NAME } from "../lib/arten";
   import { ordnen } from "../lib/buendel";
   import type { Buch } from "../lib/typen";
   import { lesen } from "../lib/ziele";
   import Ladebalken from "./Ladebalken.svelte";
   import Sprachmarke from "./Sprachmarke.svelte";
+  import Buchzeichen from "./Buchzeichen.svelte";
 
-  const SYMBOL = ART_SYMBOL, ART = ART_NAME;
+  const ART = ART_NAME;
 
   /** Stamm einer Datei (Kennung ohne Stand), wie ihn der Bücherlader für Abos führt. */
   const stamm = (b: Buch) => b.kennung.replace(STAND_AM_ENDE, "");
@@ -85,7 +86,7 @@
 {#snippet karte(b: Buch)}
     {@const abo = abos.get(stamm(b))}
     <div class="buch-gross" class:archiviert={!!b.archiv}>
-      <span class="sym"><i class="fa-solid {SYMBOL[b.art]}"></i></span>
+      <span class="sym"><Buchzeichen buch={b} /></span>
       <div class="kopfzeile"><b>{b.titel}</b><Sprachmarke kuerzel={b.sprache} name /><span class="datei">{b.kennung}.zim</span></div>
       <div class="aktionen">
         <button class="knopf" onclick={() => lesen(b.kennung, b.startseite)}><i class="fa-solid fa-book-open"></i>Öffnen</button>

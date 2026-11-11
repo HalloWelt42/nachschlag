@@ -124,4 +124,13 @@ def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche:
             raise _fehlt(f)
         return Response(e.inhalt, media_type=e.mime, headers={"Cache-Control": DAUERHAFT})
 
+    @r.get("/inhalt/symbol/{buch}", dependencies=lesen)
+    async def symbol(buch: str) -> Response:
+        """Das Symbol, das das Buch mitbringt (PNG, größte Fassung); 404, wenn es keins hat (WIKI-88). Die Kennung trägt
+        den Stand, darum darf der Browser es dauerhaft behalten."""
+        try:
+            return Response(await bibliothek.symbol(buch), media_type="image/png", headers={"Cache-Control": DAUERHAFT})
+        except (BuchFehlt, EintragFehlt) as f:
+            raise _fehlt(f)
+
     return r

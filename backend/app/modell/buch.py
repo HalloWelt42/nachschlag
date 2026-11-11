@@ -44,6 +44,8 @@ class Buch(BaseModel):
     groesse: int = Field(description="Größe der Datei in Bytes")
     faehigkeiten: Faehigkeiten
     startseite: str = Field("", description="Pfad der Startseite im Buch")
+    symbol: str = Field("", description="Adresse des Symbols, das das Buch mitbringt (PNG, WIKI-88); leer: es hat keins, "
+                                        "die Oberfläche zeigt das Zeichen seiner Art")
     archiv: Archivstand | None = Field(None, description="im Archiv (WIKI-46); leer: aktive Quelle")
     buendel: str = Field("", description="Bündel, zu dem das Buch gehört (WIKI-83, etwa freecodecamp_de); leer: steht für sich")
     buendel_titel: str = Field("", description="Name der Ebene des Bündels (der Titel des Gesamtbuchs)")

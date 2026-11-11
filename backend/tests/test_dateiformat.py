@@ -29,6 +29,17 @@ def test_art():
     assert art_aus("dateiformate v0.1.0") == "dateiformat"
 
 
+async def test_buchsymbol(leser, tmp_path):
+    """WIKI-88: ein Buch, das ein Symbol mitbringt, nennt dessen Adresse; ohne Symbol bleibt sie leer."""
+    buch = await leser._bib.buch(BUCH)
+    assert buch.symbol == f"/api/v1/inhalt/symbol/{BUCH}"
+    assert (await leser._bib.symbol(BUCH)) == probebuch.PNG
+    ohne = tmp_path / "ohne"
+    probebuch.bauen(ohne, "probe_de_all_2026-01")
+    andere = Bibliothek(lambda: str(ohne))
+    assert (await andere.buch("probe_de_all_2026-01")).symbol == ""
+
+
 async def test_formatseite(leser):
     buch = await leser._bib.buch(BUCH)
     assert buch.art == "dateiformat" and buch.faehigkeiten.lesedesign

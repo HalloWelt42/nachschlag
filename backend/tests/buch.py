@@ -510,6 +510,7 @@ def bauen_dateiformate(ordner: Path, name: str = "dateiformate_de_all_2026-11") 
                                  ("Creator", "Dateiformate"), ("Publisher", "Nachschlag"), ("Scraper", "dateiformate v0.1.0"),
                                  ("Tags", "dateiformate;_category:other")):
             c.add_metadata(schluessel, wert)
+        c.add_illustration(PNG, 48, 48)                             # das Symbol des Buchs (WIKI-88)
         c.add_item(_Seite("index", "Dateiformate", DF_START))
         c.add_item(_Seite("format/png", "PNG - Portable Network Graphics", DF_PNG))
         c.add_item(_Seite("format/gif", "GIF", DF_GIF))

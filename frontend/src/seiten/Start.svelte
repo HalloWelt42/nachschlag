@@ -13,7 +13,6 @@
   import { STARTANSICHTEN, startansicht, startansichtMerken } from "../lib/ansicht.svelte";
   import { themaHolen } from "../lib/themen.svelte";
   import { Auswahl } from "appkern-oberflaeche";
-  import { ART_SYMBOL } from "../lib/arten";
   import Buchkachel from "../teile/Buchkachel.svelte";
   import Buendelebene from "../teile/Buendelebene.svelte";
   import { buendelHinweis, ordnen, reihenfolge } from "../lib/buendel";
@@ -22,6 +21,7 @@
   import { gehe } from "appkern-oberflaeche";
   import { meins, meinsLaden, verlaufHolen, wann, type Verlaufseintrag } from "../lib/meins.svelte";
   import { lader } from "../lib/buecherlader.svelte";
+  import Buchzeichen from "../teile/Buchzeichen.svelte";
 
   const WEITERLESEN = 4;                 // Karten im Entwurf
   const MERKZETTEL = 5;
@@ -30,7 +30,6 @@
 
   interface Fund { buch: Buch; pfad: string; titel: string; einleitung: string }
 
-  const SYMBOL = ART_SYMBOL;
 
   let funde = $state<Record<string, Fund | null>>({});
   const REIHE = 6;                       // Artikel des Themas unter dem Artikel für heute
@@ -247,7 +246,7 @@
               {@const neu = b.archiv?.ersetzt_durch ? buchVon(b.archiv.ersetzt_durch) : undefined}
               <div class="liste-zeile">
                 <button class="liste-ziel" onclick={() => lesen(b.kennung, b.startseite)}>
-                  <span class="ohne-bild"><i class="fa-solid {SYMBOL[b.art]}"></i></span>
+                  <span class="ohne-bild"><Buchzeichen buch={b} /></span>
                   <span><span class="t">{bezeichnung(b)}</span>
                     <span class="u">Stand {datum(b.stand)} · {b.archiv?.grund === "ersetzt"
                       ? `ersetzt durch die Fassung ${neu ? `vom ${datum(neu.stand)}` : b.archiv.ersetzt_durch}` : "von Hand abgelegt"}</span></span>

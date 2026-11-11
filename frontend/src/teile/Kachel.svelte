@@ -12,6 +12,7 @@
     art = "hoch",
     bild = "",
     symbol = "fa-file-lines",
+    zeichen,
     titel,
     untertitel = "",
     ziel,
@@ -28,6 +29,7 @@
     art?: "hoch" | "quer" | "text";
     bild?: string;
     symbol?: string;
+    zeichen?: Snippet;                       // eigenes Zeichen statt `symbol` (etwa das Buchzeichen, WIKI-88)
     titel: string;
     untertitel?: string;
     ziel?: () => void;
@@ -56,7 +58,7 @@
                 href={element === "a" ? adresse : undefined} type={element === "button" ? "button" : undefined}
                 disabled={element === "button" ? gesperrt : undefined} onclick={tippen} {...rest}>
   {#if art !== "text"}
-    <span class="kachel-bild" class:zeichen={!bild}>{#if bild}<img src={bild} alt="" loading="lazy" />{:else}<i class="fa-solid {symbol}"></i>{/if}</span>
+    <span class="kachel-bild" class:zeichen={!bild} class:echt={!bild && !!zeichen}>{#if bild}<img src={bild} alt="" loading="lazy" />{:else if zeichen}{@render zeichen()}{:else}<i class="fa-solid {symbol}"></i>{/if}</span>
   {/if}
   <span class="kachel-koerper">
     {#if vorsatz}{@render vorsatz()}{/if}

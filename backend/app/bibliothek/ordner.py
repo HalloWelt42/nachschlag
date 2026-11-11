@@ -115,6 +115,7 @@ def buch_aus(kennung: str, a: Archive, groesse: int) -> Buch:
                 beschreibung=_angabe(a, "Description"), sprache=_angabe(a, "Language").split(",")[0],
                 stand=_angabe(a, "Date"), erzeuger=erzeuger, art=art, eintraege=a.entry_count,
                 artikel=seiten_aus(a), medien=a.media_count, groesse=groesse, startseite=start,
+                symbol=f"/api/v1/inhalt/symbol/{kennung}" if a.has_illustration() else "",
                 faehigkeiten=Faehigkeiten(titelindex=a.has_title_index, volltext=a.has_fulltext_index,
                                           bilder=a.media_count > 0, lesedesign=art in MIT_LESEDESIGN))
 
@@ -202,6 +203,17 @@ class Bibliothek:
             weiter = self._eintrag(kennung, basis + unquote(ziel), tiefe + 1, unquote(ziel_anker))
             return weiter
         return Eintrag(e.path, e.title, item.mimetype, inhalt, anker)
+
+    async def symbol(self, kennung: str) -> bytes:
+        """Das Symbol, das ein Buch mitbringt, in der größten Fassung (meist 48 Pixel, PNG); `EintragFehlt` ohne."""
+        return await asyncio.to_thread(self._symbol, kennung)
+
+    def _symbol(self, kennung: str) -> bytes:
+        a = self.archiv(kennung)
+        groessen = a.get_illustration_sizes() if a.has_illustration() else set()
+        if not groessen:
+            raise EintragFehlt(f"{kennung} bringt kein Symbol mit")
+        return bytes(a.get_illustration_item(max(groessen)).content)
 
     async def eintrag(self, kennung: str, pfad: str) -> Eintrag:
         return await asyncio.to_thread(self._eintrag, kennung, pfad)
