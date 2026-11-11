@@ -28,7 +28,7 @@ from .buecherlader import Buecherlader, Regeln as Laderregeln
 from .bilder import Grossbilder
 from .bilder.dienst import Steckbriefstufe
 from .bilder.api import router as bilder_router
-from .buecherlader.api import router as buecherlader_router
+from .buecherlader.api import router as buecherlader_router, symbol_router as katalogsymbol_router
 from .eigenindex.ablage import Eigenindizes
 from .eigenindex.api import router as indexdienst_router
 from .eigenindex.auftrag import Indexauftraege
@@ -275,7 +275,8 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
             eigen.entfernen(kennung)
 
     lader = Buecherlader(geruest.db, geruest.auftraege, laderregeln, quellen.von_hand_aktiv,
-                         transport=lader_transport or transport, in_gebrauch=fundus_dateien, nach_loeschen=nach_loeschen)
+                         transport=lader_transport or transport, in_gebrauch=fundus_dateien, nach_loeschen=nach_loeschen,
+                         symbolordner=daten / "katalogsymbole")
     geruest.begleiter_anmelden(lader)
     # eine Regel zum Zurückstellen für alle Dienste: Sammlungen warten auf die Nacht, Laden mit "nur nachts" auch
     geruest.auftraege.zurueckstellen_wenn(lambda a: sammlungen.zurueckstellen(a) or lader.zurueckstellen(a)
@@ -293,6 +294,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     app.include_router(mcp_router(geruest, mcp_werkzeuge(bibliothek, suche, leser)))   # MCP-Werkzeuge für KI (WIKI-78)
     app.include_router(quellenarchiv_router(geruest, quellen))
     app.include_router(buecherlader_router(geruest, lader))
+    app.include_router(katalogsymbol_router(geruest, lader))
     app.include_router(sammlung_router(geruest, sammlungen, stimmen))
     app.include_router(ausprobieren_router(geruest, Ausprobieren(lambda: geruest.verbund, lambda: e().codeschmiede_adresse)))
     notizbilder = Notizbilder(meins, ablage)

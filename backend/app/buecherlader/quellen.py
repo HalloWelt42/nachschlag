@@ -121,7 +121,7 @@ class Katalogquelle:
             await melden(f"{self.name}: Sprache {sprache}")
             adresse = f"{self.adresse.rstrip('/')}/entries?lang={KATALOGSPRACHE.get(sprache, sprache)}&count=-1"
             try:
-                eintraege = eintraege_aus((await c.get(adresse)).raise_for_status().content)
+                eintraege = eintraege_aus((await c.get(adresse)).raise_for_status().content, adresse)
             except (httpx.HTTPError, ET.ParseError) as f:
                 ergebnis.hinweise.append(f"{self.name} ({sprache}): {f}")
                 continue

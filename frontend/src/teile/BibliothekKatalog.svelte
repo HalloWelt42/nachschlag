@@ -161,7 +161,7 @@
       {@const a = b.angaben}
       <div class="katkarte {karteKlasse(b)}" data-karte>
         <div class="kopf-k">
-          <span class="sym">{#if lokal(b)}<Buchzeichen buch={lokal(b)!} />{:else}<i class="fa-solid {katalogZeichen(a.kategorie, b.ordner)}"></i>{/if}</span>
+          <span class="sym"><Buchzeichen buch={lokal(b) ?? b} ersatz={katalogZeichen(a.kategorie, b.ordner)} /></span>
           <div>
             <span class="t">{b.titel}</span>
             <span class="u">{b.beschreibung ? `${b.beschreibung} · ` : ""}{b.ordner.replace(/_/g, " ")}</span>

@@ -69,6 +69,7 @@ FEED = """<?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2
 <entry><title>Probelexikon</title><summary>Buch für die Tests</summary><articleCount>9</articleCount><mediaCount>2</mediaCount>
 <tags>lexikon;tiere;_category:wikipedia;_pictures:yes;_videos:no;_ftindex:yes</tags>
 <author><name>Tests</name></author><publisher><name>openZIM</name></publisher><dc:issued>2026-10-02T00:00:00Z</dc:issued>
+<link rel="http://opds-spec.org/image/thumbnail" href="/catalog/v2/illustration/abc/?size=48" type="image/png;width=48;height=48;scale=1"/>
 <link rel="http://opds-spec.org/acquisition/open-access" type="application/x-zim" length="4096"
       href="https://lb.test/zim/probe/probe_de_all_2026-10.zim.meta4"/></entry>
 <entry><title>Ohne Datei</title></entry></feed>"""
@@ -80,7 +81,9 @@ def test_katalog_mit_angaben():
     a = e.angaben
     assert (a.titel, a.artikel, a.medien, a.autor, a.herausgeber, a.kategorie) == ("Probelexikon", 9, 2, "Tests", "openZIM", "wikipedia")
     assert a.schlagworte == ["lexikon", "tiere"] and a.bilder is True and a.videos is False and a.volltext is True
-    assert a.datum == "2026-10-02"
+    assert a.datum == "2026-10-02" and a.symbol_quelle == "/catalog/v2/illustration/abc/?size=48"   # ohne Basis relativ
+    [mit] = eintraege_aus(FEED, KATALOG + "/entries?lang=deu")
+    assert mit.angaben.symbol_quelle == "http://katalog.test/catalog/v2/illustration/abc/?size=48"
 
 
 def test_verzeichnisse_aller_spiegel():
@@ -125,6 +128,7 @@ class Server:
         self.summen: dict[str, str] = {}
         self.bereiche: list[tuple[str, str]] = []    # (Bereich/Datei, Größe in der Liste)
         self.fortgesetzt: list[str] = []
+        self.symbole_geholt = 0                      # Abrufe von Symbolen beim Katalog (WIKI-88)
         self.mit_ladedatei = False                   # Ladedateien (meta4) bei der Quelle der Prüfsummen
         self.quelle = quelle
 
@@ -156,6 +160,9 @@ class Server:
         if url.startswith(SUMMEN) and url.endswith(".sha256"):
             pfad = url[len(SUMMEN):-len(".sha256")]
             return httpx.Response(200, text=f"{self.summen[pfad]}  {pfad.split('/')[1]}\n") if pfad in self.summen else httpx.Response(404)
+        if url.startswith(KATALOG + "/illustration/"):
+            self.symbole_geholt += 1
+            return httpx.Response(200, content=probebuch.PNG, headers={"content-type": "image/png"})
         if url.startswith(KATALOG):
             return httpx.Response(200, text=FEED)
         if url.startswith(VERZEICHNIS):
@@ -529,3 +536,21 @@ async def test_eigene_buecher_aus_einem_ordner(umgebung, tmp_path: Path):
     assert laden[0].zustand == "fertig" and laden[0].ergebnis["ort"] == "Bibliothek"
     assert (buecher / "eigenes_de_all_2026-11.zim").read_bytes() == datei.read_bytes()
     assert "eigenes_de_all_2026-11.zim" in (buecher / "library.xml").read_text()
+
+
+
+async def test_symbole_aus_dem_katalog_einmal_geholt(umgebung, tmp_path: Path):
+    """WIKI-88: der Katalog nennt das Symbol eines Buchs; die App holt es beim ersten Abruf und puffert es."""
+    lader, auftraege, server, *_ = umgebung
+    lader._symbolordner = tmp_path / "symbole"
+    await lader.durchsehen("probe")
+    await fertig(auftraege)
+    probe = next(b for b in (await lader.verzeichnis()).eintraege if b.basis == "probe_de_all")
+    assert probe.symbol == "/api/v1/inhalt/katalogsymbol/probe_de_all"
+    assert await lader.katalogsymbol("probe_de_all") == probebuch.PNG
+    assert await lader.katalogsymbol("probe_de_all") == probebuch.PNG
+    assert server.symbole_geholt == 1 and (tmp_path / "symbole" / "probe_de_all.png").is_file()
+    with pytest.raises(LookupError):
+        await lader.katalogsymbol("neues_de_all")                  # nur im Verzeichnis, der Katalog nennt keins
+    with pytest.raises(LookupError):
+        await lader.katalogsymbol("../boese")

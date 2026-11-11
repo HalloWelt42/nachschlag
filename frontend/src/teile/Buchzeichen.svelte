@@ -4,12 +4,13 @@
   import { ART_SYMBOL } from "../lib/arten";
   import type { Buch } from "../lib/typen";
 
-  let { buch }: { buch: Pick<Buch, "art" | "symbol"> } = $props();
+  // `ersatz`: anderes Zeichen, wenn kein Symbol da ist (im Katalog das Zeichen der Sammlung)
+  let { buch, ersatz = "" }: { buch: Pick<Buch, "symbol"> & Partial<Pick<Buch, "art">>; ersatz?: string } = $props();
   let kaputt = $state(false);
 </script>
 
 {#if buch.symbol && !kaputt}
   <img class="buchzeichen" src={buch.symbol} alt="" loading="lazy" onerror={() => (kaputt = true)} />
 {:else}
-  <i class="fa-solid {ART_SYMBOL[buch.art]}"></i>
+  <i class="fa-solid {ersatz || (buch.art ? ART_SYMBOL[buch.art] : 'fa-book')}"></i>
 {/if}

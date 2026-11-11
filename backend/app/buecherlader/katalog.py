@@ -8,13 +8,15 @@ from __future__ import annotations
 import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 from ..modell.buecherlader import Angaben
 from .verzeichnis import zerlegen
 
 _ATOM = "{http://www.w3.org/2005/Atom}"
 _META4 = "{urn:ietf:params:xml:ns:metalink}"
+#: Verweis auf das Symbol eines Buchs im Katalog (OPDS)
+SYMBOL_REL = "http://opds-spec.org/image/thumbnail"
 #: Sprachen im Namen der Dateien und im Katalog (ISO 639-3)
 KATALOGSPRACHE = {"de": "deu", "en": "eng", "mul": "mul"}
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -54,8 +56,9 @@ def _schlagworte(tags: str) -> tuple[list[str], str, dict[str, bool]]:
     return [f for f in freie if f != kategorie], kategorie, schalter          # die Kategorie nicht noch als Schlagwort
 
 
-def eintraege_aus(feed: str | bytes) -> list[Katalogeintrag]:
-    """Die Bücher eines Katalogs; Einträge ohne Verweis auf eine ZIM-Datei fallen weg."""
+def eintraege_aus(feed: str | bytes, basis: str = "") -> list[Katalogeintrag]:
+    """Die Bücher eines Katalogs; Einträge ohne Verweis auf eine ZIM-Datei fallen weg. `basis`: Adresse des Katalogs,
+    gegen die relative Verweise (das Symbol) aufgelöst werden."""
     aus = []
     for e in ET.fromstring(feed).iter(f"{_ATOM}entry"):
         link = next((l for l in e.iter(f"{_ATOM}link") if l.get("type") == "application/x-zim"), None)
@@ -74,7 +77,9 @@ def eintraege_aus(feed: str | bytes) -> list[Katalogeintrag]:
             herausgeber=(e.findtext(f"{_ATOM}publisher/{_ATOM}name") or "").strip(),
             kategorie=kategorie or (e.findtext(f"{_ATOM}category") or "").strip(), schlagworte=freie,
             bilder=schalter.get("pictures"), videos=schalter.get("videos"), volltext=schalter.get("ftindex"),
-            datum=(e.findtext("{http://purl.org/dc/terms/}issued") or "")[:10])
+            datum=(e.findtext("{http://purl.org/dc/terms/}issued") or "")[:10],
+            symbol_quelle=next((urljoin(basis, l.get("href", "")) for l in e.iter(f"{_ATOM}link")
+                                if l.get("rel") == SYMBOL_REL and l.get("href")), ""))
         aus.append(Katalogeintrag(ordner=pfad[-2] if len(pfad) > 1 else "", datei=pfad[-1], stamm=name.stamm,
                                   sprache=name.sprache, stand=name.stand, groesse=_zahl(link.get("length")),
                                   ladedatei=ladedatei, angaben=angaben))

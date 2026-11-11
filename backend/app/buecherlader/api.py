@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field
 
 from appkern.app import Geruest
@@ -129,5 +129,21 @@ def router(geruest: Geruest, lader: Buecherlader) -> APIRouter:
     async def vorschlaege() -> list[Quellvorschlag]:
         """Aus der offiziellen Ladedatei eines bekannten Buchs: die Spiegel mit Land, die noch fehlen."""
         return await lader.vorschlaege()
+
+    return r
+
+
+def symbol_router(geruest: Geruest, lader: Buecherlader) -> APIRouter:
+    """Symbole der Bücher laut Katalog für <img> (Lesezugang wie die Medien, WIKI-88)."""
+    r = APIRouter(prefix="/api/v1/inhalt", tags=["buecherlader"], dependencies=[geruest.lesen])
+
+    @r.get("/katalogsymbol/{basis}", summary="Symbol eines Buchs laut Katalog (gepuffert)")
+    async def katalogsymbol(basis: str) -> Response:
+        """Das Symbol, das der Katalog der Bücher zu einem Buch nennt; einmal geholt, danach aus dem Puffer der App."""
+        try:
+            return Response(await lader.katalogsymbol(basis), media_type="image/png",
+                            headers={"Cache-Control": "public, max-age=604800"})
+        except LookupError as f:
+            raise HTTPException(status_code=404, detail=str(f)) from f
 
     return r

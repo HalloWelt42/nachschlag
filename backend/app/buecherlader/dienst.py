@@ -63,6 +63,13 @@ PHASEN = (Phase(schluessel="laden", titel="Laden", symbol="download"),
           Phase(schluessel="oeffnen", titel="Öffnen und zählen", symbol="book-open"),
           Phase(schluessel="ablegen", titel="In die Bibliothek", symbol="box-archive"))
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
+#: Stamm eines Buchs ohne Ausgabe, wie er als Dateiname der Symbole taugt
+_BASIS = re.compile(r"[\w.-]{1,120}")
+#: größtes Symbol, das der Bücherlader aus dem Katalog annimmt
+SYMBOL_HOECHSTENS = 256 * 1024
+#: so viele Symbole holt der Bücherlader zugleich beim Katalog (mehr nimmt er übel); bittet er um Geduld, so lange warten
+SYMBOLE_ZUGLEICH = 2
+SYMBOL_GEDULD_S = (1.0, 3.0, 8.0)
 
 
 @dataclass(frozen=True)
@@ -127,7 +134,8 @@ class Buecherlader(Begleiter):
                  von_hand_aktiv: Callable[[str], Awaitable[bool]], *, transport: httpx.AsyncBaseTransport | None = None,
                  uhr: Callable[[], datetime] = lambda: datetime.now(timezone.utc), zeitplan: bool = True,
                  in_gebrauch: Callable[[], Awaitable[set[str] | None]] | None = None,
-                 nach_loeschen: Callable[[str, bool], Awaitable[None]] | None = None) -> None:
+                 nach_loeschen: Callable[[str, bool], Awaitable[None]] | None = None,
+                 symbolordner: Path | None = None) -> None:
         """`von_hand_aktiv(kennung)`: hat der Nutzer diese Fassung von Hand aktiv gesetzt (Archiv der Quellen)? Dann
         bleibt sie über die Frist hinaus. `zeitplan`: ohne ihn (Tests) läuft `takt` nur, wenn man ihn ruft.
         `in_gebrauch()`: Dateinamen, die andere Dienste noch lesen (der Fundus, WIKI-58); None heißt unbekannt (er
@@ -135,6 +143,8 @@ class Buecherlader(Begleiter):
         gelöschten Buch abräumen (Vermerk im Archiv der Quellen; war es die letzte Fassung des Buchs, auch den eigenen
         Index, sonst bleibt er Vorlage für den Index einer anderen Fassung)."""
         self._bestand, self._auftraege, self._regeln = Bestand(db), auftraege, regeln
+        self._symbolordner = symbolordner             # Symbole aus dem Katalog, einmal geholt (WIKI-88)
+        self._symbolsperre = asyncio.Semaphore(SYMBOLE_ZUGLEICH)
         self._von_hand_aktiv, self._transport, self._uhr, self._mit_zeitplan = von_hand_aktiv, transport, uhr, zeitplan
         self._in_gebrauch, self._nach_loeschen = in_gebrauch, nach_loeschen
         self._wecker: asyncio.Task | None = None
@@ -599,6 +609,49 @@ class Buecherlader(Begleiter):
 
     # ----- Stand und Verzeichnis --------------------------------------------------------------------------------------
 
+    # ----- Symbole aus dem Katalog (WIKI-88) ---------------------------------------------------------------------------
+
+    async def katalogsymbol(self, basis: str) -> bytes:
+        """Das Symbol eines Buchs laut Katalog: beim ersten Mal geholt und im Ordner der Symbole abgelegt, danach von
+        dort. Nur Bilder bis SYMBOL_HOECHSTENS; `LookupError`, wenn es keins gibt oder es sich nicht holen lässt."""
+        if self._symbolordner is None or not _BASIS.fullmatch(basis):
+            raise LookupError(basis)
+        datei = self._symbolordner / f"{basis}.png"
+        if datei.is_file():
+            return datei.read_bytes()
+        quelle = await self._bestand.symbolquelle(basis)
+        if not quelle:
+            raise LookupError(f"{basis}: der Katalog nennt kein Symbol")
+        async with self._symbolsperre:
+            if datei.is_file():                       # ein anderer Abruf hat es inzwischen geholt
+                return datei.read_bytes()
+            antwort = await self._symbol_holen(basis, quelle)
+        inhalt = antwort.content
+        if not antwort.headers.get("content-type", "").startswith("image/") or not 0 < len(inhalt) <= SYMBOL_HOECHSTENS:
+            raise LookupError(f"{basis}: kein brauchbares Bild")
+        self._symbolordner.mkdir(parents=True, exist_ok=True)
+        zwischen = datei.with_suffix(".teil")
+        zwischen.write_bytes(inhalt)
+        zwischen.replace(datei)
+        return inhalt
+
+    async def _symbol_holen(self, basis: str, quelle: str) -> httpx.Response:
+        async with self._client() as c:
+            for warten in (*SYMBOL_GEDULD_S, None):
+                try:
+                    antwort = await c.get(quelle)
+                except httpx.HTTPError as f:
+                    raise LookupError(f"{basis}: Symbol nicht zu holen ({f})") from f
+                if antwort.status_code in (429, 503) and warten is not None:
+                    sagt = antwort.headers.get("retry-after", "")
+                    await asyncio.sleep(min(float(sagt), 10.0) if sagt.isdigit() else warten)
+                    continue
+                if antwort.status_code != 200:
+                    logger.info("Symbol %s: %s antwortet %s", basis, rechnername(quelle), antwort.status_code)
+                    raise LookupError(f"{basis}: Symbol nicht zu holen ({antwort.status_code})")
+                return antwort
+        raise AssertionError("unerreichbar")
+
     # ----- Quellen verwalten (WIKI-62) ---------------------------------------------------------------------------------
 
     async def quellen(self) -> list[Quellstand]:
@@ -747,7 +800,8 @@ class Buecherlader(Begleiter):
                 quellen=z.bezuege) for z in teile]
             buecher.append(Verzeichnisbuch(basis=basis, ordner=erste.ordner, sprache=erste.sprache,
                                            titel=erste.titel or basis, beschreibung=erste.beschreibung,
-                                           eintraege=max(z.eintraege for z in teile), angaben=erste.angaben_lesen(),
+                                           eintraege=max(z.eintraege for z in teile), angaben=(angaben := erste.angaben_lesen()),
+                                           symbol=f"/api/v1/inhalt/katalogsymbol/{basis}" if angaben.symbol_quelle else "",
                                            varianten=varianten))
         bereiche = sorted({b.ordner for b in buecher})
         sprachen = sorted({b.sprache for b in buecher})

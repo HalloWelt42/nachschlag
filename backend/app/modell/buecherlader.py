@@ -14,7 +14,7 @@ Neuheit = Literal["", "buch", "fassung"]
 
 class Angaben(BaseModel):
     """Was eine Quelle über ein Buch weiß (WIKI-62), zusammengeführt aus allen Quellen (der Katalog vor dem Verzeichnis).
-    Vorschaubilder fremder Seiten werden nicht übernommen."""
+    Vom Katalog kommt auch das Symbol des Buchs (WIKI-88, Nutzer 11.11.2026): die App holt es einmal und puffert es."""
     titel: str = ""
     beschreibung: str = ""
     artikel: int = Field(0, description="Zahl der Artikel; 0: unbekannt")
@@ -27,6 +27,7 @@ class Angaben(BaseModel):
     videos: bool | None = Field(None, description="mit Videos; leer: unbekannt")
     volltext: bool | None = Field(None, description="mit eingebautem Volltextindex; leer: unbekannt")
     datum: str = Field("", description="Datum der Fassung laut Katalog (JJJJ-MM-TT)")
+    symbol_quelle: str = Field("", description="Adresse des Symbols laut Katalog; die App holt und puffert es (WIKI-88)")
 
 
 class Quellstand(BaseModel):
@@ -86,6 +87,7 @@ class Verzeichnisbuch(BaseModel):
     beschreibung: str = ""
     eintraege: int = Field(0, description="Zahl der Artikel laut Katalog; 0: unbekannt")
     angaben: Angaben = Field(default_factory=Angaben, description="was die Quellen über das Buch wissen")
+    symbol: str = Field("", description="Adresse des Symbols über die App (gepuffert, WIKI-88); leer: keins bekannt")
     varianten: list[Variante]
 
 

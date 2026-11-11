@@ -14,6 +14,7 @@ from appkern.datenbank import Datenbank
 from ..modell.buecherlader import Durchgang
 from ..modell.buecherlader import Angaben, Quellstand
 from .quellen import Art, Bezug, Vereint
+from .verzeichnis import AUSGABEN
 
 STUFEN = ["""
 CREATE TABLE buecherlader_buch (
@@ -192,6 +193,15 @@ class Bestand:
         return (z["nr"], Durchgang.model_validate_json(z["inhalt"])) if z else None
 
     # ----- Verzeichnis ------------------------------------------------------------------------------------------------
+
+    async def symbolquelle(self, basis: str) -> str:
+        """Adresse des Symbols laut Katalog für ein Buch (Stamm ohne Ausgabe), aus irgendeiner seiner Ausgaben."""
+        staemme = [basis, *(f"{basis}_{a}" for a in AUSGABEN)]
+        for z in await self._db.zeilen(f"SELECT angaben FROM buecherlader_buch WHERE stamm IN ({','.join('?' * len(staemme))}) "
+                                       "AND angaben != ''", tuple(staemme)):
+            if quelle := Angaben.model_validate_json(z["angaben"]).symbol_quelle:
+                return quelle
+        return ""
 
     async def buecher(self, sprachen: set[str]) -> list[Buchzeile]:
         """Alle bekannten Bücher der Sprachen mit ihrem jüngsten Stand."""

@@ -236,6 +236,7 @@ export interface Verzeichnisbuch {
   beschreibung: string;
   eintraege: number;
   angaben: Angaben;
+  symbol: string;                    // Symbol laut Katalog, über die App gepuffert (WIKI-88); leer: keins bekannt
   varianten: Variante[];
 }
 
