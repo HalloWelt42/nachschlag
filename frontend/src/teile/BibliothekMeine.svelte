@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { STAND_AM_ENDE } from "../lib/stand";
   // Reiter Meine Bücher der Bibliothek (WIKI-57): jede Quelle mit Kennzahlen, Fähigkeiten und Abo. Hat eine Art von Buch
   // noch keinen eigenen Baustein, steht das sichtbar daran ("Eigene Ansicht fehlt", mit dem Erzeuger), und oben fasst ein
   // Band zusammen, für welche Erzeuger eine Ansicht fehlt: so sieht man, wo noch gebaut werden muss. Jedes Buch lässt
@@ -17,7 +18,7 @@
   const SYMBOL = ART_SYMBOL, ART = ART_NAME;
 
   /** Stamm einer Datei (Kennung ohne Stand), wie ihn der Bücherlader für Abos führt. */
-  const stamm = (b: Buch) => b.kennung.replace(/_\d{4}-\d{2}$/, "");
+  const stamm = (b: Buch) => b.kennung.replace(STAND_AM_ENDE, "");
   const abos = $derived(new Map((lader.stand?.abos ?? []).map((a) => [a.stamm, a])));
   const buecher = $derived([...bibliothek.buecher].sort((a, b) => Number(!!a.archiv) - Number(!!b.archiv)));
   const ohneAnsicht = $derived.by(() => {

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { STAND_AM_ENDE } from "../lib/stand";
   // Reiter Fassungen und Laden der Bibliothek (WIKI-57, Entwurf fassungen.html): Durchsicht des Verzeichnisses, Platz mit
   // Reserve und je Abo drei Plätze (vorige, aktiv, neu) mit Umschalten und Zurück. Was gerade lädt, zeigt seinen
   // Fortschritt nur auf der Seite Aufträge und in der Fußleiste; hier steht der Verweis dorthin.
@@ -15,7 +16,7 @@
   const stand = $derived(lader.stand);
   const platz = $derived(stand?.platz ?? null);
   const anteil = (n: number) => (platz && platz.gesamt ? `${(100 * n) / platz.gesamt}%` : "0%");
-  const kennung = (k: string) => k.replace(/^.*_(\d{4}-\d{2})$/, "$1");
+  const kennung = (k: string) => STAND_AM_ENDE.exec(k)?.[1] ?? k;
 
   let fehler = $state("");
   let arbeitet = $state("");

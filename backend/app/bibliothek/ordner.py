@@ -18,7 +18,7 @@ from urllib.parse import unquote
 
 from libzim.reader import Archive
 
-from ..modell.buch import Art, Bibliotheksstand, Buch, Faehigkeiten
+from ..modell.buch import STAND_MUSTER, Art, Bibliotheksstand, Buch, Faehigkeiten
 
 logger = logging.getLogger("nachschlag.bibliothek")
 #: Erzeuger und die Grundstruktur ihrer Bücher; erkannt am Anfang der Angabe Scraper
@@ -31,8 +31,8 @@ QUELLEN: tuple[tuple[str, Art], ...] = (("php.net/manual", "dokumentation"),)
 KATEGORIEN: tuple[tuple[str, Art], ...] = (("ifixit", "anleitung"),)
 #: Arten mit eigenem Lesedesign (wächst mit den Bausteinen)
 MIT_LESEDESIGN: set[Art] = {"enzyklopaedie", "dokumentation", "frage_antwort", "anleitung", "uebung", "dateiformat"}
-#: Stand am Ende eines Dateinamens (`_2026-10`); davor steht das Buch in seiner Ausgabe
-STAND = re.compile(r"_\d{4}-\d{2}$")
+#: Stand am Ende eines Dateinamens (`_2026-10`, eigene Bücher auch `_2026-11-12`); davor steht das Buch in seiner Ausgabe
+STAND = re.compile(rf"_{STAND_MUSTER}$")
 UMLEITUNG_HTML = re.compile(rb"""<meta[^>]+http-equiv=["']refresh["'][^>]+URL=['"]?\.?/?([^'">]+)""", re.I)
 
 

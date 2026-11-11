@@ -16,6 +16,8 @@ from dataclasses import dataclass
 from html import unescape
 from urllib.parse import unquote
 
+from ..modell.buch import STAND_MUSTER
+
 #: Eine Zeile einer Verzeichnisseite: eine Tabellenzeile oder eine Textzeile
 _ZEILEN = re.compile(r"<tr\b|\n", re.I)
 #: Verweis auf eine Datei oder einen Unterordner (auch `span href` wie bei lighttpd)
@@ -23,7 +25,7 @@ _VERWEIS = re.compile(r'href="([^"?#]+)"', re.I)
 _TAG = re.compile(r"<[^>]+>")
 #: Größe mit Einheit: 45G, 1.2 GiB, 512K, 3,5 MB
 _GROESSE = re.compile(r"(?<![\w.,])(\d+(?:[.,]\d+)?)\s*([KMGT])(?:i?B)?(?![\w])")
-_NAME = re.compile(r"^(?P<stamm>[^/]+)_(?P<stand>\d{4}-\d{2})\.zim$")
+_NAME = re.compile(rf"^(?P<stamm>[^/]+)_(?P<stand>{STAND_MUSTER})\.zim$")
 _EINHEIT = {"": 1, "K": 1024, "M": 1024**2, "G": 1024**3, "T": 1024**4}
 #: Ausgaben eines Buchs: mit Bildern, ohne Bilder, nur Einleitungen
 AUSGABEN = ("maxi", "nopic", "mini")

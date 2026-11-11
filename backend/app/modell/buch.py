@@ -7,6 +7,10 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 #: Grundstruktur eines Buchs; danach wählt Nachschlag den Baustein (siehe bausteine/)
+#: Stand am Ende des Namens einer Datei: Jahr und Monat (`2026-10`, die Spiegel) oder mit Tag (`2026-11-12`, eigene
+#: Bücher mit mehreren Fassungen im Monat, WIKI-87). Ein Muster für Bibliothek, Bücherlader, Index und Oberfläche
+#: (frontend/src/lib/stand.ts); als Text verglichen ordnen sich beide Formen richtig.
+STAND_MUSTER = r"\d{4}-\d{2}(?:-\d{2})?"
 Art = Literal["enzyklopaedie", "dokumentation", "frage_antwort", "anleitung", "uebung", "dateiformat", "webseite", "sonstiges"]
 
 

@@ -9,10 +9,11 @@ import re
 from collections.abc import Callable
 from pathlib import Path
 
+from ..modell.buch import STAND_MUSTER
 from . import schema
 
 
-_STAND = re.compile(r"^(?P<stamm>.+)_(?P<stand>\d{4}-\d{2})$")
+_STAND = re.compile(rf"^(?P<stamm>.+)_(?P<stand>{STAND_MUSTER})$")
 
 
 class Eigenindizes:

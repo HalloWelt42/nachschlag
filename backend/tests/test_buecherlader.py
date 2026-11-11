@@ -41,6 +41,13 @@ def seite(*zeilen: str) -> str:
             '<a href="/kiwix/">Parent Directory</a>                             -   \n' + "".join(zeilen) + "</pre></body></html>")
 
 
+def test_stand_auch_tagesgenau():
+    """Eigene Bücher kommen auch mehrmals im Monat (WIKI-87): der Stand darf einen Tag tragen und ordnet sich als Text."""
+    assert zerlegen("dateiformate_de_all_2026-11-12.zim").stand == "2026-11-12"
+    assert zerlegen("wikipedia_de_all_maxi_2026-10.zim").stand == "2026-10"
+    assert "2026-11" < "2026-11-12" < "2026-12"
+
+
 def test_verzeichnisseite_lesen():
     wurzel = seite(zeile("wikipedia/", "-"), zeile("stack_exchange/", "-"))
     assert ordner_aus(wurzel) == ["wikipedia", "stack_exchange"]
