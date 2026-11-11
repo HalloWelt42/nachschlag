@@ -33,6 +33,7 @@ Schlagworte), nie am Dateinamen. Suche, Merkzettel, Notizen und Themen kennen nu
 | Anleitung, Gerät, Anleitungen finden | ohne Erzeuger, Kategorie iFixit | WIKI-64 |
 | Übung, Übungen (Kurse) | fcc2zim (freeCodeCamp) | WIKI-66 |
 | Kategorie (Kategorieseite), Kategorien am Artikel | mwoffliner ab 2.x, wenn das Buch Kategorien hat (Klexikon) | WIKI-75 |
+| Dateiformat (Formatseite mit Steckbrief, Startseite als Übersicht der Kategorien) | dateiformate (eigenes Buch, gebaut im privaten Repo dateiformate) | WIKI-87 |
 
 Sprungseiten: eine kleine HTML-Seite mit `meta refresh` auf `Seite#Abschnitt` ist eine Weiterleitung (mwoffliner) und
 wird aufgelöst. Ein Sprung auf einen Anker mit Schrägstrich (`index.html#kurs/block/aufgabe`, fcc2zim) ist dagegen eine

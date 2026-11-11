@@ -43,6 +43,10 @@ den Leser anspricht, mit du.""",
     "enzyklopaedie": """Es ist ein Artikel einer Enzyklopädie. Eigennamen stehen in der im Deutschen üblichen Form (München,
 Peking), sonst unverändert; wissenschaftliche Namen (Gattung, Art) und Titel von Werken bleiben unverändert. Schreibe im
 sachlichen Stil eines Lexikons.""",
+    "dateiformat": """Es ist die Beschreibung eines Dateiformats (Aufbau, Geschichte, Werkzeuge). Unverändert bleiben Namen von
+Formaten, Dateiendungen, MIME-Typen, Bytefolgen, Feldnamen, Kennungen von Blöcken (IHDR, FourCC), Programme, Firmen und
+Normen. Verwende die üblichen deutschen Fachbegriffe (chunk: Block, header: Kopf, byte order: Bytereihenfolge,
+lossless: verlustfrei). Schreibe sachlich und unpersönlich, ohne Anrede.""",
 }
 SONST = "Schreibe sachlich; Fachbegriffe, Namen und Bezeichner bleiben unverändert."
 

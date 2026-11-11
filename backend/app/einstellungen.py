@@ -35,9 +35,9 @@ TEXTMODELL = "qwen/qwen3-next-80b"
 EIGENE_INDIZES = {"keine": "keine", "handbuecher": "Handbücher und Übungen",
                   "handbuecher_fragen": "Handbücher, Übungen, Frage und Antwort, Anleitungen", "alle": "alle Quellen"}
 ARTEN_JE_STUFE: dict[str, list[str]] = {
-    "keine": [], "handbuecher": ["dokumentation", "uebung"],
-    "handbuecher_fragen": ["dokumentation", "uebung", "frage_antwort", "anleitung"],
-    "alle": ["dokumentation", "uebung", "frage_antwort", "anleitung", "enzyklopaedie", "webseite", "sonstiges"]}
+    "keine": [], "handbuecher": ["dokumentation", "uebung", "dateiformat"],
+    "handbuecher_fragen": ["dokumentation", "uebung", "frage_antwort", "anleitung", "dateiformat"],
+    "alle": ["dokumentation", "uebung", "frage_antwort", "anleitung", "dateiformat", "enzyklopaedie", "webseite", "sonstiges"]}
 
 
 class AppEinstellungen(Grundeinstellungen):

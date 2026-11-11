@@ -1,6 +1,6 @@
 // Was die Schnittstelle von Nachschlag liefert (Spiegel der Modelle in backend/app/modell).
 
-export type Art = "enzyklopaedie" | "dokumentation" | "frage_antwort" | "anleitung" | "uebung" | "webseite" | "sonstiges";
+export type Art = "enzyklopaedie" | "dokumentation" | "frage_antwort" | "anleitung" | "uebung" | "dateiformat" | "webseite" | "sonstiges";
 
 export interface Faehigkeiten {
   titelindex: boolean;

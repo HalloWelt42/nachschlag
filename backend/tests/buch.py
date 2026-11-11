@@ -466,3 +466,49 @@ def bauen_kategorien(ordner: Path, name: str = "probekat_de_all_maxi_2026-11") -
         c.add_item(_Seite("_categories_partials_Kategorie:Tiere_pages_1", "", '<div id="mw-pages">' + _liste(artikel[:3]) + "</div>", vorne=False))
         c.add_item(_Seite("_categories_partials_Kategorie:Tiere_pages_2", "", '<div id="mw-pages">' + _liste(artikel[3:]) + "</div>", vorne=False))
     return datei
+
+
+# ----- Probebuch Dateiformate (Erzeuger dateiformate, WIKI-87): Formatseiten mit Steckbrief und Texten je Quelle --------
+
+def _df_seite(titel: str, rumpf: str, kopf: str = "") -> str:
+    return (f'<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>{titel}</title>'
+            f'<link rel="stylesheet" href="../_/stil.css">{kopf}</head><body>{rumpf}</body></html>')
+
+
+DF_PNG = _df_seite("PNG - Portable Network Graphics", """<article class="dateiformat"><header>
+<h1>PNG - Portable Network Graphics</h1><p class="kurz">Rasterbild mit verlustfreier Kompression.</p>
+<table class="steckbrief"><tr data-feld="endungen"><th>Endungen</th><td><a href="../endung/png">.png</a></td></tr>
+<tr data-feld="mime"><th>MIME-Typ</th><td><code>image/png</code></td></tr>
+<tr data-feld="kategorien"><th>Kategorie</th><td><a href="../kategorie/bild">Bild</a></td></tr></table></header>
+<section class="quelle" id="fileformat" data-quelle="fileformat" lang="de"><h2>Formatbeschreibung</h2>
+<h3 id="aufbau">Aufbau</h3><p>Eine PNG-Datei beginnt mit einer Signatur, gefolgt von Blöcken wie <code>IHDR</code>; siehe
+<a href="gif">GIF</a> und <a href="fehlt">Fehlt</a>.</p><img src="../bilder/png/aufbau.png" width="300" alt="Aufbau">
+<p class="herkunft">Herkunft: Beispielquelle · <a href="https://example.org/png/">Seite der Quelle</a></p>
+<details class="fassung" lang="en"><summary>Englisches Original</summary><h3 id="structure">Structure</h3>
+<p>A PNG file starts with a signature.</p></details></section></article>""",
+                  '<script type="application/json" id="dateiformat">{"kennung": "png"}</script>')
+DF_GIF = _df_seite("GIF", '<article class="dateiformat"><header><h1>GIF</h1></header><section class="quelle"><h2>Formatbeschreibung</h2>'
+                          '<p>Graphics Interchange Format mit höchstens 256 Farben je Bild, oft für kleine Animationen.</p></section></article>')
+DF_START = _df_seite("Dateiformate", """<article class="start"><h1>Dateiformate</h1><p class="kurz">2 Formate in 1 Kategorie.</p>
+<section class="gruppe"><h2 id="medien"><a href="kategorie/medien">Bild, Ton und Modelle</a></h2><ul class="kacheln">
+<li><a href="kategorie/bild">Bild <small>2</small></a></li></ul></section></article>""")
+DF_BILD = _df_seite("Bild", '<article class="kategorie"><h1>Bild</h1><h2 id="formate">Formate (2)</h2><ul class="formate">'
+                            '<li><a href="../format/png">PNG</a></li><li><a href="../format/gif">GIF</a></li></ul></article>')
+
+
+def bauen_dateiformate(ordner: Path, name: str = "dateiformate_de_all_2026-11") -> Path:
+    ordner.mkdir(parents=True, exist_ok=True)
+    datei = ordner / f"{name}.zim"
+    with Creator(str(datei)).config_indexing(True, "deu") as c:
+        c.set_mainpath("index")
+        for schluessel, wert in (("Name", name.rsplit("_", 1)[0]), ("Title", "Dateiformate"), ("Language", "deu,eng"),
+                                 ("Description", "Dateiformate für die Tests"), ("Date", "2026-11-11"),
+                                 ("Creator", "Dateiformate"), ("Publisher", "Nachschlag"), ("Scraper", "dateiformate v0.1.0"),
+                                 ("Tags", "dateiformate;_category:other")):
+            c.add_metadata(schluessel, wert)
+        c.add_item(_Seite("index", "Dateiformate", DF_START))
+        c.add_item(_Seite("format/png", "PNG - Portable Network Graphics", DF_PNG))
+        c.add_item(_Seite("format/gif", "GIF", DF_GIF))
+        c.add_item(_Seite("kategorie/bild", "Bild", DF_BILD))
+        c.add_item(_Seite("bilder/png/aufbau.png", "", PNG, "image/png", vorne=False))
+    return datei

@@ -24,13 +24,13 @@ logger = logging.getLogger("nachschlag.bibliothek")
 #: Erzeuger und die Grundstruktur ihrer Bücher; erkannt am Anfang der Angabe Scraper
 ERZEUGER: tuple[tuple[str, Art], ...] = (("mwoffliner", "enzyklopaedie"), ("devdocs", "dokumentation"),
                                         ("sotoki", "frage_antwort"), ("fcc2zim", "uebung"), ("warc2zim", "webseite"),
-                                        ("zimit", "webseite"))
+                                        ("zimit", "webseite"), ("dateiformate", "dateiformat"))
 #: Spiegel von Seiten (warc2zim, zimit), deren Inhalt eine bekannte Art ist: die Quelle (Metadatum Source) entscheidet
 QUELLEN: tuple[tuple[str, Art], ...] = (("php.net/manual", "dokumentation"),)
 #: Bücher ohne Angabe Scraper, deren Art die Kategorie in den Schlagworten (Tags `_category:...`) verrät (WIKI-64)
 KATEGORIEN: tuple[tuple[str, Art], ...] = (("ifixit", "anleitung"),)
 #: Arten mit eigenem Lesedesign (wächst mit den Bausteinen)
-MIT_LESEDESIGN: set[Art] = {"enzyklopaedie", "dokumentation", "frage_antwort", "anleitung", "uebung"}
+MIT_LESEDESIGN: set[Art] = {"enzyklopaedie", "dokumentation", "frage_antwort", "anleitung", "uebung", "dateiformat"}
 #: Stand am Ende eines Dateinamens (`_2026-10`); davor steht das Buch in seiner Ausgabe
 STAND = re.compile(r"_\d{4}-\d{2}$")
 UMLEITUNG_HTML = re.compile(rb"""<meta[^>]+http-equiv=["']refresh["'][^>]+URL=['"]?\.?/?([^'">]+)""", re.I)

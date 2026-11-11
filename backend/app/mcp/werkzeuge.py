@@ -27,7 +27,7 @@ class Werkzeug:
 
 
 class BuecherEingabe(BaseModel):
-    art: str = Field("", description="nur Bücher dieser Art: enzyklopaedie, dokumentation, frage_antwort, anleitung, uebung; leer: alle")
+    art: str = Field("", description="nur Bücher dieser Art: enzyklopaedie, dokumentation, frage_antwort, anleitung, uebung, dateiformat; leer: alle")
 
 
 class SuchenEingabe(BaseModel):
