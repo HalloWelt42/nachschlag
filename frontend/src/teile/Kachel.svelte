@@ -21,6 +21,7 @@
     gesperrt = false,
     class: klasse = "",
     vorsatz,
+    marke,
     ecke,
     children,
     fuss,
@@ -38,6 +39,7 @@
     gesperrt?: boolean;
     class?: string;
     vorsatz?: Snippet;
+    marke?: Snippet;                         // oben links auf dem Bild (etwa das Symbol des Buchs, WIKI-89)
     ecke?: Snippet;
     children?: Snippet;
     fuss?: Snippet;
@@ -67,5 +69,6 @@
     {#if children}{@render children()}{/if}
     {#if fuss}<span class="kachel-fuss" data-fuss>{@render fuss()}</span>{/if}
   </span>
+  {#if marke}<span class="kachel-marke">{@render marke()}</span>{/if}
   {#if ecke}<span class="kachel-ecke">{@render ecke()}</span>{/if}
 </svelte:element>

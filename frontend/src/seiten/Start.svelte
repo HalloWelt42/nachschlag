@@ -22,16 +22,16 @@
   import { meins, meinsLaden, verlaufHolen, wann, type Verlaufseintrag } from "../lib/meins.svelte";
   import { lader } from "../lib/buecherlader.svelte";
   import Buchzeichen from "../teile/Buchzeichen.svelte";
+  import Fundkarte, { type Fund } from "../teile/Fundkarte.svelte";
 
   const WEITERLESEN = 4;                 // Karten im Entwurf
   const MERKZETTEL = 5;
   const FERTIG_AB = 0.95;                // so weit gelesen gilt als fertig, nicht mehr zum Weiterlesen
   let weiterlesen = $state.raw<Verlaufseintrag[]>([]);
 
-  interface Fund { buch: Buch; pfad: string; titel: string; einleitung: string }
 
 
-  let funde = $state<Record<string, Fund | null>>({});
+  let funde = $state<Record<string, Fund | null>>({});        // Zufallsfund je Buch (Fundkarte, WIKI-89)
   const REIHE = 6;                       // Artikel des Themas unter dem Artikel für heute
   const magazin = $derived(startansicht.wert === "b");
   let heute = $state.raw<Heute | null>(null);
@@ -72,7 +72,7 @@
     try {
       const z = await zufallHolen(b.kennung);
       const a = await artikelHolen(b.kennung, z.pfad);
-      const fund = { buch: b, pfad: a.pfad, titel: a.titel, einleitung: a.einleitung };
+      const fund: Fund = { pfad: a.pfad, titel: a.titel, einleitung: a.einleitung, bild: a.bild };
       funde = { ...funde, [b.kennung]: fund };     // erst nach dem Abwarten zusammensetzen
     } catch (f) {
       fehler = seitenFehler(f);
@@ -194,17 +194,7 @@
         <div class="stoebern">
           {#each mitLesedesign as b (b.kennung)}
             {@const f = funde[b.kennung]}
-            <Kachel art="text" titel={f?.titel ?? "sucht ..."} untertitel={b.titel}>
-              {#snippet vorsatz()}<span class="fund-etikett"><i class="fa-solid fa-dice"></i>Zufallsfund</span>{/snippet}
-              {#snippet ecke()}<Sprachmarke kuerzel={b.sprache} />{/snippet}
-              {#if f?.einleitung}<span class="auszug">{f.einleitung}</span>{/if}
-              {#snippet fuss()}
-                <span class="knopfreihe">
-                  <button class="knopf" disabled={!f} onclick={() => f && lesen(b.kennung, f.pfad)}><i class="fa-solid fa-book-open"></i>Lesen</button>
-                  <button class="knopf still" onclick={() => zufallsfund(b)}><i class="fa-solid fa-rotate"></i>Neuer Zufall</button>
-                </span>
-              {/snippet}
-            </Kachel>
+            <Fundkarte buch={b} fund={f ?? undefined} lesen={() => f && lesen(b.kennung, f.pfad)} neu={() => zufallsfund(b)} />
           {/each}
         </div>
       </section>

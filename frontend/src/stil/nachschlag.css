@@ -232,6 +232,10 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .kachel-unter { font-size: var(--klein); color: var(--text-2); overflow-wrap: anywhere; }
 .kachel-fuss { margin-top: auto; padding-top: var(--a2); }
 .kachel-ecke { position: absolute; top: var(--a2); right: var(--a2); display: flex; align-items: center; gap: 4px; }
+/* Marke oben links auf dem Bild (WIKI-89): das Symbol des Buchs frei, ohne Fläche; nur das Ersatzzeichen bekommt eine */
+.kachel-marke { position: absolute; top: var(--a2); left: var(--a2); width: 34px; height: 34px; display: grid; place-items: center; }
+.kachel-marke .buchzeichen { width: 100%; height: 100%; max-width: none; max-height: none; }
+.kachel-marke > i { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--flaeche); color: var(--artfarbe, var(--petrol)); }
 /* Teile, die in Karten wiederkehren */
 .lesestand-fuss { display: flex; align-items: center; gap: var(--a2); font-size: var(--marke); color: var(--text-3); }
 .lesestand-fuss .spur { flex: 1; height: 4px; border-radius: 2px; background: var(--mulde); overflow: hidden; }
@@ -292,7 +296,17 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .grosssuche .suchfeld { height: 58px; padding: 0 10px 0 18px; font-size: calc(var(--gross) + 2px); border-radius: var(--r3); box-shadow: var(--schatten); gap: var(--a3); }
 .grosssuche .suchfeld > i { font-size: 18px; }
 .fund-etikett { font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; display: flex; align-items: center; gap: 6px; }
-.stoebern { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: var(--a4); }
+.stoebern { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: var(--a4); }
+/* Zufallsfund als Bildkarte (WIKI-89, teile/Fundkarte.svelte): Bild 16:9, ohne Bild die Farbe der Art mit dem Anfangsbuchstaben */
+.fundkarte .kachel-bild { height: auto; aspect-ratio: 16 / 9; }
+.fundkarte .kachel-bild img { background: var(--licht); }            /* durchsichtige Zeichnungen brauchen hellen Grund */
+.fund-ohne-bild { position: relative; width: 100%; height: 100%; overflow: hidden;
+  background: radial-gradient(120% 90% at 30% 20%, color-mix(in srgb, var(--artfarbe) 32%, var(--flaeche)) 0%, var(--flaeche-2) 70%); }
+.fund-ohne-bild .wasser { position: absolute; right: -2%; bottom: -30%; font-family: var(--schrift-zahl); font-size: calc(var(--seitentitel) * 5); line-height: 1;
+  font-weight: 600; color: color-mix(in srgb, var(--artfarbe) 30%, transparent); }
+.fundkarte .auszug { -webkit-line-clamp: 3; }
+.fund-fuss { display: flex; align-items: center; gap: 6px; }
+.fund-buch { flex: 1; min-width: 0; font-size: var(--klein); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* ----- Kategorien (seiten/Kategorien.svelte, WIKI-74): Bücher nach Art ----- */
 .kat-seite { display: flex; flex-direction: column; gap: var(--a5); max-width: 1320px; }
 .kat-wahl { display: flex; flex-wrap: wrap; gap: var(--a2); }

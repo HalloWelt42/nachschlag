@@ -6,6 +6,12 @@ export const ART_SYMBOL: Record<Art, string> = {
   webseite: "fa-globe", sonstiges: "fa-box-archive",
 };
 
+// Farbe je Art (Marke des Appkerns): Fläche hinter Funden ohne Bild (WIKI-89)
+export const ART_FARBE: Record<Art, string> = {
+  enzyklopaedie: "var(--himmel)", dokumentation: "var(--flieder)", frage_antwort: "var(--minze)", anleitung: "var(--koralle)",
+  uebung: "var(--honig)", dateiformat: "var(--tuerkis)", webseite: "var(--stahl)", sonstiges: "var(--sand)",
+};
+
 export const ART_NAME: Record<Art, string> = {
   enzyklopaedie: "Nachschlagewerk", dokumentation: "Dokumentation", frage_antwort: "Frage und Antwort", anleitung: "Anleitungen", uebung: "Übungen", dateiformat: "Dateiformate",
   webseite: "Webseite", sonstiges: "unbekannte Art",
