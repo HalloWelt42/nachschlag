@@ -298,11 +298,11 @@ button.kachel:disabled { opacity: .6; cursor: default; }
 .fund-etikett { font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; display: flex; align-items: center; gap: 6px; }
 .stoebern { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: var(--a4); }
 /* Zufallsfund als Bildkarte (WIKI-89, teile/Fundkarte.svelte): Bild 16:9, ohne Bild die Farbe der Art mit dem Anfangsbuchstaben */
-.fundkarte .kachel-bild { height: auto; aspect-ratio: 16 / 9; }
+.fundkarte .kachel-bild { position: relative; height: auto; aspect-ratio: 16 / 9; }
 .fundkarte .kachel-bild img { background: var(--licht); }            /* durchsichtige Zeichnungen brauchen hellen Grund */
-.fund-ohne-bild { position: relative; width: 100%; height: 100%; overflow: hidden;
+.fund-ohne-bild { position: absolute; inset: 0; overflow: hidden;   /* liegt im Bildrahmen, nie breiter als er */
   background: radial-gradient(120% 90% at 30% 20%, color-mix(in srgb, var(--artfarbe) 32%, var(--flaeche)) 0%, var(--flaeche-2) 70%); }
-.fund-ohne-bild .wasser { position: absolute; right: -2%; bottom: -30%; font-family: var(--schrift-zahl); font-size: calc(var(--seitentitel) * 5); line-height: 1;
+.fund-ohne-bild .wasser { position: absolute; right: var(--a2); bottom: -30%; font-family: var(--schrift-zahl); font-size: calc(var(--seitentitel) * 5); line-height: 1;
   font-weight: 600; color: color-mix(in srgb, var(--artfarbe) 30%, transparent); }
 .fundkarte .auszug { -webkit-line-clamp: 3; }
 .fund-fuss { display: flex; align-items: center; gap: 6px; }
