@@ -12,3 +12,6 @@ frontend/dist/
 .DS_Store
 .env
 /privat/
+
+# Entwürfe WIKI-89: gezogene Funde mit Bildern und Symbolen fremder Bücher (mockups/kacheln/funde_ziehen.py)
+mockups/kacheln/daten/

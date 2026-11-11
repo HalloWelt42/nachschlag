@@ -1,0 +1,151 @@
+/* Entwürfe WIKI-89: Zufallsfunde der Startseite mit Bildmaterial und gegen die Flut an Karten. Nur Marken der App
+   (marken.css), Kachel wie in der App (nachschlag.css); hier nur, was die Varianten neu bringen. */
+
+body { margin: 0; background: var(--hg); color: var(--text); }
+.entwurf { max-width: 1240px; margin: 0 auto; padding: var(--a4) var(--a5) var(--a7); display: flex; flex-direction: column; gap: var(--a5); }
+.entwurf-kopf { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a3); }
+.entwurf-kopf h1 { margin: 0; font-size: var(--seitentitel); flex: 1 1 auto; }
+.entwurf-kopf .neben { color: var(--text-3); font-size: var(--klein); }
+.varianten { display: flex; flex-wrap: wrap; gap: 6px; }
+.varianten a { text-decoration: none; }
+.erklaerung { margin: 0; color: var(--text-2); max-width: 78ch; }
+.erklaerung b { color: var(--text); }
+
+/* ----- gemeinsame Teile: Titelbild, Buchzeile, Symbolknöpfe ------------------------------------------------------- */
+.titelbild { position: relative; display: grid; place-items: center; overflow: hidden; background: var(--mulde); }
+.titelbild img.foto { width: 100%; height: 100%; object-fit: cover; background: #eef1f5; }   /* durchsichtige Zeichnungen brauchen hellen Grund */
+/* ohne Artikelbild: das Symbol des Buchs freigestellt auf der Farbe seiner Art, mit dem Anfangsbuchstaben als Wasserzeichen */
+.titelbild.ohne { background: radial-gradient(120% 90% at 30% 20%, color-mix(in srgb, var(--artfarbe) 32%, var(--flaeche)) 0%, var(--flaeche-2) 70%); }
+.titelbild.ohne .wasser { position: absolute; right: -6%; bottom: -22%; font-family: var(--schrift-zahl); font-size: 140px; line-height: 1;
+  color: color-mix(in srgb, var(--artfarbe) 22%, transparent); font-weight: 600; pointer-events: none; }
+.titelbild.ohne .gross { width: 56px; height: 56px; object-fit: contain; position: relative; }
+.titelbild.ohne i.gross { font-size: 40px; color: var(--artfarbe); display: grid; place-items: center; }
+.buchzeile { display: flex; align-items: center; gap: 6px; font-size: var(--klein); color: var(--text-2); min-width: 0; }
+.buchzeile img { width: 18px; height: 18px; object-fit: contain; flex: none; }
+.buchzeile span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.knopf-sym { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: var(--r2); border: 0; background: var(--flaeche-2);
+  color: var(--text-2); cursor: pointer; }
+.knopf-sym:hover { color: var(--text); background: var(--akzent-flaeche); }
+.art-enzyklopaedie { --artfarbe: var(--himmel); }
+.art-dokumentation { --artfarbe: var(--flieder); }
+.art-uebung { --artfarbe: var(--honig); }
+.art-anleitung { --artfarbe: var(--koralle); }
+.art-frage_antwort { --artfarbe: var(--minze); }
+.art-dateiformat { --artfarbe: var(--tuerkis); }
+
+/* ----- 1 Bildkarte ------------------------------------------------------------------------------------------------- */
+.v-bildkarte { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: var(--a4); }
+.v-bildkarte .kachel .titelbild { aspect-ratio: 16 / 9; border-radius: var(--r2) var(--r2) 0 0; }
+.v-bildkarte .kachel .auszug { -webkit-line-clamp: 3; }
+.v-bildkarte .kachel-fuss { display: flex; gap: 6px; align-items: center; }
+.v-bildkarte .kachel-fuss .buchzeile { flex: 1; }
+
+/* ----- 2 Spielkarten-Stapel: oberste Reihe voll, darunter nur die Köpfe; Hover hebt eine Karte heraus ------------ */
+.v-stapel { --hoehe: 300px; --kopf: 64px; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  column-gap: var(--a4); row-gap: 0; }
+.v-stapel .karte { height: var(--hoehe); position: relative; transition: transform var(--schnell) ease, box-shadow var(--schnell) ease; }
+.v-stapel .karte.unten { margin-top: calc(var(--kopf) - var(--hoehe)); }            /* überlappt die Karte darüber, nur ihr Kopf bleibt */
+.v-stapel .karte { display: flex; flex-direction: column; z-index: var(--ebene); }
+/* das Band mit Symbol und Titel sitzt am unteren Rand: von den Karten dahinter schaut genau dieses Band heraus */
+.v-stapel .karte .kopfband { order: 9; margin-top: auto; height: var(--kopf); flex: none; display: flex; align-items: center; gap: 10px; padding: 0 var(--a3);
+  border-top: 1px solid var(--rand); }
+.v-stapel .karte .kopfband img, .v-stapel .karte .kopfband i { width: 26px; height: 26px; object-fit: contain; font-size: 20px; color: var(--artfarbe); flex: none; }
+.v-stapel .karte .kopfband .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.v-stapel .karte .titelbild { height: 120px; }
+.v-stapel .karte .koerper { padding: var(--a3); display: flex; flex-direction: column; gap: 6px; }
+.v-stapel .karte .auszug { -webkit-line-clamp: 3; }
+/* darüber fahren holt die Karte nach vorn, an ihrem Platz: sie deckt dann die Reihe darüber zu */
+.v-stapel .karte.unten:hover, .v-stapel .karte.unten:focus-within, .v-stapel .karte.unten.offen {
+  z-index: 200; transform: translateY(-6px); box-shadow: var(--schatten-schwebend), 0 0 0 2px var(--akzent-flaeche); }
+.v-stapel .karte { box-shadow: 0 10px 16px -10px var(--schattenfarbe); }
+
+/* ----- 3 Fächer je Buch: drei Funde gestapelt, Hover fächert auf -------------------------------------------------- */
+.v-faecher { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: var(--a6) var(--a5); padding-top: var(--a3); }
+.faecher { position: relative; height: 330px; }
+.faecher .karte { position: absolute; inset: 0 0 auto 0; height: 300px; transition: transform var(--schnell) ease; transform-origin: 50% 110%; }
+.faecher .karte:nth-child(1) { transform: rotate(-4deg) translate(-6px, 6px); }
+.faecher .karte:nth-child(2) { transform: rotate(3deg) translate(6px, 4px); }
+.faecher .karte:nth-child(3) { transform: none; }
+.faecher:hover .karte:nth-child(1) { transform: rotate(-11deg) translate(-38px, 10px); }
+.faecher:hover .karte:nth-child(2) { transform: rotate(10deg) translate(38px, 10px); }
+.faecher .karte .titelbild { height: 140px; border-radius: var(--r2) var(--r2) 0 0; }
+.faecher .karte .koerper { padding: var(--a3); display: flex; flex-direction: column; gap: 6px; }
+.faecher .karte .auszug { -webkit-line-clamp: 3; }
+.faecher .karte.ruecken .titelbild { height: 100%; border-radius: var(--r2); }
+.faecher .zahl-k { position: absolute; right: 8px; top: 8px; z-index: 2; }
+
+/* ----- 4 Leitkarte und Mosaik --------------------------------------------------------------------------------------- */
+.v-leit { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: var(--a4); }
+.leitkarte { display: grid; grid-template-rows: 260px auto; align-self: start; }
+.leitkarte .titelbild { border-radius: var(--r2) var(--r2) 0 0; }
+.leitkarte .koerper { padding: var(--a4); display: flex; flex-direction: column; gap: var(--a2); }
+.mosaik { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--a2); align-content: start; }
+.mosaik .feld { position: relative; aspect-ratio: 1; border-radius: var(--r2); overflow: hidden; cursor: pointer; }
+.mosaik .feld .titelbild { position: absolute; inset: 0; }
+.mosaik .feld .band { position: absolute; inset: auto 0 0 0; padding: 18px 8px 6px; font-size: var(--klein); font-weight: 600; color: #fff;
+  background: linear-gradient(transparent, rgb(0 0 0 / .72)); }
+.mosaik .feld .hover-text { position: absolute; inset: 0; padding: 8px; font-size: var(--klein); background: rgb(12 17 23 / .9); color: #e8edf3;
+  opacity: 0; transition: opacity var(--schnell); overflow: hidden; }
+.mosaik .feld:hover .hover-text { opacity: 1; }
+
+/* ----- 5 Magazin: Aufmacher je Art, Meldungen darunter ------------------------------------------------------------- */
+.v-magazin { columns: 3 300px; column-gap: var(--a5); }
+.rubrik { break-inside: avoid; margin-bottom: var(--a5); background: var(--flaeche); border-radius: var(--r2); overflow: hidden; }
+.rubrik-kopf { display: flex; align-items: center; gap: 8px; padding: var(--a2) var(--a3); font-weight: 600; background: var(--flaeche-2); }
+.rubrik-kopf i { color: var(--artfarbe); }
+.rubrik .aufmacher .titelbild { height: 150px; }
+.rubrik .aufmacher .koerper { padding: var(--a3); display: flex; flex-direction: column; gap: 4px; }
+.rubrik .aufmacher .auszug { -webkit-line-clamp: 5; }
+.rubrik .meldung { display: flex; gap: 10px; align-items: center; padding: 8px var(--a3); border-top: 1px solid var(--rand); }
+.rubrik .meldung .titelbild { width: 44px; height: 44px; border-radius: var(--r1); flex: none; }
+.rubrik .meldung .titelbild.ohne .gross { width: 26px; height: 26px; }
+.rubrik .meldung .titelbild.ohne .wasser { display: none; }
+
+/* ----- 6 Liste mit Lesepult ---------------------------------------------------------------------------------------- */
+.v-pult { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: var(--a4); align-items: start; }
+.pult-liste { display: flex; flex-direction: column; background: var(--flaeche); border-radius: var(--r2); overflow: hidden; }
+.pult-liste .zeile { display: flex; gap: 10px; align-items: center; padding: 8px var(--a3); border: 0; border-bottom: 1px solid var(--rand);
+  background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.pult-liste .zeile:hover { background: var(--flaeche-2); }
+.pult-liste .zeile.an { background: var(--akzent-weich); }
+.pult-liste .zeile .titelbild { width: 48px; height: 36px; border-radius: var(--r1); flex: none; }
+.pult-liste .zeile .titelbild.ohne .gross { width: 22px; height: 22px; }
+.pult-liste .zeile .titelbild.ohne .wasser { display: none; }
+.pult-liste .zeile .t { font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pult { position: sticky; top: var(--a4); display: grid; grid-template-rows: 220px auto; }
+.pult .titelbild { border-radius: var(--r2) var(--r2) 0 0; }
+.pult .koerper { padding: var(--a4); display: flex; flex-direction: column; gap: var(--a2); }
+
+/* ----- 7 Wendekarte: vorn Bild und Titel, hinten Auszug -------------------------------------------------------------- */
+.v-wende { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: var(--a4); }
+.wende { perspective: 900px; height: 260px; }
+.wende .innen { position: relative; height: 100%; transition: transform .45s ease; transform-style: preserve-3d; }
+.wende:hover .innen, .wende.offen .innen { transform: rotateY(180deg); }
+.wende .seite-v, .wende .seite-h { position: absolute; inset: 0; backface-visibility: hidden; border-radius: var(--r2); overflow: hidden; background: var(--flaeche); }
+.wende .seite-v .titelbild { position: absolute; inset: 0; }
+.wende .seite-v .band { position: absolute; inset: auto 0 0 0; padding: 26px var(--a3) var(--a3); color: #fff; background: linear-gradient(transparent, rgb(0 0 0 / .75));
+  display: flex; flex-direction: column; gap: 4px; }
+.wende .seite-v .band .t { font-weight: 600; display: block; }
+.wende .seite-v .band .buchzeile { color: #dfe6ee; }
+.wende .seite-h { transform: rotateY(180deg); padding: var(--a3); display: flex; flex-direction: column; gap: 6px; }
+.wende .seite-h .auszug { -webkit-line-clamp: 7; }
+
+/* ----- 8 Eine Runde: vier Funde statt aller, neu mischen, nach Art filtern ------------------------------------------- */
+.v-runde .reihe-r { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: var(--a4); }
+.v-runde .reihe-r .titelbild { aspect-ratio: 16 / 10; border-radius: var(--r2) var(--r2) 0 0; }
+.v-runde .reihe-r .auszug { -webkit-line-clamp: 3; }
+.runde-leiste { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.runde-leiste .wuerfel { font-size: var(--titel); }
+.runde-leiste .rest { margin-left: auto; color: var(--text-3); font-size: var(--klein); }
+
+/* ----- Telefon: kein Hover; Stapel öffnet per Tipp, Mosaik und Pult werden eine Spalte ------------------------------ */
+@media (max-width: 760px) {
+  .entwurf { padding-inline: var(--a3); }
+  .v-leit, .v-pult { grid-template-columns: minmax(0, 1fr); }
+  .pult { display: none; }
+  .mosaik { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .v-stapel { --hoehe: 280px; }
+  .v-faecher { padding-inline: 8px; }
+  .faecher .karte:nth-child(1), .faecher:hover .karte:nth-child(1) { transform: rotate(-2deg) translate(-3px, 5px); }
+  .faecher .karte:nth-child(2), .faecher:hover .karte:nth-child(2) { transform: rotate(2deg) translate(3px, 3px); }
+}
