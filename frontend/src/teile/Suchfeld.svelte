@@ -2,8 +2,9 @@
   // Suchfeld mit Vorschlägen beim Tippen (Entwurf teile/vorschlaege.html): oben Titel aus dem Index der Bücher,
   // darunter passende Stellen aus der Bedeutungssuche (nur, wenn sie antwortet). Pfeiltasten wählen, Enter öffnet;
   // ohne Wahl führt Enter zur Suche mit allen Treffern. `gross`: Form der Startseite und der Suchseite; `taste`: die
-  // Taste / setzt die Schreibmarke hierher (nur das Feld im Kopf).
+  // Taste / setzt die Schreibmarke hierher (das Feld im Kopf; ein großes Feld immer, dann tritt die Kopfsuche zurück).
   import { onMount, tick } from "svelte";
+  import { seitensuche } from "../lib/ansicht.svelte";
   import { sucheHolen, vorschlaegeHolen } from "../lib/schnittstelle";
   import { abschnittFuer, suchregeln, suchregelnLaden } from "../lib/suchregeln.svelte";
   import type { Treffer, Vorschlag } from "../lib/typen";
@@ -138,8 +139,15 @@
     }
   }
 
+  // ein großes Feld ist die Suche der Seite: die Kopfsuche tritt zurück, die Taste / gehört dann ihm (WIKI-90)
   onMount(() => {
-    if (!taste) return;
+    if (!gross) return;
+    seitensuche.anzahl += 1;
+    return () => { seitensuche.anzahl -= 1; };
+  });
+
+  onMount(() => {
+    if (!taste && !gross) return;
     const schreibmarke = (e: KeyboardEvent) => {
       const ziel = e.target as HTMLElement | null;
       if (e.key !== "/" || ziel?.closest("input, textarea, [contenteditable]")) return;
@@ -166,7 +174,7 @@
     {/if}
     <!-- Spracheingabe (WIKI-42): der Text steht im Feld, wächst beim Sprechen; am Ende läuft die Suche, er bleibt änderbar -->
     <Sprechknopf titel="Frage sprechen" live={(t) => (frage = t)} fertig={(t) => { frage = t; alleTreffer(); }} />
-    {#if taste}<kbd title="Taste / setzt die Schreibmarke ins Suchfeld">/</kbd>{/if}
+    {#if taste || gross}<kbd title="Taste / setzt die Schreibmarke ins Suchfeld">/</kbd>{/if}
   </label>
   {#if offen && frage.trim()}
     <!-- Auswahl mit der Maus ohne den Fokus zu verlieren (sonst schließt das Feld vor dem Klick) -->

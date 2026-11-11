@@ -19,6 +19,7 @@
   import Register from "./seiten/Register.svelte";
   import Kategorien from "./seiten/Kategorien.svelte";
   import Suchfeld from "./teile/Suchfeld.svelte";
+  import { seitensuche } from "./lib/ansicht.svelte";
   import { meins } from "./lib/meins.svelte";
   import { ladeAnteil, ladeZahl, lader, laderLaden } from "./lib/buecherlader.svelte";
 
@@ -64,7 +65,8 @@
   ];
 </script>
 
-{#snippet kopfMitte()}<Suchfeld taste />{/snippet}
+<!-- die Kopfsuche tritt zurück, solange die Seite ein großes Suchfeld hat (WIKI-90) -->
+{#snippet kopfMitte()}{#if !seitensuche.anzahl}<Suchfeld taste />{/if}{/snippet}
 
 <!-- am Telefon unten: Start, Suche, Kategorie, Katalog, Mehr; Aufträge unter Mehr (WIKI-74) -->
 <Schale {bereiche} {einstellungen} fassung={__APP_FASSUNG__} {kopfMitte} auftraegeReiter={false} />

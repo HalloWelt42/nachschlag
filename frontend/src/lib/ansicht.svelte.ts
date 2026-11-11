@@ -53,3 +53,8 @@ export function startansichtMerken(wert: string): void {
     // ohne Speicher gilt die Wahl nur jetzt
   }
 }
+
+
+// Große Suchfelder auf der Seite (Start "Suche zuerst", Suchseite, WIKI-90): solange eins da ist, entfällt die Suche im
+// Kopf (sie wäre doppelt), und die Taste / setzt die Schreibmarke ins große Feld. Am Telefon hat der Kopf keine Suche.
+export const seitensuche = $state({ anzahl: 0 });
