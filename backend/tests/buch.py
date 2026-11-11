@@ -486,14 +486,18 @@ DF_PNG = _df_seite("PNG - Portable Network Graphics", """<article class="dateifo
 <p class="herkunft">Herkunft: Beispielquelle · <a href="https://example.org/png/">Seite der Quelle</a></p>
 <details class="fassung" lang="en"><summary>Englisches Original</summary><h3 id="structure">Structure</h3>
 <p>A PNG file starts with a signature.</p></details></section></article>""",
-                  '<script type="application/json" id="dateiformat">{"kennung": "png"}</script>')
+                  '<script type="application/json" id="dateiformat">{"kennung": "png", "kategorien": [{"kennung": "bild", "name": {"de": "Bild"}, "pfad": "kategorie/bild"}]}</script>')
 DF_GIF = _df_seite("GIF", '<article class="dateiformat"><header><h1>GIF</h1></header><section class="quelle"><h2>Formatbeschreibung</h2>'
                           '<p>Graphics Interchange Format mit höchstens 256 Farben je Bild, oft für kleine Animationen.</p></section></article>')
 DF_START = _df_seite("Dateiformate", """<article class="start"><h1>Dateiformate</h1><p class="kurz">2 Formate in 1 Kategorie.</p>
 <section class="gruppe"><h2 id="medien"><a href="kategorie/medien">Bild, Ton und Modelle</a></h2><ul class="kacheln">
 <li><a href="kategorie/bild">Bild <small>2</small></a></li></ul></section></article>""")
-DF_BILD = _df_seite("Bild", '<article class="kategorie"><h1>Bild</h1><h2 id="formate">Formate (2)</h2><ul class="formate">'
-                            '<li><a href="../format/png">PNG</a></li><li><a href="../format/gif">GIF</a></li></ul></article>')
+DF_BILD = _df_seite("Bild", '<article class="kategorie"><p class="pfad"><a href="medien">Bild, Ton und Modelle</a></p>'
+                            '<h1>Bild</h1><h2 id="formate">Formate (2)</h2><ul class="formate">'
+                            '<li><a href="../format/png">PNG</a></li><li><a href="../format/gif">GIF</a></li></ul>'
+                            '<section class="quelle"><h2>Über diese Kategorie</h2><p>Formate für Bilder aller Art.</p></section></article>')
+DF_MEDIEN = _df_seite("Bild, Ton und Modelle", '<article class="kategorie"><h1>Bild, Ton und Modelle</h1><ul class="kacheln">'
+                                              '<li><a href="bild">Bild</a></li></ul></article>')
 
 
 def bauen_dateiformate(ordner: Path, name: str = "dateiformate_de_all_2026-11") -> Path:
@@ -510,5 +514,6 @@ def bauen_dateiformate(ordner: Path, name: str = "dateiformate_de_all_2026-11") 
         c.add_item(_Seite("format/png", "PNG - Portable Network Graphics", DF_PNG))
         c.add_item(_Seite("format/gif", "GIF", DF_GIF))
         c.add_item(_Seite("kategorie/bild", "Bild", DF_BILD))
+        c.add_item(_Seite("kategorie/medien", "Bild, Ton und Modelle", DF_MEDIEN))
         c.add_item(_Seite("bilder/png/aufbau.png", "", PNG, "image/png", vorne=False))
     return datei

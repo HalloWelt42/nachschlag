@@ -42,6 +42,18 @@ async def test_formatseite(leser):
     assert "<details" in a.html and "Englisches Original" in a.html
     assert 'class="wl"' in a.html and "Fehlt" in a.html and 'href="fehlt"' not in a.html
     assert a.bild.startswith("/api/v1/inhalt/medien/") and "https://example.org/png/" in a.online
+    assert [(k.pfad, k.titel) for k in a.kategorien] == [("kategorie/bild", "Bild")]
+
+
+async def test_kategorieseite(leser):
+    a = await leser.lesen(BUCH, "kategorie/bild")
+    assert a.darstellung == "kategorie" and a.titel == "Bild"
+    k = a.kategorie
+    assert [(x.pfad, x.titel) for x in k.ober] == [("kategorie/medien", "Bild, Ton und Modelle")]
+    assert [(x.pfad, x.titel) for x in k.seiten] == [("format/png", "PNG"), ("format/gif", "GIF")]
+    assert "Bilder aller Art" in a.html and "Über diese Kategorie" in a.html
+    ober = await leser.lesen(BUCH, "kategorie/medien")
+    assert [(x.pfad, x.titel) for x in ober.kategorie.unter] == [("kategorie/bild", "Bild")]
 
 
 async def test_startseite(leser):

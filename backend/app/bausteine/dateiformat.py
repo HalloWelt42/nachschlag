@@ -8,16 +8,44 @@ Startseite wird eine Übersicht der Kategorien in Gruppen."""
 
 from __future__ import annotations
 
+import json
+
 from lxml import html as lhtml
 from lxml.etree import SubElement
 
 from ..bibliothek import Eintrag
-from ..modell.artikel import Gruppe, Nachbar, Steckbrief
+from ..modell.artikel import Gruppe, Kategorieangaben, Kategorieverweis, Nachbar, Steckbrief
 from ..modell.buch import Buch
 from . import html as h
 from .basis import Aufbereitet, Wege
 
 KENNZEICHEN_START = b'class="start"'
+KENNZEICHEN_KATEGORIE = b'<article class="kategorie"'
+
+
+def _kategorien_der_formatseite(doc) -> list[Kategorieverweis]:
+    """Die Kategorien eines Formats aus seinen Angaben (JSON); ein Format kann in mehreren stehen."""
+    block = next(iter(doc.xpath("//script[@id='dateiformat']")), None)
+    if block is None or not block.text:
+        return []
+    try:
+        daten = json.loads(block.text)
+    except ValueError:
+        return []
+    return [Kategorieverweis(pfad=k["pfad"], titel=k["name"].get("de") or k["kennung"]) for k in daten.get("kategorien", [])]
+
+
+def _verweise(doc, pfad: str, buch: Buch, wege: Wege, xpath: str) -> list[Kategorieverweis]:
+    aus = []
+    for a in doc.xpath(xpath):
+        anzahl = None
+        for zahl in a.findall("small"):
+            anzahl = int(h.text_von(zahl)) if h.text_von(zahl).isdigit() else None
+            zahl.drop_tree()
+        ziel = h.ziel_im_buch(pfad, a.get("href") or "")
+        if ziel and wege.gibt_es(buch.kennung, ziel):
+            aus.append(Kategorieverweis(pfad=ziel, titel=h.text_von(a), anzahl=anzahl))
+    return aus
 
 
 def _steckbrief(tabelle, titel: str) -> Steckbrief:
@@ -56,6 +84,9 @@ class Dateiformat:
         doc = lhtml.fromstring(eintrag.inhalt.decode("utf-8", "replace"))
         if KENNZEICHEN_START in eintrag.inhalt[:8192]:
             return self._start(buch, eintrag, doc, wege)
+        if KENNZEICHEN_KATEGORIE in eintrag.inhalt:
+            return self._kategorie(buch, eintrag, doc, wege)
+        kategorien = _kategorien_der_formatseite(doc)
         artikel = next(iter(doc.xpath("//article")), doc)
         kopf = next(iter(artikel.xpath(".//h1")), None)
         titel = h.text_von(kopf) if kopf is not None else eintrag.titel
@@ -83,7 +114,33 @@ class Dateiformat:
             einleitung = h.text_von(erster) if erster is not None else ""
         rumpf = "".join(h.als_html(k) for k in artikel)
         return Aufbereitet(titel=titel, html=rumpf, einleitung=einleitung[:1200], abschnitte=abschnitte,
-                           steckbrief=steckbrief, bild=bild, verweise=verweise, online=online)
+                           steckbrief=steckbrief, bild=bild, verweise=verweise, online=online, kategorien=kategorien)
+
+    def _kategorie(self, buch: Buch, eintrag: Eintrag, doc, wege: Wege) -> Aufbereitet:
+        """Kategorieseite in der Kategorie-Ansicht von Nachschlag: Oberkategorie, Unterkategorien (bei großen
+        Kategorien die Seiten je Anfangsbuchstabe), Formate und die Beschreibung der Kategorie."""
+        kopf = next(iter(doc.xpath("//article//h1")), None)
+        titel = h.text_von(kopf) if kopf is not None else eintrag.titel
+        p = eintrag.pfad
+        angaben = Kategorieangaben(ober=_verweise(doc, p, buch, wege, "//article/p[contains(@class,'pfad')]//a"),
+                                   unter=_verweise(doc, p, buch, wege, "//article/ul[contains(@class,'kacheln')]//a"),
+                                   seiten=_verweise(doc, p, buch, wege, "//article/ul[contains(@class,'formate')]//a"))
+        angaben.seiten_gesamt = len(angaben.seiten)
+        beschreibung = next(iter(doc.xpath("//article/section[contains(@class,'quelle')]")), None)
+        html_text, einleitung = "", ""
+        if beschreibung is not None:
+            for herkunft in beschreibung.xpath(".//p[contains(@class,'herkunft')]"):
+                herkunft.set("class", "hinweis")
+            h.verweise_umschreiben(beschreibung, buch.kennung, p, wege)
+            h.saeubern(beschreibung)
+            html_text, einleitung = "".join(h.als_html(k) for k in beschreibung), h.text_von(beschreibung)[:400]
+        kurz = next(iter(doc.xpath("//article/p[contains(@class,'kurz')]")), None)
+        if kurz is not None and not einleitung:
+            einleitung = h.text_von(kurz)
+        teile = [*([f"{len(angaben.unter)} Unterseiten"] if angaben.unter else []),
+                 *([f"{len(angaben.seiten)} Formate"] if angaben.seiten else [])]
+        return Aufbereitet(titel=titel, html=html_text, einleitung=einleitung, rubrik=" · ".join(["Kategorie", *teile]),
+                           kategorie=angaben, kategorien=angaben.ober, darstellung="kategorie")
 
     def _start(self, buch: Buch, eintrag: Eintrag, doc, wege: Wege) -> Aufbereitet:
         """Startseite: je Obergruppe die Kategorien als Rubrik (wie die Übersicht eines Handbuchs)."""
