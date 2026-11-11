@@ -72,3 +72,12 @@ async def test_startseite(leser):
     assert a.darstellung == "uebersicht"
     assert [(g.titel, [(e.pfad, e.titel) for e in g.eintraege]) for g in a.gruppen] == [
         ("Bild, Ton und Modelle", [("kategorie/bild", "Bild")])]
+
+
+def test_text_ohne_eingebettete_stile():
+    """WIKI-89: Stile mitten im Absatz (TemplateStyles der Wikipedia) gehören nicht in Einleitung und Auszug."""
+    from lxml import html as lhtml
+    from app.bausteine.html import text_von
+    p = lhtml.fromstring('<p>Triphylien <style>/* start */ .mw-parser-output .Latn{font-family:x}</style>(altgriechisch '
+                         '<span>Triphylia</span>)<script>var x = 1;</script> ist eine Landschaft.</p>')
+    assert text_von(p) == "Triphylien (altgriechisch Triphylia) ist eine Landschaft."

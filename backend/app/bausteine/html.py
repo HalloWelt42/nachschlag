@@ -76,7 +76,10 @@ def gerade(text: str) -> str:
 
 
 def text_von(el) -> str:
-    return gerade(re.sub(r"\s+", " ", el.text_content()).strip())
+    """Lesbarer Text eines Elements, ohne eingebettete Stile und Skripte (Wikipedia setzt TemplateStyles mitten in
+    Absätze; sonst stünde Stil-Code in Einleitung, Auszug und Vorlesetext, WIKI-89)."""
+    teile = el.xpath(".//text()[not(ancestor::style or ancestor::script or ancestor::noscript)]")
+    return gerade(re.sub(r"\s+", " ", "".join(teile)).strip())
 
 
 def anker_aus(titel: str, vergeben: set[str]) -> str:
