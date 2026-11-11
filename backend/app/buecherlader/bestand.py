@@ -82,6 +82,22 @@ INSERT INTO buecherlader_quelle (art, name, adresse, rang) VALUES
     ('verzeichnis', 'dotsrc.org (Uni Aalborg)', 'https://mirrors.dotsrc.org/kiwix/zim/', 3),
     ('verzeichnis', 'Academic Computer Club Umeå', 'https://mirror.accum.se/mirror/kiwix.org/zim/', 4),
     ('verzeichnis', 'NLUUG', 'https://ftp.nluug.nl/pub/kiwix/zim/', 5);
+""", """
+-- WIKI-87: eigene Bücher aus einem Ordner auf dem Rechner der App (SQLite ändert keine Prüfung: Tabelle neu)
+CREATE TABLE buecherlader_quelle_neu (
+    nr      INTEGER PRIMARY KEY,
+    art     TEXT NOT NULL CHECK (art IN ('verzeichnis', 'katalog', 'ordner')),
+    name    TEXT NOT NULL,
+    adresse TEXT NOT NULL UNIQUE,
+    an      INTEGER NOT NULL DEFAULT 1,
+    rang    INTEGER NOT NULL,
+    zuletzt TEXT NOT NULL DEFAULT '',
+    funde   INTEGER NOT NULL DEFAULT 0,
+    meldung TEXT NOT NULL DEFAULT ''
+);
+INSERT INTO buecherlader_quelle_neu SELECT nr, art, name, adresse, an, rang, zuletzt, funde, meldung FROM buecherlader_quelle;
+DROP TABLE buecherlader_quelle;
+ALTER TABLE buecherlader_quelle_neu RENAME TO buecherlader_quelle;
 """]
 #: Die ersten Quellen (Stufe 2, WIKI-62): der offizielle Katalog und Spiegel an Hochschulen und bei gemeinnützigen
 #: Betreibern, alle mit lesbarem Verzeichnis (geprüft am 07.11.2026). Weitere fügt man in der Bibliothek hinzu.

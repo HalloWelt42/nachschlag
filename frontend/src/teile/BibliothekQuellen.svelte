@@ -8,7 +8,7 @@
   import { quelleAendern, quelleAnlegen, quelleEntfernen, quellvorschlaegeHolen } from "../lib/schnittstelle";
   import type { Quellstand, Quellvorschlag } from "../lib/typen";
 
-  const ART = { verzeichnis: "Verzeichnis", katalog: "Katalog" } as const;
+  const ART = { verzeichnis: "Verzeichnis", katalog: "Katalog", ordner: "Eigener Ordner" } as const;
   const quellen = $derived(lader.stand?.quellen ?? []);
 
   let art = $state<Quellstand["art"]>("verzeichnis");
@@ -80,8 +80,11 @@
     <div class="segment" role="radiogroup" aria-label="Art der Quelle">
       <button type="button" class:aktiv={art === "verzeichnis"} onclick={() => (art = "verzeichnis")}>Verzeichnis</button>
       <button type="button" class:aktiv={art === "katalog"} onclick={() => (art = "katalog")}>Katalog</button>
+      <button type="button" class:aktiv={art === "ordner"} onclick={() => (art = "ordner")}
+              title="Eigene Bücher in einem Ordner auf dem Rechner der App: Ordner je Bereich, Prüfsumme als .sha256 daneben">Eigener Ordner</button>
     </div>
-    <input class="eingabe" type="url" bind:value={adresse} required placeholder="https://.../zim/" aria-label="Adresse der Quelle" />
+    <input class="eingabe" type={art === "ordner" ? "text" : "url"} bind:value={adresse} required
+           placeholder={art === "ordner" ? "/app/daten/eigene-buecher" : "https://.../zim/"} aria-label="Adresse der Quelle" />
     <input class="eingabe quelle-name-feld" bind:value={name} placeholder="Name (wahlweise)" aria-label="Name der Quelle" />
     <button class="knopf" type="submit" disabled={!!arbeitet || !adresse.trim()}><i class="fa-solid fa-plus"></i>Hinzufügen</button>
     <button class="knopf still" type="button" disabled={!!arbeitet}

@@ -203,7 +203,7 @@ export interface Angaben {
 
 export interface Quellstand {
   nr: number;
-  art: "verzeichnis" | "katalog";
+  art: "verzeichnis" | "katalog" | "ordner";
   name: string;
   adresse: string;
   an: boolean;

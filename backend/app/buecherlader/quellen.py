@@ -12,6 +12,7 @@ import asyncio
 import xml.etree.ElementTree as ET
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Literal, Protocol
 from urllib.parse import urljoin, urlparse
 
@@ -19,9 +20,9 @@ import httpx
 
 from ..modell.buecherlader import Angaben
 from .katalog import KATALOGSPRACHE, eintraege_aus
-from .verzeichnis import dateien_aus, ordner_aus
+from .verzeichnis import dateien_aus, ordner_aus, zerlegen
 
-Art = Literal["verzeichnis", "katalog"]
+Art = Literal["verzeichnis", "katalog", "ordner"]
 Melden = Callable[[str], Awaitable[None]]
 #: so viele Bereiche eines Spiegels zugleich (mehr nehmen manche übel: 429)
 BEREICHE_GLEICHZEITIG = 2
@@ -131,11 +132,45 @@ class Katalogquelle:
         return ergebnis
 
 
+#: Bezug aus einem Ordner auf dem Rechner der App: datei:<Pfad>
+DATEI = "datei:"
+
+
+@dataclass
+class Ordnerquelle:
+    """Eigene Bücher in einem Ordner auf dem Rechner der App (WIKI-87): Unterordner je Bereich, darin die ZIM-Dateien,
+    je Datei die Prüfsumme daneben (<datei>.sha256). Ein anderes Programm legt neue Fassungen hinein (etwa das Buch der
+    Dateiformate); der Bücherlader führt sie wie jedes andere Buch (Abo, Fassungen, Umschalten, Rückfall)."""
+    nr: int
+    name: str
+    adresse: str
+    art: Art = "ordner"
+
+    async def durchsehen(self, c: httpx.AsyncClient, sprachen: frozenset[str], melden: Melden) -> Ergebnis:
+        wurzel = Path(self.adresse)
+        if not wurzel.is_dir():
+            raise ValueError(f"Den Ordner {self.adresse} gibt es nicht")
+        bereiche = sorted(p for p in wurzel.iterdir() if p.is_dir() and not p.name.startswith("."))
+        ergebnis = Ergebnis(bereiche=len(bereiche))
+        for bereich in bereiche:
+            await melden(f"{self.name}: Bereich {bereich.name}")
+            for datei in sorted(bereich.glob("*.zim")):
+                name = zerlegen(datei.name)
+                if name is None or name.sprache not in sprachen:
+                    continue
+                ergebnis.funde.append(Fund(bereich.name, datei.name, name.stamm, name.sprache, name.stand,
+                                           datei.stat().st_size, f"{DATEI}{datei}"))
+        return ergebnis
+
+
 def quelle_aus(nr: int, art: Art, name: str, adresse: str) -> Quelle:
-    return (Katalogquelle if art == "katalog" else Verzeichnisquelle)(nr=nr, name=name, adresse=adresse)
+    klasse = {"katalog": Katalogquelle, "ordner": Ordnerquelle}.get(art, Verzeichnisquelle)
+    return klasse(nr=nr, name=name, adresse=adresse)
 
 
 def rechnername(adresse: str) -> str:
+    if adresse.startswith(DATEI) or adresse.startswith("/"):
+        return "eigener Ordner"
     return urlparse(adresse).hostname or adresse
 
 

@@ -496,3 +496,29 @@ async def test_buch_loeschen(umgebung):
     assert "probe_de_all" not in await lader._bestand.abos() and not (buecher / ".neu" / "probe_de_all_2026-10.zim").exists()
     with pytest.raises(LookupError):
         await lader.loeschen("probe_de_all_2026-10")
+
+
+async def test_eigene_buecher_aus_einem_ordner(umgebung, tmp_path: Path):
+    """WIKI-87: ein Ordner auf dem Rechner der App als Quelle (Bereich je Unterordner, Prüfsumme daneben); das Buch
+    lädt wie jedes andere, ohne Prüfsumme lädt nichts, ein falscher Pfad fällt beim Anlegen auf."""
+    import hashlib
+    lader, auftraege, server, werte, buecher, *_ = umgebung
+    eigene = tmp_path / "eigene"
+    datei = probebuch.bauen(eigene / "other", "eigenes_de_all_2026-11")
+    with pytest.raises(LaderFehler):
+        await lader.quelle_anlegen(NeueQuelle(art="ordner", adresse=str(tmp_path / "fehlt"), name="Eigene"))
+    await lader.quelle_anlegen(NeueQuelle(art="ordner", adresse=str(eigene), name="Eigene Bücher"))
+    await lader.durchsehen("probe")
+    await fertig(auftraege)
+    assert any(q.art == "ordner" and q.funde == 1 for q in await lader.quellen())
+
+    await lader.abonnieren("eigenes_de_all", "other")
+    [a] = await fertig(auftraege, "buch_laden")
+    assert a.zustand == "fehler" and "Keine Prüfsumme" in a.fehler
+
+    Path(str(datei) + ".sha256").write_text(f"{hashlib.sha256(datei.read_bytes()).hexdigest()}  {datei.name}\n")
+    await auftraege.wiederholen(a.id)
+    laden = await fertig(auftraege, "buch_laden")
+    assert laden[0].zustand == "fertig" and laden[0].ergebnis["ort"] == "Bibliothek"
+    assert (buecher / "eigenes_de_all_2026-11.zim").read_bytes() == datei.read_bytes()
+    assert "eigenes_de_all_2026-11.zim" in (buecher / "library.xml").read_text()

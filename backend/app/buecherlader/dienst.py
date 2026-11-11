@@ -43,7 +43,7 @@ from .ablage import Ablage, Lokal
 from .bestand import Bestand, Buchzeile, Wechsel, jetzt
 from .bibliotheksliste import Bibliotheksliste
 from .katalog import ladedatei_aus
-from .quellen import Ergebnis, Quelle, quelle_aus, rechnername, vereinigen
+from .quellen import DATEI, Ergebnis, Quelle, quelle_aus, rechnername, vereinigen
 from .verzeichnis import AUSGABEN, basis_und_ausgabe, ordner_aus, zerlegen
 
 logger = logging.getLogger("nachschlag.buecherlader")
@@ -379,7 +379,9 @@ class Buecherlader(Begleiter):
             # Prüfsumme und Spiegel der Ladedatei, solange einer fehlt (auch ein Auftrag aus der Zeit vor den Quellen,
             # der nur die Prüfsumme kennt und noch keine Bezugsquellen hat)
             if not k.zwischenstand.get("soll") or "spiegel" not in k.zwischenstand:
-                soll, spiegel = await self._pruefsumme(c, r, e, next((b.ladedatei for b in bezuege if b.ladedatei), ""))
+                eigen = next((b.adresse for b in bezuege if b.adresse.startswith(DATEI)), "")
+                soll, spiegel = (self._pruefsumme_daneben(eigen), []) if eigen else \
+                    await self._pruefsumme(c, r, e, next((b.ladedatei for b in bezuege if b.ladedatei), ""))
                 await k.merken(soll=k.zwischenstand.get("soll") or soll, spiegel=spiegel)
             adressen = list(dict.fromkeys([b.adresse for b in bezuege] + k.zwischenstand.get("spiegel", [])))
             if not adressen:
@@ -387,7 +389,10 @@ class Buecherlader(Begleiter):
             fehler = []
             for adresse in adressen:
                 try:
-                    await self._herunterladen(k, c, r, ablage, adresse, teil)
+                    if adresse.startswith(DATEI):
+                        await self._kopieren(k, r, ablage, Path(adresse.removeprefix(DATEI)), teil)
+                    else:
+                        await self._herunterladen(k, c, r, ablage, adresse, teil)
                     break
                 except BezugFehlt as f:
                     fehler.append(f"{rechnername(adresse)}: {f}")
@@ -429,6 +434,44 @@ class Buecherlader(Begleiter):
         if not _SHA256.match(soll):
             raise AuftragFehler(f"Die Prüfsumme für {e.datei} ist unlesbar; ohne Prüfsumme lädt der Bücherlader nicht")
         return soll, []
+
+    @staticmethod
+    def _pruefsumme_daneben(adresse: str) -> str:
+        """Prüfsumme einer Datei aus einem eigenen Ordner: <datei>.sha256 daneben (erstes Wort). Ohne sie lädt nichts."""
+        datei = Path(adresse.removeprefix(DATEI) + ".sha256")
+        try:
+            soll = datei.read_text(encoding="utf-8").split()[0].lower()
+        except (OSError, IndexError) as f:
+            raise AuftragFehler(f"Keine Prüfsumme neben {datei.name[:-7]}; ohne Prüfsumme lädt der Bücherlader nicht") from f
+        if not _SHA256.match(soll):
+            raise AuftragFehler(f"Die Prüfsumme in {datei.name} ist unlesbar; ohne Prüfsumme lädt der Bücherlader nicht")
+        return soll
+
+    async def _kopieren(self, k: Kontext, r: Regeln, ablage: Ablage, quelle: Path, teil: Path) -> None:
+        """Aus einem eigenen Ordner in die angefangene Datei kopieren, fortsetzbar wie ein Download; die Prüfsumme
+        entscheidet am Ende. `BezugFehlt`: die Datei ist nicht (mehr) da."""
+        try:
+            gesamt = quelle.stat().st_size
+        except OSError as f:
+            raise BezugFehlt(f"Datei fehlt ({f})") from f
+        schon = teil.stat().st_size if teil.exists() else 0
+        if schon > gesamt:
+            teil.unlink()
+            schon = 0
+        if schon == gesamt:
+            return
+        if fehlt := self._platz_fehlt(r, ablage, gesamt - schon):
+            raise AuftragFehler(fehlt)
+        await k.fortschritt(schon / gesamt, f"{gb(schon)} von {gb(gesamt)} · aus dem eigenen Ordner", phase="laden")
+        with quelle.open("rb") as ein, teil.open("ab" if schon else "wb") as aus:
+            ein.seek(schon)
+            n = 0
+            while stueck := await asyncio.to_thread(ein.read, STUECK):
+                await asyncio.to_thread(aus.write, stueck)
+                schon, n = schon + len(stueck), n + 1
+                await k.pruefen()
+                if n % 32 == 0:
+                    await k.fortschritt(schon / gesamt, f"{gb(schon)} von {gb(gesamt)} · aus dem eigenen Ordner")
 
     async def _herunterladen(self, k: Kontext, c: httpx.AsyncClient, r: Regeln, ablage: Ablage, adresse: str,
                              teil: Path) -> None:
@@ -564,6 +607,11 @@ class Buecherlader(Begleiter):
     async def quelle_anlegen(self, neu: NeueQuelle) -> list[Quellstand]:
         """Eine Quelle hinzufügen; ein Verzeichnis wird dabei gelesen, damit eine falsche Adresse gleich auffällt."""
         adresse = neu.adresse.strip()
+        if neu.art == "ordner":
+            if not adresse.startswith("/") or not Path(adresse).is_dir():
+                raise LaderFehler(f"Den Ordner {adresse} gibt es auf diesem Rechner nicht (Pfad, wie ihn die App sieht)")
+        elif not adresse.startswith(("http://", "https://")):
+            raise LaderFehler("Ein Verzeichnis oder Katalog braucht eine Adresse mit http:// oder https://")
         if neu.art == "verzeichnis":
             adresse = adresse if adresse.endswith("/") else adresse + "/"
             async with self._client() as c:

@@ -33,7 +33,7 @@ der Bücher schreibt. Alles, was länger läuft, ist ein Auftrag des Appkerns (S
 |---|---|
 | `verzeichnis.py` | Verzeichnisseiten aller Spiegel lesen (Apache, lighttpd, nginx): Bereiche, Dateien, Stamm, Sprache, Stand |
 | `katalog.py` | Katalog lesen (Bücher mit Angaben und Ladedatei) und Ladedateien (meta4: Prüfsumme, Spiegel) |
-| `quellen.py` | Schnittstelle Quelle (Verzeichnis, Katalog) und die Vereinigungsmenge aller Quellen mit Bezugsquellen |
+| `quellen.py` | Schnittstelle Quelle (Verzeichnis, Katalog, eigener Ordner) und die Vereinigungsmenge aller Quellen mit Bezugsquellen |
 | `bestand.py` | Datenbank: Bücher und Fassungen mit dem Durchgang, in dem sie zuerst auftauchten, Durchgänge, Abos, Wechsel |
 | `ablage.py` | Dateien im Ordner der Bücher: Bibliothek, `.laden/` (angefangen), `.neu/` (wartet aufs Umschalten) |
 | `bibliotheksliste.py` | `library.xml` für einen Bücherserver neben Nachschlag nachziehen (wahlweise) |
@@ -53,6 +53,15 @@ wartet der Lader und fragt erneut.
 Vereinigung: je Buch und Stand ein Eintrag mit den Bezugsquellen aller Quellen, die die Datei haben, und den
 zusammengeführten Angaben (Katalog vor Verzeichnis; Titel, Beschreibung, Artikel, Medien, Autor, Herausgeber,
 Kategorie, Schlagworte, Bilder, Videos, Volltextindex, Datum; keine fremden Vorschaubilder).
+
+### Eigene Bücher (WIKI-87)
+
+Quellenart "Eigener Ordner": ein Ordner auf dem Rechner der App, darin ein Unterordner je Bereich mit den ZIM-Dateien
+(Name `<stamm>_<JJJJ-MM>.zim` wie bei den Spiegeln) und je Datei die Prüfsumme daneben (`<datei>.sha256`, erstes Wort).
+Ein anderes Programm legt neue Fassungen hinein, etwa das Buch der Dateiformate (`python -m dateiformate ausliefern`
+im privaten Repo dateiformate, nach `/mnt/data/nachschlag/daten/eigene-buecher/other/`, in der App
+`/app/daten/eigene-buecher`). Der Bücherlader führt diese Bücher wie jedes andere: Abo, Fassungen, Umschalten,
+Rückfall. Geladen wird durch Kopieren (fortsetzbar), geprüft gegen die Prüfsumme daneben; ohne sie lädt nichts.
 
 ## Ablauf beim Laden
 

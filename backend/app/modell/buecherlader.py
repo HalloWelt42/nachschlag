@@ -32,7 +32,7 @@ class Angaben(BaseModel):
 class Quellstand(BaseModel):
     """Eine Quelle des Bücherladers mit dem Ergebnis ihres letzten Durchgangs."""
     nr: int
-    art: Literal["verzeichnis", "katalog"]
+    art: Literal["verzeichnis", "katalog", "ordner"]
     name: str
     adresse: str
     an: bool
@@ -43,8 +43,11 @@ class Quellstand(BaseModel):
 
 
 class NeueQuelle(BaseModel):
-    art: Literal["verzeichnis", "katalog"] = Field(description="Verzeichnis eines Spiegels (Ordner je Bereich) oder Katalog")
-    adresse: str = Field(min_length=8, max_length=300, pattern=r"^https?://", description="Adresse, mit / am Ende")
+    art: Literal["verzeichnis", "katalog", "ordner"] = Field(
+        description="Verzeichnis eines Spiegels (Ordner je Bereich), Katalog, oder ein Ordner auf dem Rechner der App mit "
+                    "eigenen Büchern (Ordner je Bereich, je Datei die Prüfsumme daneben als <datei>.sha256)")
+    adresse: str = Field(min_length=2, max_length=300, pattern=r"^(https?://|/)",
+                         description="Adresse mit / am Ende; bei einem Ordner sein Pfad auf dem Rechner der App")
     name: str = Field("", max_length=80, description="leer: der Rechner aus der Adresse")
 
 
