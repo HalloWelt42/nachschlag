@@ -80,6 +80,9 @@
 .fundband { display: flex; align-items: center; gap: var(--a3); margin: var(--a3) var(--a5) 0; padding: var(--a2) var(--a3); border-radius: var(--r2);
             background: color-mix(in srgb, var(--petrol) 12%, transparent); color: var(--text); font-size: var(--klein); }
 .fundband > i { color: var(--petrol); }
+/* Hinweise der Suchseite als Block: gleicher Abstand oben und unten, die Liste darunter beginnt mit Luft (WIKI-103) */
+.fundbaender { display: flex; flex-direction: column; gap: var(--a2); padding: var(--a3) var(--a5); }
+.fundbaender > .fundband { margin: 0; }
 .fundband .frage { font-weight: 600; }
 .fundband .weg { font-family: var(--schrift-zahl); font-size: var(--marke); color: var(--petrol); padding: 1px 7px; border-radius: var(--r1);
                  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--petrol) 40%, transparent); white-space: nowrap; }
@@ -357,6 +360,7 @@ button.buendel-kopf:hover { background: var(--flaeche-2); }
 .weg-marke.bedeutung { background: color-mix(in srgb, var(--petrol) 13%, transparent); color: var(--petrol); }
 .weg-marke.index { background: color-mix(in srgb, var(--stahl) 14%, transparent); color: var(--stahl); }
 .suchseite { flex: 1; min-height: 0; display: grid; grid-template-columns: 250px minmax(0, 1fr) 380px; }
+.such-reiter { display: none; }                         /* nur in schmalen Fenstern, dort als Reiter */
 .filterspalte { background: var(--leiste); box-shadow: 1px 0 0 var(--rand); padding: var(--a3); display: flex; flex-direction: column; gap: var(--a4); font-size: var(--klein); overflow-y: auto; }
 .filtergruppe h4 { margin: 0 0 6px; font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; }
 .filtergruppe button { display: flex; width: 100%; align-items: center; gap: var(--a2); padding: 4px 6px; border: 0; border-radius: var(--r2); cursor: pointer;
@@ -1030,7 +1034,11 @@ button.buendel-kopf:hover { background: var(--flaeche-2); }
 @media (max-width: 900px) {
   .suchseite { grid-template-columns: minmax(0, 1fr); }
   .filterspalte { display: none; }
-  .ergebnisse, .suchkopf { padding-inline: var(--a3); }
+  .ergebnisse, .suchkopf, .fundbaender { padding-inline: var(--a3); }
+  /* Reiter Treffer und Quellen (WIKI-103): die Quellenliste zeigt sich anstelle der Treffer */
+  .such-reiter { display: flex; padding: var(--a2) var(--a3); }
+  .suchseite.zeigt-quellen .filterspalte { display: flex; }
+  .suchseite.zeigt-quellen > .rollfeld { display: none; }
 }
 @media (max-width: 700px) {
   .artikel-text figure, .artikel-text table.rechts { float: none; margin: 0 auto 1em; }

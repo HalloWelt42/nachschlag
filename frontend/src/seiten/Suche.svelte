@@ -45,6 +45,7 @@
 
   let staende = $state.raw<Record<string, Stand>>({});
   let aus = $state<string[]>([]);             // abgewählte Bücher
+  let spalte = $state<"treffer" | "quellen">("treffer");   // schmale Fenster: welcher Reiter (WIKI-103)
   let gewaehlt = $state.raw<Treffer | null>(null);
   let vorschau = $state.raw<Artikel | null>(null);
   let fehler = $state("");
@@ -274,44 +275,57 @@
       <b style:width="{Math.max(6, (erledigt / reihenfolge.length) * 100)}%"></b></div>
   {/if}
 </div>
-{#if bedeutungAusstehend}
-  <div class="fundband"><i class="fa-solid fa-circle-notch fa-spin"></i>
-    <span><b>Bedeutungssuche läuft noch.</b> Bis dahin Treffer aus dem Index; die passenden Stellen kommen nach.</span></div>
-{:else if nachgeliefert !== null}
-  <div class="fundband"><i class="fa-solid fa-wand-magic-sparkles"></i>
-    <span>Treffer nach Bedeutung nachgeliefert, die Bedeutungssuche brauchte {(nachgeliefert / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 })} s.</span></div>
+<!-- Hinweise zur Suche als ein Block mit gleichem Abstand oben und unten (WIKI-103): nichts klebt an der Liste darunter -->
+{#if bedeutungAusstehend || nachgeliefert !== null || hinweisBedeutung || statt || meintest
+     || (uebersetzung && !gleich(uebersetzung.text, frage)) || uebersetzungGrund}
+<div class="fundbaender">
+  {#if bedeutungAusstehend}
+    <div class="fundband"><i class="fa-solid fa-circle-notch fa-spin"></i>
+      <span><b>Bedeutungssuche läuft noch.</b> Bis dahin Treffer aus dem Index; die passenden Stellen kommen nach.</span></div>
+  {:else if nachgeliefert !== null}
+    <div class="fundband"><i class="fa-solid fa-wand-magic-sparkles"></i>
+      <span>Treffer nach Bedeutung nachgeliefert, die Bedeutungssuche brauchte {(nachgeliefert / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 })} s.</span></div>
+  {/if}
+  {#if hinweisBedeutung}
+    <div class="fundband warn"><i class="fa-solid fa-triangle-exclamation"></i>
+      <span><b>Nur Index:</b> {hinweisBedeutung}. Treffer passen deshalb nur dem Wortlaut nach.</span></div>
+  {/if}
+  <!-- Suchkorrektur (WIKI-41) -->
+  {#if statt}
+    <div class="fundband"><i class="fa-solid fa-spell-check"></i>
+      <span>Keine Treffer für <b>{statt}</b>, gezeigt werden die für <b>{frage}</b>.</span>
+      <button class="knopf still" onclick={() => weiterSuchen(statt, { genau: "1" })}>Doch nach {statt} suchen</button></div>
+  {:else if meintest}
+    <div class="fundband"><i class="fa-solid fa-spell-check"></i>
+      <span>Meintest du <button class="meintest" onclick={() => weiterSuchen(meintest)}>{meintest}</button>?</span></div>
+  {/if}
+  <!-- Übersetzte Suche (WIKI-40): womit die englischen Quellen zusätzlich gefragt werden, änderbar -->
+  {#if uebersetzung && !gleich(uebersetzung.text, frage)}
+    <div class="fundband uebersetzt"><i class="fa-solid fa-language"></i>
+      {#if aendern}
+        <form class="uebersetzung-aendern" onsubmit={korrigieren}>
+          <input name="neu-text" bind:value={neuText} aria-label="Übersetzung für die englischen Quellen" />
+          <button class="knopf primaer" type="submit">Übernehmen</button>
+          <button class="knopf still" type="button" onclick={() => (aendern = false)}>Abbrechen</button>
+        </form>
+      {:else}
+        <span>Englische Quellen auch mit <b>{uebersetzung.text}</b>{uebersetzung.von === "nutzer" ? " (deine Übersetzung)" : ""}</span>
+        <button class="knopf still" onclick={() => { neuText = uebersetzung!.text; aendern = true; }}><i class="fa-solid fa-pen"></i>Ändern</button>
+      {/if}
+    </div>
+  {:else if uebersetzungGrund}
+    <div class="fundband"><i class="fa-solid fa-language"></i><span>Englische Quellen ohne Übersetzung: {uebersetzungGrund}</span></div>
+  {/if}
+</div>
 {/if}
-{#if hinweisBedeutung}
-  <div class="fundband warn"><i class="fa-solid fa-triangle-exclamation"></i>
-    <span><b>Nur Index:</b> {hinweisBedeutung}. Treffer passen deshalb nur dem Wortlaut nach.</span></div>
-{/if}
-<!-- Suchkorrektur (WIKI-41) -->
-{#if statt}
-  <div class="fundband"><i class="fa-solid fa-spell-check"></i>
-    <span>Keine Treffer für <b>{statt}</b>, gezeigt werden die für <b>{frage}</b>.</span>
-    <button class="knopf still" onclick={() => weiterSuchen(statt, { genau: "1" })}>Doch nach {statt} suchen</button></div>
-{:else if meintest}
-  <div class="fundband"><i class="fa-solid fa-spell-check"></i>
-    <span>Meintest du <button class="meintest" onclick={() => weiterSuchen(meintest)}>{meintest}</button>?</span></div>
-{/if}
-<!-- Übersetzte Suche (WIKI-40): womit die englischen Quellen zusätzlich gefragt werden, änderbar -->
-{#if uebersetzung && !gleich(uebersetzung.text, frage)}
-  <div class="fundband uebersetzt"><i class="fa-solid fa-language"></i>
-    {#if aendern}
-      <form class="uebersetzung-aendern" onsubmit={korrigieren}>
-        <input name="neu-text" bind:value={neuText} aria-label="Übersetzung für die englischen Quellen" />
-        <button class="knopf primaer" type="submit">Übernehmen</button>
-        <button class="knopf still" type="button" onclick={() => (aendern = false)}>Abbrechen</button>
-      </form>
-    {:else}
-      <span>Englische Quellen auch mit <b>{uebersetzung.text}</b>{uebersetzung.von === "nutzer" ? " (deine Übersetzung)" : ""}</span>
-      <button class="knopf still" onclick={() => { neuText = uebersetzung!.text; aendern = true; }}><i class="fa-solid fa-pen"></i>Ändern</button>
-    {/if}
-  </div>
-{:else if uebersetzungGrund}
-  <div class="fundband"><i class="fa-solid fa-language"></i><span>Englische Quellen ohne Übersetzung: {uebersetzungGrund}</span></div>
-{/if}
-<div class="suchseite">
+<!-- schmale Fenster (WIKI-103): Treffer oder Quellen als Reiter; neben den Treffern ist dort kein Platz für die Liste -->
+<div class="reiterleiste such-reiter" role="tablist" aria-label="Treffer oder Quellen">
+  <button role="tab" aria-selected={spalte === "treffer"} class:aktiv={spalte === "treffer"} onclick={() => (spalte = "treffer")}>
+    Treffer{#if frage && fertig}{" "}<span class="zahl">{zahl(gesamt)}</span>{/if}</button>
+  <button role="tab" aria-selected={spalte === "quellen"} class:aktiv={spalte === "quellen"} onclick={() => (spalte = "quellen")}>
+    Quellen <span class="zahl">{durchsucht.length - aus.length} von {durchsucht.length}</span></button>
+</div>
+<div class="suchseite" class:zeigt-quellen={spalte === "quellen"}>
   <aside class="filterspalte">
     <div class="filtergruppe"><h4>Quellen</h4>
       {#each durchsucht as b (b.kennung)}
