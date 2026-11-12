@@ -3,6 +3,7 @@ Stimme gehen mit; ohne Leitstelle, ohne Freigabe oder bei Fehlern vor dem ersten
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import io
 import json
@@ -87,10 +88,11 @@ async def test_satz_fuer_satz_mit_ton_sprache_und_stimme():
     s = Sprechdienst(lambda: ls, lambda: "klangwerk-sprechen", lambda: "serena")
     await s.pruefen()
     zeilen = await alle(s, "Der Rotfuchs jagt. Er frisst Mäuse!\n\nNeuer Absatz.", "de")
-    assert [z["art"] for z in zeilen] == ["satz", "satz", "satz", "ende"]
-    assert [z["text"] for z in zeilen[:3]] == ["Der Rotfuchs jagt.", "Er frisst Mäuse!", "Neuer Absatz."]
-    assert [z["nr"] for z in zeilen[:3]] == [0, 1, 2]
-    assert dauer_ms(base64.b64decode(zeilen[0]["ton"])) == 250 and zeilen[-1]["dauer_ms"] == 750
+    assert [z["art"] for z in zeilen] == ["plan", "satz", "satz", "satz", "ende"]
+    assert zeilen[0] == {"art": "plan", "saetze": 3, "zeichen": 47}             # vorab, für den Puffer (WIKI-104)
+    assert [z["text"] for z in zeilen[1:4]] == ["Der Rotfuchs jagt.", "Er frisst Mäuse!", "Neuer Absatz."]
+    assert [z["nr"] for z in zeilen[1:4]] == [0, 1, 2]
+    assert dauer_ms(base64.b64decode(zeilen[1]["ton"])) == 250 and zeilen[-1]["dauer_ms"] == 750
     methode, weg, optionen = ls.aufrufe[0]
     assert (methode, weg, ls.dienstname) == ("POST", "/v1/audio/speech", "klangwerk-sprechen")
     assert optionen["json"] == {"input": "Der Rotfuchs jagt.", "response_format": "wav", "voice": "serena", "language": "german"}
@@ -122,7 +124,7 @@ async def test_fehler_vor_dem_ersten_satz_ist_ein_grund_danach_eine_zeile():
         await alle(s, "Eins. Zwei.")
     s = Sprechdienst(lambda: Leitstelle(fehler_ab=1), lambda: "klangwerk-sprechen", lambda: "")
     zeilen = await alle(s, "Eins. Zwei.")
-    assert [z["art"] for z in zeilen] == ["satz", "fehler"] and "brach ab" in zeilen[1]["meldung"]
+    assert [z["art"] for z in zeilen] == ["plan", "satz", "fehler"] and "brach ab" in zeilen[2]["meldung"]
 
 
 class Stimmen:
@@ -139,13 +141,13 @@ async def test_eigene_stimme_spricht_der_klondienst_mit_der_probe():
     s = Sprechdienst(lambda: ls, lambda: "klangwerk-sprechen", lambda: "privat:s1", lambda: "klangwerk-klonen", Stimmen())
     await s.pruefen()
     zeilen = await alle(s, "Der Rotfuchs jagt.", "de")
-    assert [z["art"] for z in zeilen] == ["satz", "ende"]
+    assert [z["art"] for z in zeilen] == ["plan", "satz", "ende"]
     clone, audio = ls.aufrufe[0], ls.aufrufe[1]
     assert (clone[1], ls.dienstname, ls.gebunden) == ("/tts/clone", "klangwerk-klonen", 1)
     assert clone[2]["data"] == {"text": "Der Rotfuchs jagt.", "ref_text": "Probe der Hausstimme.", "language": "german", "modus": "icl"}
     assert clone[2]["files"]["ref_audio"][1] == wav(500)
     assert audio[:2] == ("GET", "/tts/audio/satz.wav")
-    assert (await alle(s, "It hunts.", "en"))[0]["art"] == "satz"
+    assert (await alle(s, "It hunts.", "en"))[1]["art"] == "satz"
     assert ls.aufrufe[2][2]["data"]["modus"] == "abdruck"          # andere Sprache als die Probe: nur der Stimmabdruck
 
 
@@ -159,3 +161,35 @@ async def test_eigene_stimme_ohne_freigabe_oder_klondienst_ein_grund():
     with pytest.raises(NichtBereit, match="nicht frei") as f:
         await alle(fremd, "Satz.")
     assert f.value.status == 403
+
+
+async def test_saetze_im_voraus_in_fester_reihenfolge():
+    """WIKI-104: bis zu VORAUS Sätze sind zugleich beim Sprechdienst; kommen spätere früher zurück, bleibt die Reihenfolge
+    des Texts. Bricht der Leser ab, wird nichts mehr bestellt."""
+    from app.vorlesen.sprechdienst import VORAUS
+    ls = Leitstelle()
+    unterwegs, hoechstens = 0, 0
+    dienst = Dienst(ls)
+    alt = dienst.anfrage
+
+    async def langsam_zuerst(methode, weg, **optionen):
+        nonlocal unterwegs, hoechstens
+        unterwegs += 1
+        hoechstens = max(hoechstens, unterwegs)
+        await asyncio.sleep(0.05 if optionen["json"]["input"].startswith("Eins") else 0.01)
+        unterwegs -= 1
+        return await alt(methode, weg, **optionen)
+
+    dienst.anfrage = langsam_zuerst
+    ls.dienst = lambda name: dienst
+    s = Sprechdienst(lambda: ls, lambda: "klangwerk-sprechen", lambda: "")
+    zeilen = await alle(s, "Eins. Zwei. Drei. Vier. Fünf.")
+    assert [z["text"] for z in zeilen if z["art"] == "satz"] == ["Eins.", "Zwei.", "Drei.", "Vier.", "Fünf."]
+    assert hoechstens == VORAUS
+
+    ls.aufrufe.clear()
+    strom = s.zeilen("Eins. Zwei. Drei. Vier. Fünf. Sechs.", "de")
+    assert json.loads(await anext(strom))["art"] == "plan"
+    await strom.aclose()                                                    # der Leser bricht ab
+    await asyncio.sleep(0.1)
+    assert len(ls.aufrufe) <= VORAUS

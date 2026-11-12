@@ -11,6 +11,7 @@ dem Ton als Base64-WAV in `ton`), zuletzt ende, oder fehler, wenn es nach dem er
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import io
 import json
@@ -28,6 +29,9 @@ from .stimmen import PRIVAT, NichtFreigegeben, Referenz, Stimmenquelle
 
 #: so lange gilt der geholte Katalog der Stimmen
 KATALOG_GILT_S = 600
+#: so viele Sätze sind zugleich beim Sprechdienst in Arbeit (WIKI-104): der nächste ist schon unterwegs, während der
+#: vorige noch klingt; die Reihenfolge bleibt die des Texts
+VORAUS = 3
 #: Sprache des Texts (Kennzeichen wie im HTML) in der Schreibweise des Sprechmodells; sonst die Vorgabe des Dienstes
 SPRACHEN = {"de": "german", "en": "english", "fr": "french", "es": "spanish", "it": "italian", "pt": "portuguese",
             "ru": "russian", "ja": "japanese", "ko": "korean", "zh": "chinese"}
@@ -141,7 +145,9 @@ class Sprechdienst:
 
     async def zeilen(self, text: str, sprache: str) -> AsyncIterator[bytes]:
         """Die Zeilen des Stroms für `text`. Scheitert es vor dem ersten Satz: `NichtBereit`; danach eine Zeile
-        `fehler`. Bricht der Leser ab, wird kein weiterer Satz bestellt."""
+        `fehler`. Mit dem ersten Satz kommt vorab der Plan (Zahl der Sätze und Zeichen), damit der Vorleser seinen
+        Puffer nach der Länge des Rests bemisst (WIKI-104). Bis zu VORAUS Sätze sind zugleich in Arbeit; bricht der
+        Leser ab, werden die bestellten zurückgenommen und keine weiteren bestellt."""
         ls = self._leitstelle()
         referenz = None
         if eigene := self._eigene_id():
@@ -154,21 +160,36 @@ class Sprechdienst:
             except VerbundFehler as f:
                 raise NichtBereit(f"Die Vertonung mit den eigenen Stimmen antwortet nicht: {f.meldung}") from f
         arbeit = f"vorlesen-{uuid.uuid4().hex[:12]}"
+        teile = [s for satz in saetze(text) for s in stuecke(satz.text) if hat_worte(s)]
+        bestellt: dict[int, asyncio.Task[bytes]] = {}
+
+        def bestellen(i: int) -> None:
+            if i < len(teile) and i not in bestellt:
+                aufgabe = asyncio.create_task(self._sprechen(ls, teile[i], sprache, arbeit, referenz))
+                aufgabe.add_done_callback(lambda a: a.cancelled() or a.exception())   # abgeholt, auch zurückgenommen
+                bestellt[i] = aufgabe
+
         nr, gesamt = 0, 0
         try:
-            for satz in saetze(text):
-                for stueck in stuecke(satz.text):
-                    if not hat_worte(stueck):
-                        continue
-                    wav = await self._sprechen(ls, stueck, sprache, arbeit, referenz)
-                    ms = dauer_ms(wav)
-                    yield zeile({"art": "satz", "nr": nr, "text": stueck, "dauer_ms": ms,
-                                 "ton": base64.b64encode(wav).decode("ascii")})
-                    nr += 1
-                    gesamt += ms
-        except LeitstellenFehler as f:
-            if not nr:
-                raise NichtBereit(f"Vorlesen gerade nicht möglich: {f}", 403 if f.status in (401, 403) else 503) from f
-            yield zeile({"art": "fehler", "meldung": f"Vorlesen brach ab: {f}"})
-            return
+            for i in range(VORAUS):
+                bestellen(i)
+            for i, stueck in enumerate(teile):
+                try:
+                    wav = await bestellt.pop(i)
+                except LeitstellenFehler as f:
+                    if not nr:
+                        raise NichtBereit(f"Vorlesen gerade nicht möglich: {f}", 403 if f.status in (401, 403) else 503) from f
+                    yield zeile({"art": "fehler", "meldung": f"Vorlesen brach ab: {f}"})
+                    return
+                bestellen(i + VORAUS)
+                if i == 0:
+                    yield zeile({"art": "plan", "saetze": len(teile), "zeichen": sum(len(t) for t in teile)})
+                ms = dauer_ms(wav)
+                yield zeile({"art": "satz", "nr": nr, "text": stueck, "dauer_ms": ms,
+                             "ton": base64.b64encode(wav).decode("ascii")})
+                nr += 1
+                gesamt += ms
+        finally:
+            for aufgabe in bestellt.values():
+                aufgabe.cancel()
         yield zeile({"art": "ende", "saetze": nr, "dauer_ms": gesamt})
