@@ -10,6 +10,7 @@
   import { untrack } from "svelte";
   import Suchfeld from "../teile/Suchfeld.svelte";
   import Buchmarke from "../teile/Buchmarke.svelte";
+  import Wahlzeichen from "../teile/Wahlzeichen.svelte";
   import { bibliothek, bibliothekLaden, zahl, nutzbar } from "../lib/bibliothek.svelte";
   import { abschnittFuer, suchregelnLaden } from "../lib/suchregeln.svelte";
   import { artikelHolen, korrekturHolen, sucheHolen, uebersetzungHolen, uebersetzungKorrigieren, type Uebersetzung } from "../lib/schnittstelle";
@@ -298,8 +299,8 @@
     <div class="filtergruppe"><h4>Quellen</h4>
       {#each durchsucht as b (b.kennung)}
         {@const an = !aus.includes(b.kennung)}
-        <button class:an class:aus={!an} onclick={() => umschalten(b.kennung)} title={an ? "Diese Quelle nicht durchsuchen" : "Diese Quelle durchsuchen"}>
-          <i class="fa-{an ? 'solid fa-square-check' : 'regular fa-square'}"></i><Buchmarke kennung={b.kennung} symbol={false} />
+        <button class:an class:aus={!an} aria-pressed={an} onclick={() => umschalten(b.kennung)} title={an ? "Diese Quelle nicht durchsuchen" : "Diese Quelle durchsuchen"}>
+          <Wahlzeichen {an} /><Buchmarke kennung={b.kennung} symbol={false} flaggeVorn />
           <span class="zahl">{staende[b.kennung]?.ergebnis ? zahl(staende[b.kennung].ergebnis!.index_gesamt) : ""}</span></button>
       {/each}
     </div>

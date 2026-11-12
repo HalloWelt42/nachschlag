@@ -363,6 +363,14 @@ button.buendel-kopf:hover { background: var(--flaeche-2); }
 .filtergruppe button:hover { background: var(--flaeche-2); }
 .filtergruppe button i { width: 16px; color: var(--text-3); }
 .filtergruppe button.an i { color: var(--akzent); }
+.filtergruppe button .buchmarke { align-items: flex-start; }
+.filtergruppe button .buchmarke .sprachmarke { padding-top: .2em; }      /* die Flagge steht auf der ersten Zeile */
+
+/* Zeichen einer Wahl (WIKI-103): größer als ein Haken-Kästchen, ohne Haken; gewählt Akzentfläche mit Kern */
+.wahlzeichen { flex: none; position: relative; width: 20px; height: 20px; border-radius: var(--r1);
+               box-shadow: inset 0 0 0 2px var(--rand-stark); transition: background-color var(--ruhig), box-shadow var(--ruhig); }
+.wahlzeichen.an { background: var(--akzent-flaeche); box-shadow: none; }
+.wahlzeichen.an::after { content: ""; position: absolute; inset: 6px; border-radius: 2px; background: var(--auf-akzent); }
 .filtergruppe button.aus { color: var(--text-3); }
 .filtergruppe button .zahl { margin-left: auto; font-family: var(--schrift-zahl); color: var(--text-3); font-size: var(--marke); }
 .ergebnisse { padding: var(--a4) var(--a5) var(--a6); display: flex; flex-direction: column; gap: var(--a3); max-width: 1100px; }
