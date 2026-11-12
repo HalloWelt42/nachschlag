@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import asyncio
 import sqlite3
+import threading
 from pathlib import Path
 
 from ..eigenindex.ablage import Eigenindizes
@@ -18,15 +19,19 @@ SEITEN_JE_MAL = 2000
 class Kategorienindex:
     def __init__(self, ablage: Eigenindizes) -> None:
         self._ablage = ablage
-        self._offen: dict[Path, sqlite3.Connection] = {}
+        # je Faden eigene Leseverbindungen: eine geteilte Verbindung liefert bei gleichzeitigen Abfragen falsche oder
+        # leere Antworten (der Kategorienbaum fragt alle Kategorien einer Seite zugleich, WIKI-96)
+        self._faden = threading.local()
 
     def _verbindung(self, buch: str) -> sqlite3.Connection | None:
         pfad = self._ablage.datei(buch)
         if pfad is None:
             return None
-        v = self._offen.get(pfad)
+        offen: dict[Path, sqlite3.Connection] = getattr(self._faden, "offen", None) or {}
+        self._faden.offen = offen
+        v = offen.get(pfad)
         if v is None:
-            v = self._offen[pfad] = schema.lesen(pfad)
+            v = offen[pfad] = schema.lesen(pfad)
         return v
 
     def namensraum(self, buch: str) -> str:

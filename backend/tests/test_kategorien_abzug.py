@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import gzip
 import json
+import asyncio
 import sys
 from pathlib import Path
 
@@ -109,6 +110,15 @@ async def test_weitere_seiten_ab_der_letzten(ordner):
     assert await k.weitere(BUCH, "Kategorie:Füchse", seite.nr) == []
     assert [s.pfad for s in await k.weitere(BUCH, "Kategorie:Füchse", 0)] == ["Rotfuchs"]
     assert await k.weitere(BUCH, "Kategorie:Leer", 0) is None
+
+
+async def test_gleichzeitige_abfragen_stoeren_sich_nicht(ordner):
+    """WIKI-96: der Kategorienbaum fragt alle Kategorien einer Seite zugleich; jede Antwort muss stimmen."""
+    k = Kategorienindex(Eigenindizes(lambda: str(ordner / "kategorien"), gueltig=schema.gueltig))
+    pfade = ["Kategorie:Füchse", "Kategorie:Alles", "Kategorie:Tiere", "Kategorie:Schwede"] * 25
+    antworten = await asyncio.gather(*(k.kategorie(BUCH, p) for p in pfade))
+    assert all(a is not None for a in antworten)
+    assert [a[0] for a in antworten[:4]] * 25 == [a[0] for a in antworten]
 
 
 def test_wiki_und_ordnung():
