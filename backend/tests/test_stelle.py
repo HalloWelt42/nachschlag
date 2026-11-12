@@ -34,7 +34,7 @@ async def test_stelle_ins_deutsche_mit_zeilen():
     e = await u.uebersetzen("// Check, if any animal name is longer than 5 letters.\nif (x) {}", "de")
     assert e.text == "// Prüfen, ob ein Tiername länger als 5 Buchstaben ist.\nif (x) {}" and e.ziel == "de" and not e.grund
     nachrichten, optionen = ls.aufrufe[0]
-    assert "ins Deutsche" in nachrichten[0].inhalt and optionen["prioritaet"] == "hoch"
+    assert "ins Deutsche" in nachrichten[0].inhalt and "prioritaet" not in optionen   # Vorrang aus der Vorgabe (WIKI-100)
     assert optionen["modell"] == TEXTMODELL                                   # das Modell wählt die App (LS-19)
 
 

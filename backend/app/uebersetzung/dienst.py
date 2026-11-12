@@ -81,7 +81,7 @@ class Uebersetzer(Begleiter):
             raise UebersetzungFehlt("Leitstelle nicht eingerichtet (Einstellungen, Verbindungen)")
         try:
             antwort = await leitstelle.chat([Nachricht.system(ANWEISUNG), Nachricht.nutzer(frage)], modell=self._modell(),
-                                            titel="Suche übersetzen", prioritaet="hoch", response_format=FORM, temperature=0)
+                                            titel="Suche übersetzen", response_format=FORM, temperature=0)
             text = _frage(gerade(str(json_lesen(antwort.text).get("text", ""))))
         except LeitstellenFehler as f:
             raise UebersetzungFehlt(f"Übersetzung gerade nicht möglich: {f}") from f

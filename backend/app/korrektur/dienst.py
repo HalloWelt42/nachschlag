@@ -144,7 +144,7 @@ class Korrektor:
             return Korrektur(frage=frage)
         try:
             antwort = await leitstelle.chat([Nachricht.system(ANWEISUNG), Nachricht.nutzer(frage)], modell=self._modell(),
-                                            titel="Suche korrigieren", prioritaet="hoch", response_format=FORM, temperature=0)
+                                            titel="Suche korrigieren", response_format=FORM, temperature=0)
             text = re.sub(r"\s+", " ", gerade(str(json_lesen(antwort.text).get("text", "")))).strip()
         except (LeitstellenFehler, ValueError, AttributeError):
             return Korrektur(frage=frage)                      # ohne Korrektur bleibt die Suche, wie sie war

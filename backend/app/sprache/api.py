@@ -12,7 +12,7 @@ from fastapi import APIRouter, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from appkern.app import Geruest
-from appkern.leitstelle import LeitstellenFehler, hoeren
+from appkern.leitstelle import Leitstelle, LeitstellenFehler, hoeren
 
 #: Größtes Stück (die Aufnahme schneidet nach höchstens 15 s, 16 kHz WAV sind rund 0,5 MB)
 HOECHSTENS = 8 << 20
@@ -27,14 +27,15 @@ class Sprachstand(BaseModel):
     grund: str = ""
 
 
-def router(geruest: Geruest, dienst: Callable[[], str]) -> APIRouter:
+def router(geruest: Geruest, dienst: Callable[[], str], leitstelle_fuer: Callable[[], Leitstelle | None]) -> APIRouter:
+    """`leitstelle_fuer`: die Leitstelle mit der Vorgabe der Spracheingabe (Rechner, Vorrang; WIKI-100)."""
     r = APIRouter(prefix="/api/v1", tags=["sprache"], dependencies=[geruest.pflicht])
 
     @r.get("/sprache", response_model=Sprachstand)
     async def stand() -> Sprachstand:
         """Ob die Spracheingabe gerade geht: Leitstelle da, Hördienst eingestellt und für Nachschlag freigegeben. Die
         Oberfläche zeigt das Mikrofon nur dann (nur zeigen, was geht)."""
-        leitstelle = geruest.leitstelle
+        leitstelle = leitstelle_fuer()
         if leitstelle is None:
             return Sprachstand(bereit=False, grund="Leitstelle nicht eingerichtet (Einstellungen, Verbindungen)")
         if not dienst():
@@ -50,7 +51,7 @@ def router(geruest: Geruest, dienst: Callable[[], str]) -> APIRouter:
     @r.post("/sprache", response_model=Gehoert)
     async def sprache(datei: UploadFile) -> Gehoert:
         """Ein Stück Ton zu Text (Sprache erkennt der Hördienst selbst: Fragen mischen Deutsch und Fachwörter)."""
-        leitstelle = geruest.leitstelle
+        leitstelle = leitstelle_fuer()
         if leitstelle is None:
             raise HTTPException(503, "Leitstelle nicht eingerichtet (Einstellungen, Verbindungen)")
         if not dienst():
@@ -63,7 +64,7 @@ def router(geruest: Geruest, dienst: Callable[[], str]) -> APIRouter:
             pfad = Path(ordner) / f"sprache{endung}"
             pfad.write_bytes(inhalt)
             try:
-                gehoert = await hoeren(leitstelle, dienst(), pfad, "auto", titel="Spracheingabe", prioritaet="hoch")
+                gehoert = await hoeren(leitstelle, dienst(), pfad, "auto", titel="Spracheingabe")
             except LeitstellenFehler as f:
                 raise HTTPException(503, f"Hören gerade nicht möglich: {f}") from f
         return Gehoert(text=gehoert.text)

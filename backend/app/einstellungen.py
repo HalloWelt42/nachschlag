@@ -30,6 +30,14 @@ LADEN_WANN = {"immer": "immer", "nachts": "nur nachts (Fenster unter Über Nacht
 #: Vorgabe für Übersetzung und Korrektur. Das Modell wählt immer die App, nie die Leitstelle (LS-19): jede Textanfrage
 #: nennt es, eine leere Einstellung gilt als diese Vorgabe.
 TEXTMODELL = "qwen/qwen3-next-80b"
+#: Vorrang eines Dienstes bei der Leitstelle (WIKI-100); höchstens so hoch, wie die Leitstelle Nachschlag erlaubt
+Vorrang = Literal["hoch", "normal", "hintergrund"]
+VORRANG = {"hoch": "Hoch", "normal": "Normal", "hintergrund": "Hintergrund"}
+RECHNER_TEXT = ("Auf welchem Rechner {was} bevorzugt rechnet; die Auswahl sind die Rechner, auf denen der Dienst gerade "
+                "liegt. Ein Wunsch: schläft der Rechner oder ist er belegt, rechnet die Leitstelle anderswo. Leitstelle "
+                "entscheidet: sie wählt selbst.")
+VORRANG_TEXT = ("Wie dringend {was} gegenüber anderer Arbeit ist, höchstens so hoch, wie die Leitstelle Nachschlag "
+                "erlaubt. Arbeit im Hintergrund (ein Buch bauen, über Nacht) bleibt Hintergrund.")
 
 #: Welche Bücher einen eigenen Index bekommen (WIKI-17): Stufen in der Reihenfolge des Baus, docs/SUCHE.md
 EIGENE_INDIZES = {"keine": "keine", "handbuecher": "Handbücher und Übungen",
@@ -99,6 +107,10 @@ class AppEinstellungen(Grundeinstellungen):
     klondienst: str = Field("klangwerk-klonen", title="Klondienst", json_schema_extra=VORLESEN,
                             description="Dienst der Leitstelle, der mit einer eigenen Stimme spricht; er bekommt die Probe "
                                         "der Stimme mit jedem Satz.")
+    vorlesen_rechner: str = Field("", title="Rechner für Vorlesen", json_schema_extra=VORLESEN,
+                                  description=RECHNER_TEXT.format(was="Vorlesen"))
+    vorlesen_vorrang: Vorrang = Field("hoch", title="Vorrang für Vorlesen", json_schema_extra={**VORLESEN, "beschriftungen": VORRANG},
+                                      description=VORRANG_TEXT.format(was="Vorlesen"))
     vertonung_adresse: str = Field("", title="Eigene Stimmen (Vertonung)", json_schema_extra=VORLESEN,
                                    description="Adresse der Vertonung: dort liegen die eigenen Stimmen und wer sie nutzen "
                                                "darf (Vertonung, Einstellungen, Private Stimmen für). Nachschlag holt dort "
@@ -117,6 +129,10 @@ class AppEinstellungen(Grundeinstellungen):
                             description="Formt die Artikel eines Themas nach der Vorlage um und schreibt Auf einen Blick, "
                                         "Fragen und Glossar. Die Dauer schätzt Nachschlag aus dem Tempo dieses Modells, das "
                                         "es nach jedem Buch neu misst; leer gilt die Vorgabe Qwen 80B.")
+    buch_rechner: str = Field("", title="Rechner für Bücher und Arbeit über Nacht", json_schema_extra=ALS_BUCH,
+                              description=RECHNER_TEXT.format(was="das Modell für Bücher"))
+    buch_vorrang: Vorrang = Field("normal", title="Vorrang für Probekapitel", json_schema_extra={**ALS_BUCH, "beschriftungen": VORRANG},
+                                  description=VORRANG_TEXT.format(was="ein Probekapitel"))
 
     # --- Suche ------------------------------------------------------------------------------------------------------
     suchmodell: str = Field(TEXTMODELL, title="Modell für Übersetzung und Korrektur", json_schema_extra=SUCHE,
@@ -124,9 +140,19 @@ class AppEinstellungen(Grundeinstellungen):
                                         "bleiben), Artikel aus anderen Sprachen ins Deutsche und korrigiert Tippfehler, wenn "
                                         "der Wortschatz der Quellen nichts hergibt. Jede Anfrage an die Leitstelle nennt dieses "
                                         "Modell; leer gilt die Vorgabe Qwen 80B.")
+    uebersetzung_rechner: str = Field("", title="Rechner für Übersetzung und Korrektur", json_schema_extra=SUCHE,
+                                      description=RECHNER_TEXT.format(was="das Modell für Übersetzung und Korrektur"))
+    uebersetzung_vorrang: Vorrang = Field("hoch", title="Vorrang für Übersetzung und Korrektur",
+                                          json_schema_extra={**SUCHE, "beschriftungen": VORRANG},
+                                          description=VORRANG_TEXT.format(was="Übersetzung und Korrektur"))
     hoerdienst: str = Field("klangwerk-hoeren", title="Hördienst für die Spracheingabe", json_schema_extra=SUCHE,
                             description="Dienst der Leitstelle, der gesprochene Fragen und Notizen verschriftet. Das "
                                         "Mikrofon erscheint nur, wenn die Leitstelle ihn für Nachschlag freigibt.")
+    spracheingabe_rechner: str = Field("", title="Rechner für die Spracheingabe", json_schema_extra=SUCHE,
+                                       description=RECHNER_TEXT.format(was="die Spracheingabe"))
+    spracheingabe_vorrang: Vorrang = Field("hoch", title="Vorrang für die Spracheingabe",
+                                           json_schema_extra={**SUCHE, "beschriftungen": VORRANG},
+                                           description=VORRANG_TEXT.format(was="die Spracheingabe"))
     eigene_indizes: Literal["keine", "handbuecher", "handbuecher_fragen", "alle"] = Field(
         "handbuecher_fragen", title="Quellen mit eigenem Index", json_schema_extra={**SUCHE, "beschriftungen": EIGENE_INDIZES},
         description="Ein eigener Index findet Namen aus dem Code (array_map), Rubriken und Einleitungen und sucht in Quellen "

@@ -54,7 +54,7 @@ class Stellenuebersetzer:
             return Stellenuebersetzung(ziel=ziel, grund="Leitstelle nicht eingerichtet (Einstellungen, Verbindungen)")
         try:
             antwort = await leitstelle.chat([Nachricht.system(ANWEISUNG.format(ziel=ZIELE[ziel])), Nachricht.nutzer(text)],
-                                            modell=self._modell(), titel="Stelle übersetzen", prioritaet="hoch",
+                                            modell=self._modell(), titel="Stelle übersetzen",
                                             response_format=FORM, temperature=0)
             uebersetzt = gerade(str(json_lesen(antwort.text).get("text", ""))).strip("\n")
         except LeitstellenFehler as f:

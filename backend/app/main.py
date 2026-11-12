@@ -83,6 +83,7 @@ from .modell.buch import Art as Buchart
 from .modell.suche import Suchregeln
 from .suche import Suche
 from .suche.anbindung import Bedeutungsanbindung
+from .vorgaben import Vorgaben
 from .suche.bedeutung import FundusBedeutung
 
 
@@ -131,8 +132,10 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
                                     lambda: ARTEN_JE_STUFE[e().eigene_indizes], lambda: e().eigenindex_hoechstens_gb,
                                     nutzbare=quellen.nutzbare)
 
+    # je Dienst eine Leitstelle mit seiner Vorgabe: bevorzugter Rechner und Vorrang aus den Einstellungen (WIKI-100)
+    vorgaben = Vorgaben(lambda: geruest.leitstelle, e)
     stimmenquelle = Stimmenquelle(geruest, lambda: e().vertonung_adresse)      # eigene Stimmen: nur die Probe
-    sprechdienst = Sprechdienst(lambda: geruest.leitstelle, lambda: e().sprechdienst, lambda: e().vorlesestimme,
+    sprechdienst = Sprechdienst(vorgaben.leitstelle("vorlesen"), lambda: e().sprechdienst, lambda: e().vorlesestimme,
                                 lambda: e().klondienst, stimmenquelle)
     meins = Meins(geruest.db, bibliothek.name_von, bibliothek.kennung_von)
     # Notizen und Themen als Markdown in der Ablage der App (WIKI-23): Kellerwolke oder Datenordner (WIKI-11)
@@ -165,9 +168,9 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
                                          nutzbare=quellen.nutzbare, sorte="kategorien", art="kategorien", titel="Kategorien",
                                          passt=lambda b: wiki(b.kennung) is not None)
     geruest.begleiter_anmelden(kategorienauftraege)
-    uebersetzer = Uebersetzer(geruest.db, lambda: geruest.leitstelle, lambda: e().suchmodell)
+    uebersetzer = Uebersetzer(geruest.db, vorgaben.leitstelle("uebersetzung"), lambda: e().suchmodell)
     geruest.begleiter_anmelden(uebersetzer)
-    artikeluebersetzer = Artikeluebersetzer(geruest.db, geruest.auftraege, bibliothek, leser, lambda: geruest.leitstelle,
+    artikeluebersetzer = Artikeluebersetzer(geruest.db, geruest.auftraege, bibliothek, leser, vorgaben.leitstelle("uebersetzung"),
                                             lambda: e().suchmodell)
     geruest.begleiter_anmelden(artikeluebersetzer)
     geruest.verbindung_anmelden("Index-Dienst", indexauftraege.verbindung, wahlweise=True)
@@ -227,9 +230,10 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     geruest.begleiter_anmelden(Nachtwecker(geruest.auftraege, nacht))
     # Stapelarbeit je Sammlung (WIKI-44): jede Arbeit mit eigener Stimme spricht über einen eigenen Sprechdienst
     sammlungen = Sammlungen(geruest.db, geruest.auftraege, themen, bibliothek, leser, artikeluebersetzer,
-                            lambda stimme: Sprechdienst(lambda: geruest.leitstelle, lambda: e().sprechdienst,
-                                                        lambda: stimme or e().vorlesestimme, lambda: e().klondienst, stimmenquelle),
-                            lambda: geruest.leitstelle, lambda: e().suchmodell, ablage,
+                            lambda stimme: Sprechdienst(vorgaben.leitstelle("vorlesen"), lambda: e().sprechdienst,
+                                                        lambda: stimme or e().vorlesestimme, lambda: e().klondienst, stimmenquelle,
+                                                        prioritaet="hintergrund"),
+                            vorgaben.leitstelle("buch"), lambda: e().suchmodell, ablage,
                             lambda: (e().nachts_von, e().nachts_bis))
     geruest.begleiter_anmelden(sammlungen)
 
@@ -239,9 +243,14 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
 
     buecher = Buecher(geruest.db, geruest.auftraege, themen, bibliothek, leser, artikeluebersetzer, meins.notizen, literatur,
                       Vorlagen(ablage), Buchablage(ablage),
-                      Bildquelle(bibliothek, grossbilder.finden), lambda: geruest.leitstelle, lambda: e().buchmodell, nacht)
+                      Bildquelle(bibliothek, grossbilder.finden), vorgaben.leitstelle("buch"), lambda: e().buchmodell, nacht)
     geruest.begleiter_anmelden(buecher)
     geruest.einstellungen.anbieten("buchmodell", geruest.leitstelle_angebot("text"))
+    # Rechner je Dienst: "Leitstelle entscheidet" und die Rechner, auf denen der gewählte Dienst gerade liegt (WIKI-100)
+    geruest.einstellungen.anbieten("vorlesen_rechner", geruest.leitstelle_rechner_angebot(lambda: (e().sprechdienst, e().klondienst)))
+    geruest.einstellungen.anbieten("spracheingabe_rechner", geruest.leitstelle_rechner_angebot(lambda: e().hoerdienst))
+    geruest.einstellungen.anbieten("uebersetzung_rechner", geruest.leitstelle_rechner_angebot(lambda: e().suchmodell))
+    geruest.einstellungen.anbieten("buch_rechner", geruest.leitstelle_rechner_angebot(lambda: e().buchmodell))
 
     # Bücherlader (WIKI-57): Verzeichnis durchsehen, Neues melden, Abos laden; schreibt als Einziger in den Ordner der Bücher
     def laderregeln() -> Laderregeln:
@@ -301,7 +310,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     app.include_router(meins_router(geruest, meins, notizbilder, markdown))
     app.include_router(notizbilder_router(geruest, notizbilder))                 # Bilder für <img> (Cookie)
     app.include_router(themen_router(geruest, themen, suche, bibliothek, meins, leser, markdown,
-                                     ThemenOrdner(geruest.auftraege, themen, leser, lambda: geruest.leitstelle, lambda: e().suchmodell)))
+                                     ThemenOrdner(geruest.auftraege, themen, leser, vorgaben.leitstelle("uebersetzung"), lambda: e().suchmodell)))
     app.include_router(zitieren_router(geruest, bibliothek, leser))
     app.include_router(alsbuch_router(geruest, buecher))
     app.include_router(buchdateien_router(geruest, buecher))   # Herunterladen (Cookie)
@@ -314,10 +323,10 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     app.include_router(register_router(geruest, Register(bibliothek, eigen)))
     app.include_router(anleitungen_router(geruest, Anleitungen(bibliothek, eigen, wege(bibliothek))))
     app.include_router(uebersetzung_router(geruest, uebersetzer, artikeluebersetzer,
-                                           Stellenuebersetzer(lambda: geruest.leitstelle, lambda: e().suchmodell)))
+                                           Stellenuebersetzer(vorgaben.leitstelle("uebersetzung"), lambda: e().suchmodell)))
     app.include_router(vorlesen_router(geruest, sprechdienst))     # Vorlesen über die Leitstelle (WIKI-43)
-    app.include_router(sprache_router(geruest, lambda: e().hoerdienst))
-    app.include_router(korrektur_router(geruest, Korrektor(eigen.alle, lambda: geruest.leitstelle, lambda: e().suchmodell),
+    app.include_router(sprache_router(geruest, lambda: e().hoerdienst, vorgaben.leitstelle("spracheingabe")))
+    app.include_router(korrektur_router(geruest, Korrektor(eigen.alle, vorgaben.leitstelle("uebersetzung"), lambda: e().suchmodell),
                                          an=lambda: e().tippfehler))
     app.include_router(kategorien_router(geruest, kategorien))
     app.include_router(bilder_router(geruest, grossbilder))

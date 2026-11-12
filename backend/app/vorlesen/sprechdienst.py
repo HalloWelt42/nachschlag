@@ -19,7 +19,7 @@ import uuid
 import wave
 from collections.abc import AsyncIterator, Callable
 
-from appkern.leitstelle import Leitstelle, LeitstellenFehler
+from appkern.leitstelle import Leitstelle, LeitstellenFehler, Prioritaet
 from appkern.leitstelle.arbeit import LAUFENDE_ARBEIT
 from appkern.saetze import hat_worte, saetze, stuecke
 from appkern.verbund import VerbundFehler
@@ -65,8 +65,11 @@ def zeile(daten: dict) -> bytes:
 class Sprechdienst:
     def __init__(self, leitstelle: Callable[[], Leitstelle | None], dienst: Callable[[], str], stimme: Callable[[], str],
                  klondienst: Callable[[], str] = lambda: "klangwerk-klonen", stimmen: Stimmenquelle | None = None,
-                 uhr: Callable[[], float] = time.monotonic) -> None:
+                 uhr: Callable[[], float] = time.monotonic, prioritaet: Prioritaet | None = None) -> None:
+        """`prioritaet`: nur für Arbeit, die selbst einen Vorrang hat (Vertonen über Nacht: Hintergrund); sonst gilt der
+        Vorrang für Vorlesen aus den Einstellungen (Vorgabe des Dienstes, WIKI-100)."""
         self._ls, self._dienst, self._stimme, self._uhr = leitstelle, dienst, stimme, uhr
+        self._prioritaet = prioritaet
         self._klondienst, self.stimmen = klondienst, stimmen
         self._katalog: tuple[float, str, list[str]] | None = None
 
@@ -113,7 +116,7 @@ class Sprechdienst:
         try:
             stimme = self._stimme()
             antwort = await ls.dienst(self._dienst()).anfrage(
-                "POST", "/v1/audio/speech", titel="Vorlesen", prioritaet="hoch",
+                "POST", "/v1/audio/speech", titel="Vorlesen", prioritaet=self._prioritaet,
                 json={"input": text, "response_format": "wav", **({"voice": stimme} if stimme else {}),
                       **({"language": SPRACHEN[sprache]} if sprache in SPRACHEN else {})})
         finally:
@@ -128,7 +131,7 @@ class Sprechdienst:
             dienst = ls.dienst(self._klondienst())
             async with dienst.gebunden():
                 antwort = await dienst.json(
-                    "POST", "/tts/clone", titel="Vorlesen", prioritaet="hoch",
+                    "POST", "/tts/clone", titel="Vorlesen", prioritaet=self._prioritaet,
                     data={"text": text, "ref_text": referenz.text, "language": SPRACHEN.get(sprache, "german"),
                           "modus": modus(referenz, sprache)},
                     files={"ref_audio": ("referenz.wav", referenz.ton, "audio/wav")})

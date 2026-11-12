@@ -47,7 +47,8 @@ async def test_uebersetzt_einmal_und_merkt(db):
     await u.starten()
     erste = await u.uebersetzen("  Text in die   Zwischenablage kopieren ")
     assert (erste.frage, erste.text, erste.von) == ("Text in die Zwischenablage kopieren", "copy text to the clipboard", "modell")
-    assert leitstelle.aufrufe[0]["prioritaet"] == "hoch" and leitstelle.aufrufe[0]["modell"] == TEXTMODELL
+    # der Vorrang kommt aus der Vorgabe des Dienstes (Einstellungen, WIKI-100), nie fest aus dem Aufruf
+    assert "prioritaet" not in leitstelle.aufrufe[0] and leitstelle.aufrufe[0]["modell"] == TEXTMODELL
     assert (await u.uebersetzen("Text in die Zwischenablage kopieren")).text == "copy text to the clipboard"
     assert len(leitstelle.aufrufe) == 1                                        # gemerkt, kein zweiter Aufruf
 

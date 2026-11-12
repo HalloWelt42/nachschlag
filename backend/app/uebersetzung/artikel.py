@@ -229,7 +229,7 @@ class Artikeluebersetzer(Begleiter):
             antwort = await leitstelle.chat(
                 [Nachricht.system(anweisen(len(portion))),
                  Nachricht.nutzer(json.dumps({"stuecke": [v for _, v in portion]}, ensure_ascii=False))],
-                modell=self._modell(), titel="Artikel übersetzen", prioritaet="normal",
+                modell=self._modell(), titel="Artikel übersetzen",
                 response_format=_form(len(portion)), temperature=0)
             stuecke = json_lesen(antwort.text).get("stuecke")
             if not isinstance(stuecke, list) or len(stuecke) != len(portion):
