@@ -19,7 +19,7 @@ from .bibliothek import Bibliothek, BuchFehlt, EintragFehlt
 from .bilder import Grossbilder
 from .eigenindex.abfrage import rueckverweise
 from .eigenindex.ablage import Eigenindizes
-from .modell.artikel import Artikel, Nachbar, Rueckverweise
+from .modell.artikel import Artikel, Kategoriezweig, Nachbar, Rueckverweise
 from .modell.buch import Bibliotheksstand, Buch
 from .modell.suche import Suchergebnis, Suchregeln, Vorschlag
 from .quellenarchiv import Quellenarchiv
@@ -75,6 +75,15 @@ def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche:
         if grossbilder:
             _nebenbei(grossbilder.geoeffnet(a))
         return a
+
+    @r.get("/kategorienbaum/{buch}/{pfad:path}", response_model=list[Kategoriezweig], dependencies=pflicht)
+    async def kategorienbaum(buch: str, pfad: str) -> list[Kategoriezweig]:
+        """Die Kategorien einer Seite mit ihren Oberkategorien und einigen anderen Seiten darin (Kategorienbaum im
+        Kopf des Lesers, WIKI-95/96); bei Frage und Antwort sind es die Schlagwörter."""
+        try:
+            return await leser.kategorienbaum(buch, pfad)
+        except (BuchFehlt, EintragFehlt) as f:
+            raise _fehlt(f)
 
     @r.get("/zufall/{buch}", dependencies=pflicht)
     async def zufall(buch: str) -> dict[str, str]:

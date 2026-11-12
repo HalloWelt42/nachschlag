@@ -5,8 +5,12 @@ gesetzt im Grunddesign der Artikelansicht (Entwurf frage-antwort.html). Die Quel
 
 Nachschlag setzt daraus: die Frage mit Stimmen, Schlagwörtern und Kommentaren, darunter die Antworten nach Stimmen (die
 akzeptierte zuerst und gekennzeichnet), jede mit Wer und Wann; Kommentare zugeklappt. Der Steckbrief nennt Stimmen,
-Antworten, Gefragt, Bearbeitet, Schlagwörter und verwandte Fragen. Andere Seiten des Buchs (Nutzer, Schlagwörter)
-zeigt die Originalansicht."""
+Antworten, Gefragt, Bearbeitet, Schlagwörter und verwandte Fragen.
+
+Schlagwörter sind die Kategorien des Buchs (WIKI-95): die Seite `tags` wird zur Kategorieseite mit den Schlagwörtern als
+Unterkategorien (mit der Zahl ihrer Fragen), eine Frage nennt ihre Schlagwörter als Kategorien, eine Fragenliste die
+meistgenutzten. Jedes führt auf seine Liste `questions/tagged/<wort>`. Andere Seiten des Buchs (Nutzer) zeigt die
+Originalansicht."""
 
 from __future__ import annotations
 
@@ -17,13 +21,20 @@ from lxml import html as lhtml
 from lxml.etree import SubElement
 
 from ..bibliothek import Eintrag
-from ..modell.artikel import Abschnitt, Beitrag, FrageAngaben, Fragekarte, Steckbrief
+from ..modell.artikel import Abschnitt, Beitrag, FrageAngaben, Fragekarte, Kategorieangaben, Kategorieverweis, Steckbrief
 from ..modell.buch import Buch
 from . import html as h
 from .basis import Aufbereitet, Wege
 from .code import code_text
 
 KONTO = re.compile(r"users/(\d+)")
+#: die Übersicht der Schlagwörter im Buch
+SCHLAGWORTSEITE = "tags"
+#: so viele der meistgenutzten Schlagwörter nennt eine Fragenliste als ihre Kategorien
+SCHLAGWOERTER_IN_LISTEN = 24
+_ZAHL_FRAGEN = re.compile(r"(\d[\d,.]*)\s+questions?", re.I)
+#: die Schlagwörter der Übersicht je Buch, einmal gelesen (das Buch ändert sich nicht, eine neue Fassung hat eine neue Kennung)
+_UEBERSICHT: dict[str, list[Kategorieverweis]] = {}
 MONATE = {m: i for i, m in enumerate("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(), 1)}
 ZEIT = re.compile(r"(asked|answered|edited)?\s*([A-Z][a-z]{2})\s+(\d{1,2})(?:\s*'(\d{2}))?")
 
@@ -103,6 +114,35 @@ def _schlagwoerter(eltern, marken: list[str], buch: Buch, wege: Wege) -> None:
         if ziel:
             el.set("href", ziel)
             el.set("class", "register")
+
+
+def _schlagwortpfad(wort: str) -> str:
+    return f"questions/tagged/{wort}"
+
+
+def _als_kategorien(marken: list[str], buch: Buch, wege: Wege) -> list[Kategorieverweis]:
+    """Schlagwörter, deren Liste das Buch hat, als Kategorien."""
+    return [Kategorieverweis(pfad=p, titel=m) for m in marken if wege.gibt_es(buch.kennung, p := _schlagwortpfad(m))]
+
+
+def _schlagwortkarten(doc, buch: Buch, wege: Wege) -> list[Kategorieverweis]:
+    """Die Karten der Schlagwortübersicht: Name, Liste im Buch, Zahl der Fragen (in der Folge der Quelle: die
+    meistgenutzten zuerst)."""
+    karten = []
+    for karte in doc.xpath("//div[contains(@class,'js-tag-cell')]"):
+        wort = _text(karte, ".//a[contains(@class,'post-tag')]")
+        zahl = _ZAHL_FRAGEN.search(h.text_von(karte))
+        if wort and wege.gibt_es(buch.kennung, pfad := _schlagwortpfad(wort)):
+            karten.append(Kategorieverweis(pfad=pfad, titel=wort, anzahl=int(re.sub(r"\D", "", zahl.group(1))) if zahl else None))
+    return karten
+
+
+def _meistgenutzte(buch: Buch, wege: Wege) -> list[Kategorieverweis]:
+    """Die meistgenutzten Schlagwörter des Buchs aus seiner Übersicht; ohne Übersicht keine."""
+    if buch.kennung not in _UEBERSICHT:
+        roh = wege.datei(buch.kennung, SCHLAGWORTSEITE)
+        _UEBERSICHT[buch.kennung] = _schlagwortkarten(lhtml.fromstring(roh.decode("utf-8", "replace")), buch, wege) if roh else []
+    return _UEBERSICHT[buch.kennung][:SCHLAGWOERTER_IN_LISTEN]
 
 
 def _kommentare(beitrag):
@@ -193,11 +233,14 @@ class FrageAntwort:
 
     def passt(self, eintrag: Eintrag) -> bool:
         return eintrag.mime.startswith("text/html") and (b'id="question"' in eintrag.inhalt
-                                                          or b'class="question-summary"' in eintrag.inhalt)
+                                                          or b'class="question-summary"' in eintrag.inhalt
+                                                          or b"js-tag-cell" in eintrag.inhalt)
 
     def aufbereiten(self, buch: Buch, eintrag: Eintrag, wege: Wege) -> Aufbereitet:
         doc = lhtml.fromstring(eintrag.inhalt.decode("utf-8", "replace"))
         h.stile_uebersetzen(doc)
+        if doc.xpath("//div[contains(@class,'js-tag-cell')]"):
+            return self._schlagwoerter(doc, buch, wege)
         if not doc.xpath("//*[@id='question']"):
             return self._liste(doc, buch, eintrag, wege)
         kopf = next(iter(doc.xpath("//*[@id='question-header']//h1")), None)
@@ -247,7 +290,19 @@ class FrageAntwort:
                                gefragt=frage_beitrag.datum, schlagwoerter=marken,
                                beitraege=[frage_beitrag, *(a[7] for a in antworten)])
         return Aufbereitet(titel=titel, html=html, einleitung=einleitung, abschnitte=abschnitte, steckbrief=steckbrief,
-                           bild=bild, verweise=verweise, online=online, rubrik="Fragen", frage=angaben)
+                           bild=bild, verweise=verweise, online=online, rubrik="Fragen", frage=angaben,
+                           kategorien=_als_kategorien(marken, buch, wege))
+
+    @staticmethod
+    def _schlagwoerter(doc, buch: Buch, wege: Wege) -> Aufbereitet:
+        """Die Übersicht der Schlagwörter als Kategorieseite: jedes Schlagwort eine Unterkategorie mit seinen Fragen."""
+        karten = _schlagwortkarten(doc, buch, wege)
+        einleitung = _text(doc, "//*[@id='mainbar-full']/p")
+        beschreibung = lhtml.Element("p")
+        beschreibung.text = einleitung
+        return Aufbereitet(titel="Schlagwörter", html=h.als_html(beschreibung) if einleitung else "", einleitung=einleitung,
+                           darstellung="kategorie", rubrik=f"Kategorie · {len(karten)} Schlagwörter",
+                           kategorie=Kategorieangaben(unter=karten, einheit="Fragen"))
 
     @staticmethod
     def _liste(doc, buch: Buch, eintrag: Eintrag, wege: Wege) -> Aufbereitet:
@@ -280,8 +335,13 @@ class FrageAntwort:
                 blaettern[richtung] = ziel
         kopf = next(iter(doc.xpath("//h1")), None)
         titel = _listentitel(h.text_von(kopf) if kopf is not None else "") or buch.titel
+        # die Liste eines Schlagworts ist dessen Kategorie: darüber die Übersicht aller (für den Kategorienbaum)
+        ist_schlagwort = eintrag.pfad.startswith(_schlagwortpfad(""))
+        uebersicht = [Kategorieverweis(pfad=SCHLAGWORTSEITE, titel="Alle Schlagwörter")] if wege.gibt_es(buch.kennung, SCHLAGWORTSEITE) else []
         return Aufbereitet(titel=titel, fragen=fragen, darstellung="uebersicht", rubrik="Fragen",
-                           zurueck=blaettern.get("zurueck", ""), weiter=blaettern.get("weiter", ""))
+                           zurueck=blaettern.get("zurueck", ""), weiter=blaettern.get("weiter", ""),
+                           kategorien=_meistgenutzte(buch, wege),
+                           kategorie=Kategorieangaben(ober=uebersicht) if ist_schlagwort else None)
 
     @staticmethod
     def _steckbrief(doc, buch: Buch, eintrag: Eintrag, wege: Wege, nummer: str, stimmen: int, antworten: list,

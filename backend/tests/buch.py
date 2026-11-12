@@ -256,6 +256,16 @@ FRAGENLISTE = ('<html><body><h1>Most Popular</h1><div class="question-summary" i
                '<div class="s-pagination"><a class="s-pagination--item" href="./questions_page=2" rel="next">Next</a></div></body></html>')
 
 
+SCHLAGWOERTER = ('<html><body class="tags-page"><div id="mainbar-full"><h1>Tags</h1><p>A tag is a keyword or label that '
+                 'categorizes your question with other, similar questions.</p><div id="tags_list"><div id="tags-browser">'
+                 + "".join(f'<div class="s-card js-tag-cell"><div><a href="./questions/tagged/{w}" class="post-tag">{w}</a></div>'
+                           f'<div class="grid--cell fc-medium">About {w}.</div><div class="mt-auto"><div class="grid--cell">{n} questions'
+                           '</div></div></div>' for w, n in (("os-clipboard", 1520), ("registers", 830), ("fehlt", 3)))
+                 + '</div></div></div></body></html>')
+SCHLAGWORTLISTE = FRAGENLISTE.replace("<h1>Most Popular</h1>", "<h1>Questions tagged [os-clipboard]</h1>").replace(
+    'href="./questions/', 'href="../../questions/').replace('href="./questions_page=2"', 'href="../../questions_page=2"')
+
+
 def bauen_qa(ordner: Path, name: str = "probeqa_en_all_2026-10") -> Path:
     ordner.mkdir(parents=True, exist_ok=True)
     datei = ordner / f"{name}.zim"
@@ -269,6 +279,9 @@ def bauen_qa(ordner: Path, name: str = "probeqa_en_all_2026-10") -> Path:
         c.add_item(_Seite("questions/332/registers", "Define registers", "<html><body><p>registers</p></body></html>"))
         c.add_item(_Seite("questions", "Most Popular", FRAGENLISTE))
         c.add_item(_Seite("questions_page=2", "Most Popular", "<html><body><h1>Most Popular</h1></body></html>"))
+        c.add_item(_Seite("tags", "Tags", SCHLAGWOERTER))
+        c.add_item(_Seite("questions/tagged/os-clipboard", "Questions tagged [os-clipboard]", SCHLAGWORTLISTE))
+        c.add_item(_Seite("questions/tagged/registers", "Questions tagged [registers]", "<html><body><h1>Questions tagged [registers]</h1></body></html>"))
     return datei
 
 

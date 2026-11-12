@@ -396,6 +396,31 @@ async def test_fragenliste_als_karten_mit_blaettern(nachschlag):
                             "stimmen": 1520, "antworten": 2, "akzeptiert": True, "schlagwoerter": ["os-clipboard"], "gefragt": "03.02.2015"}]
 
 
+async def test_schlagwoerter_sind_kategorien_mit_baum(nachschlag):
+    """WIKI-95/96: die Schlagwortübersicht ist eine Kategorieseite (Fragen je Schlagwort, nur vorhandene Listen), eine
+    Frage nennt ihre Schlagwörter als Kategorien, eine Liste die meistgenutzten; der Kategorienbaum zeigt je Kategorie
+    die Oberkategorie und andere Seiten darin (ohne die eigene)."""
+    c, _, _ = nachschlag
+    q = "/api/v1/artikel/probeqa_en_all_2026-10"
+    t = (await c.get(f"{q}/tags")).json()
+    assert (t["darstellung"], t["titel"], t["kategorie"]["einheit"]) == ("kategorie", "Schlagwörter", "Fragen")
+    assert [(u["titel"], u["anzahl"]) for u in t["kategorie"]["unter"]] == [("os-clipboard", 1520), ("registers", 830)]
+    assert "keyword or label" in t["html"]
+    frage = (await c.get(f"{q}/questions/84/clipboard")).json()
+    assert frage["kategorien"] == [{"pfad": "questions/tagged/os-clipboard", "titel": "os-clipboard", "anzahl": None, "nr": None}]
+    liste = (await c.get(f"{q}/questions")).json()
+    assert [k["titel"] for k in liste["kategorien"]] == ["os-clipboard", "registers"]
+
+    baum = (await c.get("/api/v1/kategorienbaum/probeqa_en_all_2026-10/questions/84/clipboard")).json()
+    assert [z["kategorie"]["titel"] for z in baum] == ["os-clipboard"]
+    assert baum[0]["ober"] == [{"pfad": "tags", "titel": "Alle Schlagwörter", "anzahl": None, "nr": None}]
+    assert baum[0]["seiten"] == []                                        # die einzige Frage darin ist die eigene
+    baum = (await c.get("/api/v1/kategorienbaum/probeqa_en_all_2026-10/questions")).json()
+    assert [(z["kategorie"]["titel"], [s["titel"] for s in z["seiten"]], z["seiten_gesamt"]) for z in baum] == [
+        ("os-clipboard", ["How can I copy text to the clipboard?"], 1520), ("registers", [], 830)]
+    assert (await c.get("/api/v1/kategorienbaum/probeqa_en_all_2026-10/gibt/es/nicht")).status_code == 404
+
+
 async def test_merkzettel_verlauf_und_vorlieben(nachschlag):
     """Meins je Konto: merken (zweimal bleibt einer), Anteil aus dem Lesestand, Lesezeit zusammengezählt, Suche im
     Verlauf, jüngstes zuerst; Vorlieben setzen und löschen; vergessen."""

@@ -75,7 +75,7 @@
       <section class="kat-gruppe">
         <h2><i class="fa-solid fa-folder-tree"></i>Unterkategorien<span class="kat-zahl">{k.unter.length}</span></h2>
         <div class="anl-kacheln text">
-          {#each k.unter as u (u.pfad)}<Kachel art="text" titel={u.titel} untertitel={u.anzahl ? `${zahl(u.anzahl)} Seiten` : ""}
+          {#each k.unter as u (u.pfad)}<Kachel art="text" titel={u.titel} untertitel={u.anzahl ? `${zahl(u.anzahl)} ${k.einheit ?? "Seiten"}` : ""}
               adresse={ziel(u.pfad)} ziel={() => lesen(artikel.buch, u.pfad)} />{/each}
         </div>
       </section>

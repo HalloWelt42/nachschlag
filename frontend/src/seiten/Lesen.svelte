@@ -24,6 +24,7 @@
   import { geraet } from "appkern-oberflaeche";
   import NotizBlatt from "../teile/NotizBlatt.svelte";
   import ThemaWahl from "../teile/ThemaWahl.svelte";
+  import Kategorienbaum from "../teile/Kategorienbaum.svelte";
   import Lesegroesse from "../teile/Lesegroesse.svelte";
   import { groesseFuer } from "../lib/lesegroesse.svelte";
   import { istRahmenmeldung, lesenWeg, OHNE_HERKUNFT, ortNormal, ortVon, rahmenZiel } from "../lib/originalrahmen";
@@ -965,6 +966,10 @@
       <button class="knopf" title="Notiz zum ganzen Artikel; für eine Stelle den Text markieren" onclick={notizZumArtikel}>
         <i class="fa-regular fa-note-sticky"></i><span class="wort">Notiz</span>{#if artikelNotizen.length}<span class="zahl">{artikelNotizen.length}</span>{/if}</button>
       {#if buch}<ThemaWahl artikel={{ buch: artikel.buch, pfad: artikel.pfad, titel: artikel.titel, bild: artikel.bild }} buchName={buch.name} />{/if}
+      {#if artikel.kategorien?.length && !zeigeOriginal}
+        <!-- Kategorien der Seite oben im Kopf, aufklappbar als Baum (WIKI-95/96); bei Frage und Antwort die Schlagwörter -->
+        <Kategorienbaum buch={artikel.buch} pfad={artikel.pfad} anzahl={artikel.kategorien.length} schlagwoerter={buch?.art === "frage_antwort"} />
+      {/if}
       {#if artikel.darstellung !== "original" && artikel.original}<!-- ohne Original: Seiten, die das Buch nicht selbst hat (Kategorien aus den Datenabzügen) -->
         <button class="knopf" class:an={original} title="Die Seite so, wie sie in der Quelle steht" onclick={() => (original = !original)}>
           <i class="fa-solid fa-file-code"></i><span class="wort">Original</span></button>

@@ -49,6 +49,19 @@ class Kategorieangaben(BaseModel):
     seiten: list[Kategorieverweis] = Field(default_factory=list)
     seiten_gesamt: int = Field(0, description="so viele Seiten hat die Kategorie; mehr als in seiten: der Rest kommt "
                                               "seitenweise über /api/v1/kategorien/{buch}/seiten")
+    einheit: str = Field("Seiten", description="was die Zahl einer Unterkategorie zählt (bei Schlagwörtern: Fragen)")
+
+
+class Kategoriezweig(BaseModel):
+    """Eine Kategorie einer Seite im Kategorienbaum des Lesers (WIKI-95/96): darüber ihre Oberkategorien, darin einige
+    andere Seiten derselben Kategorie."""
+    kategorie: Kategorieverweis
+    ober: list[Kategorieverweis] = Field(default_factory=list)
+    unter: list[Kategorieverweis] = Field(default_factory=list, description="einige Unterkategorien (große Kategorien "
+                                                                          "teilen ihre Seiten oft darauf auf)")
+    unter_gesamt: int = 0
+    seiten: list[Kategorieverweis] = Field(default_factory=list, description="andere Seiten der Kategorie, ohne die eigene")
+    seiten_gesamt: int = Field(0, description="so viele Seiten hat die Kategorie, soweit bekannt (0: unbekannt)")
 
 
 Darstellung = Literal["lesedesign", "uebersicht", "original", "anleitung", "geraet", "anleitungen", "uebung", "uebungen", "kategorie"]

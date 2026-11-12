@@ -11,12 +11,15 @@ from .bausteine.basis import Aufbereitet
 from .bausteine.html import online_adresse
 from .bibliothek import Bibliothek, EintragFehlt
 from .kategorien.abfrage import Kategorienindex
-from .modell.artikel import Artikel
+from .modell.artikel import Artikel, Kategorieverweis, Kategoriezweig
 from .originalansicht import Originalscheine
 
 
 #: so oft zieht der Zufall neu, wenn er eine Sprungseite ohne Ziel in der Quelle trifft
 ZUFALL_ZUEGE = 12
+#: Kategorienbaum (WIKI-95/96): höchstens so viele Kategorien einer Seite, je Kategorie so viele andere Seiten
+ZWEIGE_HOECHSTENS = 30
+SEITEN_JE_ZWEIG = 8
 
 
 def _pfad(pfad: str) -> str:
@@ -89,6 +92,28 @@ class Artikelleser:
                              *([f"{anzahl} Seiten"] if anzahl else [])])
         return Artikel(buch=buch, pfad=pfad, angefragt=pfad, titel=titel, darstellung="kategorie", baustein="kategorie", original="",
                        html="", rubrik=rubrik, kategorie=angaben, kategorien=angaben.ober)
+
+    async def kategorienbaum(self, buch: str, pfad: str, je: int = SEITEN_JE_ZWEIG) -> list[Kategoriezweig]:
+        """Die Kategorien einer Seite, jede mit ihren Oberkategorien und einigen anderen Seiten darin (WIKI-95/96). Jede
+        Kategorie wird gelesen wie eine Seite: so gilt das für alle Quellen gleich (Kategoriendatei, Kategorieseiten
+        im Buch, Schlagwortlisten)."""
+        seite = await self.lesen(buch, pfad)
+        kategorien = seite.kategorien[:ZWEIGE_HOECHSTENS]
+        return list(await asyncio.gather(*(self._zweig(buch, k, seite.pfad, je) for k in kategorien)))
+
+    async def _zweig(self, buch: str, k: Kategorieverweis, ohne: str, je: int) -> Kategoriezweig:
+        try:
+            kat = await self.lesen(buch, k.pfad)
+        except EintragFehlt:
+            return Kategoriezweig(kategorie=k)
+        angaben = kat.kategorie
+        seiten = (angaben.seiten if angaben and angaben.seiten
+                  else [Kategorieverweis(pfad=f.pfad, titel=f.titel) for f in kat.fragen])
+        # die Kategorieseite kennt ihre Seiten ganz (Zahl oder Liste); eine Schlagwortliste nur ihre erste Seite
+        gesamt = (angaben.seiten_gesamt or len(angaben.seiten) if angaben else 0) or k.anzahl or 0
+        unter = angaben.unter if angaben else []
+        return Kategoriezweig(kategorie=k, ober=angaben.ober if angaben else [], unter=unter[:je], unter_gesamt=len(unter),
+                              seiten=[s for s in seiten if s.pfad != ohne][:je], seiten_gesamt=gesamt)
 
     async def zufall(self, buch: str) -> str:
         """Pfad eines zufälligen Artikels, der sich lesen lässt. Weiterleitungen sind aufgelöst; eine Sprungseite, deren

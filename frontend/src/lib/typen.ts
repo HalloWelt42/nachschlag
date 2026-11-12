@@ -369,4 +369,8 @@ export interface Kursangaben { kurse: Uebungskurs[] }
 /** anzahl: bei Unterkategorien die Seiten direkt darin; nr: bei Seiten aus der Kategoriendatei die Stelle für Weitere */
 export interface Kategorieverweis { pfad: string; titel: string; anzahl?: number | null; nr?: number | null }
 /** seiten_gesamt: so viele Seiten hat die Kategorie (Kategoriendatei); mehr als geliefert kommen über kategorieSeitenHolen */
-export interface Kategorieangaben { ober: Kategorieverweis[]; unter: Kategorieverweis[]; seiten: Kategorieverweis[]; seiten_gesamt?: number }
+export interface Kategorieangaben { ober: Kategorieverweis[]; unter: Kategorieverweis[]; seiten: Kategorieverweis[]; seiten_gesamt?: number;
+                                    einheit?: string }
+/** Eine Kategorie im Kategorienbaum des Lesers (WIKI-95/96): Oberkategorien und andere Seiten darin; 0 Seiten gesamt: unbekannt */
+export interface Kategoriezweig { kategorie: Kategorieverweis; ober: Kategorieverweis[]; unter: Kategorieverweis[]; unter_gesamt: number;
+                                  seiten: Kategorieverweis[]; seiten_gesamt: number }

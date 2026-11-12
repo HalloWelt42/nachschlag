@@ -37,3 +37,15 @@ async def test_kategorien_am_artikel_und_kategorieseite(leser):
     assert [o.pfad for o in f.kategorie.ober] == ["Kategorie:Tiere"] and [s.pfad for s in f.kategorie.seiten] == ["Tier05"]
     ohne = await leser.lesen("probe_de_all_2026-01", "Rotfuchs")       # Lexikon ohne Kategorien: keine Leiste
     assert ohne.kategorien == []
+
+
+async def test_kategorienbaum_einer_seite(leser):
+    """WIKI-96: je Kategorie der Seite ihre Oberkategorien und andere Seiten darin, die eigene nicht; ohne Kategorien
+    kein Baum."""
+    baum = await leser.kategorienbaum(BUCH, "Tier05", je=3)
+    tiere = next(z for z in baum if z.kategorie.titel == "Tiere")
+    assert [s.pfad for s in tiere.seiten] == ["Tier01", "Tier02", "Tier03"] and tiere.seiten_gesamt == 5
+    fuechse = next((z for z in baum if z.kategorie.pfad == "Kategorie:Füchse"), None)
+    if fuechse is not None:                                             # Tier05 steht auch bei den Füchsen
+        assert [o.pfad for o in fuechse.ober] == ["Kategorie:Tiere"] and fuechse.seiten == []
+    assert await leser.kategorienbaum("probe_de_all_2026-01", "Rotfuchs") == []
