@@ -27,6 +27,12 @@ RRF_K = 60
 MISCHUNG: dict[str, tuple[float, float]] = {"index": (2.0, 1.0), "ausgewogen": (1.0, 1.0), "bedeutung": (1.0, 2.0)}
 
 
+def durchsuchbar(b: Buch, eigen: Eigenindizes) -> bool:
+    """Ob die Suche eine Quelle durchsuchen kann: ihre Datei bringt einen Volltextindex mit, oder Nachschlag hat einen
+    eigenen gebaut. Die eine Regel für Suche und Bücherliste; ein neuer eigener Index nimmt die Quelle von selbst auf."""
+    return b.faehigkeiten.volltext or eigen.datei(b.kennung) is not None
+
+
 def _rang(platz: int) -> float:
     return 1.0 / (RRF_K + platz)
 
@@ -56,8 +62,7 @@ class Suche:
         if not auswahl and self._vorgewaehlt is not None:
             auswahl = await self._vorgewaehlt()
         alle = (await self._bib.stand()).buecher if auswahl or self._nutzbare is None else await self._nutzbare()
-        return [b for b in alle if (b.faehigkeiten.volltext or self._eigen.datei(b.kennung))
-                and (not auswahl or b.kennung in auswahl)]
+        return [b for b in alle if durchsuchbar(b, self._eigen) and (not auswahl or b.kennung in auswahl)]
 
     def _eigen_suchen(self, b: Buch, frage: str, anzahl: int) -> tuple[list[Treffer], int] | None:
         """Treffer aus dem eigenen Index des Buchs (Ausschnitte aus dem Index, ohne das Buch zu lesen); None ohne ihn."""

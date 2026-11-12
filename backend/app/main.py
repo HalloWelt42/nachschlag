@@ -82,6 +82,7 @@ from .fassung import FASSUNG, WURZEL
 from .modell.buch import Art as Buchart
 from .modell.suche import Suchregeln
 from .suche import Suche
+from .suche.dienst import durchsuchbar
 from .suche.anbindung import Bedeutungsanbindung
 from .vorgaben import Vorgaben
 from .suche.bedeutung import FundusBedeutung
@@ -115,7 +116,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
     bedeutung = FundusBedeutung(lambda: geruest.verbund, lambda: e().fundus_adresse, anbindung.sammlung,
                                 lambda: e().fundus_vorsilbe)
     eigen = Eigenindizes(lambda: e().eigenindex_ordner)
-    quellen = Quellenarchiv(geruest.db, bibliothek)           # Archiv der Quellen (WIKI-46)
+    quellen = Quellenarchiv(geruest.db, bibliothek, lambda b: durchsuchbar(b, eigen))   # Archiv der Quellen (WIKI-46)
     geruest.begleiter_anmelden(quellen)
     async def bedeutungsbuch() -> str:
         """Die Quelle der Bedeutungssuche in ihrer jüngsten Fassung (die Einstellung nennt eine Datei mit Stand)."""

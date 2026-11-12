@@ -8,6 +8,7 @@ ergibt sich jedes Mal neu aus der Bibliothek. Eine Wahrheit für alle Konten (di
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, timezone
 from typing import Literal
 
@@ -56,8 +57,9 @@ def nutzbar(b: Buch) -> bool:
 
 
 class Quellenarchiv(Begleiter):
-    def __init__(self, db: Datenbank, bibliothek: Bibliothek) -> None:
-        self._db, self._bib = db, bibliothek
+    def __init__(self, db: Datenbank, bibliothek: Bibliothek, durchsuchbar: Callable[[Buch], bool] = lambda b: b.faehigkeiten.volltext) -> None:
+        """`durchsuchbar`: ob die Suche die Quelle durchsuchen kann (Volltextindex oder eigener Index, suche.dienst)."""
+        self._db, self._bib, self._durchsuchbar = db, bibliothek, durchsuchbar
 
     async def starten(self) -> None:
         await self._db.einrichten("nachschlag_quellenarchiv", STUFEN)
@@ -67,8 +69,9 @@ class Quellenarchiv(Begleiter):
                 for z in await self._db.zeilen("SELECT kennung, zustand, mitnutzen FROM quellenarchiv")}
 
     async def stand(self) -> Bibliotheksstand:
-        """Die Bibliothek mit dem Archivstand jeder Quelle."""
+        """Die Bibliothek mit dem Archivstand jeder Quelle und ob die Suche sie durchsuchen kann."""
         s = await self._bib.stand()
+        s = s.model_copy(update={"buecher": [b.model_copy(update={"durchsuchbar": self._durchsuchbar(b)}) for b in s.buecher]})
         # Bündel erst nach dem Archiv: nur aktive Quellen bilden eins (WIKI-83)
         return s.model_copy(update={"buecher": buendeln(einordnen(s.buecher, await self._entscheidungen()))})
 

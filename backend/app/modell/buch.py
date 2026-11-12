@@ -47,6 +47,8 @@ class Buch(BaseModel):
     symbol: str = Field("", description="Adresse des Symbols, das das Buch mitbringt (PNG, WIKI-88); leer: es hat keins, "
                                         "die Oberfläche zeigt das Zeichen seiner Art")
     archiv: Archivstand | None = Field(None, description="im Archiv (WIKI-46); leer: aktive Quelle")
+    durchsuchbar: bool = Field(False, description="in der Suche: die Datei bringt einen Volltextindex mit oder Nachschlag "
+                                                  "hat einen eigenen gebaut (eine Regel, suche.dienst.durchsuchbar)")
     buendel: str = Field("", description="Bündel, zu dem das Buch gehört (WIKI-83, etwa freecodecamp_de); leer: steht für sich")
     buendel_titel: str = Field("", description="Name der Ebene des Bündels (der Titel des Gesamtbuchs)")
     buendel_gesamt: bool = Field(False, description="das Gesamtbuch des Bündels: die Ebene öffnet es, die übrigen sind Themen")

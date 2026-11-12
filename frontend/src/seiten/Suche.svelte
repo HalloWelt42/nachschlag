@@ -60,7 +60,8 @@
   const nur = $derived(zusatz.get("nur") === "1" && !!kontext);
   const statt = $derived(zusatz.get("statt") ?? "");          // korrigiert aus dieser Frage (sie fand nichts)
   const genau = $derived(zusatz.get("genau") === "1");        // ohne Korrektur, so wie getippt
-  const durchsucht = $derived(bibliothek.buecher.filter((b) => b.faehigkeiten.volltext && nutzbar(b)));   // ohne Archiv (WIKI-46)
+  // was die Suche durchsuchen kann, sagt das Backend (Volltextindex der Datei oder eigener Index), ohne Archiv (WIKI-46)
+  const durchsucht = $derived(bibliothek.buecher.filter((b) => b.durchsuchbar && nutzbar(b)));
   // Reihenfolge: das Buch, aus dem gesucht wurde, dann die übrigen wie in der Bibliothek
   // ohne Frage wird nichts gesucht: keine Quelle steht dann als "sucht" da (WIKI-92, Rückmeldung 12.11.)
   const reihenfolge = $derived.by((): Buch[] => {

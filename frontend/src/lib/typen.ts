@@ -26,6 +26,7 @@ export interface Buch {
   startseite: string;
   symbol: string;          // Adresse des Symbols, das das Buch mitbringt; leer: Zeichen der Art (WIKI-88)
   archiv: Archivstand | null;        // im Archiv (WIKI-46); null: aktive Quelle
+  durchsuchbar: boolean;               // in der Suche: Volltextindex der Datei oder eigener Index
   buendel: string;                   // Bündel (WIKI-83, etwa freecodecamp_de); leer: steht für sich
   buendel_titel: string;             // Name der Ebene (Titel des Gesamtbuchs)
   buendel_gesamt: boolean;           // das Gesamtbuch: die Ebene öffnet es

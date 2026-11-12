@@ -181,6 +181,12 @@ async def _abholen(mac: httpx.AsyncClient) -> dict:
 
 async def test_mac_holt_ab_baut_und_uebergibt(pi, buecher, tmp_path):
     c, app = pi
+
+    async def doku() -> dict:
+        return next(b for b in (await c.get("/api/v1/buecher")).json()["buecher"] if b["kennung"] == DOKU)
+
+    vorher = await doku()
+    assert vorher["durchsuchbar"] == vorher["faehigkeiten"]["volltext"]      # ohne eigenen Index: nur, was die Datei mitbringt
     assert await app.state.indexauftraege.fehlende_einreihen() == [DOKU]    # nur die eingestellten Arten (Handbücher)
     assert await app.state.indexauftraege.fehlende_einreihen() == []        # kein zweiter Auftrag für dasselbe Buch
     laufend = await _laeuft(c)
@@ -201,6 +207,7 @@ async def test_mac_holt_ab_baut_und_uebergibt(pi, buecher, tmp_path):
     verbindung = next(v for v in (await c.get("/api/v1/verbindungen")).json() if v["name"] == "Index-Dienst")
     assert verbindung["ok"]
 
+    assert (await doku())["durchsuchbar"]                                    # mit eigenem Index von selbst in der Suche
     s = (await c.get("/api/v1/suche", params={"frage": "filters elements", "buecher": DOKU})).json()
     assert s["treffer"][0]["pfad"] == "function.array-filter" and "<em>" in s["treffer"][0]["ausschnitt"]
     s = (await c.get("/api/v1/suche", params={"frage": "array_map", "buecher": DOKU})).json()
