@@ -691,6 +691,17 @@ button.buendel-kopf:hover { background: var(--flaeche-2); }
 .auswahl-leiste { position: fixed; z-index: 45; transform: translateY(-100%); display: flex; gap: 2px; padding: 6px; border-radius: 14px; background: var(--text);
                   box-shadow: 0 8px 24px color-mix(in srgb, var(--schattenfarbe) 30%, transparent); }
 .auswahl-leiste.unten { transform: none; }
+
+/* Eigenes Menü per Rechtsklick (WIKI-107, Baustein Kontextmenue) */
+.kontextmenue { position: fixed; z-index: 50; min-width: 220px; max-width: min(320px, calc(100vw - 16px)); display: flex; flex-direction: column;
+                padding: var(--a1); border-radius: var(--r3); background: var(--leiste);
+                box-shadow: 0 12px 40px color-mix(in srgb, var(--schattenfarbe) 30%, transparent), 0 0 0 1px var(--rand); }
+.kontextmenue-titel { padding: 6px 10px 4px; font-size: var(--marke); color: var(--text-3); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kontextmenue button { display: flex; align-items: center; gap: var(--a2); padding: 7px 10px; border: 0; border-radius: var(--r2); background: transparent;
+                       color: var(--text); font: inherit; font-size: var(--klein); text-align: left; cursor: pointer; }
+.kontextmenue button i { width: 16px; color: var(--text-3); }
+.kontextmenue button:hover, .kontextmenue button:focus-visible { background: var(--flaeche-2); outline: none; }
+.kontextmenue button:hover i, .kontextmenue button:focus-visible i { color: var(--akzent); }
 .auswahl-leiste button { border: 0; background: transparent; color: var(--hg); font: inherit; font-size: var(--marke); display: flex; flex-direction: column;
                          align-items: center; gap: 3px; padding: 5px 9px; border-radius: var(--r2); cursor: pointer; }
 .auswahl-leiste button:hover { background: color-mix(in srgb, var(--hg) 16%, transparent); }

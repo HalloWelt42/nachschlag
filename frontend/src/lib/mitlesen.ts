@@ -22,18 +22,19 @@ function nurText(el: Element): string {
   return (kopie.textContent ?? "").replace(/\s+/g, " ").trim();
 }
 
-/** Was vorgelesen wird: der Abschnitt, in dem man liest (`anker`; ohne die Einleitung), mit seinen Unterabschnitten bis
- *  zur nächsten Überschrift derselben oder einer höheren Ebene, oder der ganze Artikel; nur Überschriften und Absätze. */
-export function vorlesetext(wurzel: HTMLElement, umfang: Vorleseumfang, anker: string): string {
+/** Was vorgelesen wird: der Abschnitt `anker` (ohne Anker die Einleitung) mit seinen Unterabschnitten bis zur nächsten
+ *  Überschrift derselben oder einer höheren Ebene, der ganze Artikel, oder ab dem Abschnitt bis zum Schluss (`ab_hier`,
+ *  aus dem Menü des Inhalts, WIKI-107); nur Überschriften und Absätze. */
+export function vorlesetext(wurzel: HTMLElement, umfang: Vorleseumfang | "ab_hier", anker: string): string {
   const bloecke = [...wurzel.querySelectorAll<HTMLElement>(BLOECKE)].filter((b) => !b.closest(KEIN_TEXT));
   let auswahl = bloecke;
-  if (umfang === "abschnitt") {
+  if (umfang !== "alles") {
     const start = anker ? wurzel.querySelector<HTMLElement>(`[id="${CSS.escape(anker)}"]`) : null;
     const kopf = start?.matches(UEBERSCHRIFTEN) ? start : start?.closest<HTMLElement>(UEBERSCHRIFTEN) ?? null;
-    const von = kopf ? bloecke.indexOf(kopf) : 0;
+    const von = Math.max(0, kopf ? bloecke.indexOf(kopf) : 0);
     const grenze = kopf ? ebene(kopf) : 9;                                 // Einleitung: bis zur ersten Überschrift
-    const bis = bloecke.findIndex((b, i) => i > von && b.matches(UEBERSCHRIFTEN) && ebene(b) <= grenze);
-    auswahl = bloecke.slice(Math.max(0, von), bis < 0 ? undefined : bis);
+    const bis = umfang === "ab_hier" ? -1 : bloecke.findIndex((b, i) => i > von && b.matches(UEBERSCHRIFTEN) && ebene(b) <= grenze);
+    auswahl = bloecke.slice(von, bis < 0 ? undefined : bis);
   }
   return auswahl.map(nurText).filter(Boolean).join("\n");
 }

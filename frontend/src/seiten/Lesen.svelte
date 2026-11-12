@@ -25,6 +25,7 @@
   import NotizBlatt from "../teile/NotizBlatt.svelte";
   import ThemaWahl from "../teile/ThemaWahl.svelte";
   import Kategorienbaum from "../teile/Kategorienbaum.svelte";
+  import Kontextmenue, { type Menuepunkt } from "../teile/Kontextmenue.svelte";
   import Lesegroesse from "../teile/Lesegroesse.svelte";
   import { groesseFuer } from "../lib/lesegroesse.svelte";
   import { istRahmenmeldung, lesenWeg, OHNE_HERKUNFT, ortNormal, ortVon, rahmenZiel } from "../lib/originalrahmen";
@@ -627,7 +628,36 @@
     const wahl = window.getSelection();
     const inhalt = wahl && wahl.rangeCount ? markierungstext(wahl.getRangeAt(0)) : "";
     textwahl = null;
+    vorlesenMit(inhalt);
+  }
+
+  /** Diesen Text unter der Kennung des Artikels vorlesen (der Satz läuft im Text mit); im Tippen aufrufen. */
+  function vorlesenMit(inhalt: string) {
     if (inhalt) void vorleser.starten(vorleseKennung, "/vorlesen", { sprache: textSprache || "de", text: inhalt });
+  }
+
+  // Menü per Rechtsklick im Inhalt (WIKI-107): an einem Abschnitt ihn vorlesen, ab ihm, alles, hinspringen, den Verweis
+  // kopieren; am Kopf "Inhalt" den ganzen Artikel. Vorlesen nur, wenn es geht.
+  let menue = $state<{ x: number; y: number; titel: string; punkte: Menuepunkt[] } | null>(null);
+
+  function inhaltMenue(e: MouseEvent, a?: { anker: string; titel: string }, danach: () => void = () => {}) {
+    if (!artikel) return;
+    e.preventDefault();
+    const t = text;
+    const punkte: Menuepunkt[] = [];
+    if (vorlesbar.da && t) {
+      if (vorleser.kennung === vorleseKennung) punkte.push({ symbol: "fa-stop", titel: "Vorlesen anhalten", aktion: () => vorleser.anhalten() });
+      if (a) {
+        punkte.push({ symbol: "fa-volume-high", titel: "Abschnitt vorlesen", aktion: () => { danach(); vorlesenMit(vorlesetext(t, "abschnitt", a.anker)); } });
+        punkte.push({ symbol: "fa-forward", titel: "Ab hier vorlesen", aktion: () => { danach(); vorlesenMit(vorlesetext(t, "ab_hier", a.anker)); } });
+      }
+      punkte.push({ symbol: "fa-book-open-reader", titel: "Ganzen Artikel vorlesen", aktion: () => { danach(); vorlesenMit(vorlesetext(t, "alles", "")); } });
+    }
+    if (a) punkte.push({ symbol: "fa-arrow-right", titel: "Zum Abschnitt", aktion: () => { danach(); springen(a.anker); } });
+    const adresse = `${location.origin}/${lesenZiel(artikel.buch, artikel.pfad, {}, a?.anker ?? "")}`;
+    punkte.push({ symbol: "fa-link", titel: a ? "Verweis auf den Abschnitt kopieren" : "Verweis auf den Artikel kopieren",
+                  aktion: () => void kopieren(adresse) });
+    menue = { x: e.clientX, y: e.clientY, titel: a?.titel ?? artikel.titel, punkte };
   }
   $effect(() => {
     const satz = vorleser.kennung === vorleseKennung ? vorleser.satz : null;
@@ -1136,11 +1166,11 @@
       <div class="lesen" class:ohne-inhalt={!inhalt.length && !artikel.nachbarn.length} class:mit-wissen={mitWissen} data-art={buch?.art} style:zoom={zoom}>
         {#if inhalt.length || artikel.nachbarn.length}
           <nav class="inhalt" aria-label="Inhalt">
-            <div class="inhalt-titel">Inhalt</div>
+            <div class="inhalt-titel" role="presentation" oncontextmenu={(e) => inhaltMenue(e)}>Inhalt</div>
             <ol>
               {#each inhalt as a, i (a.anker)}
                 <li class:unter={a.ebene > 2} class:aktiv={a.anker === aktivImInhalt} class:gelesen={indexAktiv > i}>
-                  <a href="#{a.anker}" onclick={(e) => { e.preventDefault(); springen(a.anker); }}>
+                  <a href="#{a.anker}" onclick={(e) => { e.preventDefault(); springen(a.anker); }} oncontextmenu={(e) => inhaltMenue(e, a)}>
                     {#if a.ebene === 2}<span class="nr">{nummern[i]}</span>{/if}{a.titel}</a>
                 </li>
               {/each}
@@ -1280,7 +1310,8 @@
           <ol>
             {#each inhalt as a, i (a.anker)}
               <li class:unter={a.ebene > 2} class:aktiv={a.anker === aktivImInhalt}>
-                <a href="#{a.anker}" onclick={(e) => { e.preventDefault(); inhaltTafel = false; springen(a.anker); }}>
+                <a href="#{a.anker}" onclick={(e) => { e.preventDefault(); inhaltTafel = false; springen(a.anker); }}
+                   oncontextmenu={(e) => inhaltMenue(e, a, () => (inhaltTafel = false))}>
                   {#if a.ebene === 2}<span class="nr">{nummern[i]}</span>{/if}{a.titel}</a>
               </li>
             {/each}
@@ -1314,6 +1345,9 @@
 
 <svelte:document onselectionchange={auswahlGeaendert} />
 <svelte:window onmessage={rahmenNachricht} />
+{#if menue}
+  <Kontextmenue x={menue.x} y={menue.y} titel={menue.titel} punkte={menue.punkte} onzu={() => (menue = null)} />
+{/if}
 {#if textwahl}
   <!-- die Auswahl bleibt beim Tippen auf die Leiste bestehen -->
   <div class="auswahl-leiste" class:unten={textwahl.unten} bind:this={wahlLeiste} role="toolbar" tabindex="-1" aria-label="Stelle"
