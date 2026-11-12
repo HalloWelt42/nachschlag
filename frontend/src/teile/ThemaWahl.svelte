@@ -59,7 +59,7 @@
           <i class="fa-{an ? 'solid fa-square-check' : 'regular fa-square'}"></i><span>{t.titel}</span><span class="zahl">{t.eintraege}</span></button>
       {/each}
       <form onsubmit={(e) => { e.preventDefault(); anlegen(); }}>
-        <input class="eingabe" bind:value={neu} placeholder="Neues Thema" maxlength="120" aria-label="Neues Thema" />
+        <input name="neu" class="eingabe" bind:value={neu} placeholder="Neues Thema" maxlength="120" aria-label="Neues Thema" />
         <button class="knopf" disabled={!neu.trim() || arbeitet} title="Thema anlegen und den Artikel hineinlegen"><i class="fa-solid fa-plus"></i></button>
       </form>
       {#if fehler}<div class="fehlertext">{fehler}</div>{/if}

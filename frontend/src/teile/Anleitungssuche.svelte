@@ -135,7 +135,7 @@
     {#snippet kopf()}
       <div class="katalog-filter">
         <label class="suchfeld katalog-suche"><i class="fa-solid fa-magnifying-glass"></i>
-          <input type="search" bind:value={eingabe} oninput={getippt} placeholder="Gerät, Bauteil oder Fehler" aria-label="Anleitungen suchen" /></label>
+          <input name="eingabe" type="search" bind:value={eingabe} oninput={getippt} placeholder="Gerät, Bauteil oder Fehler" aria-label="Anleitungen suchen" /></label>
         <div class="segment" role="radiogroup" aria-label="Art">
           {#each ARTEN as a (a.wert)}
             <button class:aktiv={aktiv && frage.art === a.wert} onclick={() => setze({ art: a.wert, bauteil: null })}>{a.titel}</button>
@@ -169,7 +169,7 @@
       {/if}
       {#if wahlOffen}
         <div class="anl-werkzeugwahl">
-          <label class="suchfeld"><i class="fa-solid fa-filter"></i><input type="search" bind:value={werkzeugFilter} placeholder="Werkzeug suchen" aria-label="Werkzeug suchen" /></label>
+          <label class="suchfeld"><i class="fa-solid fa-filter"></i><input name="werkzeug-filter" type="search" bind:value={werkzeugFilter} placeholder="Werkzeug suchen" aria-label="Werkzeug suchen" /></label>
           <div class="anl-chips">
             {#each sichtbar as w (w.wort)}
               <button class="chip wahl" class:an={meine.includes(w.wort)} onclick={() => werkzeugUmschalten(w.wort)} title="{zahl(w.anleitungen)} Anleitungen brauchen es">

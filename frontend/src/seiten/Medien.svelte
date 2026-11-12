@@ -69,7 +69,7 @@
         {#if !geraet.mobil}<h1>Medien</h1>{/if}          <!-- am Telefon steht der Titel im Kopf -->
         <form class="suchfeld medien-suche" onsubmit={absenden} role="search">
           <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="search" bind:value={eingabe} placeholder="Bilder zu einem Begriff" aria-label="Bilder zu einem Begriff" />
+          <input name="eingabe" type="search" bind:value={eingabe} placeholder="Bilder zu einem Begriff" aria-label="Bilder zu einem Begriff" />
         </form>
         <div class="segment">
           {#each ARTEN as [a, wort] (a)}<button class:aktiv={art === a} onclick={() => filtern({ art: a })}>{wort}</button>{/each}

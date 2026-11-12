@@ -164,7 +164,7 @@
 <div class="suchanker" class:grosssuche={gross} class:offen={offen && frage.trim()}>
   <label class="suchfeld">
     <i class="fa-solid fa-magnifying-glass"></i>
-    <input bind:this={feld} bind:value={frage} type="search" placeholder={platzhalter} autocomplete="off" spellcheck="false"
+    <input name="frage" bind:this={feld} bind:value={frage} type="search" placeholder={platzhalter} autocomplete="off" spellcheck="false"
            aria-label="Suchen" oninput={eingabe} onkeydown={tasten} onfocus={() => (offen = true)} onblur={schliessen} />
     {#if kontext}
       <button type="button" class="buchwahl mit-buch" title="Treffer aus dieser Quelle zuerst; antippen: alle Quellen gleich"

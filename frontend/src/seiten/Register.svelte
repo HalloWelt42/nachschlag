@@ -109,7 +109,7 @@
         <div class="register-filter">
           <Auswahl wert={buch} symbol="fa-book" titel="Welche Quellen" optionen={buchwahl} onwahl={(w: string) => weg(ansicht === "autoren" ? "register/autoren" : "register", w)} />
           <label class="suchfeld register-anfang"><i class="fa-solid fa-filter"></i>
-            <input type="search" bind:value={anfang} placeholder={ansicht === "autoren" ? "Name beginnt mit" : "Schlagwort beginnt mit"}
+            <input name="anfang" type="search" bind:value={anfang} placeholder={ansicht === "autoren" ? "Name beginnt mit" : "Schlagwort beginnt mit"}
                    aria-label="Filter" /></label>
           <span class="register-zahl">{zahl(gesamt)} {ansicht === "autoren" ? (gesamt === 1 ? "Autor" : "Autoren") : (gesamt === 1 ? "Schlagwort" : "Schlagwörter")}</span>
         </div>

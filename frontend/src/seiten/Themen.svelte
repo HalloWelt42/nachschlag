@@ -60,7 +60,7 @@
         {#if neu !== null}
           <form class="bereich-neu thema-neu" onsubmit={(e) => { e.preventDefault(); void anlegen(); }}>
             <!-- svelte-ignore a11y_autofocus -->
-            <input class="eingabe" bind:value={neu} placeholder="Name des Themas" maxlength="120" autofocus onkeydown={(e) => e.key === "Escape" && (neu = null)} />
+            <input name="neu" class="eingabe" bind:value={neu} placeholder="Name des Themas" maxlength="120" autofocus onkeydown={(e) => e.key === "Escape" && (neu = null)} />
             <button class="knopf primaer" disabled={!neu.trim()}>Anlegen</button>
           </form>
         {/if}

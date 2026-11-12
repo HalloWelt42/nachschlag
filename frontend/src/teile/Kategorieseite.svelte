@@ -62,7 +62,7 @@
           {/if}
           {#if alle.length > 12}
             <label class="suchfeld kat-filter"><i class="fa-solid fa-filter"></i>
-              <input type="search" bind:value={filter} placeholder="In {zahl(alle.length)} {fehlen ? 'geladenen ' : ''}Seiten filtern" aria-label="Seiten filtern" /></label>
+              <input name="filter" type="search" bind:value={filter} placeholder="In {zahl(alle.length)} {fehlen ? 'geladenen ' : ''}Seiten filtern" aria-label="Seiten filtern" /></label>
           {/if}
         </div>
       {/snippet}

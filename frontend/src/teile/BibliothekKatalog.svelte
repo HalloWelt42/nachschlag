@@ -109,7 +109,7 @@
   {#snippet kopf()}
   <div class="katalog-filter">
     <label class="suchfeld katalog-suche"><i class="fa-solid fa-magnifying-glass"></i>
-      <input type="search" bind:value={filter.suche} placeholder="Im Katalog suchen" aria-label="Im Katalog suchen" /></label>
+      <input name="suche" type="search" bind:value={filter.suche} placeholder="Im Katalog suchen" aria-label="Im Katalog suchen" /></label>
     {#if sprachen.length > 1}
       <div class="segment" role="radiogroup" aria-label="Sprache">
         <button class:aktiv={!filter.sprache} onclick={() => (filter.sprache = "")}>Alle Sprachen</button>

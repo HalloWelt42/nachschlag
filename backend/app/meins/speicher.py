@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from appkern.app.begleiter import Begleiter
 from appkern.datenbank import Datenbank
 
+from ..medienweg import bild_heute
 from ..modell.meins import (Beispiel, BeispielAenderung, BeispielNeu, Bewertung, BewertungNeu, Lesestand, Merkeintrag, Merken, Notiz, NotizAenderung,
                             Notizbild, NotizNeu, Suchmeldung, Verlaufseintrag)
 
@@ -86,7 +87,9 @@ class Meins(Begleiter):
         zeilen = await self._db.zeilen(
             "SELECT m.*, COALESCE(v.anteil, 0) AS anteil FROM merkzettel m LEFT JOIN verlauf v ON v.konto=m.konto "
             "AND v.art='artikel' AND v.buch_name=m.buch_name AND v.pfad=m.pfad WHERE m.konto=? ORDER BY m.angelegt DESC", (konto,))
-        return [Merkeintrag(**{k: z[k] for k in Merkeintrag.model_fields if k in z}, buch=await self._kennung_von(z["buch_name"]))
+        kennungen = {n: await self._kennung_von(n) for n in {z["buch_name"] for z in zeilen}}
+        return [Merkeintrag(**{**{k: z[k] for k in Merkeintrag.model_fields if k in z},
+                               "bild": bild_heute(z["bild"], kennungen[z["buch_name"]])}, buch=kennungen[z["buch_name"]])
                 for z in zeilen]
 
     async def merken(self, konto: str, eingabe: Merken) -> Merkeintrag:
@@ -184,6 +187,7 @@ class Meins(Begleiter):
     @staticmethod
     def _notiz(z: dict, buch: str) -> Notiz:
         werte = {k: z[k] for k in Notiz.model_fields if k in z}
+        werte["bild"] = bild_heute(z.get("bild", ""), buch)
         werte["belege"] = json.loads(z.get("belege") or "[]")
         werte["bilder"] = json.loads(z.get("bilder") or "[]")
         return Notiz(**werte, buch=buch)
@@ -250,8 +254,10 @@ class Meins(Begleiter):
         filter_art = " AND art=?" if art else ""
         werte = (konto, art, anzahl, ab) if art else (konto, anzahl, ab)
         zeilen = await self._db.zeilen(f"SELECT * FROM verlauf WHERE konto=?{filter_art} ORDER BY zuletzt DESC LIMIT ? OFFSET ?", werte)
-        return [Verlaufseintrag(**{k: z[k] for k in Verlaufseintrag.model_fields if k in z},
-                                buch=await self._kennung_von(z["buch_name"]) if z["buch_name"] else "") for z in zeilen]
+        kennungen = {n: await self._kennung_von(n) if n else "" for n in {z["buch_name"] for z in zeilen}}
+        return [Verlaufseintrag(**{**{k: z[k] for k in Verlaufseintrag.model_fields if k in z},
+                                   "bild": bild_heute(z["bild"], kennungen[z["buch_name"]])}, buch=kennungen[z["buch_name"]])
+                for z in zeilen]
 
     async def lesestand_von(self, konto: str, buch: str, pfad: str) -> Verlaufseintrag | None:
         """Der Lesestand einer Seite (etwa der Schritt einer Anleitung in der Werkstatt, WIKI-64); `buch` ist die Kennung,

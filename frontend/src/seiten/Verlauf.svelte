@@ -65,7 +65,7 @@
           {/each}
         </div>
         <label class="suchfeld meins-suche"><i class="fa-solid fa-magnifying-glass"></i>
-          <input type="search" placeholder="Im Verlauf suchen" bind:value={suche} aria-label="Im Verlauf suchen" /></label>
+          <input name="suche" type="search" placeholder="Im Verlauf suchen" bind:value={suche} aria-label="Im Verlauf suchen" /></label>
         <button class="knopf still" onclick={() => (leerenFragen = true)}><i class="fa-solid fa-trash"></i>Leeren</button>
       </div>
       {#if leerenFragen}

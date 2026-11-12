@@ -46,7 +46,7 @@
           {/each}
         </div>
         <label class="suchfeld meins-suche"><i class="fa-solid fa-magnifying-glass"></i>
-          <input type="search" placeholder="Im Merkzettel suchen" bind:value={suche} aria-label="Im Merkzettel suchen" /></label>
+          <input name="suche" type="search" placeholder="Im Merkzettel suchen" bind:value={suche} aria-label="Im Merkzettel suchen" /></label>
       </div>
       {#if fehler}<div class="fehlertext">{fehler}</div>{/if}
       {#if meins.geladen && !meins.merkzettel.length}

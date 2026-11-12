@@ -219,7 +219,7 @@
     <span class="notiz-feldknoepfe">
       <button class="knopf still" title="Bild anfügen (oder ein Bildschirmfoto ins Textfeld einfügen)" onclick={() => dateiwahl?.click()}>
         <i class="fa-solid fa-image"></i><span class="wort">Bild</span></button>
-      <input type="file" accept="image/*" multiple hidden bind:this={dateiwahl}
+      <input name="input-file" type="file" accept="image/*" multiple hidden bind:this={dateiwahl}
              onchange={(e) => { const f = e.currentTarget; void bilderAnfuegen([...(f.files ?? [])]); f.value = ""; }} />
       <Sprechknopf titel="Notiz sprechen" fertig={(t) => { text = text.trim() ? `${text.trimEnd()} ${t}` : t; tippen(); }} /></span></div>
   <textarea id={feldId} class="schreibfeld" bind:this={feld} bind:value={text} oninput={tippen} onpaste={einfuegen}

@@ -256,10 +256,10 @@
   <div class="thema-kopf">
     {#if bearbeiten}
       <div class="thema-formular">
-        <label><span class="feld-titel">Titel</span><input class="eingabe" bind:value={bearbeiten.titel} maxlength="120" /></label>
-        <label><span class="feld-titel">Beschreibung</span><textarea class="eingabe" rows="2" bind:value={bearbeiten.beschreibung} maxlength="1000"></textarea></label>
+        <label><span class="feld-titel">Titel</span><input name="titel" class="eingabe" bind:value={bearbeiten.titel} maxlength="120" /></label>
+        <label><span class="feld-titel">Beschreibung</span><textarea name="beschreibung" class="eingabe" rows="2" bind:value={bearbeiten.beschreibung} maxlength="1000"></textarea></label>
         <label><span class="feld-titel">Wächst mit der Suche</span>
-          <input class="eingabe" bind:value={bearbeiten.regel} maxlength="400" placeholder="leer: nur von Hand" /></label>
+          <input name="regel" class="eingabe" bind:value={bearbeiten.regel} maxlength="400" placeholder="leer: nur von Hand" /></label>
         <div><span class="feld-titel">In welchen Quellen</span>
           <Auswahl bind:wert={bearbeiten.regel_buch} symbol="fa-book"
                    optionen={[{ wert: "", titel: "Alle Quellen" }, ...reihenfolge(bibliothek.buecher).map((b) => ({ wert: b.kennung, titel: bezeichnung(b), hinweis: buendelHinweis(b) }))]} /></div>
@@ -293,7 +293,7 @@
       {#if neuerBereich !== null}
         <form class="bereich-neu" onsubmit={(e) => { e.preventDefault(); void bereichNeu(); }}>
           <!-- svelte-ignore a11y_autofocus -->
-          <input class="eingabe" bind:value={neuerBereich} placeholder="Name des Bereichs" maxlength="120" autofocus
+          <input name="neuer-bereich" class="eingabe" bind:value={neuerBereich} placeholder="Name des Bereichs" maxlength="120" autofocus
                  onkeydown={(e) => e.key === "Escape" && (neuerBereich = null)} />
           <button class="knopf primaer" disabled={!neuerBereich.trim()}>Anlegen</button>
           <button type="button" class="knopf still" onclick={() => (neuerBereich = null)}>Abbrechen</button>
@@ -390,7 +390,7 @@
             {#if umbenennen?.id === g.id}
               <form class="bereich-neu" onsubmit={(e) => { e.preventDefault(); void umbenannt(); }}>
                 <!-- svelte-ignore a11y_autofocus -->
-                <input class="eingabe" bind:value={umbenennen.titel} maxlength="120" autofocus onkeydown={(e) => e.key === "Escape" && (umbenennen = null)} />
+                <input name="titel" class="eingabe" bind:value={umbenennen.titel} maxlength="120" autofocus onkeydown={(e) => e.key === "Escape" && (umbenennen = null)} />
                 <button class="knopf primaer">Speichern</button>
               </form>
             {:else}

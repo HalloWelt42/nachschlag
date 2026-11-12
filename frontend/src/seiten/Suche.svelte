@@ -241,7 +241,7 @@
   <div class="fundband uebersetzt"><i class="fa-solid fa-language"></i>
     {#if aendern}
       <form class="uebersetzung-aendern" onsubmit={korrigieren}>
-        <input bind:value={neuText} aria-label="Übersetzung für die englischen Quellen" />
+        <input name="neu-text" bind:value={neuText} aria-label="Übersetzung für die englischen Quellen" />
         <button class="knopf primaer" type="submit">Übernehmen</button>
         <button class="knopf still" type="button" onclick={() => (aendern = false)}>Abbrechen</button>
       </form>

@@ -84,7 +84,7 @@
             {/each}
           </div>
           <label class="suchfeld meins-suche"><i class="fa-solid fa-magnifying-glass"></i>
-            <input type="search" placeholder="In Notizen und Zitaten suchen" bind:value={suche} aria-label="In Notizen und Zitaten suchen" /></label>
+            <input name="suche" type="search" placeholder="In Notizen und Zitaten suchen" bind:value={suche} aria-label="In Notizen und Zitaten suchen" /></label>
           {#if themen.liste.length}
             <Auswahl bind:wert={thema} symbol="fa-layer-group" titel="Nur Notizen an Artikeln dieses Themas"
                      optionen={[{ wert: "", titel: "Thema: alle" }, ...themen.liste.map((t) => ({ wert: t.id, titel: `Thema: ${t.titel}` }))]} />

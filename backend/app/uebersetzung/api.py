@@ -57,7 +57,8 @@ def router(geruest: Geruest, uebersetzer: Uebersetzer, artikel: Artikeluebersetz
         try:
             return await artikel.stand(buch, pfad)
         except BuchFehlt as f:
-            raise HTTPException(status_code=404, detail=str(f))
+            # eine Abfrage des Stands: ein fehlendes Buch ist ein Zustand mit Grund, kein Fehler (WIKI-97)
+            return Artikelstand(zustand="nicht_moeglich", grund=str(f))
 
     @r.post("/artikel/{buch}/{pfad:path}", response_model=Artikelstand)
     async def artikel_uebersetzen(buch: str, pfad: str, wer: str = Depends(geruest.wer)) -> Artikelstand:

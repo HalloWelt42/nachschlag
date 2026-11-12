@@ -28,7 +28,7 @@
     <Seitenkopf rand="var(--ueb-rand)">
       {#snippet kopf()}
         <label class="suchfeld ueb-filter"><i class="fa-solid fa-filter"></i>
-          <input type="search" bind:value={filter} placeholder="Aufgabe finden" aria-label="Aufgaben nach Titel filtern" /></label>
+          <input name="filter" type="search" bind:value={filter} placeholder="Aufgabe finden" aria-label="Aufgaben nach Titel filtern" /></label>
       {/snippet}
     </Seitenkopf>
     {#each kurse as k (k.kennung)}

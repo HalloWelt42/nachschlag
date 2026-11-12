@@ -200,7 +200,7 @@
       {:else}
         <form class="exp-neu-form" onsubmit={(e) => { e.preventDefault(); void kopieren(); }}>
           <!-- svelte-ignore a11y_autofocus -->
-          <input class="eingabe" bind:value={neu} maxlength="60" placeholder="Name der Vorlage" autofocus onkeydown={(e) => e.key === "Escape" && (neu = null)} />
+          <input name="neu" class="eingabe" bind:value={neu} maxlength="60" placeholder="Name der Vorlage" autofocus onkeydown={(e) => e.key === "Escape" && (neu = null)} />
           <span class="exp-leise">als Kopie von {v?.titel}</span>
           <span class="knopfzeile"><button class="knopf primaer" disabled={!neu.trim()}>Anlegen</button><button type="button" class="knopf still" onclick={() => (neu = null)}>Abbrechen</button></span>
         </form>
@@ -212,7 +212,7 @@
       <div class="exp-schritte">
         <div class="exp-datei">
           <i class="fa-solid {v.symbol} exp-akzent"></i>
-          {#if fest}<b class="exp-dateititel">{v.titel}</b>{:else}<input class="eingabe exp-dateititel" bind:value={v.titel} maxlength="60" aria-label="Name der Vorlage" />{/if}
+          {#if fest}<b class="exp-dateititel">{v.titel}</b>{:else}<input name="titel" class="eingabe exp-dateititel" bind:value={v.titel} maxlength="60" aria-label="Name der Vorlage" />{/if}
           <span>{v.mitgeliefert ? "mitgeliefert und fest; zum Ändern kopieren" : v.kopiert_aus ? `kopiert aus ${v.kopiert_aus} am ${datum(v.kopiert_am)}` : "eigene Vorlage"}</span>
           <span class="rechts">
             {#if zustand.art === "speichert"}<span class="exp-leise"><i class="fa-solid fa-spinner fa-spin"></i> speichert</span>
@@ -244,8 +244,8 @@
           </div>
           {#if kasten}
             <form class="exp-kastenform" onsubmit={(e) => { e.preventDefault(); kastenFertig(); }}>
-              <label><span class="feld-titel">Überschrift des Kastens</span><input class="eingabe" bind:value={kasten.titel} maxlength="80" placeholder="etwa So beobachtest du es" /></label>
-              <label><span class="feld-titel">Was die KI hineinschreibt</span><textarea class="eingabe exp-freitext" bind:value={kasten.anweisung} maxlength="1000"
+              <label><span class="feld-titel">Überschrift des Kastens</span><input name="titel" class="eingabe" bind:value={kasten.titel} maxlength="80" placeholder="etwa So beobachtest du es" /></label>
+              <label><span class="feld-titel">Was die KI hineinschreibt</span><textarea name="anweisung" class="eingabe exp-freitext" bind:value={kasten.anweisung} maxlength="1000"
                      placeholder="etwa: ob und womit man es selbst sieht; steht dazu nichts im Artikel, bleibt der Kasten leer"></textarea></label>
               <span class="knopfzeile"><button class="knopf primaer" disabled={!kasten.titel.trim() || !kasten.anweisung.trim()}>{kasten.platz === null ? "Hinzufügen" : "Übernehmen"}</button>
                 <button type="button" class="knopf still" onclick={() => (kasten = null)}>Abbrechen</button></span>
@@ -273,7 +273,7 @@
               {/if}
             </span></div>
           <div class="feld"><div class="was"><div class="name">Zusatz in eigenen Worten</div><div class="beschreibung">Geht so an das Modell, nach den festen Regeln.</div></div>
-            <textarea class="exp-freitext" bind:value={v.anweisung.zusatz} maxlength="2000" readonly={fest} aria-label="Zusatz in eigenen Worten"
+            <textarea name="zusatz" class="exp-freitext" bind:value={v.anweisung.zusatz} maxlength="2000" readonly={fest} aria-label="Zusatz in eigenen Worten"
                       placeholder="etwa: bei jedem Himmelsobjekt sagen, ob und womit man es selbst sieht"></textarea></div>
           <div class="feld"><div class="was"><div class="name">Feste Regeln</div><div class="beschreibung">Gelten für jede Vorlage und lassen sich nicht abschalten.</div></div>
             <span class="exp-regeln">{#each buecher.katalog?.regeln ?? [] as r (r)}<span class="chip"><i class="fa-solid fa-check"></i>{r}</span>{/each}</span></div>

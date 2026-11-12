@@ -13,6 +13,7 @@ from typing import Any
 from appkern.app.begleiter import Begleiter
 from appkern.datenbank import Datenbank
 
+from ..medienweg import bild_heute
 from ..modell.themen import (
     Bereich, BereichAenderung, EintragNeu, Thema, ThemaAenderung, Themeneintrag, Themenkopf, ThemaNeu, Verschieben, Zuordnung,
 )
@@ -77,12 +78,14 @@ class Themen(Begleiter):
             "SELECT b.thema, COUNT(*) AS zahl FROM themen_bereiche b JOIN themen t ON t.id=b.thema WHERE t.konto=? GROUP BY b.thema",
             (konto,))
         zahl_bereiche = {z["thema"]: z["zahl"] for z in bereiche}
+        kennungen = {n: await self._kennung(n) for n in {e["buch_name"] for e in eintraege}}
         koepfe = []
         for t in themen:
             eigene = [e for e in eintraege if e["thema"] == t["id"]]
             koepfe.append(Themenkopf(id=t["id"], titel=t["titel"], regel=t["regel"], eintraege=len(eigene),
                                      bereiche=zahl_bereiche.get(t["id"], 0), buecher=len({e["buch_name"] for e in eigene}),
-                                     bilder=[e["bild"] for e in eigene if e["bild"]][:BILDER_IN_DER_LISTE]))
+                                     bilder=[b for e in eigene if (b := bild_heute(e["bild"], kennungen[e["buch_name"]]))]
+                                     [:BILDER_IN_DER_LISTE]))
         return koepfe
 
     async def anlegen(self, konto: str, neu: ThemaNeu) -> Thema:
@@ -107,7 +110,8 @@ class Themen(Begleiter):
         return Thema(id=t["id"], titel=t["titel"], beschreibung=t["beschreibung"], regel=t["regel"],
                      regel_buch=await self._kennung(t["regel_buch"]), angelegt=t["angelegt"],
                      bereiche=[Bereich(**b) for b in bereiche],
-                     eintraege=[Themeneintrag(**{k: z[k] for k in Themeneintrag.model_fields if k in z},
+                     eintraege=[Themeneintrag(**{**{k: z[k] for k in Themeneintrag.model_fields if k in z},
+                                                 "bild": bild_heute(z["bild"], kennungen[z["buch_name"]])},
                                               buch=kennungen[z["buch_name"]]) for z in zeilen])
 
     async def aendern(self, konto: str, kennung: str, aenderung: ThemaAenderung) -> Thema | None:
