@@ -51,6 +51,19 @@
 .vorschlaege .fuss-zeile .rechts { margin-left: auto; color: var(--akzent); font-weight: 600; cursor: pointer; }
 .vorschlaege .leer { padding: 12px 14px; color: var(--text-3); }
 
+/* Ladeanzeige der Suche (WIKI-92): ein Lichtstreif läuft am Fuß des Feldes, solange Vorschläge geholt werden;
+   als bewegter Hintergrund, nicht als verschobenes Teil, so ragt nichts aus dem Feld */
+.suchfeld { position: relative; }
+.suchfeld .suchlauf { position: absolute; left: var(--r2); right: var(--r2); bottom: 0; height: 2px; border-radius: 1px; opacity: 0;
+                      transition: opacity var(--ruhig);
+                      background: linear-gradient(90deg, transparent, var(--akzent-flaeche), transparent) no-repeat;
+                      background-size: 40% 100%; animation: suchlauf 1.2s linear infinite; }
+.suchfeld.sucht .suchlauf { opacity: 1; }
+.suchfeld.sucht > i { color: var(--akzent); }
+.vorschlaege .sucht-zeile { display: flex; align-items: center; gap: var(--a2); padding: 10px 14px; color: var(--text-2); }
+.vorschlaege .sucht-zeile i { color: var(--akzent); }
+@keyframes suchlauf { from { background-position: -70% 0; } to { background-position: 170% 0; } }
+
 /* ----- Rahmen der Artikelseite ----- */
 .artikel-kopf { padding: var(--a3) var(--a5) var(--a2); background: var(--hg); box-shadow: 0 1px 0 var(--rand); }
 .pfad { display: flex; align-items: center; gap: var(--a2); font-size: var(--klein); color: var(--text-3); min-width: 0; }
@@ -333,6 +346,11 @@ button.buendel-kopf:hover { background: var(--flaeche-2); }
 .suchkopf .grosssuche .suchfeld { height: 50px; }
 .suchstand { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2) var(--a4); font-size: var(--klein); color: var(--text-3); }
 .suchstand .zahl { font-family: var(--schrift-zahl); }
+/* Fortschritt über alle Quellen: der Balken wächst je fertiger Quelle, ein Schimmer zeigt, dass gesucht wird (WIKI-92) */
+.suchfortschritt { height: 4px; width: min(100%, 720px); border-radius: 2px; background: var(--mulde); overflow: hidden; }
+.suchfortschritt b { display: block; height: 100%; border-radius: 2px; background-color: var(--akzent-flaeche); transition: width var(--ruhig);
+                     background-image: linear-gradient(90deg, transparent, color-mix(in srgb, var(--flaeche) 55%, transparent), transparent);
+                     background-size: 40% 100%; background-repeat: no-repeat; animation: suchlauf 1.4s linear infinite; }
 .weg-marke { display: inline-flex; align-items: center; gap: 5px; font-size: var(--marke); padding: 1px 7px; border-radius: var(--r1); white-space: nowrap; }
 .weg-marke.bedeutung { background: color-mix(in srgb, var(--petrol) 13%, transparent); color: var(--petrol); }
 .weg-marke.index { background: color-mix(in srgb, var(--stahl) 14%, transparent); color: var(--stahl); }
@@ -361,6 +379,21 @@ button.buendel-kopf:hover { background: var(--flaeche-2); }
 .treffer .zeile1 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px var(--a2); }
 .treffer .t { font-weight: 600; font-size: var(--titel); overflow-wrap: anywhere; }
 .treffer .t.code { font-family: var(--schrift-editor); font-weight: 500; }
+/* Platzhalter, bis eine Quelle antwortet: Form eines Treffers, Zeilen schimmern (WIKI-92) */
+.treffer.platzhalter { cursor: default; }
+.treffer.platzhalter:hover { box-shadow: var(--schatten); }
+.treffer.platzhalter .zeilen { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
+.treffer.platzhalter .ohne-bild, .treffer.platzhalter .zeilen > span {
+  background: linear-gradient(90deg, var(--flaeche-2), color-mix(in srgb, var(--flaeche-2) 40%, var(--flaeche)), var(--flaeche-2)) var(--flaeche-2);
+  background-size: 200% 100%; animation: platzhalter 1.4s ease-in-out infinite; }
+.treffer.platzhalter .zeilen > span { display: block; height: 10px; border-radius: 3px; }
+.treffer.platzhalter .z1 { width: 38%; height: 14px; }
+.treffer.platzhalter .z2 { width: 92%; }
+.treffer.platzhalter .z3 { width: 70%; }
+@keyframes platzhalter { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .suchfeld .suchlauf, .suchfortschritt b, .treffer.platzhalter .ohne-bild, .treffer.platzhalter .zeilen > span { animation: none; }
+}
 /* Filter einer Übersicht (WIKI-17) */
 .uebersicht-filter { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a2) var(--a3); padding: var(--a4) var(--a5) 0; }
 .uebersicht-filter .suchfeld { flex: 1 1 260px; max-width: 520px; height: var(--knopf-hoehe); }

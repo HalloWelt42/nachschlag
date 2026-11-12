@@ -32,6 +32,10 @@
   let stellenUhr: ReturnType<typeof setTimeout> | undefined;
   let titelAbruf: AbortController | undefined;
   let stellenAbruf: AbortController | undefined;
+  // läuft eine Abfrage (auch die Wartezeit davor): Laufbalken im Feld, "sucht" in der Liste (WIKI-92)
+  let titelLaeuft = $state(false);
+  let stellenLaeuft = $state(false);
+  const laeuft = $derived(titelLaeuft || stellenLaeuft);
 
   $effect(() => {
     frage = wert;
@@ -62,34 +66,45 @@
     clearTimeout(stellenUhr);
     const jetzt = frage.trim();
     if (!jetzt) {
+      titelAbruf?.abort();
+      stellenAbruf?.abort();
       titel = [];
       stellen = [];
+      titelLaeuft = stellenLaeuft = false;
       return;
     }
+    titelLaeuft = true;
     titelUhr = setTimeout(async () => {
       titelAbruf?.abort();
-      titelAbruf = new AbortController();
+      const abruf = (titelAbruf = new AbortController());
       try {
-        const vorschlaege = await vorschlaegeHolen(jetzt, [], 6, titelAbruf.signal);
+        const vorschlaege = await vorschlaegeHolen(jetzt, [], 6, abruf.signal);
         // Titel aus dem Buch, in dem man ist, zuerst; sonst bleibt die Folge des Index
         titel = kontext ? [...vorschlaege.filter((v) => v.buch === kontext), ...vorschlaege.filter((v) => v.buch !== kontext)] : vorschlaege;
       } catch {
         /* abgebrochen oder ohne Antwort: die Liste bleibt, wie sie war */
+      } finally {
+        if (abruf === titelAbruf) titelLaeuft = false;   // nur die jüngste Abfrage beendet das Laufen
       }
     }, TITEL_WARTEN_MS);
     void suchregelnLaden();
     if (jetzt.length < STELLEN_AB_ZEICHEN || suchregeln.vorschlaege === "titel") {   // Einstellung: nur Titel (WIKI-79)
+      stellenAbruf?.abort();
       stellen = [];
+      stellenLaeuft = false;
       return;
     }
+    stellenLaeuft = true;
     stellenUhr = setTimeout(async () => {
       stellenAbruf?.abort();
-      stellenAbruf = new AbortController();
+      const abruf = (stellenAbruf = new AbortController());
       try {
-        const ergebnis = await sucheHolen(jetzt, { wege: "bedeutung", anzahl: 3 }, stellenAbruf.signal);
+        const ergebnis = await sucheHolen(jetzt, { wege: "bedeutung", anzahl: 3 }, abruf.signal);
         stellen = ergebnis.nur_index ? [] : ergebnis.treffer;
       } catch {
-        stellen = [];
+        if (!abruf.signal.aborted) stellen = [];
+      } finally {
+        if (abruf === stellenAbruf) stellenLaeuft = false;
       }
     }, STELLEN_WARTEN_MS);
   }
@@ -162,8 +177,8 @@
 </script>
 
 <div class="suchanker" class:grosssuche={gross} class:offen={offen && frage.trim()}>
-  <label class="suchfeld">
-    <i class="fa-solid fa-magnifying-glass"></i>
+  <label class="suchfeld" class:sucht={laeuft} aria-busy={laeuft}>
+    <i class="fa-solid {laeuft ? 'fa-circle-notch fa-spin' : 'fa-magnifying-glass'}"></i>
     <input name="frage" bind:this={feld} bind:value={frage} type="search" placeholder={platzhalter} autocomplete="off" spellcheck="false"
            aria-label="Suchen" oninput={eingabe} onkeydown={tasten} onfocus={() => (offen = true)} onblur={schliessen} />
     {#if kontext}
@@ -175,7 +190,8 @@
     {/if}
     <!-- Spracheingabe (WIKI-42): der Text steht im Feld, wächst beim Sprechen; am Ende läuft die Suche, er bleibt änderbar -->
     <Sprechknopf titel="Frage sprechen" live={(t) => (frage = t)} fertig={(t) => { frage = t; alleTreffer(); }} />
-    {#if (taste || gross) && !geraet.mobil}<kbd title="Taste / setzt die Schreibmarke ins Suchfeld">/</kbd>{/if}
+    {#if (taste || gross) && !geraet.mobil}<kbd title="Kurzbefehl: die Taste / setzt die Schreibmarke ins Suchfeld">/</kbd>{/if}
+    <span class="suchlauf" aria-hidden="true"></span>
   </label>
   {#if offen && frage.trim()}
     <!-- Auswahl mit der Maus ohne den Fokus zu verlieren (sonst schließt das Feld vor dem Klick) -->
@@ -207,7 +223,13 @@
           </div>
         {/each}
       {/if}
-      {#if !titel.length && !stellen.length}<div class="leer">Kein Titel beginnt so. Enter sucht im Text aller Quellen.</div>{/if}
+      {#if stellenLaeuft && !stellen.length && titel.length}
+        <div class="sucht-zeile"><i class="fa-solid fa-circle-notch fa-spin"></i>Sucht passende Stellen ...</div>
+      {/if}
+      {#if !titel.length && !stellen.length}
+        {#if laeuft}<div class="sucht-zeile"><i class="fa-solid fa-circle-notch fa-spin"></i>Sucht in allen Quellen ...</div>
+        {:else}<div class="leer">Kein Titel beginnt so. Enter sucht im Text aller Quellen.</div>{/if}
+      {/if}
       <div class="fuss-zeile">
         <span><kbd>↑</kbd> <kbd>↓</kbd> wählen</span><span><kbd>Enter</kbd> öffnen</span><span><kbd>Esc</kbd> schließen</span>
         <span class="rechts" role="button" tabindex="-1" onclick={alleTreffer} onkeydown={() => {}}>Alle Treffer zeigen</span>

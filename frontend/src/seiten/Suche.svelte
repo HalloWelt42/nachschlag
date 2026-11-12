@@ -68,6 +68,7 @@
   });
   const mitTreffern = $derived(reihenfolge.filter((b) => staende[b.kennung]?.stand !== "fertig" || staende[b.kennung]?.ergebnis?.treffer.length));
   const ohneTreffer = $derived(reihenfolge.filter((b) => staende[b.kennung]?.stand === "fertig" && !staende[b.kennung]?.ergebnis?.treffer.length));
+  const erledigt = $derived(reihenfolge.filter((b) => staende[b.kennung] && staende[b.kennung].stand !== "sucht").length);
   const fertig = $derived(reihenfolge.length > 0 && reihenfolge.every((b) => staende[b.kennung] && staende[b.kennung].stand !== "sucht"));
   const gesamt = $derived(reihenfolge.reduce((n, b) => n + (staende[b.kennung]?.ergebnis?.index_gesamt ?? 0), 0));
   const besteStelle = $derived(reihenfolge.map((b) => staende[b.kennung]?.ergebnis?.beste_stelle).find(Boolean) ?? null);
@@ -200,6 +201,9 @@
 <div class="inhalt-stufe" data-schrift="klein">
 <div class="suchkopf">
   {#key frage}<Suchfeld gross wert={frage} />{/key}
+  {#if frage && !bibliothek.geladen}
+    <div class="suchstand"><span><i class="fa-solid fa-circle-notch fa-spin"></i> Quellen werden geladen ...</span></div>
+  {/if}
   {#if frage && reihenfolge.length}
     <div class="suchstand">
       {#if nur}
@@ -221,6 +225,11 @@
         {/each}
       </span>
     </div>
+    <!-- Fortschritt über alle Quellen (WIKI-92): wächst mit jeder fertigen Quelle, schimmert, solange gesucht wird -->
+    {#if !fertig}
+      <div class="suchfortschritt" role="progressbar" aria-label="Suche läuft" aria-valuemin={0} aria-valuemax={reihenfolge.length}
+           aria-valuenow={erledigt}><b style:width="{Math.max(6, (erledigt / reihenfolge.length) * 100)}%"></b></div>
+    {/if}
   {/if}
 </div>
 {#if hinweisBedeutung}
@@ -315,6 +324,13 @@
               </span>
             </button>
           {/each}
+          {#if !st || st.stand === "sucht"}
+            <!-- Platzhalter in der Form der Treffer, bis die Quelle antwortet (WIKI-92) -->
+            {#each [0, 1] as n (n)}
+              <div class="treffer platzhalter" aria-hidden="true"><span class="ohne-bild"></span>
+                <span class="zeilen"><span class="z1"></span><span class="z2"></span><span class="z3"></span></span></div>
+            {/each}
+          {/if}
         </section>
       {/each}
       {#if ohneTreffer.length}
