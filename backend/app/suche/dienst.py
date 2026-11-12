@@ -1,7 +1,8 @@
 """Suche über die Bücher der Bibliothek: der Index antwortet immer (der eigene, wenn das Buch einen hat, sonst der
 Index der ZIM-Datei); die Bedeutungssuche läuft gleichzeitig mit einer
 Wartezeit. Gemischt wird nach Rang (Reciprocal Rank Fusion, k = 60): ein Treffer, den beide Wege finden, steigt.
-Antwortet die Bedeutungssuche nicht rechtzeitig oder ist sie nicht angebunden, steht `nur_index` in der Antwort."""
+Antwortet die Bedeutungssuche nicht rechtzeitig oder ist sie nicht angebunden, steht `nur_index` in der Antwort; läuft sie
+noch, zusätzlich `bedeutung_ausstehend`: eine Suche mit `nachliefern` wartet länger auf dieselbe Anfrage (nachliefern.py)."""
 
 from __future__ import annotations
 
@@ -18,6 +19,7 @@ from ..modell.suche import Suchergebnis, Treffer, Vorschlag, Zeiten
 from . import index
 from .vorschlaege import KANDIDATEN_JE_BUCH, genaue_wege, ordnen
 from .bedeutung import Bedeutung, BedeutungFehlt, Fundstelle
+from .nachliefern import Ausstehend, LaufendeBedeutung
 from .bilder import Trefferbilder
 
 RRF_K = 60
@@ -33,16 +35,20 @@ class Suche:
     def __init__(self, bibliothek: Bibliothek, bedeutung: Bedeutung, wartezeit_s: Callable[[], float],
                  bedeutungsbuch: Callable[[], Awaitable[str]], medien: Callable[[str, str], str], eigen: Eigenindizes,
                  nutzbare: Callable[[], Awaitable[list[Buch]]] | None = None, mischung: Callable[[], str] = lambda: "ausgewogen",
-                 vorgewaehlt: Callable[[], Awaitable[list[str]]] | None = None) -> None:
+                 vorgewaehlt: Callable[[], Awaitable[list[str]]] | None = None,
+                 nachliefern_s: Callable[[], float] = lambda: 30.0) -> None:
         """`bedeutungsbuch`: Kennung des Buchs, zu dem die Bedeutungssuche gehört (ihre Treffer zeigen in dieses Buch); nach
         einer neuen Fassung die neue (WIKI-58).
         `nutzbare`: die Quellen ohne Auswahl (ohne archivierte, die nicht mitgenutzt werden, WIKI-46); sonst alle.
         `mischung`: Einstellung, wie die Wege gewichtet werden (MISCHUNG). `vorgewaehlt`: Kennungen der Bücher, in denen
-        ohne eigene Auswahl gesucht wird (Einstellung Bücher in der Suche); leer: alle nutzbaren (WIKI-79)."""
+        ohne eigene Auswahl gesucht wird (Einstellung Bücher in der Suche); leer: alle nutzbaren (WIKI-79).
+        `nachliefern_s`: so lange wartet eine Nachfrage auf die Bedeutungssuche (WIKI-98)."""
         self._bib, self._bedeutung, self._warten, self._bedeutungsbuch = bibliothek, bedeutung, wartezeit_s, bedeutungsbuch
         self._medien, self._eigen = medien, eigen
         self._nutzbare, self._mischung, self._vorgewaehlt = nutzbare, mischung, vorgewaehlt
         self._bilder = Trefferbilder(bibliothek, medien) if medien else None
+        self._nachliefern_s = nachliefern_s
+        self._laufend = LaufendeBedeutung(bedeutung.suchen)
 
     async def _buecher(self, auswahl: list[str]) -> list[Buch]:
         """Die gewählten Quellen (auch archivierte, wer sie ausdrücklich wählt), ohne Wahl die aus der Einstellung Bücher
@@ -89,17 +95,17 @@ class Suche:
         ergebnisse = await asyncio.gather(*(asyncio.to_thread(suchen, b) for b in buecher))
         return [t for liste, _ in ergebnisse for t in liste], sum(g for _, g in ergebnisse)
 
-    async def _bedeutung_suchen(self, frage: str, anzahl: int) -> list[Fundstelle]:
-        return await asyncio.wait_for(self._bedeutung.suchen(frage, anzahl), timeout=self._warten())
-
     async def suchen(self, frage: str, buecher: list[str] | None = None, anzahl: int = 20,
-                     wege: str = "beide") -> Suchergebnis:
+                     wege: str = "beide", nachliefern: bool = False) -> Suchergebnis:
+        """`nachliefern`: die Nachfrage, nachdem die Bedeutungssuche nicht rechtzeitig antwortete; sie wartet länger
+        (Einstellung) auf dieselbe Anfrage."""
         gewaehlt = await self._buecher(buecher or [])
         start = time.perf_counter()
         buch = await self._bedeutungsbuch()
         mit_bedeutung = wege in ("beide", "bedeutung") and self._bedeutung.angebunden() and (
             not buecher or buch in buecher)
-        aufgabe = asyncio.create_task(self._bedeutung_suchen(frage, anzahl)) if mit_bedeutung else None
+        warten = self._nachliefern_s() if nachliefern else self._warten()
+        aufgabe = asyncio.create_task(self._laufend.suchen(frage, anzahl, warten)) if mit_bedeutung else None
         try:
             index_treffer, gesamt = await self._index(gewaehlt, frage, anzahl) if wege != "bedeutung" else ([], 0)
         except BaseException:
@@ -111,12 +117,14 @@ class Suche:
         stellen: list[Fundstelle] = []
         hinweis = "" if aufgabe else ("keine Bedeutungssuche angebunden" if not self._bedeutung.angebunden() else "")
         bedeutung_ms: int | None = None
+        ausstehend = False
         if aufgabe:
             try:
-                stellen = await aufgabe
-                bedeutung_ms = int((time.perf_counter() - start) * 1000)
-            except asyncio.TimeoutError:
-                hinweis = f"Bedeutungssuche antwortete nicht innerhalb von {self._warten():.1f} s"
+                stellen, bedeutung_ms = await aufgabe
+            except Ausstehend:
+                ausstehend = not nachliefern
+                hinweis = (f"Bedeutungssuche braucht länger als {warten:.1f} s, ihre Treffer kommen nach" if ausstehend
+                           else f"Bedeutungssuche antwortete auch nach {warten:.0f} s nicht")
             except BedeutungFehlt as f:
                 hinweis = f.meldung
 
@@ -146,6 +154,7 @@ class Suche:
             for t, bild in zip(liste, await asyncio.gather(*(self._bilder.bild(t.buch, t.pfad) for t in liste)), strict=True):
                 t.bild = t.bild or bild
         return Suchergebnis(frage=frage, treffer=liste, beste_stelle=beste, nur_index=not stellen, hinweis=hinweis,
+                            bedeutung_ausstehend=ausstehend,
                             bedeutung_angebunden=self._bedeutung.angebunden(),
                             zeiten=Zeiten(index_ms=index_ms, bedeutung_ms=bedeutung_ms), index_gesamt=gesamt)
 

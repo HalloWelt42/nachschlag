@@ -107,10 +107,12 @@ def router(geruest: Geruest, bibliothek: Bibliothek, leser: Artikelleser, suche:
     @r.get("/suche", response_model=Suchergebnis, dependencies=pflicht)
     async def suchen(frage: str = Query(min_length=1, max_length=400), buecher: list[str] = Query(default=[]),
                      wege: Literal["beide", "bedeutung", "index"] = "beide",
-                     anzahl: int = Query(20, ge=1, le=50)) -> Suchergebnis:
+                     anzahl: int = Query(20, ge=1, le=50),
+                     nachliefern: bool = Query(False, description="nach `bedeutung_ausstehend`: länger auf die "
+                                                                  "Bedeutungssuche warten (WIKI-98)")) -> Suchergebnis:
         """Index immer, Bedeutung dazu, gemischt nach Rang; `nur_index` und `hinweis`, wenn die Bedeutungssuche nicht
-        antwortete. Kein Fehler: auch dann kommt 200."""
-        return await suche.suchen(frage, buecher, anzahl, wege)
+        antwortete, `bedeutung_ausstehend`, wenn sie noch läuft. Kein Fehler: auch dann kommt 200."""
+        return await suche.suchen(frage, buecher, anzahl, wege, nachliefern)
 
     @r.get("/inhalt/medien/{buch}/{pfad:path}", dependencies=lesen)
     async def medien(buch: str, pfad: str, gross: bool = Query(False, description="das große Bild des Bildholers, wenn "

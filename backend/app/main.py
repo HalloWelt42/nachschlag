@@ -126,7 +126,7 @@ def app_bauen(daten: Path, transport: httpx.AsyncBaseTransport | None = None,
 
     suche = Suche(bibliothek, bedeutung, lambda: e().bedeutung_warten_s, bedeutungsbuch,
                   wege(bibliothek).medien, eigen, nutzbare=quellen.nutzbare, mischung=lambda: e().mischung,
-                  vorgewaehlt=vorgewaehlte_buecher)
+                  vorgewaehlt=vorgewaehlte_buecher, nachliefern_s=lambda: e().bedeutung_nachliefern_s)
     indexauftraege = Indexauftraege(eigen, bibliothek, geruest.auftraege, lambda: e().indexdienst_schluessel.get_secret_value(),
                                     lambda: ARTEN_JE_STUFE[e().eigene_indizes], lambda: e().eigenindex_hoechstens_gb,
                                     nutzbare=quellen.nutzbare)

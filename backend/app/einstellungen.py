@@ -171,7 +171,12 @@ class AppEinstellungen(Grundeinstellungen):
                                             "Umschalten auf eine neue Fassung gilt die neue.")
     bedeutung_warten_s: float = Field(1.5, ge=0.2, le=10, title="Warten auf die Bedeutungssuche",
                                       json_schema_extra={**SUCHE, "schritt": 0.1, "einheit": "Sekunden"},
-                                      description="Danach kommen die Treffer aus dem Index allein, mit Hinweis.")
+                                      description="Danach kommen die Treffer aus dem Index allein; die Bedeutungssuche "
+                                                  "läuft weiter und ihre Treffer kommen nach.")
+    bedeutung_nachliefern_s: float = Field(30, ge=2, le=120, title="Nachliefern der Bedeutungssuche",
+                                           json_schema_extra={**SUCHE, "schritt": 1, "einheit": "Sekunden"},
+                                           description="So lange wartet die Seite höchstens auf Treffer der "
+                                                       "Bedeutungssuche, die nicht in der ersten Antwort kamen.")
     # --- Suche: Mischung und Komfort (WIKI-79, Entwurf einstellungen-suche.html) ---------------------------------------
     mischung: Literal["index", "ausgewogen", "bedeutung"] = Field(
         "ausgewogen", title="Mischung", json_schema_extra={**SUCHE, "beschriftungen": {

@@ -151,6 +151,7 @@ export interface Suchergebnis {
   beste_stelle: Treffer | null;
   nur_index: boolean;
   hinweis: string;
+  bedeutung_ausstehend: boolean;          // die Bedeutungssuche läuft noch: mit nachliefern nachfragen (WIKI-98)
   bedeutung_angebunden: boolean;
   zeiten: { index_ms: number; bedeutung_ms: number | null };
   index_gesamt: number;

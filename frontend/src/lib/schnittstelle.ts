@@ -26,10 +26,12 @@ export const zufallHolen = (buch: string) => hole<{ buch: string; pfad: string }
 export const vorschlaegeHolen = (anfang: string, buecher: string[] = [], anzahl = 8, signal?: AbortSignal) =>
   hole<Vorschlag[]>(`/vorschlaege?${abfrage({ anfang, buecher, anzahl })}`, { signal });
 
-export const sucheHolen = (frage: string, optionen: { buecher?: string[]; wege?: "beide" | "bedeutung" | "index"; anzahl?: number } = {},
+export const sucheHolen = (frage: string, optionen: { buecher?: string[]; wege?: "beide" | "bedeutung" | "index"; anzahl?: number;
+                                                     nachliefern?: boolean } = {},
                            signal?: AbortSignal) =>
   hole<Suchergebnis>(`/suche?${abfrage({ frage, buecher: optionen.buecher ?? [], wege: optionen.wege ?? "beide",
-                                         anzahl: optionen.anzahl ?? 20 })}`, { signal });
+                                         anzahl: optionen.anzahl ?? 20, ...(optionen.nachliefern ? { nachliefern: "true" } : {}) })}`,
+                     { signal });
 
 // --- Übersetzte Suche (WIKI-40): Frage für englische Quellen, gemerkt; die Korrektur des Nutzers gilt ---
 export interface Uebersetzung { frage: string; ziel: string; text: string; von: "modell" | "nutzer" | "keine"; grund: string }

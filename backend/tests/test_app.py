@@ -22,10 +22,12 @@ TYPOGRAFISCH = {chr(c) for c in (0x201E, 0x201C, 0x201D, 0x2013, 0x2014)}
 
 
 class Fundus:
-    """Antwortet wie der Fundus; `schlaeft` lässt ihn zu spät antworten."""
+    """Antwortet wie der Fundus; `schlaeft` lässt ihn zu spät antworten, `suchanfragen` zählt die Suchen."""
     schlaeft = 0.0
+    suchanfragen = 0
 
     async def __call__(self, request: httpx.Request) -> httpx.Response:
+        self.suchanfragen += 1
         await asyncio.sleep(self.schlaeft)
         frage = json.loads(request.content)
         assert frage["art"] == "bedeutung" and frage["sammlungen"] == ["probe"]
@@ -243,6 +245,22 @@ async def test_suche_wartet_nicht_auf_langsame_bedeutung(nachschlag):
     fundus.schlaeft = 2
     s = (await c.get("/api/v1/suche", params={"frage": "Städte"})).json()
     assert s["nur_index"] and s["treffer"] and s["zeiten"]["bedeutung_ms"] is None and s["bedeutung_angebunden"]
+
+
+async def test_langsame_bedeutung_kommt_nach(nachschlag):
+    """WIKI-98: die Bedeutungssuche läuft nach der Wartezeit weiter; die Nachfrage wartet auf dieselbe Anfrage (keine
+    zweite beim Fundus) und nennt ihre echte Dauer."""
+    c, geruest, fundus = nachschlag
+    await geruest.einstellungen.aendern({"fundus_adresse": FUNDUS, "fundus_sammlung": "probe",
+                                         "bedeutung_buch": "probe_de_all_2026-01", "bedeutung_warten_s": 0.2})
+    fundus.schlaeft = 0.6
+    erst = (await c.get("/api/v1/suche", params={"frage": "Farbform"})).json()
+    assert erst["nur_index"] and erst["bedeutung_ausstehend"] and "kommen nach" in erst["hinweis"]
+    anfragen = fundus.suchanfragen
+    nach = (await c.get("/api/v1/suche", params={"frage": "Farbform", "nachliefern": True})).json()
+    assert not nach["nur_index"] and not nach["bedeutung_ausstehend"] and nach["beste_stelle"]["pfad"] == "Kreuzfuchs"
+    assert nach["zeiten"]["bedeutung_ms"] >= 550
+    assert fundus.suchanfragen == anfragen                                            # dieselbe Anfrage, keine zweite
 
 
 async def test_einstellungen_der_suche(nachschlag):

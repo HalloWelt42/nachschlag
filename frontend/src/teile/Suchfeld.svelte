@@ -99,7 +99,9 @@
       stellenAbruf?.abort();
       const abruf = (stellenAbruf = new AbortController());
       try {
-        const ergebnis = await sucheHolen(jetzt, { wege: "bedeutung", anzahl: 3 }, abruf.signal);
+        let ergebnis = await sucheHolen(jetzt, { wege: "bedeutung", anzahl: 3 }, abruf.signal);
+        // läuft die Bedeutungssuche noch, kommen ihre Stellen nach (WIKI-98); die Liste sagt solange "sucht"
+        if (ergebnis.bedeutung_ausstehend) ergebnis = await sucheHolen(jetzt, { wege: "bedeutung", anzahl: 3, nachliefern: true }, abruf.signal);
         stellen = ergebnis.nur_index ? [] : ergebnis.treffer;
       } catch {
         if (!abruf.signal.aborted) stellen = [];

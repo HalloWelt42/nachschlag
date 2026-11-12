@@ -72,7 +72,11 @@
   const fertig = $derived(reihenfolge.length > 0 && reihenfolge.every((b) => staende[b.kennung] && staende[b.kennung].stand !== "sucht"));
   const gesamt = $derived(reihenfolge.reduce((n, b) => n + (staende[b.kennung]?.ergebnis?.index_gesamt ?? 0), 0));
   const besteStelle = $derived(reihenfolge.map((b) => staende[b.kennung]?.ergebnis?.beste_stelle).find(Boolean) ?? null);
-  const hinweisBedeutung = $derived(reihenfolge.map((b) => staende[b.kennung]?.ergebnis).find((e) => e?.bedeutung_angebunden && e.nur_index && e.hinweis)?.hinweis ?? "");
+  const hinweisBedeutung = $derived(reihenfolge.map((b) => staende[b.kennung]?.ergebnis)
+    .find((e) => e?.bedeutung_angebunden && e.nur_index && !e.bedeutung_ausstehend && e.hinweis)?.hinweis ?? "");
+  // Bedeutungssuche läuft noch (WIKI-98): ihre Treffer kommen nach; danach die gemessene Dauer
+  const bedeutungAusstehend = $derived(reihenfolge.some((b) => staende[b.kennung]?.original?.bedeutung_ausstehend));
+  let nachgeliefert = $state<number | null>(null);
 
   $effect(() => {
     const f = frage, buecher = reihenfolge.map((b) => b.kennung), k = kontext, n = nur;
@@ -94,6 +98,7 @@
     uebersetzungGrund = "";
     aendern = false;
     meintest = "";
+    nachgeliefert = null;
     const englisch = buecher.filter((b) => bibliothek.buecher.find((x) => x.kennung === b)?.sprache === "eng");
     const anzahl = (b: string) => n ? NUR_EIN_BUCH : b === k ? IM_KONTEXT : JE_BUCH;
     const uebersetzt = englisch.length ? uebersetztFragen(f, englisch, anzahl, signal) : Promise.resolve();
@@ -103,6 +108,7 @@
         const original = await sucheHolen(f, { buecher: [b], anzahl: anzahl(b) }, signal);
         if (signal.aborted) return;
         staende = { ...staende, [b]: gemischt({ ...staende[b], stand: "fertig", original, ms: Math.round(performance.now() - anfang) }) };
+        if (original.bedeutung_ausstehend) void bedeutungNachliefern(f, b, anzahl(b), signal);
         const ergebnis = staende[b].ergebnis!;
         if (!gewaehlt && ergebnis.treffer[0] && (b === buecher[0] || !staende[buecher[0]]?.ergebnis?.treffer.length)) void waehlen(ergebnis.treffer[0]);
       } catch (e) {
@@ -115,6 +121,21 @@
     const summe = Object.values(staende).reduce((x, s) => x + (s.ergebnis?.index_gesamt ?? 0), 0);
     void gesuchtMelden(f, summe);
     if (!genau && !statt) void korrekturAnbieten(f, buecher, summe === 0, signal);
+  }
+
+  /** Die Bedeutungssuche antwortete nicht in der kurzen Wartezeit, läuft aber weiter: dieselbe Suche mit `nachliefern`
+   *  wartet auf sie und bringt Index und Bedeutung gemischt; die Treffer des Buchs werden ersetzt (WIKI-98). */
+  async function bedeutungNachliefern(f: string, b: string, n: number, signal: AbortSignal) {
+    let original: Suchergebnis;
+    try {
+      original = await sucheHolen(f, { buecher: [b], anzahl: n, nachliefern: true }, signal);
+    } catch {
+      if (signal.aborted || !staende[b]?.original) return;
+      original = { ...staende[b].original!, bedeutung_ausstehend: false, hinweis: "Bedeutungssuche antwortete nicht" };
+    }
+    if (signal.aborted) return;
+    staende = { ...staende, [b]: gemischt({ ...staende[b], original }) };
+    if (!original.nur_index) nachgeliefert = original.zeiten.bedeutung_ms;
   }
 
   /** Ein Vorschlag zum Antippen; ohne Treffer gleich mit der Korrektur suchen (die Seite sagt das), dann auch übers Modell. */
@@ -232,6 +253,13 @@
     {/if}
   {/if}
 </div>
+{#if bedeutungAusstehend}
+  <div class="fundband"><i class="fa-solid fa-circle-notch fa-spin"></i>
+    <span><b>Bedeutungssuche läuft noch.</b> Bis dahin Treffer aus dem Index; die passenden Stellen kommen nach.</span></div>
+{:else if nachgeliefert !== null}
+  <div class="fundband"><i class="fa-solid fa-wand-magic-sparkles"></i>
+    <span>Treffer nach Bedeutung nachgeliefert, die Bedeutungssuche brauchte {(nachgeliefert / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 })} s.</span></div>
+{/if}
 {#if hinweisBedeutung}
   <div class="fundband warn"><i class="fa-solid fa-triangle-exclamation"></i>
     <span><b>Nur Index:</b> {hinweisBedeutung}. Treffer passen deshalb nur dem Wortlaut nach.</span></div>
