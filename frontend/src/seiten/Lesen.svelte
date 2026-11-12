@@ -18,7 +18,7 @@
   import { istCode } from "../lib/code";
   import { codeEinfaerben, spracheAus } from "../lib/einfaerben";
   import { htmlSprache, spracheInWorten } from "../lib/sprache";
-  import { gemerkt, lesestandMelden, meins, meinsLaden, merken, notieren, notizLoeschen, vergessen, vorliebeSetzen, wann,
+  import { gemerkt, lesestandMelden, meins, meinsLaden, merken, notieren, notizLoeschen, vergessen, verlaufHolen, vorliebeSetzen, wann,
            type Notiz, type NotizNeu } from "../lib/meins.svelte";
   import { markieren, stelleAus, type Stelle } from "../lib/stellen";
   import { geraet } from "appkern-oberflaeche";
@@ -107,13 +107,20 @@
   // Lesegröße dieses Buchs auf diesem Gerät (WIKI-29) als Zoom des Lesebereichs, auch in der Originalseite
   const zoom = $derived(buch ? groesseFuer(buch.name) / 100 : 1);
 
-  // Ohne Buch im Weg: die Startseite des Hauptbuchs; mit Buch, aber ohne Seite (lesen/<buch>, etwa der Verweis eines
-  // Auftrags, WIKI-50): die Startseite dieses Buchs
+  // Ohne Buch im Weg (Eintrag "Artikel" der Seitenleiste): der zuletzt gelesene Artikel aus dem Verlauf, auf allen
+  // Geräten derselbe (WIKI-94); ohne Verlauf die Startseite des Hauptbuchs. Mit Buch, aber ohne Seite (lesen/<buch>,
+  // etwa der Verweis eines Auftrags, WIKI-50): die Startseite dieses Buchs
   $effect(() => {
     if (buchKennung && pfad) return;
     const kennung = buchKennung;
     untrack(async () => {
       await bibliothekLaden();
+      if (!kennung) {
+        const [letzter] = await verlaufHolen(1, 0, "artikel").catch(() => []);
+        // das Buch des Eintrags, nach dem Umschalten auf eine neue Fassung dasselbe Buch unter neuer Kennung
+        const b = letzter && (buchVon(letzter.buch) ?? bibliothek.buecher.find((x) => x.name === letzter.buch_name));
+        if (letzter && b) return gehe(lesenZiel(b.kennung, letzter.pfad), true);
+      }
       const ziel = kennung ? buchVon(kennung) : hauptbuch();
       if (ziel) gehe(lesenZiel(ziel.kennung, ziel.startseite), true);
     });
@@ -1035,7 +1042,7 @@
       <!-- Filter der Übersicht (WIKI-17, docs/SUCHE.md Punkt 2): sofort in der Liste, darunter die Suche im ganzen Buch -->
       <div class="uebersicht-filter">
         <label class="suchfeld"><i class="fa-solid fa-filter"></i>
-          <input type="search" bind:value={filterText} placeholder="In dieser Übersicht filtern" aria-label="In dieser Übersicht filtern" /></label>
+          <input name="filter-text" type="search" bind:value={filterText} placeholder="In dieser Übersicht filtern" aria-label="In dieser Übersicht filtern" /></label>
         {#if filterText.trim()}
           <button class="knopf" onclick={() => suchen(filterText.trim(), artikel!.buch, true)}><i class="fa-solid fa-magnifying-glass"></i>In der ganzen Quelle suchen</button>
           <span class="filter-stand">{gefiltert.zahl} von {gefiltert.gesamt}</span>

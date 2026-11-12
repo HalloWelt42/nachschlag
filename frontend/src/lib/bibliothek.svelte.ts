@@ -32,9 +32,12 @@ export function buch(kennung: string): Buch | undefined {
 }
 
 /** Das Buch, mit dem man ohne Wahl beginnt: das größte mit eigenem Lesedesign, sonst das größte. */
+/** Das Buch, mit dem Lesen und Stöbern ohne Wahl beginnen: das größte Nachschlagewerk mit eigenem Lesedesign; erst
+ *  ohne Nachschlagewerk das größte übrige (sonst gewann ein Frageforum mit 30 Mio. Seiten, WIKI-94). */
 export function hauptbuch(): Buch | undefined {
-  const sortiert = [...bibliothek.buecher].sort((a, b) => b.artikel - a.artikel);
-  return sortiert.find((b) => b.faehigkeiten.lesedesign) ?? sortiert[0];
+  const sortiert = [...bibliothek.buecher].filter(nutzbar)
+    .sort((a, b) => Number(b.art === "enzyklopaedie") - Number(a.art === "enzyklopaedie") || b.artikel - a.artikel);
+  return sortiert.find((b) => b.faehigkeiten.lesedesign) ?? sortiert[0] ?? bibliothek.buecher[0];
 }
 
 export function zahl(n: number): string {
