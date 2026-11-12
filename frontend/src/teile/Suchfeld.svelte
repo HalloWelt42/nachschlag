@@ -192,7 +192,10 @@
     {/if}
     <!-- Spracheingabe (WIKI-42): der Text steht im Feld, wächst beim Sprechen; am Ende läuft die Suche, er bleibt änderbar -->
     <Sprechknopf titel="Frage sprechen" live={(t) => (frage = t)} fertig={(t) => { frage = t; alleTreffer(); }} />
-    {#if (taste || gross) && !geraet.mobil}<kbd title="Kurzbefehl: die Taste / setzt die Schreibmarke ins Suchfeld">/</kbd>{/if}
+    <!-- Kurzbefehl, sichtbar nur, solange das Feld leer und nicht aktiv ist: im Feld getippt ist / ein Suchbegriff
+         (WIKI-93); unsichtbar statt entfernt, damit nichts verrutscht -->
+    {#if (taste || gross) && !geraet.mobil}<kbd class:ruht={offen || !!frage} aria-hidden={offen || !!frage}
+      title="Kurzbefehl: die Taste / setzt die Schreibmarke ins Suchfeld">/</kbd>{/if}
     <span class="suchlauf" aria-hidden="true"></span>
   </label>
   {#if offen && frage.trim()}

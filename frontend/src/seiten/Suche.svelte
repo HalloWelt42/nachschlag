@@ -62,7 +62,9 @@
   const genau = $derived(zusatz.get("genau") === "1");        // ohne Korrektur, so wie getippt
   const durchsucht = $derived(bibliothek.buecher.filter((b) => b.faehigkeiten.volltext && nutzbar(b)));   // ohne Archiv (WIKI-46)
   // Reihenfolge: das Buch, aus dem gesucht wurde, dann die übrigen wie in der Bibliothek
+  // ohne Frage wird nichts gesucht: keine Quelle steht dann als "sucht" da (WIKI-92, Rückmeldung 12.11.)
   const reihenfolge = $derived.by((): Buch[] => {
+    if (!frage) return [];
     const gewaehlte = durchsucht.filter((b) => !aus.includes(b.kennung) && (!nur || b.kennung === kontext));
     return [...gewaehlte.filter((b) => b.kennung === kontext), ...gewaehlte.filter((b) => b.kennung !== kontext)];
   });

@@ -22,6 +22,7 @@
                       font-size: var(--klein); color: var(--text-2); white-space: nowrap; }
 .suchfeld kbd { font-family: var(--schrift-zahl); font-size: var(--marke); color: var(--text-3); padding: 1px 6px; border-radius: var(--r1);
                 box-shadow: inset 0 0 0 1px var(--rand); }
+.suchfeld kbd.ruht { visibility: hidden; }
 .suchanker.offen .suchfeld, .suchfeld:focus-within { border-color: var(--akzent-flaeche); box-shadow: 0 0 0 3px var(--akzent-weich); }
 
 /* Vorschläge beim Tippen: Titel, darunter Stellen aus der Bedeutungssuche, unten Tasten und alle Treffer */
