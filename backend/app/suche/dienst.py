@@ -16,6 +16,7 @@ from ..eigenindex.ablage import Eigenindizes
 from ..modell.buch import Buch
 from ..modell.suche import Suchergebnis, Treffer, Vorschlag, Zeiten
 from . import index
+from .vorschlaege import KANDIDATEN_JE_BUCH, genaue_wege, ordnen
 from .bedeutung import Bedeutung, BedeutungFehlt, Fundstelle
 from .bilder import Trefferbilder
 
@@ -149,22 +150,33 @@ class Suche:
                             zeiten=Zeiten(index_ms=index_ms, bedeutung_ms=bedeutung_ms), index_gesamt=gesamt)
 
     async def vorschlaege(self, anfang: str, buecher: list[str] | None = None, anzahl: int = 8) -> list[Vorschlag]:
+        """Titel zum Getippten aus allen gewählten Büchern, gemeinsam geordnet (vorschlaege.py, WIKI-93): der genaue
+        Titel zuerst, Artikel vor Weiterleitungen, jede Seite einmal."""
         gewaehlt = [b for b in await self._buecher(buecher or []) if b.faehigkeiten.titelindex]
 
         def holen(b: Buch) -> list[Vorschlag]:
             a = self._bib.archiv(b.kennung)
+            pfade = list(index.titel(a, anfang, KANDIDATEN_JE_BUCH))
+            for w in genaue_wege(anfang):                      # der genaue Titel, auch wenn der Index ihn spät nennt
+                for gibt, holt in ((a.has_entry_by_path, a.get_entry_by_path), (a.has_entry_by_title, a.get_entry_by_title)):
+                    try:
+                        if gibt(w):
+                            pfade.insert(0, holt(w).path)
+                    except RuntimeError:
+                        pass
             ergebnis = []
-            for pfad in index.titel(a, anfang, anzahl):
+            for pfad in dict.fromkeys(pfade):
                 try:
                     e = a.get_entry_by_path(pfad)
                     weiter = self._bib.weiterleitung(b.kennung, pfad)
-                except (KeyError, EintragFehlt):
+                except (KeyError, EintragFehlt, RuntimeError):
                     continue
                 ergebnis.append(Vorschlag(buch=b.kennung, pfad=pfad, titel=e.title, weiterleitung=weiter))
             return ergebnis
 
         listen = await asyncio.gather(*(asyncio.to_thread(holen, b) for b in gewaehlt))
-        return [v for liste in listen for v in liste][:anzahl]
+        rang = {b.kennung: i for i, b in enumerate(gewaehlt)}
+        return ordnen((v for liste in listen for v in liste), anfang, rang, anzahl)
 
 
 __all__ = ["Suche", "BuchFehlt", "EintragFehlt"]
