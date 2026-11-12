@@ -349,6 +349,7 @@ button.buendel-kopf:hover { background: var(--flaeche-2); }
 .suchstand .zahl { font-family: var(--schrift-zahl); }
 /* Fortschritt über alle Quellen: der Balken wächst je fertiger Quelle, ein Schimmer zeigt, dass gesucht wird (WIKI-92) */
 .suchfortschritt { height: 4px; width: min(100%, 720px); border-radius: 2px; background: var(--mulde); overflow: hidden; }
+.suchfortschritt.ruht { visibility: hidden; }
 .suchfortschritt b { display: block; height: 100%; border-radius: 2px; background-color: var(--akzent-flaeche); transition: width var(--ruhig);
                      background-image: linear-gradient(90deg, transparent, color-mix(in srgb, var(--flaeche) 55%, transparent), transparent);
                      background-size: 40% 100%; background-repeat: no-repeat; animation: suchlauf 1.4s linear infinite; }
@@ -373,6 +374,8 @@ button.buendel-kopf:hover { background: var(--flaeche-2); }
 .wahlzeichen.an::after { content: ""; position: absolute; inset: 6px; border-radius: 2px; background: var(--auf-akzent); }
 .filtergruppe button.aus { color: var(--text-3); }
 .filtergruppe button .zahl { margin-left: auto; font-family: var(--schrift-zahl); color: var(--text-3); font-size: var(--marke); }
+.filtergruppe button .zahl i { color: var(--akzent); }
+.filtergruppe button .zahl.fehlt i { color: var(--gefahr); }
 .ergebnisse { padding: var(--a4) var(--a5) var(--a6); display: flex; flex-direction: column; gap: var(--a3); max-width: 1100px; }
 .beste-stelle { padding: var(--a4); background: var(--flaeche); box-shadow: var(--schatten), inset 3px 0 0 var(--petrol); border-radius: 0; display: flex; flex-direction: column; gap: var(--a2); }
 .beste-stelle .fund-etikett i { color: var(--petrol); }
@@ -419,10 +422,6 @@ button.buendel-kopf:hover { background: var(--flaeche-2); }
 .buchstand-text.fehlt { color: var(--gefahr); }
 .buchtreffer-kopf .alle { margin-left: auto; font: inherit; font-size: var(--klein); color: var(--akzent); font-weight: 600; background: none; border: 0; cursor: pointer; }
 .andere-buecher { margin: var(--a5) 0 var(--a2); font-size: var(--marke); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; }
-.buchstaende { display: flex; flex-wrap: wrap; gap: var(--a1) var(--a2); }
-.buchstand { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: var(--r1); background: var(--flaeche-2); color: var(--text-3); font-size: var(--marke); }
-.buchstand.fertig > i { color: var(--gut); }
-.buchstand.fehlt > i { color: var(--gefahr); }
 .suchfeld button.buchwahl { border: 0; font: inherit; color: inherit; cursor: pointer; }
 .suchfeld .buchwahl.mit-buch .zuerst { color: var(--text-3); }
 .suchfeld .buchwahl.mit-buch .buchtitel { max-width: 14em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1075,7 +1074,6 @@ button.buendel-kopf:hover { background: var(--flaeche-2); }
   .ergebnisse, .suchkopf { padding-inline: 0; }          /* den Seitenrand gibt die Schale, nur einmal */
   /* Telefon: keine Seitenspalten. Platzhalter-Zeichen ohne Bild entfallen; echte Bilder stehen klein links im Text,
      der Text umfließt sie (Nutzer: "solche seitlichen Elemente klauen Platz", "sollte umfließen") */
-  .suchstand .buchstaende { display: none; }              /* der Stand je Buch steht im Kopf seines Blocks */
   .treffer, .angebot-artikel { display: block; }
   .treffer .ohne-bild, .angebot-artikel .ohne-bild, .liste-ziel .ohne-bild, .vorschlag .ohne-bild,
   .notiz-gruppe .gruppenkopf .ohne-bild, .kachel.quer .kachel-bild.zeichen:not(.echt) { display: none; }

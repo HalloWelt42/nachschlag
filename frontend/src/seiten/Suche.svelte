@@ -7,7 +7,7 @@
   // Suchkorrektur (WIKI-41, Punkt 9): sonst "Meintest du ...?" (aus dem Wortschatz), ohne Treffer sucht die Seite gleich mit der
   // Korrektur (?statt=) und sagt das; "Doch nach ... suchen" (?genau=1) sucht ohne Korrektur.
   import { gehe, navigation, seitenFehler } from "appkern-oberflaeche";
-  import { untrack } from "svelte";
+  import { onDestroy, untrack } from "svelte";
   import Suchfeld from "../teile/Suchfeld.svelte";
   import Buchmarke from "../teile/Buchmarke.svelte";
   import Wahlzeichen from "../teile/Wahlzeichen.svelte";
@@ -82,14 +82,54 @@
   const bedeutungAusstehend = $derived(reihenfolge.some((b) => staende[b.kennung]?.original?.bedeutung_ausstehend));
   let nachgeliefert = $state<number | null>(null);
 
+  // Eine neue Frage sucht in allen Quellen neu; eine geänderte Auswahl der Quellen holt nur die dazugekommenen (abgewählte
+  // bleiben gemerkt und stehen beim Wiederanwählen gleich da). So bleibt die Seite beim An- und Abwählen ruhig (WIKI-103).
+  let lauf: { schluessel: string; abruf: AbortController } | null = null;
   $effect(() => {
     const f = frage, buecher = reihenfolge.map((b) => b.kennung), k = kontext, n = nur;
-    void nochmal;
+    const schluessel = `${f}\n${k}\n${n}\n${nochmal}`;
     if (!f || !buecher.length) return;
-    const abruf = new AbortController();
-    untrack(() => alleFragen(f, buecher, k, n, abruf.signal));
-    return () => abruf.abort();
+    untrack(() => {
+      if (lauf?.schluessel !== schluessel) {
+        lauf?.abruf.abort();
+        lauf = { schluessel, abruf: new AbortController() };
+        void alleFragen(f, buecher, k, n, lauf.abruf.signal);
+      } else {
+        const neu = buecher.filter((b) => !staende[b]);
+        if (neu.length) void dazuFragen(f, neu, buecher, k, n, lauf.abruf.signal);
+      }
+    });
   });
+  onDestroy(() => lauf?.abruf.abort());
+
+  const anzahlFuer = (k: string, n: boolean) => (b: string) => n ? NUR_EIN_BUCH : b === k ? IM_KONTEXT : JE_BUCH;
+  const englischVon = (buecher: string[]) => buecher.filter((b) => bibliothek.buecher.find((x) => x.kennung === b)?.sprache === "eng");
+
+  /** Eine Quelle fragen; ihr Stand steht danach in `staende`. `erste`: die Quelle, deren Treffer zuerst gewählt wird. */
+  async function buchFragen(f: string, b: string, anzahl: (b: string) => number, erste: string, einzige: boolean, signal: AbortSignal) {
+    const anfang = performance.now();
+    try {
+      const original = await sucheHolen(f, { buecher: [b], anzahl: anzahl(b) }, signal);
+      if (signal.aborted) return;
+      staende = { ...staende, [b]: gemischt({ ...staende[b], stand: "fertig", original, ms: Math.round(performance.now() - anfang) }) };
+      if (original.bedeutung_ausstehend) void bedeutungNachliefern(f, b, anzahl(b), signal);
+      const ergebnis = staende[b].ergebnis!;
+      if (!gewaehlt && ergebnis.treffer[0] && (b === erste || !staende[erste]?.ergebnis?.treffer.length)) void waehlen(ergebnis.treffer[0]);
+    } catch (e) {
+      if (signal.aborted) return;
+      staende = { ...staende, [b]: { stand: "fehler", ergebnis: null, ms: Math.round(performance.now() - anfang) } };
+      if (einzige) fehler = seitenFehler(e);
+    }
+  }
+
+  /** Quellen, die zur Auswahl dazukamen: nur sie fragen, englische auch mit der schon geholten Übersetzung. */
+  async function dazuFragen(f: string, neu: string[], buecher: string[], k: string, n: boolean, signal: AbortSignal) {
+    staende = { ...staende, ...Object.fromEntries(neu.map((b) => [b, { stand: "sucht", ergebnis: null, ms: 0 } as Stand])) };
+    const anzahl = anzahlFuer(k, n);
+    const u = uebersetzung;
+    await Promise.all([...neu.map((b) => buchFragen(f, b, anzahl, buecher[0], false, signal)),
+      ...(u && !gleich(u.text, f) ? englischVon(neu).map((b) => uebersetztIn(u.text, b, anzahl, signal)) : [])]);
+  }
 
   /** Jedes Buch für sich: so steht ein schnelles Buch nicht hinter einem langsamen, und jedes zeigt seinen Stand. */
   async function alleFragen(f: string, buecher: string[], k: string, n: boolean, signal: AbortSignal) {
@@ -103,24 +143,10 @@
     aendern = false;
     meintest = "";
     nachgeliefert = null;
-    const englisch = buecher.filter((b) => bibliothek.buecher.find((x) => x.kennung === b)?.sprache === "eng");
-    const anzahl = (b: string) => n ? NUR_EIN_BUCH : b === k ? IM_KONTEXT : JE_BUCH;
+    const englisch = englischVon(buecher);
+    const anzahl = anzahlFuer(k, n);
     const uebersetzt = englisch.length ? uebersetztFragen(f, englisch, anzahl, signal) : Promise.resolve();
-    await Promise.all([uebersetzt, ...buecher.map(async (b) => {
-      const anfang = performance.now();
-      try {
-        const original = await sucheHolen(f, { buecher: [b], anzahl: anzahl(b) }, signal);
-        if (signal.aborted) return;
-        staende = { ...staende, [b]: gemischt({ ...staende[b], stand: "fertig", original, ms: Math.round(performance.now() - anfang) }) };
-        if (original.bedeutung_ausstehend) void bedeutungNachliefern(f, b, anzahl(b), signal);
-        const ergebnis = staende[b].ergebnis!;
-        if (!gewaehlt && ergebnis.treffer[0] && (b === buecher[0] || !staende[buecher[0]]?.ergebnis?.treffer.length)) void waehlen(ergebnis.treffer[0]);
-      } catch (e) {
-        if (signal.aborted) return;
-        staende = { ...staende, [b]: { stand: "fehler", ergebnis: null, ms: Math.round(performance.now() - anfang) } };
-        if (buecher.length === 1) fehler = seitenFehler(e);
-      }
-    })]);
+    await Promise.all([uebersetzt, ...buecher.map((b) => buchFragen(f, b, anzahl, buecher[0], buecher.length === 1, signal))]);
     if (signal.aborted) return;
     const summe = Object.values(staende).reduce((x, s) => x + (s.ergebnis?.index_gesamt ?? 0), 0);
     void gesuchtMelden(f, summe);
@@ -177,14 +203,17 @@
     }
     uebersetzung = u;
     if (gleich(u.text, f)) return;
-    await Promise.all(buecher.map(async (b) => {
-      try {
-        const ergebnis = await sucheHolen(u.text, { buecher: [b], anzahl: anzahl(b) }, signal);
-        if (!signal.aborted) staende = { ...staende, [b]: gemischt({ ...staende[b], uebersetzt: ergebnis }) };
-      } catch {
-        // die Treffer der Frage selbst bleiben
-      }
-    }));
+    await Promise.all(buecher.map((b) => uebersetztIn(u.text, b, anzahl, signal)));
+  }
+
+  /** Eine englische Quelle zusätzlich mit der übersetzten Frage. */
+  async function uebersetztIn(text: string, b: string, anzahl: (b: string) => number, signal: AbortSignal) {
+    try {
+      const ergebnis = await sucheHolen(text, { buecher: [b], anzahl: anzahl(b) }, signal);
+      if (!signal.aborted) staende = { ...staende, [b]: gemischt({ ...staende[b], uebersetzt: ergebnis }) };
+    } catch {
+      // die Treffer der Frage selbst bleiben
+    }
   }
 
   async function korrigieren(e: SubmitEvent) {
@@ -237,24 +266,12 @@
       {:else}
         <span>{#if fertig}{reihenfolge.length} {reihenfolge.length === 1 ? "Quelle" : "Quellen"} durchsucht, rund {zahl(gesamt)} Treffer{:else}Sucht in {reihenfolge.length} {reihenfolge.length === 1 ? "Quelle" : "Quellen"} ...{/if}</span>
       {/if}
-      <!-- Stand je Buch (docs/SUCHE.md Punkt 7): sucht, fertig mit Zahl und Zeit, keine Antwort -->
-      <span class="buchstaende">
-        {#each reihenfolge as b (b.kennung)}
-          {@const st = staende[b.kennung]}
-          <span class="buchstand" class:fertig={st?.stand === "fertig"} class:fehlt={st?.stand === "fehler"}
-                title={st?.stand === "fertig" ? `${st.ms} ms` : st?.stand === "fehler" ? "keine Antwort" : "sucht"}>
-            {#if !st || st.stand === "sucht"}<i class="fa-solid fa-spinner fa-spin"></i>{:else if st.stand === "fehler"}<i class="fa-solid fa-triangle-exclamation"></i>{:else}<i class="fa-solid fa-check"></i>{/if}
-            <Buchmarke kennung={b.kennung} symbol={false} />
-            {#if st?.stand === "fertig"}<span class="zahl">{zahl(st.ergebnis?.index_gesamt ?? 0)}</span>{/if}
-          </span>
-        {/each}
-      </span>
     </div>
     <!-- Fortschritt über alle Quellen (WIKI-92): wächst mit jeder fertigen Quelle, schimmert, solange gesucht wird -->
-    {#if !fertig}
-      <div class="suchfortschritt" role="progressbar" aria-label="Suche läuft" aria-valuemin={0} aria-valuemax={reihenfolge.length}
-           aria-valuenow={erledigt}><b style:width="{Math.max(6, (erledigt / reihenfolge.length) * 100)}%"></b></div>
-    {/if}
+    <!-- immer an seinem Platz, fertig unsichtbar: so springt nichts, wenn eine Suche beginnt oder endet -->
+    <div class="suchfortschritt" class:ruht={fertig} role="progressbar" aria-label="Suche läuft" aria-hidden={fertig}
+         aria-valuemin={0} aria-valuemax={reihenfolge.length} aria-valuenow={erledigt}>
+      <b style:width="{Math.max(6, (erledigt / reihenfolge.length) * 100)}%"></b></div>
   {/if}
 </div>
 {#if bedeutungAusstehend}
@@ -299,9 +316,15 @@
     <div class="filtergruppe"><h4>Quellen</h4>
       {#each durchsucht as b (b.kennung)}
         {@const an = !aus.includes(b.kennung)}
+        {@const st = frage && an ? staende[b.kennung] : undefined}
         <button class:an class:aus={!an} aria-pressed={an} onclick={() => umschalten(b.kennung)} title={an ? "Diese Quelle nicht durchsuchen" : "Diese Quelle durchsuchen"}>
           <Wahlzeichen {an} /><Buchmarke kennung={b.kennung} symbol={false} flaggeVorn />
-          <span class="zahl">{staende[b.kennung]?.ergebnis ? zahl(staende[b.kennung].ergebnis!.index_gesamt) : ""}</span></button>
+          <!-- Stand je Quelle hier statt als eigene Reihe über den Treffern (docs/SUCHE.md Punkt 7, WIKI-103): sucht,
+               keine Antwort oder die Zahl der Treffer, die Zeit beim Überfahren -->
+          <span class="zahl" class:fehlt={st?.stand === "fehler"}
+                title={st?.stand === "fertig" ? `${st.ms} ms` : st?.stand === "fehler" ? "keine Antwort" : st ? "sucht" : undefined}>
+            {#if st?.stand === "sucht"}<i class="fa-solid fa-circle-notch fa-spin"></i>{:else if st?.stand === "fehler"}<i class="fa-solid fa-triangle-exclamation"></i>
+            {:else if st?.ergebnis}{zahl(st.ergebnis.index_gesamt)}{/if}</span></button>
       {/each}
     </div>
   </aside>
