@@ -9,7 +9,7 @@
   import { artikelHolen, artikelstandHolen, artikelUebersetzen, stellenstandHolen, stelleUebersetzen, zufallHolen,
            rueckverweiseHolen, type Artikelstand, type Rueckverweise } from "../lib/schnittstelle";
   import { deutsch, deutschMerken, uebersetzt } from "../lib/deutsch.svelte";
-  import { ANSICHTEN, ansichtMerken, leseansicht } from "../lib/ansicht.svelte";
+  import { ANSICHTEN, ansichtMerken, leseansicht, umfangMerken, vorleseumfang, VORLESEUMFAENGE } from "../lib/ansicht.svelte";
   import type { Artikel } from "../lib/typen";
   import { lesen, lesenZiel, suchen, verweisZiel } from "../lib/ziele";
   import { Auswahl } from "appkern-oberflaeche";
@@ -40,8 +40,8 @@
   import { ausprobierstand, beispieleHolen, beispielLoeschen, codeSprache, type Beispiel, type Codesprache,
            type Probe } from "../lib/ausprobieren";
   import { belegeDerAuswahl, recherche, rechercheUmschalten } from "../lib/recherche.svelte";
-  import { VorleseKnopf, vorleser } from "appkern-oberflaeche";
-  import { hervorhebungWeg, satzHervorheben, vorlesetext } from "../lib/mitlesen";
+  import { VorleseKnopf, vorlesbar, vorleser } from "appkern-oberflaeche";
+  import { hervorhebungWeg, markierungstext, satzHervorheben, vorlesetext } from "../lib/mitlesen";
   import { kommentareSetzen } from "../lib/kommentare";
   import Leuchtkasten from "../teile/Leuchtkasten.svelte";
   import { medienImArtikel, type Medium } from "../lib/medien";
@@ -618,6 +618,17 @@
   // Vorlesen mit Mitlesen (WIKI-8): ab dem Abschnitt, in dem man liest; der gesprochene Satz ist hervorgehoben und rollt
   // in Sicht, solange der Vorleser diesen Artikel liest
   const vorleseKennung = $derived(artikel ? `artikel:${artikel.buch}/${artikel.pfad}` : "");
+  const vorleseHinweis = $derived(vorleseumfang.wert === "alles" ? "Den ganzen Artikel vorlesen (nur Text)"
+    : "Den Abschnitt vorlesen, in dem du liest (nur Text)");
+
+  /** Die Markierung vorlesen (WIKI-102): nur ihr Text, unter der Kennung des Artikels, damit der Satz im Text mitläuft
+   *  und der Vorlese-Knopf anhält. Im Tippen gestartet (sonst bleibt der Ton am iPhone stumm). */
+  function markierungVorlesen() {
+    const wahl = window.getSelection();
+    const inhalt = wahl && wahl.rangeCount ? markierungstext(wahl.getRangeAt(0)) : "";
+    textwahl = null;
+    if (inhalt) void vorleser.starten(vorleseKennung, "/vorlesen", { sprache: textSprache || "de", text: inhalt });
+  }
   $effect(() => {
     const satz = vorleser.kennung === vorleseKennung ? vorleser.satz : null;
     untrack(() => {
@@ -977,8 +988,13 @@
       <button class="knopf still" title="Ein zufälliger Artikel aus dieser Quelle" onclick={zufall}>
         <i class="fa-solid fa-dice"></i><span class="wort">Zufall</span></button>
       {#if artikel.darstellung === "lesedesign"}
-        <VorleseKnopf kennung={vorleseKennung} beschriftung={geraet.mobil ? "" : "Vorlesen"} titel="Ab dem Abschnitt vorlesen, in dem du liest"
-                      daten={{ sprache: textSprache || "de" }} text={() => (text ? vorlesetext(text, aktiv) : "")} />
+        <VorleseKnopf kennung={vorleseKennung} beschriftung={geraet.mobil ? "" : "Vorlesen"} titel={vorleseHinweis}
+                      daten={{ sprache: textSprache || "de" }} text={() => (text ? vorlesetext(text, vorleseumfang.wert, aktiv) : "")} />
+        <!-- was der Knopf liest, bleibt auf diesem Gerät; eine Markierung liest die Leiste an ihr (WIKI-102) -->
+        {#if vorlesbar.da}
+          <Auswahl wert={vorleseumfang.wert} symbol="fa-list-ul" titel="Was Vorlesen liest, bleibt auf diesem Gerät eingestellt"
+                   onwahl={umfangMerken} optionen={VORLESEUMFAENGE} />
+        {/if}
       {/if}
       {#if uebersetzbar && !zeigeOriginal}
         <button class="knopf" class:an={aufDeutsch || (deutsch.an && ue?.zustand === "laeuft")} onclick={deutschUmschalten}
@@ -1275,8 +1291,8 @@
         {#if inhalt.length}
           <button class="knopf still" class:an={inhaltTafel} onclick={() => (inhaltTafel = !inhaltTafel)}><i class="fa-solid fa-list"></i><span class="wort">Inhalt</span></button>
         {/if}
-        <VorleseKnopf kennung={vorleseKennung} beschriftung={geraet.mobil ? "" : "Vorlesen"} titel="Ab dem Abschnitt vorlesen, in dem du liest"
-                      daten={{ sprache: textSprache || "de" }} text={() => (text ? vorlesetext(text, aktiv) : "")} />
+        <VorleseKnopf kennung={vorleseKennung} beschriftung={geraet.mobil ? "" : "Vorlesen"} titel={vorleseHinweis}
+                      daten={{ sprache: textSprache || "de" }} text={() => (text ? vorlesetext(text, vorleseumfang.wert, aktiv) : "")} />
         <button class="knopf still" class:an={!!eintrag} title={eintrag ? "Vom Merkzettel nehmen" : "Auf den Merkzettel"} onclick={merkenUmschalten}>
           <i class="fa-{eintrag ? 'solid' : 'regular'} fa-bookmark"></i></button>
         <button class="knopf still" title="Notiz zum ganzen Artikel; für eine Stelle den Text markieren" onclick={notizZumArtikel}>
@@ -1311,6 +1327,7 @@
     <button class:kopiert-ok={kopiert === "ja"} onclick={zitieren} title="Zitat mit Artikel, Abschnitt und Quelle in die Zwischenablage">
       <i class="fa-solid {kopiert === 'ja' ? 'fa-check' : kopiert === 'nein' ? 'fa-triangle-exclamation' : 'fa-quote-right'}"></i>{kopiert === "ja" ? "Kopiert" : kopiert === "nein" ? "Geht nicht" : "Zitieren"}</button>
     <button onclick={() => { const z = textwahl!.stelle.zitat; textwahl = null; suchen(z.slice(0, 200)); }}><i class="fa-solid fa-magnifying-glass"></i>Suchen</button>
+    {#if vorlesbar.da}<button onclick={markierungVorlesen} title="Nur den markierten Text vorlesen"><i class="fa-solid fa-volume-high"></i>Vorlesen</button>{/if}
     {#if stellenBereit}
       <button class:an={wahlUebersetzung?.fuer === textwahl.stelle.zitat} onclick={stelleUebersetzenKlick}
               title={textSprache === "de" ? "Ins Englische übersetzen" : "Ins Deutsche übersetzen"}><i class="fa-solid fa-language"></i>Übersetzen</button>
